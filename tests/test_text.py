@@ -6,8 +6,6 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-
-
 def test_text_initialization(corpus_fixture):
     text = Text(corpus=corpus_fixture)
     assert text.corpus == corpus_fixture, "Corpus should be set correctly"
