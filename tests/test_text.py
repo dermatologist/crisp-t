@@ -103,3 +103,28 @@ def test_dimensions(document_fixture):
     assert len(dimensions) == 3, "Dimensions should contain 3 items"
     assert all(isinstance(item, tuple) and len(item) == 2 for item in dimensions), "Each item should be a tuple of (word, count)"
     assert all(isinstance(item[0], str) and isinstance(item[1], int) for item in dimensions), "Each tuple should contain a string and an integer"
+
+def test_attributes(document_fixture):
+    text = Text(document=document_fixture)
+    text.make_spacy_doc()
+    attributes = text.attributes(word="fit", index=3)
+    print(
+        "Attributes:", attributes
+    )
+    # Check if the attributes are returned as expected
+    assert isinstance(attributes, list), "Attributes should be a list"
+    assert len(attributes) == 3, "Attributes should contain 3 items"
+    assert all(isinstance(item, tuple) and len(item) == 2 for item in attributes), "Each item should be a tuple of (word, count)"
+    assert all(isinstance(item[0], str) and isinstance(item[1], int) for item in attributes), "Each tuple should contain a string and an integer"
+
+def test_generate_summary(document_fixture):
+    text = Text(document=document_fixture)
+    text.make_spacy_doc()
+    summary = text.generate_summary(weight=10)
+    print(
+        "Summary:", summary
+    )
+    # Check if the summary is returned as expected
+    assert isinstance(summary, list), "Summary should be a list"
+    assert len(summary) > 0, "Summary should contain at least one item"
+    assert all(isinstance(item, str) for item in summary), "Each item should be a string"

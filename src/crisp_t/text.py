@@ -229,7 +229,7 @@ class Text:
         _spans = self.spans_with_common_nouns(word)
         _ad = {}
         for span in _spans:
-            for token in span:
+            for token in span.text.split():
                 if self._pos.get(token, None) == "NOUN" and word not in self._word.get(
                     token, ""
                 ):
