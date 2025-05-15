@@ -20,14 +20,14 @@ along with qrmine.  If not, see <http://www.gnu.org/licenses/>.
 import spacy
 import operator
 from textacy import preprocessing
-from .model import Document
+from .model import Corpus
 from typing import Optional
 
 
 class Text:
 
-    def __init__(self, document: Optional[Document] = None, lang="en_core_web_sm", max_length=1100000):
-        self._document = document
+    def __init__(self, corpus: Optional[Corpus] = None, lang="en_core_web_sm", max_length=1100000):
+        self._corpus = corpus
         self._lang = lang
         self._max_length = max_length
         self._spacy_doc = None
@@ -43,37 +43,37 @@ class Text:
         self.process_tokens()
 
     @property
-    def document(self):
+    def corpus(self):
         """
-        Get the document.
+        Get the corpus.
         """
-        if self._document is None:
-            raise ValueError("Document is not set")
-        return self._document
+        if self._corpus is None:
+            raise ValueError("Corpus is not set")
+        return self._corpus
 
     @property
     def max_length(self):
         """
-        Get the maximum length of the document.
+        Get the maximum length of the corpus.
         """
         return self._max_length
 
     @property
     def lang(self):
         """
-        Get the language of the document.
+        Get the language of the corpus.
         """
         return self._lang
 
-    @document.setter
-    def document(self, document: Document):
+    @corpus.setter
+    def corpus(self, corpus: Corpus):
         """
-        Set the document.
+        Set the corpus.
         """
-        if not isinstance(document, Document):
-            raise ValueError("Document must be of type Document")
-        self._document = document
-        self._spacy_doc = None  # Reset spacy_doc when a new document is set
+        if not isinstance(corpus, Corpus):
+            raise ValueError("Corpus must be of type Corpus")
+        self._corpus = corpus
+        self._spacy_doc = None  # Reset spacy_doc when a new corpus is set
         self._lemma = {}
         self._pos = {}
         self._pos_ = {}
@@ -88,7 +88,7 @@ class Text:
     @max_length.setter
     def max_length(self, max_length: int):
         """
-        Set the maximum length of the document.
+        Set the maximum length of the corpus.
         """
         if not isinstance(max_length, int):
             raise ValueError("max_length must be an integer")
@@ -99,7 +99,7 @@ class Text:
     @lang.setter
     def lang(self, lang: str):
         """
-        Set the language of the document.
+        Set the language of the corpus.
         """
         if not isinstance(lang, str):
             raise ValueError("lang must be a string")
@@ -107,14 +107,15 @@ class Text:
         self.process_tokens()
 
     def make_spacy_doc(self):
-        if self._document is None:
-            raise ValueError("Document is not set")
-        text = self.process_text(self._document.text)
-        metadata = self._document.metadata
+        if self._corpus is None:
+            raise ValueError("Corpus is not set")
+        text = ""
+        for document in self._corpus.documents:
+            text += self.process_text(document.text) + " \n"
+            metadata = document.metadata
         nlp = spacy.load(self._lang)
         nlp.max_length = self._max_length
         self._spacy_doc = nlp(text)
-        self._spacy_doc.user_data["metadata"] = metadata
         return self._spacy_doc
 
     def process_text(self, text: str) -> str:

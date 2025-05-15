@@ -12,22 +12,21 @@ logger = logging.getLogger(__name__)
 
 
 @pytest.fixture
-def document_fixture():
+def corpus_fixture():
     folder_path = resource_filename("src.crisp_t.resources", "/")
     read_data = ReadData()
     read_data.read_source(folder_path)
     corpus = read_data.create_corpus(name="Test Corpus", description="This is a test corpus")
-    document = corpus.documents[0]
-    return document
+    return corpus
 
 
-def test_text_initialization(document_fixture):
-    text = Text(document=document_fixture)
-    assert text.document == document_fixture, "Document should be set correctly"
+def test_text_initialization(corpus_fixture):
+    text = Text(corpus=corpus_fixture)
+    assert text.corpus == corpus_fixture, "Corpus should be set correctly"
 
 
-def test_common_words(document_fixture):
-    text = Text(document=document_fixture)
+def test_common_words(corpus_fixture):
+    text = Text(corpus=corpus_fixture)
     text.make_spacy_doc()
     common_words = text.common_words(index=5)
     print(
@@ -40,8 +39,8 @@ def test_common_words(document_fixture):
     assert all(isinstance(item, tuple) and len(item) == 2 for item in common_words), "Each item should be a tuple of (word, count)"
     assert all(isinstance(item[0], str) and isinstance(item[1], int) for item in common_words), "Each tuple should contain a string and an integer"
 
-def test_common_nouns(document_fixture):
-    text = Text(document=document_fixture)
+def test_common_nouns(corpus_fixture):
+    text = Text(corpus=corpus_fixture)
     text.make_spacy_doc()
     common_nouns = text.common_nouns(index=5)
     print(
@@ -54,8 +53,8 @@ def test_common_nouns(document_fixture):
     assert all(isinstance(item, tuple) and len(item) == 2 for item in common_nouns), "Each item should be a tuple of (word, count)"
     assert all(isinstance(item[0], str) and isinstance(item[1], int) for item in common_nouns), "Each tuple should contain a string and an integer"
 
-def test_common_verbs(document_fixture):
-    text = Text(document=document_fixture)
+def test_common_verbs(corpus_fixture):
+    text = Text(corpus=corpus_fixture)
     text.make_spacy_doc()
     common_verbs = text.common_verbs(index=3)
     print(
@@ -68,8 +67,8 @@ def test_common_verbs(document_fixture):
     assert all(isinstance(item, tuple) and len(item) == 2 for item in common_verbs), "Each item should be a tuple of (word, count)"
     assert all(isinstance(item[0], str) and isinstance(item[1], int) for item in common_verbs), "Each tuple should contain a string and an integer"
 
-def test_sentences_with_common_nouns(document_fixture):
-    text = Text(document=document_fixture)
+def test_sentences_with_common_nouns(corpus_fixture):
+    text = Text(corpus=corpus_fixture)
     text.make_spacy_doc()
     sentences_with_common_nouns = text.sentences_with_common_nouns(index=5)
     print(
@@ -80,8 +79,8 @@ def test_sentences_with_common_nouns(document_fixture):
     assert len(sentences_with_common_nouns) > 0, "Sentences with common nouns should contain at least one item"
     assert all(isinstance(item, str) for item in sentences_with_common_nouns), "Each item should be a string"
 
-def test_spans_with_common_nouns(document_fixture):
-    text = Text(document=document_fixture)
+def test_spans_with_common_nouns(corpus_fixture):
+    text = Text(corpus=corpus_fixture)
     text.make_spacy_doc()
     spans_with_common_nouns = text.spans_with_common_nouns(word="evaluation")
     print(
@@ -91,8 +90,8 @@ def test_spans_with_common_nouns(document_fixture):
     assert isinstance(spans_with_common_nouns, list), "Spans with common nouns should be a list"
 
 
-def test_dimensions(document_fixture):
-    text = Text(document=document_fixture)
+def test_dimensions(corpus_fixture):
+    text = Text(corpus=corpus_fixture)
     text.make_spacy_doc()
     dimensions = text.dimensions(word="theory", index=3)
     print(
@@ -104,8 +103,8 @@ def test_dimensions(document_fixture):
     assert all(isinstance(item, tuple) and len(item) == 2 for item in dimensions), "Each item should be a tuple of (word, count)"
     assert all(isinstance(item[0], str) and isinstance(item[1], int) for item in dimensions), "Each tuple should contain a string and an integer"
 
-def test_attributes(document_fixture):
-    text = Text(document=document_fixture)
+def test_attributes(corpus_fixture):
+    text = Text(corpus=corpus_fixture)
     text.make_spacy_doc()
     attributes = text.attributes(word="fit", index=3)
     print(
@@ -117,8 +116,8 @@ def test_attributes(document_fixture):
     assert all(isinstance(item, tuple) and len(item) == 2 for item in attributes), "Each item should be a tuple of (word, count)"
     assert all(isinstance(item[0], str) and isinstance(item[1], int) for item in attributes), "Each tuple should contain a string and an integer"
 
-def test_generate_summary(document_fixture):
-    text = Text(document=document_fixture)
+def test_generate_summary(corpus_fixture):
+    text = Text(corpus=corpus_fixture)
     text.make_spacy_doc()
     summary = text.generate_summary(weight=10)
     print(
