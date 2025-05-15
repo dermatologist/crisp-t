@@ -99,7 +99,7 @@ ml = [
 # awesome = pyscaffoldext.awesome.extension:AwesomeExtension
 
 [project.scripts]
-crisp-t = "crisp-t.main:main_routine"
+crisp-t = "crisp_t.cli:main"
 
 [tool.setuptools]
 zip-safe = false
