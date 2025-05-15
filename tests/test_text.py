@@ -146,3 +146,12 @@ def test_print_categories(corpus_fixture):
     assert all(
         isinstance(item, str) for item in categories
     ), "Each item should be a string"
+
+def test_category_basket(corpus_fixture):
+    text = Text(corpus=corpus_fixture)
+    text.make_spacy_doc()
+    category_basket = text.category_basket()
+    print("Category basket:", category_basket)
+    # Check if the category basket is returned as expected
+    assert isinstance(category_basket, list), "Category basket should be a list"
+    assert len(category_basket) > 0, "Category basket should contain at least one item"

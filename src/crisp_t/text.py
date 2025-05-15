@@ -26,6 +26,7 @@ from textacy import preprocessing
 from .model import Corpus
 from .utils import QRUtils
 
+
 class Text:
 
     def __init__(
@@ -278,11 +279,11 @@ class Text:
                 spans.append(span.text)
         return list(dict.fromkeys(spans))  # remove duplicates
 
-    def print_categories(self, num=10):
-        textacy.set_doc_extensions("extract.bags") # type: ignore
-        if self._spacy_doc is None:
-            self._spacy_doc = self.make_spacy_doc()
-        bot = self._spacy_doc._.to_bag_of_terms(
+    def print_categories(self, spacy_doc=None, num=10):
+        textacy.set_doc_extensions("extract.bags")  # type: ignore
+        if spacy_doc is None:
+            spacy_doc = self.make_spacy_doc()
+        bot = spacy_doc._.to_bag_of_terms(
             by="lemma_",
             weighting="freq",
             ngs=(1, 2, 3),
@@ -301,3 +302,18 @@ class Text:
         QRUtils.print_table(output)
         print("---------------------------\n")
         return to_return
+
+    def category_basket(self, num=10):
+        item_basket = []
+        spacy_docs, ids = self.make_each_document_into_spacy_doc()
+        for spacy_doc in spacy_docs:
+            item_basket.append(self.print_categories(spacy_doc, num))
+        return item_basket
+        # Example return:
+        # [['GT', 'Strauss', 'coding', 'ground', 'theory', 'seminal', 'Corbin', 'code',
+        # 'structure', 'ground theory'], ['category', 'theory', 'comparison', 'incident',
+        # 'GT', 'structure', 'coding', 'Classical', 'Grounded', 'Theory'],
+        # ['theory', 'GT', 'evaluation'], ['open', 'coding', 'category', 'QRMine',
+        # 'open coding', 'researcher', 'step', 'data', 'break', 'analytically'],
+        # ['ground', 'theory', 'GT', 'ground theory'], ['category', 'comparison', 'incident',
+        # 'category comparison', 'Theory', 'theory']]
