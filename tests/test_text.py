@@ -133,3 +133,16 @@ def test_generate_summary(corpus_fixture):
     assert all(
         isinstance(item, str) for item in summary
     ), "Each item should be a string"
+
+
+def test_print_categories(corpus_fixture):
+    text = Text(corpus=corpus_fixture)
+    text.make_spacy_doc()
+    categories = text.print_categories()
+    print("Categories:", categories)
+    # Check if the categories are returned as expected
+    assert isinstance(categories, list), "Categories should be a list"
+    assert len(categories) > 0, "Categories should contain at least one item"
+    assert all(
+        isinstance(item, str) for item in categories
+    ), "Each item should be a string"

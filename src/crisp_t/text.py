@@ -19,12 +19,12 @@ along with crisp-t.  If not, see <https://www.gnu.org/licenses/>.
 
 import operator
 from typing import Optional
-
 import spacy
+import textacy
 from textacy import preprocessing
 
 from .model import Corpus
-
+from .utils import QRUtils
 
 class Text:
 
@@ -277,3 +277,27 @@ class Text:
             for span in self.spans_with_common_nouns(key):
                 spans.append(span.text)
         return list(dict.fromkeys(spans))  # remove duplicates
+
+    def print_categories(self, num=10):
+        textacy.set_doc_extensions("extract.bags") # type: ignore
+        if self._spacy_doc is None:
+            self._spacy_doc = self.make_spacy_doc()
+        bot = self._spacy_doc._.to_bag_of_terms(
+            by="lemma_",
+            weighting="freq",
+            ngs=(1, 2, 3),
+            ents=True,
+            ncs=True,
+            dedupe=True,
+        )
+        categories = sorted(bot.items(), key=lambda x: x[1], reverse=True)[:num]
+        output = []
+        to_return = []
+        print("\n---Categories with count---")
+        output.append(("CATEGORY", "WEIGHT"))
+        for category, count in categories:
+            output.append((category, str(count)))
+            to_return.append(category)
+        QRUtils.print_table(output)
+        print("---------------------------\n")
+        return to_return
