@@ -145,10 +145,10 @@ class Text:
                 continue
             if len(token.text) < 3 or token.text.isupper():
                 continue
-            self._lemma[token] = token.lemma_
-            self._pos[token] = token.pos_
-            self._pos_[token] = token.pos
-            self._word[token] = token.lemma_
+            self._lemma[token.text] = token.lemma_
+            self._pos[token.text] = token.pos_
+            self._pos_[token.text] = token.pos
+            self._word[token.text] = token.lemma_
             self._sentiment = token.sentiment
             self._tag = token.tag_
             self._dep = token.dep_
@@ -207,7 +207,7 @@ class Text:
         for span in self._spacy_doc.sents:
             # go from the start to the end of each span, returning each token in the sentence
             # combine each token using join()
-            for token in span:
+            for token in span.text.split():
                 if word in self._word.get(token, " "):
                     spans.append(span)
         return spans
@@ -216,7 +216,7 @@ class Text:
         _spans = self.spans_with_common_nouns(word)
         _ad = {}
         for span in _spans:
-            for token in span:
+            for token in span.text.split():
                 if self._pos.get(token, None) == "ADJ":
                     _ad[self._word.get(token)] = _ad.get(self._word.get(token), 0) + 1
                 if self._pos.get(token, None) == "ADV":
