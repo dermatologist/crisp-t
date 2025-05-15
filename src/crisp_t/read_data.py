@@ -51,6 +51,36 @@ class ReadData:
             raise ValueError("No corpus found. Please create a corpus first.")
         return self._corpus
 
+    @property
+    def documents(self):
+        """
+        Get the documents.
+        """
+        if not self._documents:
+            raise ValueError("No documents found. Please read data first.")
+        return self._documents
+
+    @corpus.setter
+    def corpus(self, value):
+        """
+        Set the corpus.
+        """
+        if not isinstance(value, Corpus):
+            raise ValueError("Value must be a Corpus object.")
+        self._corpus = value
+
+    @documents.setter
+    def documents(self, value):
+        """
+        Set the documents.
+        """
+        if not isinstance(value, list):
+            raise ValueError("Value must be a list of Document objects.")
+        for document in value:
+            if not isinstance(document, Document):
+                raise ValueError("Value must be a list of Document objects.")
+        self._documents = value
+
     def create_corpus(self, name=None, description=None):
         """
         Create a corpus from the documents.
@@ -66,6 +96,14 @@ class ReadData:
             description=description,
         )
         return self._corpus
+
+    def get_documents_from_corpus(self):
+        """
+        Get the documents from the corpus.
+        """
+        if not self._corpus:
+            raise ValueError("No corpus found. Please create a corpus first.")
+        return self._corpus.documents
 
     # write corpus to json file
     def write_corpus_to_json(self, file_name="corpus.json"):
