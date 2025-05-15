@@ -201,3 +201,40 @@ class Cluster:
             contents = pd.Series(self._processed_docs)
             sent_topics_df = pd.concat([sent_topics_df, contents], axis=1)
         return sent_topics_df.reset_index(drop=False)
+
+    # https://www.machinelearningplus.com/nlp/topic-modeling-visualization-how-to-present-results-lda-models/
+    def most_representative_docs(self):
+        sent_topics_df = self.format_topics_sentences()
+        sent_topics_sorteddf_mallet = pd.DataFrame()
+        sent_topics_outdf_grpd = sent_topics_df.groupby("Dominant_Topic")
+
+        for i, grp in sent_topics_outdf_grpd:
+            sent_topics_sorteddf_mallet = pd.concat(
+                [
+                    sent_topics_sorteddf_mallet,
+                    grp.sort_values(["Perc_Contribution"], ascending=False).head(1),
+                ],
+                axis=0,
+            )
+
+        return sent_topics_sorteddf_mallet
+
+    def topics_per_document(self, start=0, end=1):
+        # Get main topic in each document
+        if self._bag_of_words is None:
+            raise ValueError(
+                "Bag of words is not available. Ensure 'process()' has been called successfully."
+            )
+        if self._lda_model is None:
+            self.build_lda_model()
+        if self._lda_model is None:
+            raise ValueError("LDA model could not be built.")
+        corpus_sel = self._bag_of_words[start:end]
+        dominant_topics = []
+        topic_percentages = []
+        for i, corp in enumerate(corpus_sel):
+            topic_percs = self._lda_model[corp]
+            dominant_topic = sorted(topic_percs, key=lambda x: x[1], reverse=True)[0][0]
+            dominant_topics.append((i, dominant_topic))
+            topic_percentages.append(topic_percs)
+        return (dominant_topics, topic_percentages)
