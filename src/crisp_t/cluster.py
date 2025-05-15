@@ -238,3 +238,55 @@ class Cluster:
             dominant_topics.append((i, dominant_topic))
             topic_percentages.append(topic_percs)
         return (dominant_topics, topic_percentages)
+
+    def doc_vectorizer(self, doc, model):
+        doc_vector = []
+        num_words = 0
+        for word in doc:
+            try:
+                if num_words == 0:
+                    doc_vector = model.wv[word]
+                else:
+                    doc_vector = np.add(doc_vector, model.wv[word])
+                num_words += 1
+            except:
+                # pass if word is not found
+                pass
+
+        return np.asarray(doc_vector) / num_words
+
+    def vectorizer(self, docs, titles, num_clusters=4, visualize=False):
+        X = []
+        T = []
+        if self._word2vec_model is None:
+            self._word2vec_model = Word2Vec(docs, min_count=20, vector_size=50)
+        for index, doc in enumerate(docs):
+            X.append(self.doc_vectorizer(doc, self._word2vec_model))
+            T.append(titles[index])
+        print("Averaged text w2v representstion:")
+        print(X[0])
+        _X = np.array(X)
+        print(_X.shape)
+        tsne = TSNE(n_components=2, random_state=0)
+        tsne_model = tsne.fit_transform(_X)
+        # Obtain the prediction
+        kmeans = KMeans(n_clusters=num_clusters, random_state=0)
+        y_pred = kmeans.fit(tsne_model).predict(tsne_model)
+        data = pd.DataFrame(
+            np.concatenate([tsne_model, y_pred[:, None]], axis=1),
+            columns=["x", "y", "colour"],
+        )
+        # Add the titles to the DataFrame
+        data["title"] = T
+        if not visualize:
+            print(
+                tabulate(
+                    data, # type: ignore
+                    headers="keys",
+                    tablefmt="psql",
+                    showindex=False,
+                    numalign="left",
+                    stralign="left",
+                )
+            )
+        return data
