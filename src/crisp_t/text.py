@@ -26,7 +26,9 @@ from typing import Optional
 
 class Text:
 
-    def __init__(self, corpus: Optional[Corpus] = None, lang="en_core_web_sm", max_length=1100000):
+    def __init__(
+        self, corpus: Optional[Corpus] = None, lang="en_core_web_sm", max_length=1100000
+    ):
         self._corpus = corpus
         self._lang = lang
         self._max_length = max_length
