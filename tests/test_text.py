@@ -155,3 +155,15 @@ def test_category_basket(corpus_fixture):
     # Check if the category basket is returned as expected
     assert isinstance(category_basket, list), "Category basket should be a list"
     assert len(category_basket) > 0, "Category basket should contain at least one item"
+
+
+def test_filter_documents(corpus_fixture):
+    text = Text(corpus=corpus_fixture)
+    text.make_spacy_doc()
+    filtered_documents = text.filter_documents(metadata_key='file_name', metadata_value='interview-1.txt')
+    print("Filtered documents:", filtered_documents)
+    # Check if the filtered documents are returned as expected
+    assert isinstance(filtered_documents, list), "Filtered documents should be a list"
+    assert len(filtered_documents) > 0, "Filtered documents should contain at least one item"
+    assert text.initial_document_count > 4
+    assert text.document_count() < text.initial_document_count

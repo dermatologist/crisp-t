@@ -45,6 +45,7 @@ class Text:
         self._dep = {}
         self._prob = {}
         self._idx = {}
+        self._initial_document_count = len(self._corpus.documents) if corpus else 0 # type: ignore
         self.process_tokens()
 
     @property
@@ -69,6 +70,13 @@ class Text:
         Get the language of the corpus.
         """
         return self._lang
+
+    @property
+    def initial_document_count(self):
+        """
+        Get the initial document count.
+        """
+        return self._initial_document_count
 
     @corpus.setter
     def corpus(self, corpus: Corpus):
@@ -258,6 +266,30 @@ class Text:
                     # if self._pos.get(token, None) == 'VERB':
                     # _ad[self._word.get(token)] = _ad.get(self._word.get(token), 0) + 1
         return sorted(_ad.items(), key=operator.itemgetter(1), reverse=True)[:index]
+
+    # filter documents in the corpus based on metadata
+    def filter_documents(self, metadata_key, metadata_value):
+        """
+        Filter documents in the corpus based on metadata.
+        """
+        if self._corpus is None:
+            raise ValueError("Corpus is not set")
+        filtered_documents = []
+        for document in self._corpus.documents:
+            if document.metadata.get(metadata_key) == metadata_value:
+                filtered_documents.append(document)
+        self._corpus.documents = filtered_documents
+        return filtered_documents
+
+    # get the count of documents in the corpus
+    def document_count(self):
+        """
+        Get the count of documents in the corpus.
+        """
+        if self._corpus is None:
+            raise ValueError("Corpus is not set")
+        return len(self._corpus.documents)
+
 
     def generate_summary(self, weight=10):
         """[summary]
