@@ -35,6 +35,7 @@ class Cluster:
 
     def __init__(self, corpus: Optional[Corpus] = None):
         self._corpus = corpus
+        self._ids = []
         self._lda_model: Optional[LdaModel] = None
         self._word2vec_model = None
         self._clusters = None
@@ -57,7 +58,8 @@ class Cluster:
 
         # Create a Text object
         text = Text(corpus=self._corpus)
-        spacy_docs = text.make_each_document_into_spacy_doc()
+        spacy_docs, ids = text.make_each_document_into_spacy_doc()
+        self._ids = ids
         self._processed_docs = [
             self.tokenize(doc) for doc in spacy_docs if doc is not None
         ]
@@ -107,3 +109,30 @@ class Cluster:
             for token in spacy_doc
             if not token.is_stop and not token.is_punct and not token.is_space
         ]
+
+    def print_clusters(self, verbose=False):
+        if self._lda_model is None:
+            self.build_lda_model()
+        if self._lda_model is None:
+            raise ValueError("LDA model could not be built.")
+
+        clusters = {}
+        if verbose:
+            print("\n Main topic in doc: \n")
+
+        if self._processed_docs is None:
+            raise ValueError("Processed documents are not available.")
+        for i, doc in enumerate(
+            self._processed_docs
+        ):  # Changed from get_processed_docs() to _documents
+            if self._dictionary is None:
+                self._dictionary = corpora.Dictionary(self._processed_docs)
+            bow = self._dictionary.doc2bow(doc)
+            topic = self._lda_model.get_document_topics(bow)
+            clusters[self._ids[i]] = topic
+
+        if verbose:
+            for doc_id, topic in clusters.items():
+                print(f"Document ID: {doc_id}, Topic: {topic}")
+
+        return clusters

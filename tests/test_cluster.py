@@ -28,3 +28,9 @@ def test_print_topics(corpus_fixture):
     cluster.build_lda_model()
     topics = cluster.print_topics(num_words=5, verbose=False)
     assert len(topics) == cluster._num_topics, "Number of topics should match the specified number"
+
+def test_print_clusters(corpus_fixture):
+    cluster = Cluster(corpus=corpus_fixture)
+    cluster.build_lda_model()
+    clusters = cluster.print_clusters(verbose=True)
+    assert len(clusters) == cluster._num_topics, "Number of clusters should match the specified number"

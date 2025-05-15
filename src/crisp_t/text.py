@@ -126,6 +126,7 @@ class Text:
         if self._corpus is None:
             raise ValueError("Corpus is not set")
         spacy_docs = []
+        ids = []
         for document in self._corpus.documents:
             text = self.process_text(document.text)
             metadata = document.metadata
@@ -133,7 +134,8 @@ class Text:
             nlp.max_length = self._max_length
             spacy_doc = nlp(text)
             spacy_docs.append(spacy_doc)
-        return spacy_docs
+            ids.append(document.id)
+        return spacy_docs, ids
 
     def process_text(self, text: str) -> str:
         """
