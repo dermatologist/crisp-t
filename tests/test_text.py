@@ -83,7 +83,7 @@ def test_sentences_with_common_nouns(document_fixture):
 def test_spans_with_common_nouns(document_fixture):
     text = Text(document=document_fixture)
     text.make_spacy_doc()
-    spans_with_common_nouns = text.spans_with_common_nouns(word="data")
+    spans_with_common_nouns = text.spans_with_common_nouns(word="evaluation")
     print(
         "Spans with common nouns:", spans_with_common_nouns
     )
