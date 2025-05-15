@@ -122,6 +122,19 @@ class Text:
         self._spacy_doc = nlp(text)
         return self._spacy_doc
 
+    def make_each_document_into_spacy_doc(self):
+        if self._corpus is None:
+            raise ValueError("Corpus is not set")
+        spacy_docs = []
+        for document in self._corpus.documents:
+            text = self.process_text(document.text)
+            metadata = document.metadata
+            nlp = spacy.load(self._lang)
+            nlp.max_length = self._max_length
+            spacy_doc = nlp(text)
+            spacy_docs.append(spacy_doc)
+        return spacy_docs
+
     def process_text(self, text: str) -> str:
         """
         Process the text by removing unwanted characters and normalizing it.
