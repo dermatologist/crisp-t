@@ -1,27 +1,29 @@
 """
-Copyright (C) 2020 Bell Eapen
+Copyright (C) 2025 Bell Eapen
 
-This file is part of qrmine.
+This file is part of crisp-t.
 
-qrmine is free software: you can redistribute it and/or modify
+crisp-t is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-qrmine is distributed in the hope that it will be useful,
+crisp-t is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with qrmine.  If not, see <http://www.gnu.org/licenses/>.
+along with crisp-t.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-import spacy
 import operator
-from textacy import preprocessing
-from .model import Corpus
 from typing import Optional
+
+import spacy
+from textacy import preprocessing
+
+from .model import Corpus
 
 
 class Text:
