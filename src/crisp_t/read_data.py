@@ -22,6 +22,7 @@ import os
 import logging
 import requests
 import json
+import pandas as pd
 from pypdf import PdfReader
 from .model import Document, Corpus
 
@@ -182,3 +183,15 @@ class ReadData:
         """
         Combine duplicate topics using Dict
         """
+
+    def corpus_as_dataframe(self):
+        """
+        Convert the corpus to a pandas dataframe.
+        """
+        if not self._corpus:
+            raise ValueError("No corpus found. Please create a corpus first.")
+        data = []
+        for document in self._corpus.documents:
+            data.append(document.model_dump())
+        df = pd.DataFrame(data)
+        return df

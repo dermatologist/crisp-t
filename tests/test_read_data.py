@@ -38,3 +38,9 @@ def test_corpus_is_saved_as_json(read_data_fixture):
     # clean up
     os.remove(file_path)
     assert not os.path.exists(file_path), "Corpus JSON file should be deleted"
+
+def test_corpus_as_dataframe(read_data_fixture):
+    corpus = read_data_fixture.create_corpus(name="Test Corpus", description="This is a test corpus")
+    df = read_data_fixture.corpus_as_dataframe()
+    assert df is not None, "DataFrame should not be None"
+    assert len(df) > 0, "DataFrame should have rows"
