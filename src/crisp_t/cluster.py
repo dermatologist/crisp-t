@@ -136,3 +136,68 @@ class Cluster:
                 print(f"Document ID: {doc_id}, Topic: {topic}")
 
         return clusters
+
+    def format_topics_sentences(self, visualize=False):
+        # Init output
+        sent_topics_df = pd.DataFrame()
+
+        # Get main topic in each document
+        if self._bag_of_words is None:
+            raise ValueError(
+                "Bag of words is not available. Ensure 'process()' has been called successfully."
+            )
+        if self._lda_model is None:
+            self.build_lda_model()
+        if self._lda_model is None:
+            raise ValueError("LDA model could not be built.")
+        for i, row_list in enumerate(self._lda_model[self._bag_of_words]):
+            row = row_list[0] if self._lda_model.per_word_topics else row_list
+            # print(row)
+            if isinstance(row, list):
+                row = sorted(row, key=lambda x: (x[1]), reverse=True)
+            elif (
+                isinstance(row, tuple)
+                and len(row) == 2
+                and all(isinstance(x, (int, float)) for x in row)
+            ):
+                row = [row]
+            else:
+                row = []
+            # Get the Dominant topic, Perc Contribution and Keywords for each document
+            for j, (topic_num, prop_topic) in enumerate(row):
+                if j == 0:  # => dominant topic
+                    wp = self._lda_model.show_topic(topic_num)
+                    topic_keywords = ", ".join([word for word, prop in wp])
+                    new_row = pd.DataFrame(
+                        [
+                            [
+                                self._ids[i],
+                                int(topic_num),
+                                round(prop_topic, 4),
+                                topic_keywords,
+                            ]
+                        ],
+                        columns=[
+                            "Title",
+                            "Dominant_Topic",
+                            "Perc_Contribution",
+                            "Topic_Keywords",
+                        ],
+                    )
+                    sent_topics_df = pd.concat(
+                        [sent_topics_df, new_row], ignore_index=True
+                    )
+                else:
+                    break
+        sent_topics_df.columns = [
+            "Title",
+            "Dominant_Topic",
+            "Perc_Contribution",
+            "Topic_Keywords",
+        ]
+
+        # Add original text to the end of the output
+        if visualize:
+            contents = pd.Series(self._processed_docs)
+            sent_topics_df = pd.concat([sent_topics_df, contents], axis=1)
+        return sent_topics_df.reset_index(drop=False)

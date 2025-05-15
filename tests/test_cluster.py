@@ -23,14 +23,29 @@ def test_build_lda_model(corpus_fixture):
         cluster._lda_model.num_topics == cluster._num_topics
     ), "Number of topics in LDA model should match the specified number"
 
+
 def test_print_topics(corpus_fixture):
     cluster = Cluster(corpus=corpus_fixture)
     cluster.build_lda_model()
     topics = cluster.print_topics(num_words=5, verbose=False)
-    assert len(topics) == cluster._num_topics, "Number of topics should match the specified number"
+    assert (
+        len(topics) == cluster._num_topics
+    ), "Number of topics should match the specified number"
+
 
 def test_print_clusters(corpus_fixture):
     cluster = Cluster(corpus=corpus_fixture)
     cluster.build_lda_model()
     clusters = cluster.print_clusters(verbose=True)
-    assert len(clusters) == cluster._num_topics, "Number of clusters should match the specified number"
+    assert (
+        len(clusters) == cluster._num_topics
+    ), "Number of clusters should match the specified number"
+
+
+def test_format_topics_sentences(corpus_fixture):
+    cluster = Cluster(corpus=corpus_fixture)
+    cluster.build_lda_model()
+    topics = cluster.print_topics(num_words=5, verbose=False)
+    pandas_df = cluster.format_topics_sentences(topics)
+    # print pandas dataframe using tabulate
+    print(pandas_df.head())
