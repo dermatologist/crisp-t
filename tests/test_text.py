@@ -1,25 +1,11 @@
-import pytest
-import os
-import json
 import logging
-from src.crisp_t.read_data import ReadData
 from src.crisp_t.text import Text
-from pkg_resources import resource_filename
 
 # setup logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-@pytest.fixture
-def corpus_fixture():
-    folder_path = resource_filename("src.crisp_t.resources", "/")
-    read_data = ReadData()
-    read_data.read_source(folder_path)
-    corpus = read_data.create_corpus(
-        name="Test Corpus", description="This is a test corpus"
-    )
-    return corpus
 
 
 def test_text_initialization(corpus_fixture):

@@ -1,20 +1,12 @@
-import pytest
 import os
 import json
 import logging
-from src.crisp_t.read_data import ReadData
 from pkg_resources import resource_filename
 
 # setup logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-@pytest.fixture
-def read_data_fixture():
-    folder_path = resource_filename("src.crisp_t.resources", "/")
-    read_data = ReadData()
-    read_data.read_source(folder_path)
-    return read_data
 
 def test_corpus_not_none(read_data_fixture):
     corpus = read_data_fixture.create_corpus(name="Test Corpus", description="This is a test corpus")
