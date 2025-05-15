@@ -210,6 +210,25 @@ class Text:
                 _words[value] = _words.get(value, 0) + 1
         return sorted(_words.items(), key=operator.itemgetter(1), reverse=True)[:index]
 
+    def print_coding_dictionary(self, num=10, top_n=5):
+        output = []
+        output.append(("CATEGORY", "PROPERTY", "DIMENSION"))
+        verbs = self.common_verbs(num)
+        _verbs = []
+        for verb, freq in verbs:
+            _verbs.append(verb)
+        for verb, freq in verbs:
+            for attribute, f2 in self.attributes(verb, top_n):
+                for dimension, f3 in self.dimensions(attribute, top_n):
+                    if dimension not in _verbs:
+                        output.append((verb, attribute, dimension))
+                        verb = "..."
+                        attribute = "..."
+        print("\n---Coding Dictionary---")
+        QRUtils.print_table(output)
+        print("---------------------------\n")
+        return output
+
     def sentences_with_common_nouns(self, index=10):
         _nouns = self.common_nouns(index)
         # Let's look at the sentences

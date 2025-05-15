@@ -180,3 +180,10 @@ def test_category_association(corpus_fixture):
     _category_basket = text.category_basket()
     category_association = text.category_association()
     print("Category association:", category_association)
+
+
+def test_print_coding_dictionary(corpus_fixture):
+    text = Text(corpus=corpus_fixture)
+    text.make_spacy_doc()
+    coding_dictionary = text.print_coding_dictionary()
+    assert "theory" in str(coding_dictionary)
