@@ -147,6 +147,7 @@ def test_print_categories(corpus_fixture):
         isinstance(item, str) for item in categories
     ), "Each item should be a string"
 
+
 def test_category_basket(corpus_fixture):
     text = Text(corpus=corpus_fixture)
     text.make_spacy_doc()
@@ -160,10 +161,22 @@ def test_category_basket(corpus_fixture):
 def test_filter_documents(corpus_fixture):
     text = Text(corpus=corpus_fixture)
     text.make_spacy_doc()
-    filtered_documents = text.filter_documents(metadata_key='file_name', metadata_value='interview-1.txt')
+    filtered_documents = text.filter_documents(
+        metadata_key="file_name", metadata_value="interview-1.txt"
+    )
     print("Filtered documents:", filtered_documents)
     # Check if the filtered documents are returned as expected
     assert isinstance(filtered_documents, list), "Filtered documents should be a list"
-    assert len(filtered_documents) > 0, "Filtered documents should contain at least one item"
+    assert (
+        len(filtered_documents) > 0
+    ), "Filtered documents should contain at least one item"
     assert text.initial_document_count > 4
     assert text.document_count() < text.initial_document_count
+
+
+def test_category_association(corpus_fixture):
+    text = Text(corpus=corpus_fixture)
+    text.make_spacy_doc()
+    _category_basket = text.category_basket()
+    category_association = text.category_association()
+    print("Category association:", category_association)

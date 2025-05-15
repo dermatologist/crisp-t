@@ -22,9 +22,15 @@ from typing import Optional
 import spacy
 import textacy
 from textacy import preprocessing
+import pandas as pd
+from mlxtend.preprocessing import TransactionEncoder
+from mlxtend.frequent_patterns import apriori
+from mlxtend.frequent_patterns import association_rules
 
 from .model import Corpus
 from .utils import QRUtils
+
+textacy.set_doc_extensions("extract.bags")  # type: ignore
 
 
 class Text:
@@ -45,7 +51,7 @@ class Text:
         self._dep = {}
         self._prob = {}
         self._idx = {}
-        self._initial_document_count = len(self._corpus.documents) if corpus else 0 # type: ignore
+        self._initial_document_count = len(self._corpus.documents) if corpus else 0  # type: ignore
         self.process_tokens()
 
     @property
@@ -290,7 +296,6 @@ class Text:
             raise ValueError("Corpus is not set")
         return len(self._corpus.documents)
 
-
     def generate_summary(self, weight=10):
         """[summary]
 
@@ -312,7 +317,6 @@ class Text:
         return list(dict.fromkeys(spans))  # remove duplicates
 
     def print_categories(self, spacy_doc=None, num=10):
-        textacy.set_doc_extensions("extract.bags")  # type: ignore
         if spacy_doc is None:
             spacy_doc = self.make_spacy_doc()
         bot = spacy_doc._.to_bag_of_terms(
@@ -349,3 +353,20 @@ class Text:
         # 'open coding', 'researcher', 'step', 'data', 'break', 'analytically'],
         # ['ground', 'theory', 'GT', 'ground theory'], ['category', 'comparison', 'incident',
         # 'category comparison', 'Theory', 'theory']]
+
+    def category_association(self, num=10):
+        """Generates the support for itemsets
+
+        Args:
+            num (int, optional): number of categories to generate for each doc in corpus. . Defaults to 10.
+        """
+        basket = self.category_basket(num)
+        te = TransactionEncoder()
+        te_ary = te.fit(basket).transform(basket)
+        df = pd.DataFrame(te_ary, columns=te.columns_)  # type: ignore
+        return apriori(df, min_support=0.6, use_colnames=True)
+        # Example
+        #    support      itemsets
+        # 0  0.666667          (GT)
+        # 1  0.833333      (theory)
+        # 2  0.666667  (theory, GT)
