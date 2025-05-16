@@ -27,6 +27,7 @@ import requests
 from pypdf import PdfReader
 
 from .model import Corpus, Document
+from .csv import Csv
 
 # Set up logging
 logging.basicConfig(
@@ -147,13 +148,21 @@ class ReadData:
             logger.info("Corpus read from %s", file_name)
         return self._corpus
 
-    def read_csv(self, file_name, comma_separated_ignore_words=None, comma_separated_text_columns=None, id_column=None):
+    def read_csv(self, file_name, comma_separated_ignore_words=None, comma_separated_text_columns="", id_column="", numeric=False):
         """
         Read the corpus from a csv file.
         """
         if not os.path.exists(file_name):
             raise ValueError("File not found: %s" % file_name)
         df = pd.read_csv(file_name)
+        if numeric:
+            text_columns = comma_separated_text_columns.split(",")
+            # remove text columns from the dataframe
+            for column in text_columns:
+                if column in df.columns:
+                    df.drop(column, axis=1, inplace=True)
+            csv = Csv(df, comma_separated_text_columns=comma_separated_text_columns, id_column=id_column)
+            return csv
         if comma_separated_text_columns:
             text_columns = comma_separated_text_columns.split(",")
         else:
@@ -174,7 +183,7 @@ class ReadData:
             self._content += read_from_file
             _document = Document(
                 text=read_from_file,
-                metadata={"source": file_name, "file_name": file_name, "row": index, "id": row[id_column] if id_column else ""},
+                metadata={"source": file_name, "file_name": file_name, "row": index, "id": row[id_column] if id_column is not "" else ""},
                 id=str(index),
                 score=0.0,
                 name="",

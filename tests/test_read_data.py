@@ -43,3 +43,11 @@ def test_read_csv(read_data_fixture):
     assert len(read_data_fixture.documents) > 0, "Documents should be read from CSV"
     assert all(doc is not None for doc in read_data_fixture.documents), "All documents should be non-None"
     read_data_fixture.pretty_print()
+
+def test_read_csv_numeric(read_data_fixture):
+    folder_path = resource_filename("src.crisp_t.resources", "food_coded.csv")
+    csv = read_data_fixture.read_csv(folder_path, comma_separated_text_columns="comfort_food,comfort_food_reasons,diet_current", numeric=True)
+    df = csv.df
+    print(df.head())
+    assert df is not None, "DataFrame should not be None"
+    assert len(df) > 0, "DataFrame should have rows"
