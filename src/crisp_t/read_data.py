@@ -169,12 +169,7 @@ class ReadData:
             for column in text_columns:
                 if column in df.columns:
                     df.drop(column, axis=1, inplace=True)
-            csv = Csv(
-                df,
-                comma_separated_text_columns=comma_separated_text_columns,
-                id_column=id_column,
-            )
-            return csv
+            return df
         if comma_separated_text_columns:
             text_columns = comma_separated_text_columns.split(",")
         else:
