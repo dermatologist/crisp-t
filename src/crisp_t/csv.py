@@ -211,6 +211,13 @@ class Csv:
         )
         return self._X, self._y
 
+    def drop_na(self):
+        if self._df is not None:
+            self._df.dropna(inplace=True)
+            logger.info("Missing values dropped from DataFrame.")
+        else:
+            logger.error("DataFrame is None. Cannot drop missing values.")
+
     def oversample(self):
         self._X_original = self._X
         self._y_original = self._y
@@ -223,6 +230,7 @@ class Csv:
                 "ML dependencies are not installed. Please install them by ```pip install qrmine[ml] to use ML features."
             )
             return
+
         result = ros.fit_resample(self._X, self._y)
         if len(result) == 2:
             X, y = result
