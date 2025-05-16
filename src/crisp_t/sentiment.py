@@ -6,6 +6,7 @@ import operator
 from .model import Corpus
 from .text import Text
 
+
 class Sentiment:
 
     def __init__(self, corpus: Corpus):
@@ -15,6 +16,10 @@ class Sentiment:
         self._spacy_doc = self._text.make_spacy_doc()
         self._spacy_docs, self._ids = self._text.make_each_document_into_spacy_doc()
         self._id = self._corpus.id
+
+    @property
+    def corpus(self):
+        return self._corpus
 
     def get_sentiment(self, documents=False, verbose=True):
         sentiment = {}
@@ -40,6 +45,7 @@ class Sentiment:
                         documents_copy[-1].metadata["sentiment"] = self.max_sentiment(
                             sentiment[str(doc_id)]
                         )
+            self._corpus.documents = documents_copy
 
         if verbose:
             print("Sentiment Analysis Results:")
@@ -47,7 +53,6 @@ class Sentiment:
                 print(f"Document ID: {doc_id}")
                 print(f"Sentiment Scores: {sentiment_scores}")
         return sentiment
-
 
     def max_sentiment(self, score):
         score.pop("compound", None)
