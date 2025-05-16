@@ -73,7 +73,7 @@ class ML:
         else:
             raise ValueError("Value must be an instance of Csv class.")
 
-    def get_kmeans(self, c=3, verbose=True):
+    def get_kmeans(self, number_of_clusters=3, seed=42, verbose=True):
         if self._csv is None:
             raise ValueError(
                 "CSV data is not set. Please set self.csv before calling get_kmeans."
@@ -83,28 +83,54 @@ class ML:
             raise ValueError(
                 "Input features X are None. Cannot perform KMeans clustering."
             )
-        kmeans = KMeans(n_clusters=c, init="k-means++", random_state=42)
-        y_kmeans = kmeans.fit_predict(X)
-        self._clusters = y_kmeans
-        centroids = self.get_centroids(c, verbose=verbose)
-        return y_kmeans, centroids
+        kmeans = KMeans(
+            n_clusters=number_of_clusters, init="k-means++", random_state=seed
+        )
+        self._clusters = kmeans.fit_predict(X)
+        members = self.get_members(self._clusters, number_of_clusters)
+        return self._clusters, members
 
-    def get_centroids(self, c=1, verbose=True):
-        cluster_list = []
-        for x in range(0, c):
-            ct = 0
-            for cluster in self._clusters:
-                if cluster == x:
-                    cluster_list.append(ct)
-                ct += 1
-            if verbose:
-                print("Cluster: ", x)
-                print("Cluster Length: ", len(cluster_list))
-                print("Cluster Members")
-                if self._csv is not None and getattr(self._csv, "df", None) is not None:
-                    print(self._csv.df.iloc[cluster_list, :])
-                    print("Mean")
-                    print(self._csv.df.iloc[cluster_list, :].mean(axis=0))
-                else:
-                    print("DataFrame (self._csv.df) is not set.")
-        return cluster_list
+    def get_members(self, clusters, number_of_clusters=3):
+        members = []
+        for i in range(number_of_clusters):
+            members.append([])
+        for i, cluster in enumerate(clusters):
+            members[cluster].append(i)
+        return members
+
+    def profile(self, members, number_of_clusters=3):
+        if self._csv is None:
+            raise ValueError(
+                "CSV data is not set. Please set self.csv before calling profile."
+            )
+        for i in range(number_of_clusters):
+            print("Cluster: ", i)
+            print("Cluster Length: ", len(members[i]))
+            print("Cluster Members")
+            if self._csv is not None and getattr(self._csv, "df", None) is not None:
+                print(self._csv.df.iloc[members[i], :])
+                print("Mean")
+                print(self._csv.df.iloc[members[i], :].mean(axis=0))
+            else:
+                print("DataFrame (self._csv.df) is not set.")
+        return members
+
+    # def get_centroids(self, number_of_clusters=3, verbose=True):
+    #     cluster_list = []
+    #     for x in range(0, number_of_clusters):
+    #         ct = 0
+    #         for cluster in self._clusters:
+    #             if cluster == x:
+    #                 cluster_list.append(ct)
+    #             ct += 1
+    #         if verbose:
+    #             print("Cluster: ", x)
+    #             print("Cluster Length: ", len(cluster_list))
+    #             print("Cluster Members")
+    #             if self._csv is not None and getattr(self._csv, "df", None) is not None:
+    #                 print(self._csv.df.iloc[cluster_list, :])
+    #                 print("Mean")
+    #                 print(self._csv.df.iloc[cluster_list, :].mean(axis=0))
+    #             else:
+    #                 print("DataFrame (self._csv.df) is not set.")
+    #     return cluster_list
