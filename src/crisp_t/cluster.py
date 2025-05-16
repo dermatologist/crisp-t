@@ -131,10 +131,27 @@ class Cluster:
             topic = self._lda_model.get_document_topics(bow)
             clusters[self._ids[i]] = topic
 
+        documents_copy = []
+        documents = self._corpus.documents if self._corpus is not None else []
         if verbose:
             for doc_id, topic in clusters.items():
-                print(f"Document ID: {doc_id}, Topic: {topic}")
+                print(f"Document ID: {doc_id}, Cluster: {topic[0][0]}, Probability: {topic[0][1]}")
 
+        # Add cluster information to documents metadata
+        for doc in documents:
+            doc_id = doc.id
+            if doc_id in clusters:
+                cluster = clusters[doc_id][0][0]
+                probability = clusters[doc_id][0][1]
+                doc.metadata["cluster"] = cluster
+                doc.metadata["probability"] = probability
+                documents_copy.append(doc)
+            else:
+                # If the document ID is not found in clusters, keep it unchanged
+                documents_copy.append(doc)
+        # Update the corpus with the modified documents
+        if self._corpus is not None:
+            self._corpus.documents = documents_copy
         return clusters
 
     def format_topics_sentences(self, visualize=False):
@@ -195,6 +212,29 @@ class Cluster:
             "Perc_Contribution",
             "Topic_Keywords",
         ]
+
+        documents_copy = []
+        documents = self._corpus.documents if self._corpus is not None else []
+        # Add topic information to the documents metadata
+        for doc in documents:
+            doc_id = doc.id
+            if doc_id in sent_topics_df["Title"].values:
+                topic = sent_topics_df[sent_topics_df["Title"] == doc_id][
+                    "Dominant_Topic"
+                ].values[0]
+                probability = sent_topics_df[sent_topics_df["Title"] == doc_id][
+                    "Perc_Contribution"
+                ].values[0]
+                keywords = sent_topics_df[sent_topics_df["Title"] == doc_id][
+                    "Topic_Keywords"
+                ].values[0]
+                doc.metadata["topic"] = topic
+                doc.metadata["probability"] = probability
+                doc.metadata["keywords"] = keywords
+                documents_copy.append(doc)
+            else:
+                # If the document ID is not found in clusters, keep it unchanged
+                documents_copy.append(doc)
 
         # Add original text to the end of the output
         if visualize:
