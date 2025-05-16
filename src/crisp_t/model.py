@@ -17,7 +17,7 @@ You should have received a copy of the GNU General Public License
 along with crisp-t.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from typing import Optional
+from typing import Dict, Optional, Any
 import pandas as pd
 from pydantic import BaseModel, Field, ConfigDict
 
@@ -47,6 +47,9 @@ class Corpus(BaseModel):
     )
     df: Optional[pd.DataFrame] = Field(
         None, description="Numeric data associated with the corpus."
+    )
+    visualization: Optional[Dict[str, Any]] = Field(
+        None, description="Visualization data associated with the corpus."
     )
     model_config = ConfigDict(
         arbitrary_types_allowed=True
