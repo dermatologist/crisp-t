@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 @pytest.fixture
 def read_data_fixture():
-    folder_path = resource_filename("src.crisp_t.resources", os.sep)
+    folder_path = resource_filename("src.crisp_t.resources", "")
     read_data = ReadData()
     read_data.read_source(folder_path)
     return read_data
@@ -28,7 +28,7 @@ def read_data_fixture():
 
 @pytest.fixture
 def corpus_fixture():
-    folder_path = resource_filename("src.crisp_t.resources", os.sep)
+    folder_path = resource_filename("src.crisp_t.resources", "")
     read_data = ReadData()
     read_data.read_source(folder_path)
     corpus = read_data.create_corpus(

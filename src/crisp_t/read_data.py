@@ -206,7 +206,31 @@ class ReadData:
         logger.info("Corpus read from %s", file_name)
 
     def read_source(self, source, comma_separated_ignore_words=None):
-        if source.endswith(os.sep):
+        # if source is a url
+        if source.startswith("http://") or source.startswith("https://"):
+            response = requests.get(source)
+            if response.status_code == 200:
+                read_from_file = response.text
+                # remove comma separated ignore words
+                if comma_separated_ignore_words:
+                    for word in comma_separated_ignore_words.split(","):
+                        read_from_file = re.sub(
+                            r"\b" + word.strip() + r"\b",
+                            "",
+                            read_from_file,
+                            flags=re.IGNORECASE,
+                        )
+                self._content = read_from_file
+                _document = Document(
+                    text=read_from_file,
+                    metadata={"source": source},
+                    id=source,
+                    score=0.0,
+                    name="",
+                    description="",
+                )
+                self._documents.append(_document)
+        elif os.path.exists(source):
             self._source = source
             logger.info("Reading data from folder: %s", source)
             for file_name in os.listdir(source):
@@ -263,36 +287,8 @@ class ReadData:
                             description="",
                         )
                         self._documents.append(_document)
-        # if source is a url
-        elif source.startswith("http://") or source.startswith("https://"):
-            response = requests.get(source)
-            if response.status_code == 200:
-                read_from_file = response.text
-                # remove comma separated ignore words
-                if comma_separated_ignore_words:
-                    for word in comma_separated_ignore_words.split(","):
-                        read_from_file = re.sub(
-                            r"\b" + word.strip() + r"\b",
-                            "",
-                            read_from_file,
-                            flags=re.IGNORECASE,
-                        )
-                self._content = read_from_file
-                _document = Document(
-                    text=read_from_file,
-                    metadata={"source": source},
-                    id=source,
-                    score=0.0,
-                    name="",
-                    description="",
-                )
-                self._documents.append(_document)
         else:
-            raise ValueError("source must be a folder path or url.")
-
-        """
-        Combine duplicate topics using Dict
-        """
+            raise ValueError("Source not found: %s" % source)
 
     def corpus_as_dataframe(self):
         """
