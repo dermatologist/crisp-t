@@ -36,3 +36,10 @@ def test_corpus_as_dataframe(read_data_fixture):
     df = read_data_fixture.corpus_as_dataframe()
     assert df is not None, "DataFrame should not be None"
     assert len(df) > 0, "DataFrame should have rows"
+
+def test_read_csv(read_data_fixture):
+    folder_path = resource_filename("src.crisp_t.resources", "food_coded.csv")
+    read_data_fixture.read_csv(folder_path, comma_separated_text_columns="comfort_food,comfort_food_reasons,diet_current")
+    assert len(read_data_fixture.documents) > 0, "Documents should be read from CSV"
+    assert all(doc is not None for doc in read_data_fixture.documents), "All documents should be non-None"
+    read_data_fixture.pretty_print()

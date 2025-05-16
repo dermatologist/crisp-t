@@ -83,6 +83,18 @@ class ReadData:
                 raise ValueError("Value must be a list of Document objects.")
         self._documents = value
 
+    def pretty_print(self):
+        """
+        Pretty print the corpus.
+        """
+        if not self._corpus:
+            self.create_corpus()
+        if self._corpus:
+            print(self._corpus.model_dump_json(indent=4))
+            logger.info("Corpus: %s", self._corpus.model_dump_json(indent=4))
+        else:
+            logger.error("No corpus available to pretty print.")
+
     def create_corpus(self, name=None, description=None):
         """
         Create a corpus from the documents.
@@ -134,6 +146,42 @@ class ReadData:
             self._corpus = Corpus.model_validate(data)
             logger.info("Corpus read from %s", file_name)
         return self._corpus
+
+    def read_csv(self, file_name, comma_separated_ignore_words=None, comma_separated_text_columns=None, id_column=None):
+        """
+        Read the corpus from a csv file.
+        """
+        if not os.path.exists(file_name):
+            raise ValueError("File not found: %s" % file_name)
+        df = pd.read_csv(file_name)
+        if comma_separated_text_columns:
+            text_columns = comma_separated_text_columns.split(",")
+        else:
+            text_columns = df.columns.tolist()
+        for index, row in df.iterrows():
+            read_from_file = ""
+            for column in text_columns:
+                read_from_file += str(row[column]) + " "
+            # remove comma separated ignore words
+            if comma_separated_ignore_words:
+                for word in comma_separated_ignore_words.split(","):
+                    read_from_file = re.sub(
+                        r"\b" + word.strip() + r"\b",
+                        "",
+                        read_from_file,
+                        flags=re.IGNORECASE,
+                    )
+            self._content += read_from_file
+            _document = Document(
+                text=read_from_file,
+                metadata={"source": file_name, "file_name": file_name, "row": index, "id": row[id_column] if id_column else ""},
+                id=str(index),
+                score=0.0,
+                name="",
+                description="",
+            )
+            self._documents.append(_document)
+        logger.info("Corpus read from %s", file_name)
 
     def read_source(self, source, comma_separated_ignore_words=None):
         if source.endswith("/"):
