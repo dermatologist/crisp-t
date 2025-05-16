@@ -104,6 +104,7 @@ class ReadData:
             raise ValueError("No documents found. Please read data first.")
         self._corpus = Corpus(
             documents=self._documents,
+            df=None,
             metadata={},
             id="corpus",
             score=0.0,
@@ -148,7 +149,14 @@ class ReadData:
             logger.info("Corpus read from %s", file_name)
         return self._corpus
 
-    def read_csv(self, file_name, comma_separated_ignore_words=None, comma_separated_text_columns="", id_column="", numeric=False):
+    def read_csv(
+        self,
+        file_name,
+        comma_separated_ignore_words=None,
+        comma_separated_text_columns="",
+        id_column="",
+        numeric=False,
+    ):
         """
         Read the corpus from a csv file.
         """
@@ -161,7 +169,11 @@ class ReadData:
             for column in text_columns:
                 if column in df.columns:
                     df.drop(column, axis=1, inplace=True)
-            csv = Csv(df, comma_separated_text_columns=comma_separated_text_columns, id_column=id_column)
+            csv = Csv(
+                df,
+                comma_separated_text_columns=comma_separated_text_columns,
+                id_column=id_column,
+            )
             return csv
         if comma_separated_text_columns:
             text_columns = comma_separated_text_columns.split(",")
@@ -183,7 +195,12 @@ class ReadData:
             self._content += read_from_file
             _document = Document(
                 text=read_from_file,
-                metadata={"source": file_name, "file_name": file_name, "row": index, "id": row[id_column] if id_column is not "" else ""},
+                metadata={
+                    "source": file_name,
+                    "file_name": file_name,
+                    "row": index,
+                    "id": row[id_column] if id_column is not "" else "",
+                },
                 id=str(index),
                 score=0.0,
                 name="",

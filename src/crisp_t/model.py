@@ -18,8 +18,8 @@ along with crisp-t.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 from typing import Optional
-
-from pydantic import BaseModel, Field
+import pandas as pd
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class Document(BaseModel):
@@ -45,10 +45,18 @@ class Corpus(BaseModel):
     documents: list[Document] = Field(
         default_factory=list, description="List of documents in the corpus."
     )
+    df: Optional[pd.DataFrame] = Field(
+        None, description="Numeric data associated with the corpus."
+    )
+    model_config = ConfigDict(
+        arbitrary_types_allowed=True
+    )  # required for pandas DataFrame
     metadata: dict = Field(
         default_factory=dict, description="Metadata associated with the corpus."
     )
     id: str = Field(..., description="Unique identifier for the corpus.")
-    score: Optional[float] = Field(None, description="Score associated with the corpus.")
+    score: Optional[float] = Field(
+        None, description="Score associated with the corpus."
+    )
     name: Optional[str] = Field(None, description="Name of the corpus.")
     description: Optional[str] = Field(None, description="Description of the corpus.")
