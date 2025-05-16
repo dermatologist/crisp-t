@@ -49,6 +49,17 @@ class Cluster:
         self._passes = 15
         self.process()
 
+    @property
+    def processed_docs(self) -> List[List[str]]:
+        """
+        Get the processed documents.
+
+        :return: List of processed documents.
+        """
+        if self._processed_docs is None:
+            raise ValueError("Processed documents are not available.")
+        return self._processed_docs
+
     def process(self):
         """
         Process the data and perform clustering.
@@ -135,7 +146,9 @@ class Cluster:
         documents = self._corpus.documents if self._corpus is not None else []
         if verbose:
             for doc_id, topic in clusters.items():
-                print(f"Document ID: {doc_id}, Cluster: {topic[0][0]}, Probability: {topic[0][1]}")
+                print(
+                    f"Document ID: {doc_id}, Cluster: {topic[0][0]}, Probability: {topic[0][1]}"
+                )
 
         # Add cluster information to documents metadata
         for doc in documents:
@@ -321,7 +334,7 @@ class Cluster:
         if not visualize:
             print(
                 tabulate(
-                    data, # type: ignore
+                    data,  # type: ignore
                     headers="keys",
                     tablefmt="psql",
                     showindex=False,

@@ -48,6 +48,7 @@ def test_format_topics_sentences(corpus_fixture):
     print(pandas_df.head())
     assert pandas_df is not None, "Formatted topics sentences should not be None"
 
+
 def test_most_representative_docs(corpus_fixture):
     cluster = Cluster(corpus=corpus_fixture)
     cluster.build_lda_model()
@@ -57,11 +58,10 @@ def test_most_representative_docs(corpus_fixture):
         most_representative_docs is not None
     ), "Most representative documents should not be None"
 
+
 def test_topics_per_document(corpus_fixture):
     cluster = Cluster(corpus=corpus_fixture)
     cluster.build_lda_model()
     (dominant_topics, topic_percentages) = cluster.topics_per_document()
     print(dominant_topics, topic_percentages)
-    assert (
-        dominant_topics is not None
-    ), "Dominant topics should not be None"
+    assert dominant_topics is not None, "Dominant topics should not be None"
