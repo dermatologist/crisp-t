@@ -1,0 +1,36 @@
+name: Generate and puplish gh-pages
+# https://docs.github.com/en/actions/guides/building-and-testing-python
+# https://packaging.python.org/guides/publishing-package-distribution-releases-using-github-actions-ci-cd-workflows/
+on:
+  release:
+    types: [published]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+    - uses: actions/checkout@v4
+    - name: Install uv
+      uses: astral-sh/setup-uv@v5
+      with:
+        enable-cache: true
+    - name: "Set up Python"
+      uses: actions/setup-python@v5
+      with:
+          python-version-file: "pyproject.toml"
+
+    - name: Install the project
+      run: |
+        uv sync --all-extras --dev
+        uv pip install pip
+        uv run python -m spacy download en_core_web_sm
+    - name: Create docs
+      run: |
+        uv run python -m sphinx -b html docs/ docs/_build/html
+        cp docs/_config.yml docs/_build/html/_config.yml
+    - name: Deploy Docs 🚀
+      uses: JamesIves/github-pages-deploy-action@v4
+      with:
+        branch: gh-pages # The branch the action should deploy to.
+        folder: docs/_build/html # The folder the action should deploy.

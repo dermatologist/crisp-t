@@ -1,0 +1,36 @@
+name: Tox Test
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      max-parallel: 4
+      matrix:
+        python-version: ["3.11"]
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Install uv
+      uses: astral-sh/setup-uv@v5
+      with:
+        enable-cache: true
+    - name: "Set up Python"
+      uses: actions/setup-python@v5
+      with:
+          python-version-file: "pyproject.toml"
+
+    - name: Install the project
+      run: |
+        uv sync --all-extras --dev
+        uv pip install pip
+        uv run python -m spacy download en_core_web_sm
+    - name: Test with tox
+      run: |
+        uv run tox
