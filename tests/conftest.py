@@ -7,6 +7,7 @@
     - https://docs.pytest.org/en/stable/writing_plugins.html
 """
 
+import os
 import pytest
 import logging
 from src.crisp_t.read_data import ReadData
@@ -19,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 @pytest.fixture
 def read_data_fixture():
-    folder_path = resource_filename("src.crisp_t.resources", "/")
+    folder_path = resource_filename("src.crisp_t.resources", os.sep)
     read_data = ReadData()
     read_data.read_source(folder_path)
     return read_data
@@ -27,7 +28,7 @@ def read_data_fixture():
 
 @pytest.fixture
 def corpus_fixture():
-    folder_path = resource_filename("src.crisp_t.resources", "/")
+    folder_path = resource_filename("src.crisp_t.resources", os.sep)
     read_data = ReadData()
     read_data.read_source(folder_path)
     corpus = read_data.create_corpus(

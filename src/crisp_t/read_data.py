@@ -206,7 +206,7 @@ class ReadData:
         logger.info("Corpus read from %s", file_name)
 
     def read_source(self, source, comma_separated_ignore_words=None):
-        if source.endswith("/"):
+        if source.endswith(os.sep):
             self._source = source
             logger.info("Reading data from folder: %s", source)
             for file_name in os.listdir(source):
