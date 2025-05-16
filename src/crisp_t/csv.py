@@ -192,23 +192,36 @@ class Csv:
             )
             return None
 
-    def read_xy(self, y: str, ignore_columns=True):
+    def read_xy(self, y: str, ignore_columns=True, numeric_only=False):
+        """
+        Read X and y variables from the DataFrame.
+        """
         if self._df is None:
             logger.error("DataFrame is None. Cannot read X and y.")
             return None, None
-        self._y = self._df[y]
+        if numeric_only:
+            self._df = self._df.select_dtypes(include=[numpy.number])
+            logger.info("DataFrame filtered to numeric columns only.")
+        if y == "":
+            self._y = None
+        else:
+            self._y = self._df[y]
         ignore_cols = [
             col
             for col in self._comma_separated_ignore_columns.split(",")
             if col.strip()
         ]
-        if ignore_columns and ignore_cols:
-            self._X = self._df.drop(columns=[y] + ignore_cols)
+        if y != "":
+            if ignore_columns and ignore_cols:
+                self._X = self._df.drop(columns=[y] + ignore_cols)
+            else:
+                self._X = self._df.drop(columns=[y])
         else:
-            self._X = self._df.drop(columns=[y])
-        logger.info(
-            f"X and y variables set. X shape: {self._X.shape}, y shape: {self._y.shape}"
-        )
+            if ignore_columns and ignore_cols:
+                self._X = self._df.drop(columns=ignore_cols)
+            else:
+                self._X = self._df.copy()
+        logger.info(f"X and y variables set. X shape: {self._X.shape}")
         return self._X, self._y
 
     def drop_na(self):
