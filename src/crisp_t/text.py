@@ -212,6 +212,7 @@ class Text:
 
     def print_coding_dictionary(self, num=10, top_n=5):
         output = []
+        coding_dict = []
         output.append(("CATEGORY", "PROPERTY", "DIMENSION"))
         verbs = self.common_verbs(num)
         _verbs = []
@@ -224,6 +225,16 @@ class Text:
                         output.append((verb, attribute, dimension))
                         verb = "..."
                         attribute = "..."
+                        coding_dict.append(
+                            {
+                                "category": verb,
+                                "property": attribute,
+                                "dimension": dimension,
+                            }
+                        )
+        # Add coding_dict to corpus metadata
+        if self._corpus is not None:
+            self._corpus.metadata["coding_dict"] = coding_dict
         print("\n---Coding Dictionary---")
         QRUtils.print_table(output)
         print("---------------------------\n")
@@ -363,6 +374,16 @@ class Text:
         spacy_docs, ids = self.make_each_document_into_spacy_doc()
         for spacy_doc in spacy_docs:
             item_basket.append(self.print_categories(spacy_doc, num))
+        documents_copy = []
+        documents = self._corpus.documents if self._corpus is not None else []
+        # add cateogies to respective documents
+        for i, document in enumerate(documents):
+            if i < len(item_basket):
+                document.metadata["categories"] = item_basket[i]
+                documents_copy.append(document)
+        # update the corpus with the new documents
+        if self._corpus is not None:
+            self._corpus.documents = documents_copy
         return item_basket
         # Example return:
         # [['GT', 'Strauss', 'coding', 'ground', 'theory', 'seminal', 'Corbin', 'code',
@@ -383,9 +404,20 @@ class Text:
         te = TransactionEncoder()
         te_ary = te.fit(basket).transform(basket)
         df = pd.DataFrame(te_ary, columns=te.columns_)  # type: ignore
-        return apriori(df, min_support=0.6, use_colnames=True)
+        _apriori = apriori(df, min_support=0.6, use_colnames=True)
         # Example
         #    support      itemsets
         # 0  0.666667          (GT)
         # 1  0.833333      (theory)
         # 2  0.666667  (theory, GT)
+        documents_copy = []
+        documents = self._corpus.documents if self._corpus is not None else []
+        # Add association rules to each document
+        for i, document in enumerate(documents):
+            if i < len(basket):
+                document.metadata["association_rules"] = _apriori
+                documents_copy.append(document)
+        # Update the corpus with the new documents
+        if self._corpus is not None:
+            self._corpus.documents = documents_copy
+        return _apriori
