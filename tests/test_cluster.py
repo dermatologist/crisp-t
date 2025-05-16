@@ -1,7 +1,4 @@
-import pytest
 import logging
-from src.crisp_t.read_data import ReadData
-from pkg_resources import resource_filename
 from src.crisp_t.cluster import Cluster
 
 # setup logging

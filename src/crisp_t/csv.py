@@ -108,9 +108,7 @@ class Csv:
         logger.info("ID column set successfully.")
         logger.debug(f"ID column: {self._id_column}")
 
-    def read_csv(
-        self,
-        file_path: str) -> pd.DataFrame:
+    def read_csv(self, file_path: str) -> pd.DataFrame:
         """
         Read a CSV file and create a DataFrame.
         """
@@ -138,7 +136,7 @@ class Csv:
                 else:
                     logger.warning(f"Column {col} not found in DataFrame.")
         return self._df
-    
+
     def write_csv(self, file_path: str, index: bool = False) -> None:
         if self._df is not None:
             self._df.to_csv(file_path, index=index)
@@ -155,7 +153,13 @@ class Csv:
         else:
             logger.error("DataFrame is None. Cannot mark missing values.")
 
-    def restore_mark_missing(self):
+    def mark_duplicates(self):
+        if self._df is not None:
+            self._df.drop_duplicates(inplace=True)
+        else:
+            logger.error("DataFrame is None. Cannot mark duplicates.")
+
+    def restore_df(self):
         self._df = self._df_original.copy()
 
     def get_shape(self):
@@ -229,6 +233,7 @@ class Csv:
             return
         self._X = X
         self._y = y
+        return X, y
 
     def restore_oversample(self):
         self._X = self._X_original

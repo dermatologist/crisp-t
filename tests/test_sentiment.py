@@ -1,7 +1,5 @@
-import pytest
 import logging
 from src.crisp_t.sentiment import Sentiment
-from pkg_resources import resource_filename
 
 # setup logging
 logging.basicConfig(level=logging.INFO)
