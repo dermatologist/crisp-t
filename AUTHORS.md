@@ -1,3 +1,3 @@
 # Contributors
 
-* dermatologist [github@gulfdoctor.net](mailto:github@gulfdoctor.net)
+* beapen <github@gulfdoctor.net>
