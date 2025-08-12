@@ -1,6 +1,6 @@
 # 🔍 CRISP-T (**CRoss** **I**ndustry **S**tandard **P**rocess for **T**riangulation)
 
-**Work in progress.** See the older version [here](https://github.com/dermatologist/nlp-qrmine)
+**Work in progress.** See the older version [here](https://github.com/dermatologist/crisp-t)
 
 Qualitative research involves the collection and analysis of textual data, such as interview transcripts, open-ended survey responses, and field notes. It is often used in social sciences, humanities, and health research to explore complex phenomena and understand human experiences. In addition to textual data, qualitative researchers may also collect quantitative data, such as survey responses or demographic information, to complement their qualitative findings.
 

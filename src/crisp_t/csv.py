@@ -1,7 +1,8 @@
-from typing import Optional
-import pandas as pd
 import logging
+from typing import Optional
+
 import numpy
+import pandas as pd
 
 from .model import Corpus
 
@@ -240,7 +241,7 @@ class Csv:
             ros = RandomOverSampler(random_state=0)
         except ImportError:
             logger.info(
-                "ML dependencies are not installed. Please install them by ```pip install qrmine[ml] to use ML features."
+                "ML dependencies are not installed. Please install them by ```pip install crisp-t[ml] to use ML features."
             )
             return
 
