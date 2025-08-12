@@ -1,4 +1,4 @@
-# # Contributing to `crisp-t`
+# Contributing to `crisp-t`
 
 ## Please note:
 

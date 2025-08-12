@@ -1,6 +1,6 @@
 [project]
 name = "crisp-t"
-dynamic = ["version"]  # Remove static version and add this line
+dynamic = ["version"]  
 description = "Qualitative Research support tools in Python!"
 authors = [{ name = "Bell Eapen", email = "github_public@gulfdoctor.net" }]
 readme = "README.md"
