@@ -26,5 +26,7 @@ runs:
         cache-suffix: ${{ matrix.python-version }}
 
     - name: Install Python dependencies
-      run: uv sync --frozen
+      run: |
+        uv sync --frozen
+        uv run spacy download en_core_web_sm
       shell: bash
