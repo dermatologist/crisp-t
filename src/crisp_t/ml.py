@@ -1,31 +1,29 @@
+import logging
+from random import randint
+
 import numpy
 from pandas import read_csv
 from sklearn.cluster import KMeans
 from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import OneHotEncoder
-from sklearn.preprocessing import StandardScaler
-from sklearn.svm import SVC
 from sklearn.neighbors import KDTree
-from random import randint
-import logging
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.svm import SVC
 
-from .model import Corpus
 from .csv import Csv
+from .model import Corpus
 
 logger = logging.getLogger(__name__)
 ML_INSTALLED = False
 
 try:
-    from xgboost import XGBClassifier
-    from mlxtend.frequent_patterns import apriori
-    from mlxtend.frequent_patterns import association_rules
-
+    import torch
     import torch.nn as nn
     import torch.optim as optim
-    import torch
-    from torch.utils.data import DataLoader, TensorDataset
     from imblearn.over_sampling import RandomOverSampler
+    from mlxtend.frequent_patterns import apriori, association_rules
+    from torch.utils.data import DataLoader, TensorDataset
+    from xgboost import XGBClassifier
 
     ML_INSTALLED = True
 
@@ -46,7 +44,7 @@ try:
 
 except ImportError:
     logger.info(
-        "ML dependencies are not installed. Please install them by ```pip install qrmine[ml] to use ML features."
+        "ML dependencies are not installed. Please install them by ```pip install crisp-t[ml] to use ML features."
     )
 
 
