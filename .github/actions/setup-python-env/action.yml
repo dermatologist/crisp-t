@@ -23,7 +23,13 @@ runs:
       with:
         version: ${{ inputs.uv-version }}
         enable-cache: 'true'
-        cache-suffix: ${{ matrix.python-version }}
+        cache-suffix: ${{ inputs.python-version }}
+
+    - name: run on mac
+      if: runner.os == 'macOS'
+      shell: bash
+      run: |
+        brew install libomp
 
     - name: Install Python dependencies
       run: |
