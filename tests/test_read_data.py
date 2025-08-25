@@ -23,6 +23,14 @@ def test_corpus_has_documents(read_data_fixture):
         doc is not None for doc in corpus.documents
     ), "All documents should be non-None"
 
+def test_get_document_by_id(read_data_fixture):
+    corpus = read_data_fixture.create_corpus(
+        name="Test Corpus", description="This is a test corpus"
+    )
+    first_doc_id = corpus.documents[0].id
+    doc = read_data_fixture.get_document_by_id(first_doc_id)
+    assert doc is not None, "Document should not be None"
+    assert doc.id == first_doc_id, "Document ID should match"
 
 def test_corpus_is_saved_as_json(read_data_fixture):
     corpus = read_data_fixture.create_corpus(

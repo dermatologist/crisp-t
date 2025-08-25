@@ -148,16 +148,18 @@ class ReadData:
             raise ValueError("No corpus found. Please create a corpus first.")
         return self._corpus.documents
 
-    def get_dataframe_from_corpus(self):
+    def get_document_by_id(self, doc_id):
         """
-        Get the dataframe from the corpus.
+        Get a document from the corpus by its ID.
         """
         if not self._corpus:
             raise ValueError("No corpus found. Please create a corpus first.")
-        return self._corpus.df
+        for document in self._corpus.documents:
+            if document.id == doc_id:
+                return document
+        raise ValueError("Document not found: %s" % doc_id)
 
-    # TODO Move this to corpus class. write corpus to json file
-    # TODO save df separately
+
     def write_corpus_to_json(self, file_path=""):
         """
         Write the corpus to a json file.
@@ -175,8 +177,6 @@ class ReadData:
             self._corpus.df.to_csv(df_name, index=False)
         logger.info("Corpus written to %s", file_name)
 
-    # TODO Move this to corpus class. read corpus from json file
-    # TODO read df separately
     def read_corpus_from_json(self, file_path=""):
         """
         Read the corpus from a json file.
@@ -240,7 +240,7 @@ class ReadData:
                     "source": file_name,
                     "file_name": file_name,
                     "row": index,
-                    "id": row[id_column] if id_column != "" else "",
+                    "id": row[id_column] if id_column != "" else index,
                 },
                 id=str(index),
                 score=0.0,
