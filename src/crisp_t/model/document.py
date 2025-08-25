@@ -17,21 +17,19 @@ You should have received a copy of the GNU General Public License
 along with crisp-t.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from typing import Dict, Optional, Any
-import pandas as pd
-from pydantic import BaseModel, Field, ConfigDict
+from typing import Optional
+from pydantic import BaseModel, Field
 
 
 class Document(BaseModel):
     """
     Document model for storing text and metadata.
     """
-
+    id: str = Field(..., description="Unique identifier for the document.")
+    name: Optional[str] = Field(None, description="Name of the corpus.")
+    description: Optional[str] = Field(None, description="Description of the corpus.")
+    score: float = Field(0.0, description="Score associated with the document.")
     text: str = Field(..., description="The text content of the document.")
     metadata: dict = Field(
         default_factory=dict, description="Metadata associated with the document."
     )
-    id: str = Field(..., description="Unique identifier for the document.")
-    score: float = Field(0.0, description="Score associated with the document.")
-    name: Optional[str] = Field(None, description="Name of the corpus.")
-    description: Optional[str] = Field(None, description="Description of the corpus.")
