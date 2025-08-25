@@ -117,22 +117,27 @@ class ReadData:
         else:
             logger.error("No corpus available to pretty print.")
 
+    # TODO: Enforce only one corpus (Singleton pattern)
     def create_corpus(self, name=None, description=None):
         """
         Create a corpus from the documents and dataframe.
         """
         if not self._documents:
             raise ValueError("No documents found. Please read data first.")
-        self._corpus = Corpus(
-            documents=self._documents,
-            df=self._df,
-            visualization=None,
-            metadata={},
-            id="corpus",
-            score=0.0,
-            name=name,
-            description=description,
-        )
+        if self._corpus:
+            self._corpus.documents = self._documents
+            self._corpus.df = self._df
+        else:
+            self._corpus = Corpus(
+                documents=self._documents,
+                df=self._df,
+                visualization=None,
+                metadata={},
+                id="corpus",
+                score=0.0,
+                name=name,
+                description=description,
+            )
         return self._corpus
 
     def get_documents_from_corpus(self):
