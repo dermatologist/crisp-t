@@ -33,7 +33,7 @@ from .text import Text
 
 class Cluster:
 
-    def __init__(self, corpus: Optional[Corpus] = None):
+    def __init__(self, corpus: Corpus):
         self._corpus = corpus
         self._ids = []
         self._lda_model: Optional[LdaModel] = None
@@ -78,6 +78,7 @@ class Cluster:
         self._bag_of_words = [
             self._dictionary.doc2bow(doc) for doc in self._processed_docs
         ]
+        self._corpus.metadata["bag_of_words"] = self._bag_of_words
 
     def build_lda_model(self):
         if self._lda_model is None:
@@ -112,6 +113,7 @@ class Cluster:
                     word = word.split("*")
                     words.append(f"{word[1].strip()}({word[0].strip()})")
                 print(f"Topic {topic_num}: {', '.join(words)}")
+        self._corpus.metadata["topics"] = output
         return output
 
     def tokenize(self, spacy_doc):
