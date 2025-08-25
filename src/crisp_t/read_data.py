@@ -153,24 +153,31 @@ class ReadData:
 
     # TODO Move this to corpus class. write corpus to json file
     # TODO save df separately
-    def write_corpus_to_json(self, file_name="corpus.json"):
+    def write_corpus_to_json(self, file_path=""):
         """
         Write the corpus to a json file.
         """
+        # filename is <file_path> + "corpus.json"
+        file_name = os.path.join(file_path, "corpus.json")
+        df_name = os.path.join(file_path, "corpus_df.csv")
         if self._source:
-            file_name = os.path.join(self._source, file_name)
+            file_path = os.path.join(self._source, file_name)
         if not self._corpus:
             raise ValueError("No corpus found. Please create a corpus first.")
         with open(file_name, "w") as f:
             json.dump(self._corpus.model_dump(exclude ={"df"}), f, indent=4)
+        if self._corpus.df is not None and not self._corpus.df.empty:
+            self._corpus.df.to_csv(df_name, index=False)
         logger.info("Corpus written to %s", file_name)
 
     # TODO Move this to corpus class. read corpus from json file
     # TODO read df separately
-    def read_corpus_from_json(self, file_name="corpus.json"):
+    def read_corpus_from_json(self, file_path=""):
         """
         Read the corpus from a json file.
         """
+        file_name = os.path.join(file_path, "corpus.json")
+        df_name = os.path.join(file_path, "corpus_df.csv")
         if self._source:
             file_name = os.path.join(self._source, file_name)
         if not os.path.exists(file_name):
@@ -179,6 +186,9 @@ class ReadData:
             data = json.load(f)
             self._corpus = Corpus.model_validate(data)
             logger.info("Corpus read from %s", file_name)
+        if not os.path.exists(df_name):
+            raise ValueError("File not found: %s" % df_name)
+        self._corpus.df = pd.read_csv(df_name)
         return self._corpus
 
     def read_csv(
