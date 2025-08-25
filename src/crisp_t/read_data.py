@@ -39,11 +39,12 @@ logger = logging.getLogger(__name__)
 
 class ReadData:
 
-    def __init__(self, source=None):
+    def __init__(self, corpus: Corpus | None = None, source=None):
         self._content = ""
-        self._corpus = None
+        self._corpus = corpus
         self._source = source
         self._documents = []
+        self._df = pd.DataFrame()
 
     @property
     def corpus(self):
@@ -52,6 +53,8 @@ class ReadData:
         """
         if not self._corpus:
             raise ValueError("No corpus found. Please create a corpus first.")
+        self._corpus.documents = self._documents
+        self._corpus.df = self._df
         return self._corpus
 
     @property
@@ -62,6 +65,15 @@ class ReadData:
         if not self._documents:
             raise ValueError("No documents found. Please read data first.")
         return self._documents
+
+    @property
+    def df(self):
+        """
+        Get the dataframe.
+        """
+        if self._df is None:
+            raise ValueError("No dataframe found. Please read data first.")
+        return self._df
 
     @corpus.setter
     def corpus(self, value):
@@ -84,6 +96,15 @@ class ReadData:
                 raise ValueError("Value must be a list of Document objects.")
         self._documents = value
 
+    @df.setter
+    def df(self, value):
+        """
+        Set the dataframe.
+        """
+        if not isinstance(value, pd.DataFrame):
+            raise ValueError("Value must be a pandas DataFrame.")
+        self._df = value
+
     def pretty_print(self):
         """
         Pretty print the corpus.
@@ -91,20 +112,20 @@ class ReadData:
         if not self._corpus:
             self.create_corpus()
         if self._corpus:
-            print(self._corpus.model_dump_json(indent=4))
-            logger.info("Corpus: %s", self._corpus.model_dump_json(indent=4))
+            print(self._corpus.model_dump_json(indent=4, exclude ={"df"}))
+            logger.info("Corpus: %s", self._corpus.model_dump_json(indent=4, exclude ={"df"}))
         else:
             logger.error("No corpus available to pretty print.")
 
     def create_corpus(self, name=None, description=None):
         """
-        Create a corpus from the documents.
+        Create a corpus from the documents and dataframe.
         """
         if not self._documents:
             raise ValueError("No documents found. Please read data first.")
         self._corpus = Corpus(
             documents=self._documents,
-            df=None,
+            df=self._df,
             visualization=None,
             metadata={},
             id="corpus",
@@ -122,7 +143,16 @@ class ReadData:
             raise ValueError("No corpus found. Please create a corpus first.")
         return self._corpus.documents
 
-    # write corpus to json file
+    def get_dataframe_from_corpus(self):
+        """
+        Get the dataframe from the corpus.
+        """
+        if not self._corpus:
+            raise ValueError("No corpus found. Please create a corpus first.")
+        return self._corpus.df
+
+    # TODO Move this to corpus class. write corpus to json file
+    # TODO save df separately
     def write_corpus_to_json(self, file_name="corpus.json"):
         """
         Write the corpus to a json file.
@@ -132,10 +162,11 @@ class ReadData:
         if not self._corpus:
             raise ValueError("No corpus found. Please create a corpus first.")
         with open(file_name, "w") as f:
-            json.dump(self._corpus.model_dump(), f, indent=4)
+            json.dump(self._corpus.model_dump(exclude ={"df"}), f, indent=4)
         logger.info("Corpus written to %s", file_name)
 
-    # read corpus from json file
+    # TODO Move this to corpus class. read corpus from json file
+    # TODO read df separately
     def read_corpus_from_json(self, file_name="corpus.json"):
         """
         Read the corpus from a json file.
@@ -164,18 +195,17 @@ class ReadData:
         if not os.path.exists(file_name):
             raise ValueError("File not found: %s" % file_name)
         df = pd.read_csv(file_name)
-        if numeric:
-            text_columns = comma_separated_text_columns.split(",")
-            # remove text columns from the dataframe
-            for column in text_columns:
-                if column in df.columns:
-                    df.drop(column, axis=1, inplace=True)
-            return df
+        original_df = df.copy()
         if comma_separated_text_columns:
             text_columns = comma_separated_text_columns.split(",")
         else:
-            text_columns = df.columns.tolist()
-        for index, row in df.iterrows():
+            text_columns = []
+        # remove text columns from the dataframe
+        for column in text_columns:
+            if column in df.columns:
+                df.drop(column, axis=1, inplace=True)
+        self._df = df.copy()
+        for index, row in original_df.iterrows():
             read_from_file = ""
             for column in text_columns:
                 read_from_file += str(row[column]) + " "
@@ -195,7 +225,7 @@ class ReadData:
                     "source": file_name,
                     "file_name": file_name,
                     "row": index,
-                    "id": row[id_column] if id_column is not "" else "",
+                    "id": row[id_column] if id_column != "" else "",
                 },
                 id=str(index),
                 score=0.0,
@@ -204,6 +234,10 @@ class ReadData:
             )
             self._documents.append(_document)
         logger.info("Corpus read from %s", file_name)
+        if numeric:
+            return self._df
+        else:
+            return self._corpus
 
     def read_source(self, source, comma_separated_ignore_words=None):
         # if source is a url
