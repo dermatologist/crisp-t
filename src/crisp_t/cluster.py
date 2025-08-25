@@ -167,6 +167,9 @@ class Cluster:
         # Update the corpus with the modified documents
         if self._corpus is not None:
             self._corpus.documents = documents_copy
+        # Add cluster information to corpus metadata
+        if self._corpus is not None:
+            self._corpus.metadata["clusters"] = clusters
         return clusters
 
     def format_topics_sentences(self, visualize=False):
