@@ -20,21 +20,7 @@ along with crisp-t.  If not, see <https://www.gnu.org/licenses/>.
 from typing import Dict, Optional, Any
 import pandas as pd
 from pydantic import BaseModel, Field, ConfigDict
-
-
-class Document(BaseModel):
-    """
-    Document model for storing text and metadata.
-    """
-
-    text: str = Field(..., description="The text content of the document.")
-    metadata: dict = Field(
-        default_factory=dict, description="Metadata associated with the document."
-    )
-    id: str = Field(..., description="Unique identifier for the document.")
-    score: float = Field(0.0, description="Score associated with the document.")
-    name: Optional[str] = Field(None, description="Name of the corpus.")
-    description: Optional[str] = Field(None, description="Description of the corpus.")
+from .document import Document
 
 
 class Corpus(BaseModel):
