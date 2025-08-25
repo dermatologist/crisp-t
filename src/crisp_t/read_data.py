@@ -131,7 +131,7 @@ class ReadData:
             self._corpus = Corpus(
                 documents=self._documents,
                 df=self._df,
-                visualization=None,
+                visualization={},
                 metadata={},
                 id="corpus",
                 score=0.0,

@@ -258,6 +258,10 @@ class Cluster:
         if visualize:
             contents = pd.Series(self._processed_docs)
             sent_topics_df = pd.concat([sent_topics_df, contents], axis=1)
+        # Add to visualize
+        self._corpus.visualization["sent_topics"] = sent_topics_df.reset_index( # type: ignore
+            drop=False
+        )
         return sent_topics_df.reset_index(drop=False)
 
     # https://www.machinelearningplus.com/nlp/topic-modeling-visualization-how-to-present-results-lda-models/
@@ -274,7 +278,8 @@ class Cluster:
                 ],
                 axis=0,
             )
-
+        # Add to visualize
+        self._corpus.visualization["most_representative_docs"] = sent_topics_sorteddf_mallet # type: ignore
         return sent_topics_sorteddf_mallet
 
     def topics_per_document(self, start=0, end=1):
