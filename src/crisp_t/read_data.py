@@ -112,8 +112,8 @@ class ReadData:
         if not self._corpus:
             self.create_corpus()
         if self._corpus:
-            print(self._corpus.model_dump_json(indent=4, exclude ={"df"}))
-            logger.info("Corpus: %s", self._corpus.model_dump_json(indent=4, exclude ={"df"}))
+            print(self._corpus.model_dump_json(indent=4, exclude ={"df", "visualization"}))
+            logger.info("Corpus: %s", self._corpus.model_dump_json(indent=4, exclude ={"df", "visualization"}))
         else:
             logger.error("No corpus available to pretty print.")
 
@@ -172,7 +172,7 @@ class ReadData:
         if not self._corpus:
             raise ValueError("No corpus found. Please create a corpus first.")
         with open(file_name, "w") as f:
-            json.dump(self._corpus.model_dump(exclude ={"df"}), f, indent=4)
+            json.dump(self._corpus.model_dump(exclude ={"df", "visualization"}), f, indent=4)
         if self._corpus.df is not None and not self._corpus.df.empty:
             self._corpus.df.to_csv(df_name, index=False)
         logger.info("Corpus written to %s", file_name)

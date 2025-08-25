@@ -300,6 +300,10 @@ class Cluster:
             dominant_topic = sorted(topic_percs, key=lambda x: x[1], reverse=True)[0][0]
             dominant_topics.append((i, dominant_topic))
             topic_percentages.append(topic_percs)
+        # Add to corpus metadata
+        if self._corpus is not None:
+            self._corpus.metadata["dominant_topics"] = dominant_topics
+            self._corpus.metadata["topic_percentages"] = topic_percentages
         return (dominant_topics, topic_percentages)
 
     def doc_vectorizer(self, doc, model):
@@ -315,7 +319,6 @@ class Cluster:
             except:
                 # pass if word is not found
                 pass
-
         return np.asarray(doc_vector) / num_words
 
     def vectorizer(self, docs, titles, num_clusters=4, visualize=False):
@@ -352,4 +355,6 @@ class Cluster:
                     stralign="left",
                 )
             )
+        # Add to visualization
+        self._corpus.visualization["vectorizer"] = data # type: ignore
         return data
