@@ -27,7 +27,6 @@ import requests
 from pypdf import PdfReader
 
 from .model import Corpus, Document
-from .csv import Csv
 
 # Set up logging
 logging.basicConfig(
