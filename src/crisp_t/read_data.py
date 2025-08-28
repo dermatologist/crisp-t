@@ -195,6 +195,10 @@ class ReadData:
         self._corpus.df = pd.read_csv(df_name)
         return self._corpus
 
+    # TODO IMPROVE
+    # Currently this can be used to read a CSV file and create a corpus.
+    #! Numeric True returns numeric columns only.
+    # Use csv read_csv instead.
     def read_csv(
         self,
         file_name,
@@ -251,6 +255,7 @@ class ReadData:
         if numeric:
             return self._df
         else:
+            self.create_corpus()
             return self._corpus
 
     def read_source(self, source, comma_separated_ignore_words=None):

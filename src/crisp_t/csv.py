@@ -109,6 +109,8 @@ class Csv:
         logger.info("ID column set successfully.")
         logger.debug(f"ID column: {self._id_column}")
 
+    #TODO remove @deprecated
+    #! Do not use
     def read_csv(self, file_path: str) -> pd.DataFrame:
         """
         Read a CSV file and create a DataFrame.
