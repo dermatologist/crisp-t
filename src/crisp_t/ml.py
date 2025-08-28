@@ -11,7 +11,6 @@ from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from sklearn.svm import SVC
 
 from .csv import Csv
-from .model import Corpus
 
 logger = logging.getLogger(__name__)
 ML_INSTALLED = False
@@ -51,25 +50,28 @@ except ImportError:
 class ML:
     def __init__(
         self,
-        corpus: Corpus,
+        csv: Csv,
     ):
         if not ML_INSTALLED:
             raise ImportError("ML dependencies are not installed.")
-        self._corpus = corpus
+        self._csv = csv
         self._epochs = 1
         self._samplesize = 0
-        self._csv = None
 
     @property
     def csv(self):
         return self._csv
+
+    @property
+    def corpus(self):
+        return self._csv.corpus
 
     @csv.setter
     def csv(self, value):
         if isinstance(value, Csv):
             self._csv = value
         else:
-            raise ValueError("Value must be an instance of Csv class.")
+            raise ValueError(f"The input belongs to {type(value)} instead of Csv.")
 
     def get_kmeans(self, number_of_clusters=3, seed=42, verbose=True):
         if self._csv is None:
@@ -89,6 +91,10 @@ class ML:
         return self._clusters, members
 
     def get_members(self, clusters, number_of_clusters=3):
+        _df = self._csv.df
+        # Create a column called numeric_cluster and assign cluster labels
+        _df["numeric_cluster"] = clusters
+        self._csv.df = _df
         members = []
         for i in range(number_of_clusters):
             members.append([])
@@ -101,6 +107,8 @@ class ML:
             raise ValueError(
                 "CSV data is not set. Please set self.csv before calling profile."
             )
+        _corpus = self._csv.corpus
+        _numeric_clusters = ""
         for i in range(number_of_clusters):
             print("Cluster: ", i)
             print("Cluster Length: ", len(members[i]))
@@ -109,8 +117,13 @@ class ML:
                 print(self._csv.df.iloc[members[i], :])
                 print("Mean")
                 print(self._csv.df.iloc[members[i], :].mean(axis=0))
+                _numeric_clusters += f"Cluster {i} with {len(members[i])} members\n has the following mean values:\n"
+                _numeric_clusters += f"{self._csv.df.iloc[members[i], :].mean(axis=0)}\n"
             else:
                 print("DataFrame (self._csv.df) is not set.")
+        if _corpus is not None:
+            _corpus.metadata["numeric_clusters"] = _numeric_clusters
+            self._csv.corpus = _corpus
         return members
 
     # def get_centroids(self, number_of_clusters=3, verbose=True):

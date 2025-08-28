@@ -43,6 +43,8 @@ class Csv:
 
     @property
     def corpus(self) -> Optional[Corpus]:
+        if self._corpus is not None and self._df is not None:
+            self._corpus.df = self._df
         return self._corpus
 
     @property

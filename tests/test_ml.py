@@ -9,25 +9,21 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-def test_ml_initialization(corpus_fixture):
+def test_ml_initialization(csv_fixture):
     ml = ML(
-        corpus=corpus_fixture,
+        csv=csv_fixture,
     )
-    assert ml._corpus == corpus_fixture, "Corpus should be set correctly"
+    assert ml._csv == csv_fixture, "Csv should be set correctly"
 
 
-def test_get_kmeans(corpus_fixture):
-    ml = ML(
-        corpus=corpus_fixture,
-    )
+def test_get_kmeans(csv_fixture):
     folder_path = resource_filename("src.crisp_t.resources", "food_coded.csv")
-    csv = Csv(
-        corpus=corpus_fixture,
-        comma_separated_text_columns="comfort_food,comfort_food_reasons,diet_current",
+
+    csv_fixture.read_csv(folder_path)
+    csv_fixture.drop_na()
+    ml = ML(
+        csv=csv_fixture,
     )
-    csv.read_csv(folder_path)
-    csv.drop_na()
-    ml.csv = csv
     kmeans, members = ml.get_kmeans(number_of_clusters=5)
     print(kmeans)
     print(members)
@@ -37,18 +33,16 @@ def test_get_kmeans(corpus_fixture):
     # [[3, 4, 9], [0, 1, 2, 7, 8, 10], [5], [6, 11], [12]]
 
 
-def test_profile(corpus_fixture):
-    ml = ML(
-        corpus=corpus_fixture,
-    )
+def test_profile(csv_fixture):
+
     folder_path = resource_filename("src.crisp_t.resources", "food_coded.csv")
-    csv = Csv(
-        corpus=corpus_fixture,
-        comma_separated_text_columns="comfort_food,comfort_food_reasons,diet_current",
+    _csv = csv_fixture
+    _csv.read_csv(folder_path)
+    _csv.drop_na()
+    print(_csv)
+    ml = ML(
+        csv=_csv
     )
-    csv.read_csv(folder_path)
-    csv.drop_na()
-    ml.csv = csv
     kmeans, members = ml.get_kmeans(number_of_clusters=5)
     profile = ml.profile(members, number_of_clusters=5)
     print(profile)
