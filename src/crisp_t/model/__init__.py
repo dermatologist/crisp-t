@@ -1,12 +1,11 @@
 from .document import Document
 from .corpus import Corpus
 
-from server.models.gpt2_manager import GPT2Manager
-from server.models.spacy_manager import SpacyManager
+# from server.models.gpt2_manager import GPT2Manager
+from .spacy_manager import SpacyManager
 
 __all__ = [
     "SpacyManager",
-    "GPT2Manager",
     "Document",
     "Corpus",
 ]
