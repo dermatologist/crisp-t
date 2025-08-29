@@ -24,7 +24,7 @@ import argparse
 import logging
 import sys
 
-from crisp_t import __version__
+from . import __version__
 
 __author__ = "dermatologist"
 __copyright__ = "dermatologist"

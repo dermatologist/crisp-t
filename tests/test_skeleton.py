@@ -1,6 +1,6 @@
 import pytest
 
-from crisp_t.skeleton import fib, main
+from src.crisp_t.skeleton import fib, main
 
 __author__ = "dermatologist"
 __copyright__ = "dermatologist"

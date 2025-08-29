@@ -10,7 +10,7 @@
 import os
 import pytest
 import logging
-from crisp_t.csv import Csv
+from src.crisp_t.csv import Csv
 from src.crisp_t.read_data import ReadData
 from pkg_resources import resource_filename
 
