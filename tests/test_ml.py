@@ -90,3 +90,13 @@ def test_get_xgb_classes(csv_fixture):
     assert xgb_classes is not None, "XGBoost classes should not be None"
     human_readable = ml.format_confusion_matrix_to_human_readable(xgb_classes)
     print(human_readable)
+
+# def test_get_apriori(csv_fixture):
+#     folder_path = resource_filename("src.crisp_t.resources", "food_coded.csv")
+#     _csv = csv_fixture
+#     _csv.read_csv(folder_path)
+#     _csv.drop_na()
+#     ml = ML(csv=_csv)
+#     apriori_rules = ml.get_apriori(y="Gender")
+#     assert apriori_rules is not None, "Apriori rules should not be None"
+#     print(apriori_rules)

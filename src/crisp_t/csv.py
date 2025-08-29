@@ -1,7 +1,7 @@
 import logging
 from typing import Optional
 
-import numpy
+import numpy as np
 import pandas as pd
 
 from .model import Corpus
@@ -153,7 +153,7 @@ class Csv:
 
     def mark_missing(self):
         if self._df is not None:
-            self._df.replace("", numpy.nan, inplace=True)
+            self._df.replace("", np.nan, inplace=True)
             self._df.dropna(inplace=True)
         else:
             logger.error("DataFrame is None. Cannot mark missing values.")
@@ -205,7 +205,7 @@ class Csv:
             logger.error("DataFrame is None. Cannot read X and y.")
             return None, None
         if numeric_only:
-            self._df = self._df.select_dtypes(include=[numpy.number])
+            self._df = self._df.select_dtypes(include=[np.number])
             logger.info("DataFrame filtered to numeric columns only.")
         if y == "":
             self._y = None
@@ -265,11 +265,13 @@ class Csv:
         self._X = self._X_original
         self._y = self._y_original
 
-    def prepare_data(self, y: str, oversample=False):
+    def prepare_data(self, y: str, oversample=False, one_hot_encode_all=False):
         self.mark_missing()
         if oversample:
             self.oversample()
         self.one_hot_encode_strings_in_df()
+        if one_hot_encode_all:
+            self.one_hot_encode_all_columns()
         return self.read_xy(y)
 
     def one_hot_encode_strings_in_df(self):
@@ -280,5 +282,13 @@ class Csv:
                 logger.info("One-hot encoding applied to string columns.")
             else:
                 logger.info("No string (object) columns found for one-hot encoding.")
+        else:
+            logger.error("DataFrame is None. Cannot apply one-hot encoding.")
+
+    def one_hot_encode_all_columns(self):
+        # The allowed values for a DataFrame are True, False, 0, 1. Found value 2
+        if self._df is not None:
+            self._df = self._df.applymap(lambda x: 0 if x in [False, 0] else (1 if x in [True, 1] else True))
+            logger.info("One-hot encoding applied to all columns.")
         else:
             logger.error("DataFrame is None. Cannot apply one-hot encoding.")

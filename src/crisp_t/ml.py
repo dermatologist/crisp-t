@@ -331,8 +331,8 @@ class ML:
             self._csv.corpus.metadata["knn_search"] = f"KNN search for {y} (n={n}, record no: {r}): {ind} with distances {dist}"
         return dist, ind
 
-    def process_xy(self, y: str, oversample=False):
-        X, Y = self._csv.prepare_data(y=y, oversample=oversample)
+    def process_xy(self, y: str, oversample=False, one_hot_encode_all=False):
+        X, Y = self._csv.prepare_data(y=y, oversample=oversample, one_hot_encode_all=one_hot_encode_all)
         if X is None or Y is None:
             raise ValueError("prepare_data returned None for X or Y.")
 
@@ -352,14 +352,14 @@ class ML:
 
         return X_np, Y_raw, X, Y
 
-    def get_xgb_classes(self, y: str, oversample=False):
+    def get_xgb_classes(self, y: str, oversample=False, test_size=0.25, random_state=0):
         X_np, Y_raw, X, Y = self.process_xy(y=y)
         if ML_INSTALLED:
             # ValueError: Invalid classes inferred from unique values of `y`.  Expected: [0 1], got [1 2]
             # convert y to binary
             Y_binary = (Y_raw == 1).astype(int)
             X_train, X_test, y_train, y_test = train_test_split(
-                X_np, Y_binary, test_size=0.25, random_state=0
+                X_np, Y_binary, test_size=test_size, random_state=random_state
             )
             classifier = XGBClassifier(use_label_encoder=False, eval_metric="logloss") # type: ignore
             classifier.fit(X_train, y_train)
@@ -372,5 +372,15 @@ class ML:
             if self._csv.corpus is not None:
                 self._csv.corpus.metadata["xgb_confusion_matrix"] = f"Confusion Matrix for XGBoost predicting {y}:\n{_confusion_matrix}"
             return _confusion_matrix
+        else:
+            raise ImportError("ML dependencies are not installed.")
+
+    # TODO: Fix. This gets stuck
+    def get_apriori(self, y: str, min_support=0.9, use_colnames=True, min_threshold=3):
+        if ML_INSTALLED:
+            X_np, Y_raw, X, Y = self.process_xy(y=y, one_hot_encode_all=True)
+            frequent_itemsets = apriori(X, min_support=min_support, use_colnames=use_colnames)
+            rules = association_rules(frequent_itemsets, metric="lift", min_threshold=min_threshold)
+            return rules
         else:
             raise ImportError("ML dependencies are not installed.")
