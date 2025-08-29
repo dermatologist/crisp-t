@@ -89,7 +89,7 @@ ml = [
     "scikit-learn",
     "imbalanced-learn",
     "xgboost",
-    "torch==2.2.2",
+    "torch",
 ]
 
 

@@ -267,10 +267,10 @@ class ML:
         preds = [idx_to_class[i] for i in pred_indices]
         accuracy = (pred_indices == Y_idx).sum() / len(Y_idx)
         print(
-            f"Predicting {y} with {X.shape[1]} features for { self._epochs} gave an accuracy (convergence): {accuracy*100:.2f}%"
+            f"Predicting {y} with {X.shape[1]} features for {self._epochs} gave an accuracy (convergence): {accuracy*100:.2f}%"
         )
         if _corpus is not None:
-            _corpus.metadata["nnet_predictions"] = f"Predicting {y} with {X.shape[1]} features for { self._epochs} gave an accuracy (convergence): {accuracy*100:.2f}%"
+            _corpus.metadata["nnet_predictions"] = f"Predicting {y} with {X.shape[1]} features for {self._epochs} gave an accuracy (convergence): {accuracy*100:.2f}%"
         return preds
 
     def svm_confusion_matrix(self, y: str, test_size=0.25, random_state=0):

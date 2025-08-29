@@ -287,8 +287,21 @@ class Csv:
 
     def one_hot_encode_all_columns(self):
         # The allowed values for a DataFrame are True, False, 0, 1. Found value 2
+        # Map all values to 0 or 1 for one-hot encoding:
+        # - 1 or True -> 1
+        # - 0 or False -> 0
+        # - Any other value -> 1 (with a warning)
         if self._df is not None:
-            self._df = self._df.applymap(lambda x: 0 if x in [False, 0] else (1 if x in [True, 1] else True))
-            logger.info("One-hot encoding applied to all columns.")
-        else:
-            logger.error("DataFrame is None. Cannot apply one-hot encoding.")
+
+            def to_one_hot(x):
+                if x in [1, True]:
+                    return 1
+                elif x in [0, False]:
+                    return 0
+                else:
+                    logger.warning(
+                        f"Unexpected value '{x}' encountered during one-hot encoding; mapping to 1."
+                    )
+                    return 1
+
+            self._df = self._df.applymap(to_one_hot)

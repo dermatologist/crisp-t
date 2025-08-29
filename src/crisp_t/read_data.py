@@ -158,7 +158,6 @@ class ReadData:
                 return document
         raise ValueError("Document not found: %s" % doc_id)
 
-
     def write_corpus_to_json(self, file_path=""):
         """
         Write the corpus to a json file.
@@ -190,9 +189,10 @@ class ReadData:
             data = json.load(f)
             self._corpus = Corpus.model_validate(data)
             logger.info("Corpus read from %s", file_name)
-        if not os.path.exists(df_name):
-            raise ValueError("File not found: %s" % df_name)
-        self._corpus.df = pd.read_csv(df_name)
+        if os.path.exists(df_name):
+            self._corpus.df = pd.read_csv(df_name)
+        else:
+            self._corpus.df = None
         return self._corpus
 
     # TODO IMPROVE
@@ -243,7 +243,11 @@ class ReadData:
                     "source": file_name,
                     "file_name": file_name,
                     "row": index,
-                    "id": row[id_column] if id_column != "" else index,
+                    "id": (
+                        row[id_column]
+                        if (id_column != "" and id_column in original_df.columns)
+                        else index
+                    ),
                 },
                 id=str(index),
                 score=0.0,
