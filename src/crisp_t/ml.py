@@ -289,3 +289,33 @@ class ML:
         if _corpus is not None:
             _corpus.metadata["nnet_predictions"] = f"Predicting {y} with {X.shape[1]} features for { self._epochs} gave an accuracy (convergence): {accuracy*100:.2f}%"
         return preds
+
+    def svm_confusion_matrix(self, y: str, test_size=0.25, random_state=0):
+        """Generate confusion matrix for SVM
+
+        Returns:
+            [list] -- [description]
+        """
+        X, Y = self._csv.prepare_data(y=y, oversample=False)
+        X_train, X_test, y_train, y_test = train_test_split(
+            X, Y, test_size=test_size, random_state=random_state
+        )
+        sc = StandardScaler()
+        # Issue #22
+        y_test = y_test.astype("int")
+        y_train = y_train.astype("int")
+        X_train = sc.fit_transform(X_train)
+        X_test = sc.transform(X_test)
+        classifier = SVC(kernel="linear", random_state=0)
+        classifier.fit(X_train, y_train)
+        y_pred = classifier.predict(X_test)
+        # Issue #22
+        y_pred = y_pred.astype("int")
+        _confusion_matrix = confusion_matrix(y_test, y_pred)
+        print(f"Confusion Matrix for SVM predicting {y}:\n{_confusion_matrix}")
+        # Output
+        # [[2 0]
+        #  [2 0]]
+        if self._csv.corpus is not None:
+            self._csv.corpus.metadata["svm_confusion_matrix"] = f"Confusion Matrix for SVM predicting {y}:\n{_confusion_matrix}"
+        return _confusion_matrix

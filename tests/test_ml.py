@@ -56,3 +56,13 @@ def test_get_nnet_predictions(csv_fixture):
     ml = ML(csv=_csv)
     predictions = ml.get_nnet_predictions(y="Gender")
     assert predictions is not None, "Predictions should not be None"
+
+
+def test_svm_confusion_matrix(csv_fixture):
+    folder_path = resource_filename("src.crisp_t.resources", "food_coded.csv")
+    _csv = csv_fixture
+    _csv.read_csv(folder_path)
+    _csv.drop_na()
+    ml = ML(csv=_csv)
+    confusion_matrix = ml.svm_confusion_matrix(y="Gender")
+    assert confusion_matrix is not None, "Confusion matrix should not be None"
