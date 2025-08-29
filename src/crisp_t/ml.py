@@ -115,9 +115,9 @@ class ML:
             print("Cluster Members")
             if self._csv is not None and getattr(self._csv, "df", None) is not None:
                 print(self._csv.df.iloc[members[i], :])
-                print("Mean")
+                print("Centroids")
                 print(self._csv.df.iloc[members[i], :].mean(axis=0))
-                _numeric_clusters += f"Cluster {i} with {len(members[i])} members\n has the following mean values:\n"
+                _numeric_clusters += f"Cluster {i} with {len(members[i])} members\n has the following centroids (mean values):\n"
                 _numeric_clusters += f"{self._csv.df.iloc[members[i], :].mean(axis=0)}\n"
             else:
                 print("DataFrame (self._csv.df) is not set.")
@@ -126,22 +126,3 @@ class ML:
             self._csv.corpus = _corpus
         return members
 
-    # def get_centroids(self, number_of_clusters=3, verbose=True):
-    #     cluster_list = []
-    #     for x in range(0, number_of_clusters):
-    #         ct = 0
-    #         for cluster in self._clusters:
-    #             if cluster == x:
-    #                 cluster_list.append(ct)
-    #             ct += 1
-    #         if verbose:
-    #             print("Cluster: ", x)
-    #             print("Cluster Length: ", len(cluster_list))
-    #             print("Cluster Members")
-    #             if self._csv is not None and getattr(self._csv, "df", None) is not None:
-    #                 print(self._csv.df.iloc[cluster_list, :])
-    #                 print("Mean")
-    #                 print(self._csv.df.iloc[cluster_list, :].mean(axis=0))
-    #             else:
-    #                 print("DataFrame (self._csv.df) is not set.")
-    #     return cluster_list
