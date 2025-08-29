@@ -100,3 +100,13 @@ def test_get_xgb_classes(csv_fixture):
 #     apriori_rules = ml.get_apriori(y="Gender")
 #     assert apriori_rules is not None, "Apriori rules should not be None"
 #     print(apriori_rules)
+
+def test_get_pca(csv_fixture):
+    folder_path = resource_filename("src.crisp_t.resources", "food_coded.csv")
+    _csv = csv_fixture
+    _csv.read_csv(folder_path)
+    _csv.drop_na()
+    ml = ML(csv=_csv)
+    pca_result = ml.get_pca(y="Gender")
+    assert pca_result is not None, "PCA result should not be None"
+    print(pca_result)

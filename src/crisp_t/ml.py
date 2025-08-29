@@ -379,8 +379,82 @@ class ML:
     def get_apriori(self, y: str, min_support=0.9, use_colnames=True, min_threshold=3):
         if ML_INSTALLED:
             X_np, Y_raw, X, Y = self.process_xy(y=y, one_hot_encode_all=True)
-            frequent_itemsets = apriori(X, min_support=min_support, use_colnames=use_colnames)
-            rules = association_rules(frequent_itemsets, metric="lift", min_threshold=min_threshold)
+            frequent_itemsets = apriori(X, min_support=min_support, use_colnames=use_colnames) # type: ignore
+            rules = association_rules(frequent_itemsets, metric="lift", min_threshold=min_threshold) # type: ignore
             return rules
         else:
             raise ImportError("ML dependencies are not installed.")
+
+    def get_pca(self, y: str, n=3):
+        X_np, Y_raw, X, Y = self.process_xy(y=y)
+        # https://plot.ly/~notebook_demo/264/about-the-author-some-of-sebastian-rasc/#/
+        X_std = StandardScaler().fit_transform(X)
+        (recs, factors) = X_std.shape
+        print("Covariance matrix: \n%s" % np.cov(X_std.T))
+
+        cov_mat = np.cov(X_std.T)
+
+        eig_vals, eig_vecs = np.linalg.eig(cov_mat)
+
+        print("Eigenvectors \n%s" % eig_vecs)
+        print("\nEigenvalues \n%s" % eig_vals)
+
+        # Make a list of (eigenvalue, eigenvector) tuples
+        eig_pairs = [
+            (np.abs(eig_vals[i]), eig_vecs[:, i]) for i in range(len(eig_vals))
+        ]
+
+        # Sort the (eigenvalue, eigenvector) tuples from high to low
+        eig_pairs.sort()
+        eig_pairs.reverse()
+
+        # Visually confirm that the list is correctly sorted by decreasing eigenvalues
+        print("Eigenvalues in descending order:")
+        for i in eig_pairs:
+            print(i[0])
+
+        # variance explained
+        tot = sum(eig_vals)
+        var_exp = [(i / tot) * 100 for i in sorted(eig_vals, reverse=True)]
+        cum_var_exp = np.cumsum(var_exp)
+        print("Variance explained: ", var_exp)
+        print("Cumulative: ", cum_var_exp)
+
+        if len(eig_vals) < n:
+            n = len(eig_vals)
+
+        # Adjust according to number of features chosen (default n=2)
+        matrix_w = np.hstack(
+            (eig_pairs[0][1].reshape(factors, 1), eig_pairs[1][1].reshape(factors, 1))
+        )
+
+        if n == 3:
+            matrix_w = np.hstack(
+                (
+                    eig_pairs[0][1].reshape(factors, 1),
+                    eig_pairs[1][1].reshape(factors, 1),
+                    eig_pairs[2][1].reshape(factors, 1),
+                )
+            )
+
+        if n == 4:
+            matrix_w = np.hstack(
+                (
+                    eig_pairs[0][1].reshape(factors, 1),
+                    eig_pairs[1][1].reshape(factors, 1),
+                    eig_pairs[2][1].reshape(factors, 1),
+                    eig_pairs[3][1].reshape(factors, 1),
+                )
+            )
+        if n == 5:
+            matrix_w = np.hstack(
+                (
+                    eig_pairs[0][1].reshape(factors, 1),
+                    eig_pairs[1][1].reshape(factors, 1),
+                    eig_pairs[2][1].reshape(factors, 1),
+                    eig_pairs[3][1].reshape(factors, 1),
+                    eig_pairs[4][1].reshape(factors, 1),
+                )
+            )
+
+        print("Matrix W:\n", matrix_w)
