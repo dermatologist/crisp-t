@@ -385,76 +385,72 @@ class ML:
         else:
             raise ImportError("ML dependencies are not installed.")
 
-    def get_pca(self, y: str, n=3):
+    def get_pca(self, y: str, n: int = 3):
+        """
+        Perform a manual PCA (no sklearn PCA) on the feature matrix for target y.
+
+        Args:
+            y (str): Target column name (used only for data preparation).
+            n (int): Number of principal components to keep.
+
+        Returns:
+            dict: {
+                'covariance_matrix': cov_mat,
+                'eigenvalues': eig_vals_sorted,
+                'eigenvectors': eig_vecs_sorted,
+                'explained_variance_ratio': var_exp,
+                'cumulative_explained_variance_ratio': cum_var_exp,
+                'projection_matrix': matrix_w,
+                'transformed': X_pca
+            }
+        """
         X_np, Y_raw, X, Y = self.process_xy(y=y)
-        # https://plot.ly/~notebook_demo/264/about-the-author-some-of-sebastian-rasc/#/
-        X_std = StandardScaler().fit_transform(X)
-        (recs, factors) = X_std.shape
-        print("Covariance matrix: \n%s" % np.cov(X_std.T))
+        X_std = StandardScaler().fit_transform(X_np)
 
         cov_mat = np.cov(X_std.T)
+        eig_vals, eig_vecs = np.linalg.eigh(cov_mat)  # symmetric matrix -> eigh
 
-        eig_vals, eig_vecs = np.linalg.eig(cov_mat)
+        # Sort eigenvalues (and vectors) descending
+        idx = np.argsort(eig_vals)[::-1]
+        eig_vals_sorted = eig_vals[idx]
+        eig_vecs_sorted = eig_vecs[:, idx]
 
-        print("Eigenvectors \n%s" % eig_vecs)
-        print("\nEigenvalues \n%s" % eig_vals)
+        factors = X_std.shape[1]
+        n = max(1, min(n, factors))
 
-        # Make a list of (eigenvalue, eigenvector) tuples
-        eig_pairs = [
-            (np.abs(eig_vals[i]), eig_vecs[:, i]) for i in range(len(eig_vals))
-        ]
-
-        # Sort the (eigenvalue, eigenvector) tuples from high to low
-        eig_pairs.sort()
-        eig_pairs.reverse()
-
-        # Visually confirm that the list is correctly sorted by decreasing eigenvalues
-        print("Eigenvalues in descending order:")
-        for i in eig_pairs:
-            print(i[0])
-
-        # variance explained
-        tot = sum(eig_vals)
-        var_exp = [(i / tot) * 100 for i in sorted(eig_vals, reverse=True)]
+        # Explained variance ratios
+        tot = eig_vals_sorted.sum()
+        var_exp = (eig_vals_sorted / tot) * 100.0
         cum_var_exp = np.cumsum(var_exp)
-        print("Variance explained: ", var_exp)
-        print("Cumulative: ", cum_var_exp)
 
-        if len(eig_vals) < n:
-            n = len(eig_vals)
+        # Projection matrix (first n eigenvectors)
+        matrix_w = eig_vecs_sorted[:, :n]
 
-        # Adjust according to number of features chosen (default n=2)
-        matrix_w = np.hstack(
-            (eig_pairs[0][1].reshape(factors, 1), eig_pairs[1][1].reshape(factors, 1))
-        )
+        # Project data
+        X_pca = X_std @ matrix_w
 
-        if n == 3:
-            matrix_w = np.hstack(
-                (
-                    eig_pairs[0][1].reshape(factors, 1),
-                    eig_pairs[1][1].reshape(factors, 1),
-                    eig_pairs[2][1].reshape(factors, 1),
-                )
+        # Optional prints (retain original behavior)
+        print("Covariance matrix:\n", cov_mat)
+        print("Eigenvalues (desc):\n", eig_vals_sorted)
+        print("Explained variance (%):\n", var_exp[:n])
+        print("Cumulative explained variance (%):\n", cum_var_exp[:n])
+        print("Projection matrix (W):\n", matrix_w)
+        print("Transformed (first 5 rows):\n", X_pca[:5])
+
+        result = {
+            "covariance_matrix": cov_mat,
+            "eigenvalues": eig_vals_sorted,
+            "eigenvectors": eig_vecs_sorted,
+            "explained_variance_ratio": var_exp,
+            "cumulative_explained_variance_ratio": cum_var_exp,
+            "projection_matrix": matrix_w,
+            "transformed": X_pca,
+        }
+
+        if self._csv.corpus is not None:
+            self._csv.corpus.metadata["pca"] = (
+                f"PCA kept {n} components explaining "
+                f"{cum_var_exp[n-1]:.2f}% variance."
             )
 
-        if n == 4:
-            matrix_w = np.hstack(
-                (
-                    eig_pairs[0][1].reshape(factors, 1),
-                    eig_pairs[1][1].reshape(factors, 1),
-                    eig_pairs[2][1].reshape(factors, 1),
-                    eig_pairs[3][1].reshape(factors, 1),
-                )
-            )
-        if n == 5:
-            matrix_w = np.hstack(
-                (
-                    eig_pairs[0][1].reshape(factors, 1),
-                    eig_pairs[1][1].reshape(factors, 1),
-                    eig_pairs[2][1].reshape(factors, 1),
-                    eig_pairs[3][1].reshape(factors, 1),
-                    eig_pairs[4][1].reshape(factors, 1),
-                )
-            )
-
-        print("Matrix W:\n", matrix_w)
+        return result
