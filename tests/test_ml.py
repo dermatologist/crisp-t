@@ -75,6 +75,6 @@ def test_knn_search(csv_fixture):
     _csv.read_csv(folder_path)
     _csv.drop_na()
     ml = ML(csv=_csv)
-    neighbors = ml.knn_search(y="Gender", n=3, r=3)
-    assert neighbors is not None, "Neighbors should not be None"
-    print(neighbors)
+    dist, ind = ml.knn_search(y="Gender", n=3, r=3)
+    assert ind is not None, "Neighbors should not be None"
+    print(f"KNN search for Gender (n=3, record no 3): {ind} with distances {dist}")
