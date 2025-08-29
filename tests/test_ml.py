@@ -1,8 +1,9 @@
 import logging
 
 from pkg_resources import resource_filename
-from src.crisp_t.ml import ML
+
 from src.crisp_t.csv import Csv
+from src.crisp_t.ml import ML
 
 # setup logging
 logging.basicConfig(level=logging.INFO)
@@ -40,22 +41,18 @@ def test_profile(csv_fixture):
     _csv.read_csv(folder_path)
     _csv.drop_na()
     print(_csv)
-    ml = ML(
-        csv=_csv
-    )
+    ml = ML(csv=_csv)
     kmeans, members = ml.get_kmeans(number_of_clusters=5)
     profile = ml.profile(members, number_of_clusters=5)
     print(profile)
     assert profile is not None, "Profile should not be None"
 
 
-def test_get_binary_nnet_predictions(csv_fixture):
+def test_get_nnet_predictions(csv_fixture):
     folder_path = resource_filename("src.crisp_t.resources", "food_coded.csv")
     _csv = csv_fixture
     _csv.read_csv(folder_path)
     _csv.drop_na()
-    ml = ML(
-        csv=_csv
-    )
-    predictions = ml.get_binary_nnet_predictions(y="Gender")
+    ml = ML(csv=_csv)
+    predictions = ml.get_nnet_predictions(y="Gender")
     assert predictions is not None, "Predictions should not be None"

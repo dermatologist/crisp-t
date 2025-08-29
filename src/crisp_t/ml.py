@@ -42,6 +42,20 @@ try:
             x = self.sigmoid(self.fc3(x))
             return x
 
+    class MultiClassNet(nn.Module):
+        def __init__(self, input_dim, num_classes):
+            super().__init__()
+            self.fc1 = nn.Linear(input_dim, 64)
+            self.fc2 = nn.Linear(64, 32)
+            self.fc3 = nn.Linear(32, num_classes)
+            self.relu = nn.ReLU()
+
+        def forward(self, x):
+            x = self.relu(self.fc1(x))
+            x = self.relu(self.fc2(x))
+            x = self.fc3(x)  # raw logits for CrossEntropyLoss
+            return x
+
 except ImportError:
     logger.info(
         "ML dependencies are not installed. Please install them by ```pip install crisp-t[ml] to use ML features."
@@ -119,7 +133,9 @@ class ML:
                 print("Centroids")
                 print(self._csv.df.iloc[members[i], :].mean(axis=0))
                 _numeric_clusters += f"Cluster {i} with {len(members[i])} members\n has the following centroids (mean values):\n"
-                _numeric_clusters += f"{self._csv.df.iloc[members[i], :].mean(axis=0)}\n"
+                _numeric_clusters += (
+                    f"{self._csv.df.iloc[members[i], :].mean(axis=0)}\n"
+                )
             else:
                 print("DataFrame (self._csv.df) is not set.")
         if _corpus is not None:
@@ -127,107 +143,128 @@ class ML:
             self._csv.corpus = _corpus
         return members
 
-    # ...existing code...
-    def get_binary_nnet_predictions(self, y: str):
+    def get_nnet_predictions(self, y: str):
+        """
+        Extended: Handles binary (BCELoss) and multi-class (CrossEntropyLoss).
+        Returns list of predicted original class labels.
+        """
         if ML_INSTALLED is False:
             logger.info(
                 "ML dependencies are not installed. Please install them by ```pip install crisp-t[ml] to use ML features."
             )
             return None
 
-        # Prepare data (X features, Y target)
         X, Y = self._csv.prepare_data(y=y, oversample=False)
         if X is None or Y is None:
             raise ValueError("prepare_data returned None for X or Y.")
 
-        # Ensure numpy float32 arrays (avoid torch tensor creation error on DataFrame)
-        if hasattr(X, "to_numpy"):
-            X_np = X.to_numpy(dtype=numpy.float32)
-        else:
-            X_np = numpy.asarray(X, dtype=numpy.float32)
-        if hasattr(Y, "to_numpy"):
-            Y_np = Y.to_numpy(dtype=numpy.float32)
-        else:
-            Y_np = numpy.asarray(Y, dtype=numpy.float32)
+        # To numpy float32
+        X_np = (
+            X.to_numpy(dtype=numpy.float32)
+            if hasattr(X, "to_numpy")
+            else numpy.asarray(X, dtype=numpy.float32)
+        )
+        Y_raw = Y.to_numpy() if hasattr(Y, "to_numpy") else numpy.asarray(Y)
+        # Handle NaNs
+        if numpy.isnan(X_np).any():
+            raise ValueError("NaN detected in feature matrix.")
+        if numpy.isnan(Y_raw.astype(float, copy=False)).any():
+            raise ValueError("NaN detected in target vector.")
 
-        # --- NEW: Normalize target for BCELoss to be strictly binary {0,1} ---
-        unique_classes = numpy.unique(Y_np)
-        if unique_classes.size != 2:
-            raise ValueError(
-                f"BCELoss requires binary targets, but found {unique_classes.size} classes: {unique_classes}. "
-                "Provide a binary target column or extend the code to handle multi-class with CrossEntropyLoss."
-            )
-
-        mapping_applied = False
-        class_mapping = {}
-        inverse_mapping = {}
-        # If classes are not already {0.0,1.0}, map them deterministically
-        if not numpy.array_equal(
-            numpy.sort(unique_classes), numpy.array([0.0, 1.0], dtype=numpy.float32)
-        ):
-            sorted_classes = sorted(unique_classes.tolist())
-            class_mapping = {sorted_classes[0]: 0.0, sorted_classes[1]: 1.0}
-            inverse_mapping = {v: k for k, v in class_mapping.items()}
-            Y_np = numpy.vectorize(class_mapping.get)(Y_np).astype(numpy.float32)
-            mapping_applied = True
-            logger.info(
-                f"Mapped original target classes {sorted_classes} to [0.0, 1.0] for BCELoss."
-            )
+        unique_classes = numpy.unique(Y_raw)
+        num_classes = unique_classes.size
+        if num_classes < 2:
+            raise ValueError(f"Need at least 2 classes; found {num_classes}.")
 
         vnum = X_np.shape[1]
 
-        model = NeuralNet(vnum)
-        criterion = nn.BCELoss()
+        # Binary path
+        if num_classes == 2:
+            # Map to {0.0,1.0} for BCELoss if needed
+            mapping_applied = False
+            class_mapping = {}
+            inverse_mapping = {}
+            # Ensure deterministic order
+            sorted_classes = sorted(unique_classes.tolist())
+            if not (sorted_classes == [0, 1] or sorted_classes == [0.0, 1.0]):
+                class_mapping = {sorted_classes[0]: 0.0, sorted_classes[1]: 1.0}
+                inverse_mapping = {v: k for k, v in class_mapping.items()}
+                Y_mapped = numpy.vectorize(class_mapping.get)(Y_raw).astype(
+                    numpy.float32
+                )
+                mapping_applied = True
+            else:
+                Y_mapped = Y_raw.astype(numpy.float32)
+
+            model = NeuralNet(vnum)
+            criterion = nn.BCELoss()
+            optimizer = optim.Adam(model.parameters(), lr=0.001)
+
+            X_tensor = torch.from_numpy(X_np)
+            y_tensor = torch.from_numpy(Y_mapped.astype(numpy.float32)).view(-1, 1)
+
+            dataset = TensorDataset(X_tensor, y_tensor)
+            dataloader = DataLoader(dataset, batch_size=32, shuffle=True)
+
+            for _ in range(self._epochs):
+                for batch_X, batch_y in dataloader:
+                    optimizer.zero_grad()
+                    outputs = model(batch_X)
+                    loss = criterion(outputs, batch_y)
+                    if torch.isnan(loss):
+                        raise RuntimeError("NaN loss encountered.")
+                    loss.backward()
+                    optimizer.step()
+
+            with torch.no_grad():
+                probs = model(torch.from_numpy(X_np)).view(-1).cpu().numpy()
+            bin_preds_internal = (probs >= 0.5).astype(int)
+
+            if mapping_applied:
+                preds = [inverse_mapping[float(p)] for p in bin_preds_internal]
+                y_eval = numpy.vectorize(class_mapping.get)(Y_raw).astype(int)
+                preds_eval = bin_preds_internal
+            else:
+                preds = bin_preds_internal.tolist()
+                y_eval = Y_mapped.astype(int)
+                preds_eval = bin_preds_internal
+
+            accuracy = (preds_eval == y_eval).sum() / len(y_eval)
+            print(f"Accuracy: {accuracy*100:.2f}%")
+            return preds
+
+        # Multi-class path
+        # Map original classes to indices
+        sorted_classes = sorted(unique_classes.tolist())
+        class_to_idx = {c: i for i, c in enumerate(sorted_classes)}
+        idx_to_class = {i: c for c, i in class_to_idx.items()}
+        Y_idx = numpy.vectorize(class_to_idx.get)(Y_raw).astype(numpy.int64)
+
+        model = MultiClassNet(vnum, num_classes)
+        criterion = nn.CrossEntropyLoss()
         optimizer = optim.Adam(model.parameters(), lr=0.001)
 
-        # Convert data to PyTorch tensors
         X_tensor = torch.from_numpy(X_np)
-        y_tensor = torch.from_numpy(Y_np).view(-1, 1)
+        y_tensor = torch.from_numpy(Y_idx)
 
-        # Create a dataset and data loader
         dataset = TensorDataset(X_tensor, y_tensor)
-        dataloader = DataLoader(dataset, batch_size=10, shuffle=True)
+        dataloader = DataLoader(dataset, batch_size=32, shuffle=True)
 
-        # Train the model
-        for epoch in range(self._epochs):
+        for _ in range(self._epochs):
             for batch_X, batch_y in dataloader:
                 optimizer.zero_grad()
-                outputs = model(batch_X)
-                loss = criterion(outputs, batch_y)
+                logits = model(batch_X)
+                loss = criterion(logits, batch_y)
                 if torch.isnan(loss):
-                    raise RuntimeError("Encountered NaN loss during training.")
+                    raise RuntimeError("NaN loss encountered.")
                 loss.backward()
                 optimizer.step()
 
-        # Inference
         with torch.no_grad():
-            raw_outputs = model(torch.from_numpy(X_np)).view(-1, 1)
-            preds_np = raw_outputs.cpu().numpy().flatten()
-            binary_preds = (preds_np >= 0.5).astype(int)
+            logits_full = model(torch.from_numpy(X_np))
+            pred_indices = torch.argmax(logits_full, dim=1).cpu().numpy()
 
-        # Map back to original class labels if remapped
-        if mapping_applied:
-            binary_preds = [inverse_mapping[int(p)] for p in binary_preds]
-        else:
-            binary_preds = binary_preds.tolist()
-
-        # Calculate accuracy (compare in binary space)
-        if mapping_applied:
-            # Need original Y in same label space as predictions
-            Y_eval = numpy.vectorize(class_mapping.get)(
-                Y_np_original := numpy.asarray(
-                    Y.to_numpy() if hasattr(Y, "to_numpy") else Y, dtype=numpy.float32
-                )
-            ).astype(int)
-            preds_for_acc = numpy.vectorize(class_mapping.get)(
-                numpy.asarray(binary_preds)
-            ).astype(int)
-        else:
-            Y_eval = Y_np.astype(int)
-            preds_for_acc = numpy.asarray(binary_preds).astype(int)
-
-        correct = int((preds_for_acc == Y_eval).sum())
-        total = len(preds_for_acc)
-        accuracy = correct / total if total else 0.0
-        print(f"Accuracy: {accuracy * 100:.2f}%")
-        return binary_preds
+        preds = [idx_to_class[i] for i in pred_indices]
+        accuracy = (pred_indices == Y_idx).sum() / len(Y_idx)
+        print(f"Accuracy: {accuracy*100:.2f}%")
+        return preds
