@@ -66,3 +66,5 @@ def test_svm_confusion_matrix(csv_fixture):
     ml = ML(csv=_csv)
     confusion_matrix = ml.svm_confusion_matrix(y="Gender")
     assert confusion_matrix is not None, "Confusion matrix should not be None"
+    human_readable = ml.format_confusion_matrix_to_human_readable(confusion_matrix)
+    print(human_readable)

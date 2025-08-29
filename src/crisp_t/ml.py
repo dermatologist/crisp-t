@@ -1,7 +1,7 @@
 import logging
 from random import randint
 
-import numpy
+import numpy as np
 from pandas import read_csv
 from sklearn.cluster import KMeans
 from sklearn.metrics import confusion_matrix
@@ -166,18 +166,18 @@ class ML:
 
         # To numpy float32
         X_np = (
-            X.to_numpy(dtype=numpy.float32)
+            X.to_numpy(dtype=np.float32)
             if hasattr(X, "to_numpy")
-            else numpy.asarray(X, dtype=numpy.float32)
+            else np.asarray(X, dtype=np.float32)
         )
-        Y_raw = Y.to_numpy() if hasattr(Y, "to_numpy") else numpy.asarray(Y)
+        Y_raw = Y.to_numpy() if hasattr(Y, "to_numpy") else np.asarray(Y)
         # Handle NaNs
-        if numpy.isnan(X_np).any():
+        if np.isnan(X_np).any():
             raise ValueError("NaN detected in feature matrix.")
-        if numpy.isnan(Y_raw.astype(float, copy=False)).any():
+        if np.isnan(Y_raw.astype(float, copy=False)).any():
             raise ValueError("NaN detected in target vector.")
 
-        unique_classes = numpy.unique(Y_raw)
+        unique_classes = np.unique(Y_raw)
         num_classes = unique_classes.size
         if num_classes < 2:
             raise ValueError(f"Need at least 2 classes; found {num_classes}.")
@@ -195,12 +195,12 @@ class ML:
             if not (sorted_classes == [0, 1] or sorted_classes == [0.0, 1.0]):
                 class_mapping = {sorted_classes[0]: 0.0, sorted_classes[1]: 1.0}
                 inverse_mapping = {v: k for k, v in class_mapping.items()}
-                Y_mapped = numpy.vectorize(class_mapping.get)(Y_raw).astype(
-                    numpy.float32
+                Y_mapped = np.vectorize(class_mapping.get)(Y_raw).astype(
+                    np.float32
                 )
                 mapping_applied = True
             else:
-                Y_mapped = Y_raw.astype(numpy.float32)
+                Y_mapped = Y_raw.astype(np.float32)
 
             model = NeuralNet(vnum)
             try:
@@ -208,7 +208,7 @@ class ML:
                 optimizer = optim.Adam(model.parameters(), lr=0.001) # type: ignore
 
                 X_tensor = torch.from_numpy(X_np)  # type: ignore
-                y_tensor = torch.from_numpy(Y_mapped.astype(numpy.float32)).view(-1, 1)  # type: ignore
+                y_tensor = torch.from_numpy(Y_mapped.astype(np.float32)).view(-1, 1)  # type: ignore
 
                 dataset = TensorDataset(X_tensor, y_tensor)  # type: ignore
                 dataloader = DataLoader(dataset, batch_size=32, shuffle=True)  # type: ignore
@@ -235,7 +235,7 @@ class ML:
 
             if mapping_applied:
                 preds = [inverse_mapping[float(p)] for p in bin_preds_internal] # type: ignore
-                y_eval = numpy.vectorize(class_mapping.get)(Y_raw).astype(int)
+                y_eval = np.vectorize(class_mapping.get)(Y_raw).astype(int)
                 preds_eval = bin_preds_internal
             else:
                 preds = bin_preds_internal.tolist() # type: ignore
@@ -255,7 +255,7 @@ class ML:
         sorted_classes = sorted(unique_classes.tolist())
         class_to_idx = {c: i for i, c in enumerate(sorted_classes)}
         idx_to_class = {i: c for c, i in class_to_idx.items()}
-        Y_idx = numpy.vectorize(class_to_idx.get)(Y_raw).astype(numpy.int64)
+        Y_idx = np.vectorize(class_to_idx.get)(Y_raw).astype(np.int64)
 
         model = MultiClassNet(vnum, num_classes)
         criterion = nn.CrossEntropyLoss()  # type: ignore
@@ -319,3 +319,20 @@ class ML:
         if self._csv.corpus is not None:
             self._csv.corpus.metadata["svm_confusion_matrix"] = f"Confusion Matrix for SVM predicting {y}:\n{_confusion_matrix}"
         return _confusion_matrix
+
+    def format_confusion_matrix_to_human_readable(self, confusion_matrix: np.ndarray) -> str:
+        """Format the confusion matrix to a human-readable string.
+
+        Args:
+            confusion_matrix (np.ndarray): The confusion matrix to format.
+
+        Returns:
+            str: The formatted confusion matrix with true positive, false positive, true negative, and false negative counts.
+        """
+        tn, fp, fn, tp = confusion_matrix.ravel()
+        return (
+            f"True Positive: {tp}\n"
+            f"False Positive: {fp}\n"
+            f"True Negative: {tn}\n"
+            f"False Negative: {fn}\n"
+        )
