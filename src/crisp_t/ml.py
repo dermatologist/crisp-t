@@ -127,7 +127,8 @@ class ML:
             self._csv.corpus = _corpus
         return members
 
-    def get_nnet_predictions(self, y: str):
+    # ...existing code...
+    def get_binary_nnet_predictions(self, y: str):
         if ML_INSTALLED is False:
             logger.info(
                 "ML dependencies are not installed. Please install them by ```pip install crisp-t[ml] to use ML features."
@@ -149,6 +150,30 @@ class ML:
         else:
             Y_np = numpy.asarray(Y, dtype=numpy.float32)
 
+        # --- NEW: Normalize target for BCELoss to be strictly binary {0,1} ---
+        unique_classes = numpy.unique(Y_np)
+        if unique_classes.size != 2:
+            raise ValueError(
+                f"BCELoss requires binary targets, but found {unique_classes.size} classes: {unique_classes}. "
+                "Provide a binary target column or extend the code to handle multi-class with CrossEntropyLoss."
+            )
+
+        mapping_applied = False
+        class_mapping = {}
+        inverse_mapping = {}
+        # If classes are not already {0.0,1.0}, map them deterministically
+        if not numpy.array_equal(
+            numpy.sort(unique_classes), numpy.array([0.0, 1.0], dtype=numpy.float32)
+        ):
+            sorted_classes = sorted(unique_classes.tolist())
+            class_mapping = {sorted_classes[0]: 0.0, sorted_classes[1]: 1.0}
+            inverse_mapping = {v: k for k, v in class_mapping.items()}
+            Y_np = numpy.vectorize(class_mapping.get)(Y_np).astype(numpy.float32)
+            mapping_applied = True
+            logger.info(
+                f"Mapped original target classes {sorted_classes} to [0.0, 1.0] for BCELoss."
+            )
+
         vnum = X_np.shape[1]
 
         model = NeuralNet(vnum)
@@ -156,18 +181,53 @@ class ML:
         optimizer = optim.Adam(model.parameters(), lr=0.001)
 
         # Convert data to PyTorch tensors
-        # X_tensor = torch.from_numpy(X_np)
-        # y_tensor = torch.from_numpy(Y_np).view(-1, 1)
-        # y_tensor = torch.tensor(y, dtype=torch.float32).view(-1, 1)
+        X_tensor = torch.from_numpy(X_np)
+        y_tensor = torch.from_numpy(Y_np).view(-1, 1)
 
+        # Create a dataset and data loader
+        dataset = TensorDataset(X_tensor, y_tensor)
+        dataloader = DataLoader(dataset, batch_size=10, shuffle=True)
+
+        # Train the model
+        for epoch in range(self._epochs):
+            for batch_X, batch_y in dataloader:
+                optimizer.zero_grad()
+                outputs = model(batch_X)
+                loss = criterion(outputs, batch_y)
+                if torch.isnan(loss):
+                    raise RuntimeError("Encountered NaN loss during training.")
+                loss.backward()
+                optimizer.step()
+
+        # Inference
         with torch.no_grad():
-            predictions = model(torch.from_numpy(X_np))
-            rounded = [int(round(x.item())) for x in predictions]
+            raw_outputs = model(torch.from_numpy(X_np)).view(-1, 1)
+            preds_np = raw_outputs.cpu().numpy().flatten()
+            binary_preds = (preds_np >= 0.5).astype(int)
 
-        # Calculate accuracy
-        correct = sum(1 for i, pred in enumerate(rounded) if pred == int(Y_np[i]))
-        total = len(rounded)
+        # Map back to original class labels if remapped
+        if mapping_applied:
+            binary_preds = [inverse_mapping[int(p)] for p in binary_preds]
+        else:
+            binary_preds = binary_preds.tolist()
+
+        # Calculate accuracy (compare in binary space)
+        if mapping_applied:
+            # Need original Y in same label space as predictions
+            Y_eval = numpy.vectorize(class_mapping.get)(
+                Y_np_original := numpy.asarray(
+                    Y.to_numpy() if hasattr(Y, "to_numpy") else Y, dtype=numpy.float32
+                )
+            ).astype(int)
+            preds_for_acc = numpy.vectorize(class_mapping.get)(
+                numpy.asarray(binary_preds)
+            ).astype(int)
+        else:
+            Y_eval = Y_np.astype(int)
+            preds_for_acc = numpy.asarray(binary_preds).astype(int)
+
+        correct = int((preds_for_acc == Y_eval).sum())
+        total = len(preds_for_acc)
         accuracy = correct / total if total else 0.0
         print(f"Accuracy: {accuracy * 100:.2f}%")
-        return rounded
-
+        return binary_preds

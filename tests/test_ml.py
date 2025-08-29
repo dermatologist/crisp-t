@@ -49,7 +49,7 @@ def test_profile(csv_fixture):
     assert profile is not None, "Profile should not be None"
 
 
-def test_get_nnet_predictions(csv_fixture):
+def test_get_binary_nnet_predictions(csv_fixture):
     folder_path = resource_filename("src.crisp_t.resources", "food_coded.csv")
     _csv = csv_fixture
     _csv.read_csv(folder_path)
@@ -57,5 +57,5 @@ def test_get_nnet_predictions(csv_fixture):
     ml = ML(
         csv=_csv
     )
-    predictions = ml.get_nnet_predictions(y="Gender")
+    predictions = ml.get_binary_nnet_predictions(y="Gender")
     assert predictions is not None, "Predictions should not be None"

@@ -269,5 +269,16 @@ class Csv:
         self.mark_missing()
         if oversample:
             self.oversample()
+        self.one_hot_encode_strings_in_df()
         return self.read_xy(y)
 
+    def one_hot_encode_strings_in_df(self):
+        if self._df is not None:
+            categorical_cols = self._df.select_dtypes(include=["object"]).columns.tolist()
+            if categorical_cols:
+                self._df = pd.get_dummies(self._df, columns=categorical_cols, drop_first=True)
+                logger.info("One-hot encoding applied to string columns.")
+            else:
+                logger.info("No string (object) columns found for one-hot encoding.")
+        else:
+            logger.error("DataFrame is None. Cannot apply one-hot encoding.")
