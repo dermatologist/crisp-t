@@ -160,22 +160,7 @@ class ML:
             )
         _corpus = self._csv.corpus
 
-        X, Y = self._csv.prepare_data(y=y, oversample=False)
-        if X is None or Y is None:
-            raise ValueError("prepare_data returned None for X or Y.")
-
-        # To numpy float32
-        X_np = (
-            X.to_numpy(dtype=np.float32)
-            if hasattr(X, "to_numpy")
-            else np.asarray(X, dtype=np.float32)
-        )
-        Y_raw = Y.to_numpy() if hasattr(Y, "to_numpy") else np.asarray(Y)
-        # Handle NaNs
-        if np.isnan(X_np).any():
-            raise ValueError("NaN detected in feature matrix.")
-        if np.isnan(Y_raw.astype(float, copy=False)).any():
-            raise ValueError("NaN detected in target vector.")
+        X_np, Y_raw, X, Y = self.process_xy(y=y)
 
         unique_classes = np.unique(Y_raw)
         num_classes = unique_classes.size
@@ -296,7 +281,7 @@ class ML:
         Returns:
             [list] -- [description]
         """
-        X, Y = self._csv.prepare_data(y=y, oversample=False)
+        X_np, Y_raw, X, Y = self.process_xy(y=y)
         X_train, X_test, y_train, y_test = train_test_split(
             X, Y, test_size=test_size, random_state=random_state
         )
@@ -336,3 +321,31 @@ class ML:
             f"True Negative: {tn}\n"
             f"False Negative: {fn}\n"
         )
+
+    # https://stackoverflow.com/questions/45419203/python-numpy-extracting-a-row-from-an-array
+    def knn_search(self, y: str, n=3, r=3):
+        X_np, Y_raw, X, Y = self.process_xy(y=y)
+        kdt = KDTree(X_np, leaf_size=2, metric="euclidean")
+        dist, ind = kdt.query(X_np[r - 1 : r, :], k=n)
+        return ind
+
+    def process_xy(self, y: str, oversample=False):
+        X, Y = self._csv.prepare_data(y=y, oversample=oversample)
+        if X is None or Y is None:
+            raise ValueError("prepare_data returned None for X or Y.")
+
+        # To numpy float32
+        X_np = (
+            X.to_numpy(dtype=np.float32)
+            if hasattr(X, "to_numpy")
+            else np.asarray(X, dtype=np.float32)
+        )
+        Y_raw = Y.to_numpy() if hasattr(Y, "to_numpy") else np.asarray(Y)
+
+        # Handle NaNs
+        if np.isnan(X_np).any():
+            raise ValueError("NaN detected in feature matrix.")
+        if np.isnan(Y_raw.astype(float, copy=False)).any():
+            raise ValueError("NaN detected in target vector.")
+
+        return X_np, Y_raw, X, Y

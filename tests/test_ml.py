@@ -68,3 +68,13 @@ def test_svm_confusion_matrix(csv_fixture):
     assert confusion_matrix is not None, "Confusion matrix should not be None"
     human_readable = ml.format_confusion_matrix_to_human_readable(confusion_matrix)
     print(human_readable)
+
+def test_knn_search(csv_fixture):
+    folder_path = resource_filename("src.crisp_t.resources", "food_coded.csv")
+    _csv = csv_fixture
+    _csv.read_csv(folder_path)
+    _csv.drop_na()
+    ml = ML(csv=_csv)
+    neighbors = ml.knn_search(y="Gender", n=3, r=3)
+    assert neighbors is not None, "Neighbors should not be None"
+    print(neighbors)
