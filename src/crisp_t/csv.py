@@ -267,7 +267,7 @@ class Csv:
 
     def prepare_data(self, y: str, oversample=False):
         self.mark_missing()
-        self.read_xy(y)
         if oversample:
             self.oversample()
+        return self.read_xy(y)
 

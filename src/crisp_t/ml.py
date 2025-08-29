@@ -14,6 +14,7 @@ from .csv import Csv
 
 logger = logging.getLogger(__name__)
 ML_INSTALLED = False
+torch = None
 
 try:
     import torch
@@ -125,4 +126,48 @@ class ML:
             _corpus.metadata["numeric_clusters"] = _numeric_clusters
             self._csv.corpus = _corpus
         return members
+
+    def get_nnet_predictions(self, y: str):
+        if ML_INSTALLED is False:
+            logger.info(
+                "ML dependencies are not installed. Please install them by ```pip install crisp-t[ml] to use ML features."
+            )
+            return None
+
+        # Prepare data (X features, Y target)
+        X, Y = self._csv.prepare_data(y=y, oversample=False)
+        if X is None or Y is None:
+            raise ValueError("prepare_data returned None for X or Y.")
+
+        # Ensure numpy float32 arrays (avoid torch tensor creation error on DataFrame)
+        if hasattr(X, "to_numpy"):
+            X_np = X.to_numpy(dtype=numpy.float32)
+        else:
+            X_np = numpy.asarray(X, dtype=numpy.float32)
+        if hasattr(Y, "to_numpy"):
+            Y_np = Y.to_numpy(dtype=numpy.float32)
+        else:
+            Y_np = numpy.asarray(Y, dtype=numpy.float32)
+
+        vnum = X_np.shape[1]
+
+        model = NeuralNet(vnum)
+        criterion = nn.BCELoss()
+        optimizer = optim.Adam(model.parameters(), lr=0.001)
+
+        # Convert data to PyTorch tensors
+        # X_tensor = torch.from_numpy(X_np)
+        # y_tensor = torch.from_numpy(Y_np).view(-1, 1)
+        # y_tensor = torch.tensor(y, dtype=torch.float32).view(-1, 1)
+
+        with torch.no_grad():
+            predictions = model(torch.from_numpy(X_np))
+            rounded = [int(round(x.item())) for x in predictions]
+
+        # Calculate accuracy
+        correct = sum(1 for i, pred in enumerate(rounded) if pred == int(Y_np[i]))
+        total = len(rounded)
+        accuracy = correct / total if total else 0.0
+        print(f"Accuracy: {accuracy * 100:.2f}%")
+        return rounded
 
