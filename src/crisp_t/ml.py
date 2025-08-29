@@ -1,13 +1,11 @@
 import logging
-from random import randint
 
 import numpy as np
-from pandas import read_csv
 from sklearn.cluster import KMeans
 from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KDTree
-from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
 
 from .csv import Csv
