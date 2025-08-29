@@ -70,7 +70,7 @@ class ML:
         if not ML_INSTALLED:
             raise ImportError("ML dependencies are not installed.")
         self._csv = csv
-        self._epochs = 1
+        self._epochs = 3
         self._samplesize = 0
 
     @property
