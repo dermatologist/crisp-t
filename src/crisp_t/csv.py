@@ -111,7 +111,7 @@ class Csv:
         logger.info("ID column set successfully.")
         logger.debug(f"ID column: {self._id_column}")
 
-    #TODO remove @deprecated
+    # TODO remove @deprecated
     #! Do not use
     def read_csv(self, file_path: str) -> pd.DataFrame:
         """
@@ -264,3 +264,10 @@ class Csv:
     def restore_oversample(self):
         self._X = self._X_original
         self._y = self._y_original
+
+    def prepare_data(self, y: str, oversample=False):
+        self.mark_missing()
+        self.read_xy(y)
+        if oversample:
+            self.oversample()
+
