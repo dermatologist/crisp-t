@@ -154,6 +154,12 @@ class ML:
             )
             return None
 
+        if self._csv is None:
+            raise ValueError(
+                "CSV data is not set. Please set self.csv before calling profile."
+            )
+        _corpus = self._csv.corpus
+
         X, Y = self._csv.prepare_data(y=y, oversample=False)
         if X is None or Y is None:
             raise ValueError("prepare_data returned None for X or Y.")
@@ -197,40 +203,51 @@ class ML:
                 Y_mapped = Y_raw.astype(numpy.float32)
 
             model = NeuralNet(vnum)
-            criterion = nn.BCELoss()
-            optimizer = optim.Adam(model.parameters(), lr=0.001)
+            try:
+                criterion = nn.BCELoss() # type: ignore
+                optimizer = optim.Adam(model.parameters(), lr=0.001) # type: ignore
 
-            X_tensor = torch.from_numpy(X_np)
-            y_tensor = torch.from_numpy(Y_mapped.astype(numpy.float32)).view(-1, 1)
+                X_tensor = torch.from_numpy(X_np)  # type: ignore
+                y_tensor = torch.from_numpy(Y_mapped.astype(numpy.float32)).view(-1, 1)  # type: ignore
 
-            dataset = TensorDataset(X_tensor, y_tensor)
-            dataloader = DataLoader(dataset, batch_size=32, shuffle=True)
+                dataset = TensorDataset(X_tensor, y_tensor)  # type: ignore
+                dataloader = DataLoader(dataset, batch_size=32, shuffle=True)  # type: ignore
+            except Exception as e:
+                logger.error(f"Error occurred while creating DataLoader: {e}")
+                return None
 
             for _ in range(self._epochs):
                 for batch_X, batch_y in dataloader:
                     optimizer.zero_grad()
                     outputs = model(batch_X)
                     loss = criterion(outputs, batch_y)
-                    if torch.isnan(loss):
+                    if torch.isnan(loss):  # type: ignore
                         raise RuntimeError("NaN loss encountered.")
                     loss.backward()
                     optimizer.step()
 
-            with torch.no_grad():
-                probs = model(torch.from_numpy(X_np)).view(-1).cpu().numpy()
-            bin_preds_internal = (probs >= 0.5).astype(int)
+            # Predictions
+            bin_preds_internal = None
+            if torch:
+                with torch.no_grad():
+                    probs = model(torch.from_numpy(X_np)).view(-1).cpu().numpy()
+                bin_preds_internal = (probs >= 0.5).astype(int)
 
             if mapping_applied:
-                preds = [inverse_mapping[float(p)] for p in bin_preds_internal]
+                preds = [inverse_mapping[float(p)] for p in bin_preds_internal] # type: ignore
                 y_eval = numpy.vectorize(class_mapping.get)(Y_raw).astype(int)
                 preds_eval = bin_preds_internal
             else:
-                preds = bin_preds_internal.tolist()
+                preds = bin_preds_internal.tolist() # type: ignore
                 y_eval = Y_mapped.astype(int)
                 preds_eval = bin_preds_internal
 
             accuracy = (preds_eval == y_eval).sum() / len(y_eval)
-            print(f"Accuracy: {accuracy*100:.2f}%")
+            print(
+                f"Predicting {y} with {X.shape[1]} features for {self._epochs} epochs gave an accuracy (convergence): {accuracy*100:.2f}%"
+            )
+            if _corpus is not None:
+                _corpus.metadata["nnet_predictions"] = f"Predicting {y} with {X.shape[1]} features for {self._epochs} epochs gave an accuracy (convergence): {accuracy*100:.2f}%"
             return preds
 
         # Multi-class path
@@ -241,30 +258,34 @@ class ML:
         Y_idx = numpy.vectorize(class_to_idx.get)(Y_raw).astype(numpy.int64)
 
         model = MultiClassNet(vnum, num_classes)
-        criterion = nn.CrossEntropyLoss()
-        optimizer = optim.Adam(model.parameters(), lr=0.001)
+        criterion = nn.CrossEntropyLoss()  # type: ignore
+        optimizer = optim.Adam(model.parameters(), lr=0.001)  # type: ignore
 
-        X_tensor = torch.from_numpy(X_np)
-        y_tensor = torch.from_numpy(Y_idx)
+        X_tensor = torch.from_numpy(X_np)  # type: ignore
+        y_tensor = torch.from_numpy(Y_idx)  # type: ignore
 
-        dataset = TensorDataset(X_tensor, y_tensor)
-        dataloader = DataLoader(dataset, batch_size=32, shuffle=True)
+        dataset = TensorDataset(X_tensor, y_tensor)  # type: ignore
+        dataloader = DataLoader(dataset, batch_size=32, shuffle=True)  # type: ignore
 
         for _ in range(self._epochs):
             for batch_X, batch_y in dataloader:
                 optimizer.zero_grad()
                 logits = model(batch_X)
                 loss = criterion(logits, batch_y)
-                if torch.isnan(loss):
+                if torch.isnan(loss):  # type: ignore
                     raise RuntimeError("NaN loss encountered.")
                 loss.backward()
                 optimizer.step()
 
-        with torch.no_grad():
-            logits_full = model(torch.from_numpy(X_np))
-            pred_indices = torch.argmax(logits_full, dim=1).cpu().numpy()
+        with torch.no_grad():  # type: ignore
+            logits_full = model(torch.from_numpy(X_np))  # type: ignore
+            pred_indices = torch.argmax(logits_full, dim=1).cpu().numpy()  # type: ignore
 
         preds = [idx_to_class[i] for i in pred_indices]
         accuracy = (pred_indices == Y_idx).sum() / len(Y_idx)
-        print(f"Accuracy: {accuracy*100:.2f}%")
+        print(
+            f"Predicting {y} with {X.shape[1]} features for { self._epochs} gave an accuracy (convergence): {accuracy*100:.2f}%"
+        )
+        if _corpus is not None:
+            _corpus.metadata["nnet_predictions"] = f"Predicting {y} with {X.shape[1]} features for { self._epochs} gave an accuracy (convergence): {accuracy*100:.2f}%"
         return preds
