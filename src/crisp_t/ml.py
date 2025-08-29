@@ -351,3 +351,26 @@ class ML:
             raise ValueError("NaN detected in target vector.")
 
         return X_np, Y_raw, X, Y
+
+    def get_xgb_classes(self, y: str, oversample=False):
+        X_np, Y_raw, X, Y = self.process_xy(y=y)
+        if ML_INSTALLED:
+            # ValueError: Invalid classes inferred from unique values of `y`.  Expected: [0 1], got [1 2]
+            # convert y to binary
+            Y_binary = (Y_raw == 1).astype(int)
+            X_train, X_test, y_train, y_test = train_test_split(
+                X_np, Y_binary, test_size=0.25, random_state=0
+            )
+            classifier = XGBClassifier(use_label_encoder=False, eval_metric="logloss") # type: ignore
+            classifier.fit(X_train, y_train)
+            y_pred = classifier.predict(X_test)
+            _confusion_matrix = confusion_matrix(y_test, y_pred)
+            print(f"Confusion Matrix for XGBoost predicting {y}:\n{_confusion_matrix}")
+            # Output
+            # [[2 0]
+            #  [2 0]]
+            if self._csv.corpus is not None:
+                self._csv.corpus.metadata["xgb_confusion_matrix"] = f"Confusion Matrix for XGBoost predicting {y}:\n{_confusion_matrix}"
+            return _confusion_matrix
+        else:
+            raise ImportError("ML dependencies are not installed.")

@@ -78,3 +78,15 @@ def test_knn_search(csv_fixture):
     dist, ind = ml.knn_search(y="Gender", n=3, r=3)
     assert ind is not None, "Neighbors should not be None"
     print(f"KNN search for Gender (n=3, record no 3): {ind} with distances {dist}")
+
+
+def test_get_xgb_classes(csv_fixture):
+    folder_path = resource_filename("src.crisp_t.resources", "food_coded.csv")
+    _csv = csv_fixture
+    _csv.read_csv(folder_path)
+    _csv.drop_na()
+    ml = ML(csv=_csv)
+    xgb_classes = ml.get_xgb_classes(y="Gender")
+    assert xgb_classes is not None, "XGBoost classes should not be None"
+    human_readable = ml.format_confusion_matrix_to_human_readable(xgb_classes)
+    print(human_readable)
