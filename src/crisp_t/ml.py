@@ -1,20 +1,18 @@
 import logging
-from random import randint
 
-import numpy
-from pandas import read_csv
+import numpy as np
 from sklearn.cluster import KMeans
 from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KDTree
-from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
 
 from .csv import Csv
-from .model import Corpus
 
 logger = logging.getLogger(__name__)
 ML_INSTALLED = False
+torch = None
 
 try:
     import torch
@@ -42,6 +40,20 @@ try:
             x = self.sigmoid(self.fc3(x))
             return x
 
+    class MultiClassNet(nn.Module):
+        def __init__(self, input_dim, num_classes):
+            super().__init__()
+            self.fc1 = nn.Linear(input_dim, 64)
+            self.fc2 = nn.Linear(64, 32)
+            self.fc3 = nn.Linear(32, num_classes)
+            self.relu = nn.ReLU()
+
+        def forward(self, x):
+            x = self.relu(self.fc1(x))
+            x = self.relu(self.fc2(x))
+            x = self.fc3(x)  # raw logits for CrossEntropyLoss
+            return x
+
 except ImportError:
     logger.info(
         "ML dependencies are not installed. Please install them by ```pip install crisp-t[ml] to use ML features."
@@ -51,25 +63,28 @@ except ImportError:
 class ML:
     def __init__(
         self,
-        corpus: Corpus,
+        csv: Csv,
     ):
         if not ML_INSTALLED:
             raise ImportError("ML dependencies are not installed.")
-        self._corpus = corpus
-        self._epochs = 1
+        self._csv = csv
+        self._epochs = 3
         self._samplesize = 0
-        self._csv = None
 
     @property
     def csv(self):
         return self._csv
+
+    @property
+    def corpus(self):
+        return self._csv.corpus
 
     @csv.setter
     def csv(self, value):
         if isinstance(value, Csv):
             self._csv = value
         else:
-            raise ValueError("Value must be an instance of Csv class.")
+            raise ValueError(f"The input belongs to {type(value)} instead of Csv.")
 
     def get_kmeans(self, number_of_clusters=3, seed=42, verbose=True):
         if self._csv is None:
@@ -89,6 +104,10 @@ class ML:
         return self._clusters, members
 
     def get_members(self, clusters, number_of_clusters=3):
+        _df = self._csv.df
+        # Create a column called numeric_cluster and assign cluster labels
+        _df["numeric_cluster"] = clusters
+        self._csv.df = _df
         members = []
         for i in range(number_of_clusters):
             members.append([])
@@ -101,34 +120,335 @@ class ML:
             raise ValueError(
                 "CSV data is not set. Please set self.csv before calling profile."
             )
+        _corpus = self._csv.corpus
+        _numeric_clusters = ""
         for i in range(number_of_clusters):
             print("Cluster: ", i)
             print("Cluster Length: ", len(members[i]))
             print("Cluster Members")
             if self._csv is not None and getattr(self._csv, "df", None) is not None:
                 print(self._csv.df.iloc[members[i], :])
-                print("Mean")
+                print("Centroids")
                 print(self._csv.df.iloc[members[i], :].mean(axis=0))
+                _numeric_clusters += f"Cluster {i} with {len(members[i])} members\n has the following centroids (mean values):\n"
+                _numeric_clusters += (
+                    f"{self._csv.df.iloc[members[i], :].mean(axis=0)}\n"
+                )
             else:
                 print("DataFrame (self._csv.df) is not set.")
+        if _corpus is not None:
+            _corpus.metadata["numeric_clusters"] = _numeric_clusters
+            self._csv.corpus = _corpus
         return members
 
-    # def get_centroids(self, number_of_clusters=3, verbose=True):
-    #     cluster_list = []
-    #     for x in range(0, number_of_clusters):
-    #         ct = 0
-    #         for cluster in self._clusters:
-    #             if cluster == x:
-    #                 cluster_list.append(ct)
-    #             ct += 1
-    #         if verbose:
-    #             print("Cluster: ", x)
-    #             print("Cluster Length: ", len(cluster_list))
-    #             print("Cluster Members")
-    #             if self._csv is not None and getattr(self._csv, "df", None) is not None:
-    #                 print(self._csv.df.iloc[cluster_list, :])
-    #                 print("Mean")
-    #                 print(self._csv.df.iloc[cluster_list, :].mean(axis=0))
-    #             else:
-    #                 print("DataFrame (self._csv.df) is not set.")
-    #     return cluster_list
+    def get_nnet_predictions(self, y: str):
+        """
+        Extended: Handles binary (BCELoss) and multi-class (CrossEntropyLoss).
+        Returns list of predicted original class labels.
+        """
+        if ML_INSTALLED is False:
+            logger.info(
+                "ML dependencies are not installed. Please install them by ```pip install crisp-t[ml] to use ML features."
+            )
+            return None
+
+        if self._csv is None:
+            raise ValueError(
+                "CSV data is not set. Please set self.csv before calling profile."
+            )
+        _corpus = self._csv.corpus
+
+        X_np, Y_raw, X, Y = self.process_xy(y=y)
+
+        unique_classes = np.unique(Y_raw)
+        num_classes = unique_classes.size
+        if num_classes < 2:
+            raise ValueError(f"Need at least 2 classes; found {num_classes}.")
+
+        vnum = X_np.shape[1]
+
+        # Binary path
+        if num_classes == 2:
+            # Map to {0.0,1.0} for BCELoss if needed
+            mapping_applied = False
+            class_mapping = {}
+            inverse_mapping = {}
+            # Ensure deterministic order
+            sorted_classes = sorted(unique_classes.tolist())
+            if not (sorted_classes == [0, 1] or sorted_classes == [0.0, 1.0]):
+                class_mapping = {sorted_classes[0]: 0.0, sorted_classes[1]: 1.0}
+                inverse_mapping = {v: k for k, v in class_mapping.items()}
+                Y_mapped = np.vectorize(class_mapping.get)(Y_raw).astype(
+                    np.float32
+                )
+                mapping_applied = True
+            else:
+                Y_mapped = Y_raw.astype(np.float32)
+
+            model = NeuralNet(vnum)
+            try:
+                criterion = nn.BCELoss() # type: ignore
+                optimizer = optim.Adam(model.parameters(), lr=0.001) # type: ignore
+
+                X_tensor = torch.from_numpy(X_np)  # type: ignore
+                y_tensor = torch.from_numpy(Y_mapped.astype(np.float32)).view(-1, 1)  # type: ignore
+
+                dataset = TensorDataset(X_tensor, y_tensor)  # type: ignore
+                dataloader = DataLoader(dataset, batch_size=32, shuffle=True)  # type: ignore
+            except Exception as e:
+                logger.error(f"Error occurred while creating DataLoader: {e}")
+                return None
+
+            for _ in range(self._epochs):
+                for batch_X, batch_y in dataloader:
+                    optimizer.zero_grad()
+                    outputs = model(batch_X)
+                    loss = criterion(outputs, batch_y)
+                    if torch.isnan(loss):  # type: ignore
+                        raise RuntimeError("NaN loss encountered.")
+                    loss.backward()
+                    optimizer.step()
+
+            # Predictions
+            bin_preds_internal = None
+            if torch:
+                with torch.no_grad():
+                    probs = model(torch.from_numpy(X_np)).view(-1).cpu().numpy()
+                bin_preds_internal = (probs >= 0.5).astype(int)
+
+            if mapping_applied:
+                preds = [inverse_mapping[float(p)] for p in bin_preds_internal] # type: ignore
+                y_eval = np.vectorize(class_mapping.get)(Y_raw).astype(int)
+                preds_eval = bin_preds_internal
+            else:
+                preds = bin_preds_internal.tolist() # type: ignore
+                y_eval = Y_mapped.astype(int)
+                preds_eval = bin_preds_internal
+
+            accuracy = (preds_eval == y_eval).sum() / len(y_eval)
+            print(
+                f"Predicting {y} with {X.shape[1]} features for {self._epochs} epochs gave an accuracy (convergence): {accuracy*100:.2f}%"
+            )
+            if _corpus is not None:
+                _corpus.metadata["nnet_predictions"] = f"Predicting {y} with {X.shape[1]} features for {self._epochs} epochs gave an accuracy (convergence): {accuracy*100:.2f}%"
+            return preds
+
+        # Multi-class path
+        # Map original classes to indices
+        sorted_classes = sorted(unique_classes.tolist())
+        class_to_idx = {c: i for i, c in enumerate(sorted_classes)}
+        idx_to_class = {i: c for c, i in class_to_idx.items()}
+        Y_idx = np.vectorize(class_to_idx.get)(Y_raw).astype(np.int64)
+
+        model = MultiClassNet(vnum, num_classes)
+        criterion = nn.CrossEntropyLoss()  # type: ignore
+        optimizer = optim.Adam(model.parameters(), lr=0.001)  # type: ignore
+
+        X_tensor = torch.from_numpy(X_np)  # type: ignore
+        y_tensor = torch.from_numpy(Y_idx)  # type: ignore
+
+        dataset = TensorDataset(X_tensor, y_tensor)  # type: ignore
+        dataloader = DataLoader(dataset, batch_size=32, shuffle=True)  # type: ignore
+
+        for _ in range(self._epochs):
+            for batch_X, batch_y in dataloader:
+                optimizer.zero_grad()
+                logits = model(batch_X)
+                loss = criterion(logits, batch_y)
+                if torch.isnan(loss):  # type: ignore
+                    raise RuntimeError("NaN loss encountered.")
+                loss.backward()
+                optimizer.step()
+
+        with torch.no_grad():  # type: ignore
+            logits_full = model(torch.from_numpy(X_np))  # type: ignore
+            pred_indices = torch.argmax(logits_full, dim=1).cpu().numpy()  # type: ignore
+
+        preds = [idx_to_class[i] for i in pred_indices]
+        accuracy = (pred_indices == Y_idx).sum() / len(Y_idx)
+        print(
+            f"Predicting {y} with {X.shape[1]} features for {self._epochs} gave an accuracy (convergence): {accuracy*100:.2f}%"
+        )
+        if _corpus is not None:
+            _corpus.metadata["nnet_predictions"] = f"Predicting {y} with {X.shape[1]} features for {self._epochs} gave an accuracy (convergence): {accuracy*100:.2f}%"
+        return preds
+
+    def svm_confusion_matrix(self, y: str, test_size=0.25, random_state=0):
+        """Generate confusion matrix for SVM
+
+        Returns:
+            [list] -- [description]
+        """
+        X_np, Y_raw, X, Y = self.process_xy(y=y)
+        X_train, X_test, y_train, y_test = train_test_split(
+            X, Y, test_size=test_size, random_state=random_state
+        )
+        sc = StandardScaler()
+        # Issue #22
+        y_test = y_test.astype("int")
+        y_train = y_train.astype("int")
+        X_train = sc.fit_transform(X_train)
+        X_test = sc.transform(X_test)
+        classifier = SVC(kernel="linear", random_state=0)
+        classifier.fit(X_train, y_train)
+        y_pred = classifier.predict(X_test)
+        # Issue #22
+        y_pred = y_pred.astype("int")
+        _confusion_matrix = confusion_matrix(y_test, y_pred)
+        print(f"Confusion Matrix for SVM predicting {y}:\n{_confusion_matrix}")
+        # Output
+        # [[2 0]
+        #  [2 0]]
+        if self._csv.corpus is not None:
+            self._csv.corpus.metadata["svm_confusion_matrix"] = f"Confusion Matrix for SVM predicting {y}:\n{_confusion_matrix}"
+        return _confusion_matrix
+
+    def format_confusion_matrix_to_human_readable(self, confusion_matrix: np.ndarray) -> str:
+        """Format the confusion matrix to a human-readable string.
+
+        Args:
+            confusion_matrix (np.ndarray): The confusion matrix to format.
+
+        Returns:
+            str: The formatted confusion matrix with true positive, false positive, true negative, and false negative counts.
+        """
+        tn, fp, fn, tp = confusion_matrix.ravel()
+        return (
+            f"True Positive: {tp}\n"
+            f"False Positive: {fp}\n"
+            f"True Negative: {tn}\n"
+            f"False Negative: {fn}\n"
+        )
+
+    # https://stackoverflow.com/questions/45419203/python-numpy-extracting-a-row-from-an-array
+    def knn_search(self, y: str, n=3, r=3):
+        X_np, Y_raw, X, Y = self.process_xy(y=y)
+        kdt = KDTree(X_np, leaf_size=2, metric="euclidean")
+        dist, ind = kdt.query(X_np[r - 1 : r, :], k=n)
+        if self._csv.corpus is not None:
+            self._csv.corpus.metadata["knn_search"] = f"KNN search for {y} (n={n}, record no: {r}): {ind} with distances {dist}"
+        return dist, ind
+
+    def process_xy(self, y: str, oversample=False, one_hot_encode_all=False):
+        X, Y = self._csv.prepare_data(y=y, oversample=oversample, one_hot_encode_all=one_hot_encode_all)
+        if X is None or Y is None:
+            raise ValueError("prepare_data returned None for X or Y.")
+
+        # To numpy float32
+        X_np = (
+            X.to_numpy(dtype=np.float32)
+            if hasattr(X, "to_numpy")
+            else np.asarray(X, dtype=np.float32)
+        )
+        Y_raw = Y.to_numpy() if hasattr(Y, "to_numpy") else np.asarray(Y)
+
+        # Handle NaNs
+        if np.isnan(X_np).any():
+            raise ValueError("NaN detected in feature matrix.")
+        if np.isnan(Y_raw.astype(float, copy=False)).any():
+            raise ValueError("NaN detected in target vector.")
+
+        return X_np, Y_raw, X, Y
+
+    def get_xgb_classes(self, y: str, oversample=False, test_size=0.25, random_state=0):
+        X_np, Y_raw, X, Y = self.process_xy(y=y)
+        if ML_INSTALLED:
+            # ValueError: Invalid classes inferred from unique values of `y`.  Expected: [0 1], got [1 2]
+            # convert y to binary
+            Y_binary = (Y_raw == 1).astype(int)
+            X_train, X_test, y_train, y_test = train_test_split(
+                X_np, Y_binary, test_size=test_size, random_state=random_state
+            )
+            classifier = XGBClassifier(use_label_encoder=False, eval_metric="logloss") # type: ignore
+            classifier.fit(X_train, y_train)
+            y_pred = classifier.predict(X_test)
+            _confusion_matrix = confusion_matrix(y_test, y_pred)
+            print(f"Confusion Matrix for XGBoost predicting {y}:\n{_confusion_matrix}")
+            # Output
+            # [[2 0]
+            #  [2 0]]
+            if self._csv.corpus is not None:
+                self._csv.corpus.metadata["xgb_confusion_matrix"] = f"Confusion Matrix for XGBoost predicting {y}:\n{_confusion_matrix}"
+            return _confusion_matrix
+        else:
+            raise ImportError("ML dependencies are not installed.")
+
+    # TODO: Fix. This gets stuck
+    def get_apriori(self, y: str, min_support=0.9, use_colnames=True, min_threshold=3):
+        if ML_INSTALLED:
+            X_np, Y_raw, X, Y = self.process_xy(y=y, one_hot_encode_all=True)
+            frequent_itemsets = apriori(X, min_support=min_support, use_colnames=use_colnames) # type: ignore
+            rules = association_rules(frequent_itemsets, metric="lift", min_threshold=min_threshold) # type: ignore
+            return rules
+        else:
+            raise ImportError("ML dependencies are not installed.")
+
+    def get_pca(self, y: str, n: int = 3):
+        """
+        Perform a manual PCA (no sklearn PCA) on the feature matrix for target y.
+
+        Args:
+            y (str): Target column name (used only for data preparation).
+            n (int): Number of principal components to keep.
+
+        Returns:
+            dict: {
+                'covariance_matrix': cov_mat,
+                'eigenvalues': eig_vals_sorted,
+                'eigenvectors': eig_vecs_sorted,
+                'explained_variance_ratio': var_exp,
+                'cumulative_explained_variance_ratio': cum_var_exp,
+                'projection_matrix': matrix_w,
+                'transformed': X_pca
+            }
+        """
+        X_np, Y_raw, X, Y = self.process_xy(y=y)
+        X_std = StandardScaler().fit_transform(X_np)
+
+        cov_mat = np.cov(X_std.T)
+        eig_vals, eig_vecs = np.linalg.eigh(cov_mat)  # symmetric matrix -> eigh
+
+        # Sort eigenvalues (and vectors) descending
+        idx = np.argsort(eig_vals)[::-1]
+        eig_vals_sorted = eig_vals[idx]
+        eig_vecs_sorted = eig_vecs[:, idx]
+
+        factors = X_std.shape[1]
+        n = max(1, min(n, factors))
+
+        # Explained variance ratios
+        tot = eig_vals_sorted.sum()
+        var_exp = (eig_vals_sorted / tot) * 100.0
+        cum_var_exp = np.cumsum(var_exp)
+
+        # Projection matrix (first n eigenvectors)
+        matrix_w = eig_vecs_sorted[:, :n]
+
+        # Project data
+        X_pca = X_std @ matrix_w
+
+        # Optional prints (retain original behavior)
+        print("Covariance matrix:\n", cov_mat)
+        print("Eigenvalues (desc):\n", eig_vals_sorted)
+        print("Explained variance (%):\n", var_exp[:n])
+        print("Cumulative explained variance (%):\n", cum_var_exp[:n])
+        print("Projection matrix (W):\n", matrix_w)
+        print("Transformed (first 5 rows):\n", X_pca[:5])
+
+        result = {
+            "covariance_matrix": cov_mat,
+            "eigenvalues": eig_vals_sorted,
+            "eigenvectors": eig_vecs_sorted,
+            "explained_variance_ratio": var_exp,
+            "cumulative_explained_variance_ratio": cum_var_exp,
+            "projection_matrix": matrix_w,
+            "transformed": X_pca,
+        }
+
+        if self._csv.corpus is not None:
+            self._csv.corpus.metadata["pca"] = (
+                f"PCA kept {n} components explaining "
+                f"{cum_var_exp[n-1]:.2f}% variance."
+            )
+
+        return result

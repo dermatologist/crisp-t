@@ -538,7 +538,7 @@ requires-dist = [
     { name = "spacy" },
     { name = "tabulate" },
     { name = "textacy" },
-    { name = "torch", marker = "extra == 'ml'", specifier = "==2.2.2" },
+    { name = "torch", marker = "extra == 'ml'" },
     { name = "vadersentiment" },
     { name = "wordcloud" },
     { name = "xgboost", marker = "extra == 'ml'" },

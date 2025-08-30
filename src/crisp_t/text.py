@@ -412,10 +412,10 @@ class Text:
         # 2  0.666667  (theory, GT)
         documents_copy = []
         documents = self._corpus.documents if self._corpus is not None else []
-        # Add association rules to each document
+        # TODO (Change) Add association rules to each document
         for i, document in enumerate(documents):
             if i < len(basket):
-                document.metadata["association_rules"] = _apriori
+                document.metadata["association_rules"] = _apriori #TODO This is a corpus metadata, not a document one
                 documents_copy.append(document)
         # Update the corpus with the new documents
         if self._corpus is not None:

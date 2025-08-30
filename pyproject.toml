@@ -1,6 +1,6 @@
 [project]
 name = "crisp-t"
-dynamic = ["version"]  
+dynamic = ["version"]
 description = "Qualitative Research support tools in Python!"
 authors = [{ name = "Bell Eapen", email = "github_public@gulfdoctor.net" }]
 readme = "README.md"
@@ -89,7 +89,7 @@ ml = [
     "scikit-learn",
     "imbalanced-learn",
     "xgboost",
-    "torch==2.2.2",
+    "torch",
 ]
 
 
@@ -108,7 +108,7 @@ show_error_codes = true
 
 [tool.pytest.ini_options]
 addopts = """
---cov crisp_t --cov-report term-missing
+--cov src.crisp_t --cov-report term-missing
 --verbose
 """
 norecursedirs = ["dist", "build", ".tox"]

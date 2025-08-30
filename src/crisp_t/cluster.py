@@ -33,7 +33,7 @@ from .text import Text
 
 class Cluster:
 
-    def __init__(self, corpus: Optional[Corpus] = None):
+    def __init__(self, corpus: Corpus):
         self._corpus = corpus
         self._ids = []
         self._lda_model: Optional[LdaModel] = None
@@ -78,6 +78,7 @@ class Cluster:
         self._bag_of_words = [
             self._dictionary.doc2bow(doc) for doc in self._processed_docs
         ]
+        self._corpus.metadata["bag_of_words"] = self._bag_of_words
 
     def build_lda_model(self):
         if self._lda_model is None:
@@ -112,6 +113,7 @@ class Cluster:
                     word = word.split("*")
                     words.append(f"{word[1].strip()}({word[0].strip()})")
                 print(f"Topic {topic_num}: {', '.join(words)}")
+        self._corpus.metadata["topics"] = output
         return output
 
     def tokenize(self, spacy_doc):
@@ -165,6 +167,9 @@ class Cluster:
         # Update the corpus with the modified documents
         if self._corpus is not None:
             self._corpus.documents = documents_copy
+        # Add cluster information to corpus metadata
+        if self._corpus is not None:
+            self._corpus.metadata["clusters"] = clusters
         return clusters
 
     def format_topics_sentences(self, visualize=False):
@@ -253,6 +258,10 @@ class Cluster:
         if visualize:
             contents = pd.Series(self._processed_docs)
             sent_topics_df = pd.concat([sent_topics_df, contents], axis=1)
+        # Add to visualize
+        self._corpus.visualization["sent_topics"] = sent_topics_df.reset_index( # type: ignore
+            drop=False
+        )
         return sent_topics_df.reset_index(drop=False)
 
     # https://www.machinelearningplus.com/nlp/topic-modeling-visualization-how-to-present-results-lda-models/
@@ -269,7 +278,8 @@ class Cluster:
                 ],
                 axis=0,
             )
-
+        # Add to visualize
+        self._corpus.visualization["most_representative_docs"] = sent_topics_sorteddf_mallet # type: ignore
         return sent_topics_sorteddf_mallet
 
     def topics_per_document(self, start=0, end=1):
@@ -290,6 +300,10 @@ class Cluster:
             dominant_topic = sorted(topic_percs, key=lambda x: x[1], reverse=True)[0][0]
             dominant_topics.append((i, dominant_topic))
             topic_percentages.append(topic_percs)
+        # Add to corpus metadata
+        if self._corpus is not None:
+            self._corpus.metadata["dominant_topics"] = dominant_topics
+            self._corpus.metadata["topic_percentages"] = topic_percentages
         return (dominant_topics, topic_percentages)
 
     def doc_vectorizer(self, doc, model):
@@ -305,7 +319,6 @@ class Cluster:
             except:
                 # pass if word is not found
                 pass
-
         return np.asarray(doc_vector) / num_words
 
     def vectorizer(self, docs, titles, num_clusters=4, visualize=False):
@@ -342,4 +355,6 @@ class Cluster:
                     stralign="left",
                 )
             )
+        # Add to visualization
+        self._corpus.visualization["vectorizer"] = data # type: ignore
         return data
