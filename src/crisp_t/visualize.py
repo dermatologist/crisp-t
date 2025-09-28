@@ -1,4 +1,4 @@
-
+import logging
 from collections import Counter
 
 import matplotlib.colors as mcolors
@@ -10,7 +10,12 @@ from matplotlib.patches import Rectangle
 from matplotlib.ticker import FuncFormatter
 from sklearn.manifold import TSNE
 from wordcloud import STOPWORDS, WordCloud
+
 from .model.corpus import Corpus
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
+
 
 class QRVisualize:
 
@@ -162,9 +167,7 @@ class QRVisualize:
             plt.savefig(folder_path)
             plt.close()
 
-    def sentence_chart(
-        self, lda_model, text, start=0, end=13, folder_path=None
-    ):
+    def sentence_chart(self, lda_model, text, start=0, end=13, folder_path=None):
         if lda_model is None:
             raise ValueError("LDA model is not provided.")
         corp = text[start:end]
@@ -237,7 +240,8 @@ class QRVisualize:
                         color="black",
                         transform=ax.transAxes,
                     )
-            except:
+            except Exception as e:
+                logger.error(f"Error occurred while processing document {i - 1}: {e}")
                 continue
 
         plt.subplots_adjust(wspace=0, hspace=0)
@@ -346,7 +350,7 @@ class QRVisualize:
             lambda x, pos: "Topic "
             + str(x)
             + "\n"
-            + df_top3words.loc[df_top3words.topic_id == x, "words"].values[0] # type: ignore
+            + df_top3words.loc[df_top3words.topic_id == x, "words"].values[0]  # type: ignore
         )
         ax1.xaxis.set_major_formatter(tick_formatter)
         ax1.set_title("Number of Documents by Dominant Topic", fontdict=dict(size=10))
@@ -373,17 +377,18 @@ class QRVisualize:
             plt.close()
 
     def update_annot(self, ind):
-        norm = plt.Normalize(1, 4) # type: ignore
-        cmap = plt.cm.RdYlGn # type: ignore
-        pos = self.sc.get_offsets()[ind["ind"][0]] # type: ignore
-        self.annot.xy = pos # type: ignore
+        norm = plt.Normalize(1, 4)  # type: ignore
+        cmap = plt.cm.RdYlGn  # type: ignore
+        pos = self.sc.get_offsets()[ind["ind"][0]]  # type: ignore
+        self.annot.xy = pos  # type: ignore
         text = "{}, {}".format(
             " ".join(list(map(str, ind["ind"]))),
             " ".join([self.names[n] for n in ind["ind"]]),
         )
         self.annot.set_text(text)
-        self.annot.get_bbox_patch().set_facecolor(cmap(norm(c[ind["ind"][0]]))) # type: ignore
-        self.annot.get_bbox_patch().set_alpha(0.4) # type: ignore
+        # Fix NameError: use self.c instead of c
+        self.annot.get_bbox_patch().set_facecolor(cmap(norm(self.c[ind["ind"][0]])))  # type: ignore
+        self.annot.get_bbox_patch().set_alpha(0.4)  # type: ignore
 
     def hover(self, event):
         vis = self.annot.get_visible()
