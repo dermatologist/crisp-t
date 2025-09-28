@@ -77,22 +77,21 @@ class QRVisualize:
             color for name, color in mcolors.TABLEAU_COLORS.items()
         ]  # more colors: 'mcolors.XKCD_COLORS'
 
-        cloud = WordCloud(
-            stopwords=STOPWORDS,
-            background_color="white",
-            width=250,
-            height=180,
-            max_words=5,
-            colormap="tab10",
-            color_func=lambda *args, **kwargs: cols[i],
-            prefer_horizontal=1.0,
-        )
-
         fig, axes = plt.subplots(2, 2, figsize=(10, 10), sharex=True, sharey=True)
 
         for i, ax in enumerate(axes.flatten()):
             fig.add_subplot(ax)
             topic_words = dict(topics[i][1])
+            cloud = WordCloud(
+                stopwords=STOPWORDS,
+                background_color="white",
+                width=250,
+                height=180,
+                max_words=5,
+                colormap="tab10",
+                color_func=lambda *args, **kwargs, color=cols[i]: color,
+                prefer_horizontal=1.0,
+            )
             cloud.generate_from_frequencies(topic_words, max_font_size=300)
             plt.gca().imshow(cloud)
             plt.gca().set_title("Topic " + str(i), fontdict=dict(size=16))
