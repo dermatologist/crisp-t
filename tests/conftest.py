@@ -40,3 +40,14 @@ def corpus_fixture():
 @pytest.fixture
 def csv_fixture(corpus_fixture):
     return Csv(corpus=corpus_fixture)
+
+
+@pytest.fixture(autouse=True)
+def run_before_and_after_tests(corpus_fixture):
+    """Fixture to execute asserts before and after a test is run"""
+    # Setup: fill with any logic you want
+
+    yield  # this is where the testing happens
+
+    # Teardown : fill with any logic you want
+    corpus_fixture.pretty_print()

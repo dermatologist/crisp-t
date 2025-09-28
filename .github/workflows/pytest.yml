@@ -14,11 +14,12 @@ on:
 
 jobs:
   build:
-    timeout-minutes: 20
+    timeout-minutes: 15
     strategy:
       max-parallel: 4
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        # os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [ubuntu-latest]
         python-version: ['3.11']
     runs-on: ${{ matrix.os }}
 

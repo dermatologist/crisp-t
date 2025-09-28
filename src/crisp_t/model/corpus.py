@@ -49,3 +49,24 @@ class Corpus(BaseModel):
     metadata: dict = Field(
         default_factory=dict, description="Metadata associated with the corpus."
     )
+
+    def pretty_print(self):
+        """
+        Print the corpus information in a human-readable format.
+        """
+        print(f"Corpus ID: {self.id}")
+        print(f"Name: {self.name}")
+        print(f"Description: {self.description}")
+        print(f"Score: {self.score}")
+        print("Documents:")
+        for doc in self.documents:
+            print(f" - {doc.name}")
+        if self.df is not None:
+            print("DataFrame:")
+            print(self.df.head())
+        if self.visualization is not None:
+            print("Visualization:")
+            print(self.visualization)
+        print("Metadata:")
+        for key, value in self.metadata.items():
+            print(f" - {key}: {value}")

@@ -100,10 +100,24 @@ class ML:
             n_clusters=number_of_clusters, init="k-means++", random_state=seed
         )
         self._clusters = kmeans.fit_predict(X)
-        members = self.get_members(self._clusters, number_of_clusters)
+        members = self._get_members(self._clusters, number_of_clusters)
+        # Add cluster info to csv to metadata_cluster column
+        if self._csv is not None and getattr(self._csv, "df", None) is not None:
+            self._csv.df["metadata_cluster"] = self._clusters
+        if verbose:
+            print("KMeans Cluster Centers:\n", kmeans.cluster_centers_)
+            print("KMeans Inertia (Sum of squared distances to closest cluster center):\n", kmeans.inertia_)
+            if self._csv.corpus is not None:
+                self._csv.corpus.metadata["kmeans"] = f"KMeans clustering with {number_of_clusters} clusters. Inertia: {kmeans.inertia_}"
+        # Add members info to corpus metadata
+        if self._csv.corpus is not None:
+            members_info = "\n".join(
+                [f"Cluster {i}: {len(members[i])} members" for i in range(number_of_clusters)]
+            )
+            self._csv.corpus.metadata["kmeans_members"] = f"KMeans clustering members:\n{members_info}"
         return self._clusters, members
 
-    def get_members(self, clusters, number_of_clusters=3):
+    def _get_members(self, clusters, number_of_clusters=3):
         _df = self._csv.df
         # Create a column called numeric_cluster and assign cluster labels
         _df["numeric_cluster"] = clusters
@@ -158,7 +172,7 @@ class ML:
             )
         _corpus = self._csv.corpus
 
-        X_np, Y_raw, X, Y = self.process_xy(y=y)
+        X_np, Y_raw, X, Y = self._process_xy(y=y)
 
         unique_classes = np.unique(Y_raw)
         num_classes = unique_classes.size
@@ -279,7 +293,7 @@ class ML:
         Returns:
             [list] -- [description]
         """
-        X_np, Y_raw, X, Y = self.process_xy(y=y)
+        X_np, Y_raw, X, Y = self._process_xy(y=y)
         X_train, X_test, y_train, y_test = train_test_split(
             X, Y, test_size=test_size, random_state=random_state
         )
@@ -322,14 +336,14 @@ class ML:
 
     # https://stackoverflow.com/questions/45419203/python-numpy-extracting-a-row-from-an-array
     def knn_search(self, y: str, n=3, r=3):
-        X_np, Y_raw, X, Y = self.process_xy(y=y)
+        X_np, Y_raw, X, Y = self._process_xy(y=y)
         kdt = KDTree(X_np, leaf_size=2, metric="euclidean")
         dist, ind = kdt.query(X_np[r - 1 : r, :], k=n)
         if self._csv.corpus is not None:
             self._csv.corpus.metadata["knn_search"] = f"KNN search for {y} (n={n}, record no: {r}): {ind} with distances {dist}"
         return dist, ind
 
-    def process_xy(self, y: str, oversample=False, one_hot_encode_all=False):
+    def _process_xy(self, y: str, oversample=False, one_hot_encode_all=False):
         X, Y = self._csv.prepare_data(y=y, oversample=oversample, one_hot_encode_all=one_hot_encode_all)
         if X is None or Y is None:
             raise ValueError("prepare_data returned None for X or Y.")
@@ -351,7 +365,7 @@ class ML:
         return X_np, Y_raw, X, Y
 
     def get_xgb_classes(self, y: str, oversample=False, test_size=0.25, random_state=0):
-        X_np, Y_raw, X, Y = self.process_xy(y=y)
+        X_np, Y_raw, X, Y = self._process_xy(y=y)
         if ML_INSTALLED:
             # ValueError: Invalid classes inferred from unique values of `y`.  Expected: [0 1], got [1 2]
             # convert y to binary
@@ -376,7 +390,7 @@ class ML:
     # TODO: Fix. This gets stuck
     def get_apriori(self, y: str, min_support=0.9, use_colnames=True, min_threshold=3):
         if ML_INSTALLED:
-            X_np, Y_raw, X, Y = self.process_xy(y=y, one_hot_encode_all=True)
+            X_np, Y_raw, X, Y = self._process_xy(y=y, one_hot_encode_all=True)
             frequent_itemsets = apriori(X, min_support=min_support, use_colnames=use_colnames) # type: ignore
             rules = association_rules(frequent_itemsets, metric="lift", min_threshold=min_threshold) # type: ignore
             return rules
@@ -402,7 +416,7 @@ class ML:
                 'transformed': X_pca
             }
         """
-        X_np, Y_raw, X, Y = self.process_xy(y=y)
+        X_np, Y_raw, X, Y = self._process_xy(y=y)
         X_std = StandardScaler().fit_transform(X_np)
 
         cov_mat = np.cov(X_std.T)
