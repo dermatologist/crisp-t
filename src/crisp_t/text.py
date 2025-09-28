@@ -415,8 +415,11 @@ class Text:
         # TODO (Change) Add association rules to each document
         for i, document in enumerate(documents):
             if i < len(basket):
-                document.metadata["association_rules"] = _apriori #TODO This is a corpus metadata, not a document one
+                # ! fix document.metadata["association_rules"] = _apriori #TODO This is a corpus metadata, not a document one
                 documents_copy.append(document)
+        # Add to corpus metadata
+        if self._corpus is not None:
+            self._corpus.metadata["association_rules"] = _apriori
         # Update the corpus with the new documents
         if self._corpus is not None:
             self._corpus.documents = documents_copy

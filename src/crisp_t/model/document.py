@@ -33,3 +33,16 @@ class Document(BaseModel):
     metadata: dict = Field(
         default_factory=dict, description="Metadata associated with the document."
     )
+
+    def pretty_print(self):
+        """
+        Print the document information in a human-readable format.
+        """
+        print(f"Document ID: {self.id}")
+        print(f"Name: {self.name}")
+        print(f"Description: {self.description}")
+        print(f"Score: {self.score}")
+        print(f"Text: {self.text[:100]}...")  # Print first 100 characters of text
+        print(f"Metadata: {self.metadata}")
+        print(f"Length of Text: {len(self.text)} characters")
+        print(f"Number of Metadata Entries: {len(self.metadata)}")
