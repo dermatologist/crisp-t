@@ -94,7 +94,7 @@ class QRVisualize:
                 height=180,
                 max_words=5,
                 colormap="tab10",
-                color_func=lambda *args, **kwargs, color=cols[i]: color,
+                color_func=lambda *args, color=cols[i], **kwargs: color,
                 prefer_horizontal=1.0,
             )
             cloud.generate_from_frequencies(topic_words, max_font_size=300)
@@ -416,6 +416,7 @@ class QRVisualize:
             edgecolors="black",
             linewidths=0.75,
         )
+        self.c = data["colour"]
         self.annot = self.ax.annotate(
             "",
             xy=(0, 0),

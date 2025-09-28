@@ -101,9 +101,9 @@ class ML:
         )
         self._clusters = kmeans.fit_predict(X)
         members = self._get_members(self._clusters, number_of_clusters)
-        # Add cluster info to csv to metadat_cluster column
+        # Add cluster info to csv to metadata_cluster column
         if self._csv is not None and getattr(self._csv, "df", None) is not None:
-            self._csv.df["metadat_cluster"] = self._clusters
+            self._csv.df["metadata_cluster"] = self._clusters
         if verbose:
             print("KMeans Cluster Centers:\n", kmeans.cluster_centers_)
             print("KMeans Inertia (Sum of squared distances to closest cluster center):\n", kmeans.inertia_)
