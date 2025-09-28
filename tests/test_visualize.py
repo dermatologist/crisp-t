@@ -80,10 +80,10 @@ def test_plot_correlation_heatmap_requires_two_numeric_columns(visualize: QRVisu
 
     assert fig is not None
     assert ax is not None
-    assert ax.images
-    image_array = ax.images[0].get_array()
-    assert image_array is not None
-    assert np.allclose(np.asarray(image_array), np.array([[1, -1], [-1, 1]]))
+    assert ax.collections
+    quadmesh = ax.collections[0]
+    data = np.asarray(quadmesh.get_array()).reshape(2, 2)
+    assert np.allclose(data, np.array([[1, -1], [-1, 1]]))
     plt.close(fig)
 
 

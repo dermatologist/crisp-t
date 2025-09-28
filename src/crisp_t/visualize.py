@@ -1,6 +1,7 @@
 import logging
 import math
 from collections import Counter
+from pathlib import Path
 from typing import Iterable, Sequence, Tuple, cast
 
 import matplotlib.colors as mcolors
@@ -47,6 +48,9 @@ class QRVisualize:
         show: bool,
     ) -> Figure:
         if folder_path:
+            output_path = Path(folder_path)
+            if output_path.parent:
+                output_path.parent.mkdir(parents=True, exist_ok=True)
             fig.savefig(folder_path)
         if show:
             plt.show(block=False)
@@ -628,8 +632,7 @@ class QRVisualize:
     # https://stackoverflow.com/questions/7908636/how-to-add-hovering-annotations-to-a-plot
     def cluster_chart(self, data, folder_path=None):
         # Scatter plot for Text Cluster Prediction
-        plt.figure(figsize=(6, 6))
-        self.fig, self.ax = plt.subplots()
+        self.fig, self.ax = plt.subplots(figsize=(6, 6))
         self.names = list(map(str, data["title"]))
         self.sc = plt.scatter(
             data["x"],
