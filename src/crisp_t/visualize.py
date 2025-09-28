@@ -1,12 +1,18 @@
 import logging
+import math
 from collections import Counter
+from typing import Iterable, Sequence, Tuple, cast
 
 import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+from matplotlib.axes import Axes
+from matplotlib.collections import PathCollection
+from matplotlib.figure import Figure
 from matplotlib.patches import Rectangle
+from matplotlib.text import Annotation
 from matplotlib.ticker import FuncFormatter
 from sklearn.manifold import TSNE
 from wordcloud import STOPWORDS, WordCloud
@@ -19,152 +25,354 @@ logging.basicConfig(level=logging.INFO)
 
 class QRVisualize:
 
-    def plot_frequency_distribution_of_words(self, df: pd.DataFrame, folder_path=None):
-        doc_lens = [len(d) for d in df.Text]
+    def __init__(self) -> None:
+        # Matplotlib figure components assigned lazily by plotting methods
+        self.fig: Figure | None = None
+        self.ax: Axes | None = None
+        self.sc: PathCollection | None = None
+        self.annot: Annotation | None = None
+        self.names: list[str] = []
+        self.c: np.ndarray | None = None
 
-        # Plot
-        plt.figure(figsize=(16, 7), dpi=160)
-        plt.hist(doc_lens, bins=1000, color="navy")
-        plt.text(750, 100, "Mean   : " + str(round(np.mean(doc_lens))))
-        plt.text(750, 90, "Median : " + str(round(np.median(doc_lens))))
-        plt.text(750, 80, "Stdev   : " + str(round(np.std(doc_lens))))
-        plt.text(750, 70, "1%ile    : " + str(round(np.quantile(doc_lens, q=0.01))))
-        plt.text(750, 60, "99%ile  : " + str(round(np.quantile(doc_lens, q=0.99))))
+    @staticmethod
+    def _ensure_columns(df: pd.DataFrame, required: Iterable[str]) -> None:
+        missing = [col for col in required if col not in df.columns]
+        if missing:
+            raise ValueError(f"Missing required columns: {missing}")
 
-        plt.gca().set(
-            xlim=(0, 1000), ylabel="Number of Documents", xlabel="Document Word Count"
-        )
-        plt.tick_params(size=16)
-        plt.xticks(np.linspace(0, 1000, 9))
-        plt.title("Distribution of Document Word Counts", fontdict=dict(size=22))
-        plt.show(block=False)
-        # save
+    @staticmethod
+    def _finalize_plot(
+        fig: Figure,
+        folder_path: str | None,
+        show: bool,
+    ) -> Figure:
         if folder_path:
-            plt.savefig(folder_path)
-            plt.close()
+            fig.savefig(folder_path)
+        if show:
+            plt.show(block=False)
+        else:
+            plt.close(fig)
+        return fig
 
-    def plot_distribution_by_topic(self, df: pd.DataFrame, folder_path=None):
-        # Plot
-        cols = [
-            color for name, color in mcolors.TABLEAU_COLORS.items()
-        ]  # more colors: 'mcolors.XKCD_COLORS'
+    def plot_frequency_distribution_of_words(
+        self,
+        df: pd.DataFrame,
+        folder_path: str | None = None,
+        text_column: str = "Text",
+        bins: int = 100,
+        show: bool = True,
+    ) -> Tuple[Figure, Axes]:
+        self._ensure_columns(df, [text_column])
+        doc_lens = df[text_column].dropna().map(len).tolist()
+        if not doc_lens:
+            raise ValueError("No documents available to plot frequency distribution.")
+
+        fig, ax = plt.subplots(figsize=(16, 7), dpi=160)
+        counts, _, _ = ax.hist(doc_lens, bins=bins, color="navy")
+        counts = np.asarray(counts)
+        if counts.size:
+            ax.set_ylim(top=float(counts.max()) * 1.1)
+
+        stats = {
+            "Mean": round(np.mean(doc_lens), 2),
+            "Median": round(np.median(doc_lens), 2),
+            "Stdev": round(np.std(doc_lens), 2),
+            "1%ile": round(np.quantile(doc_lens, q=0.01), 2),
+            "99%ile": round(np.quantile(doc_lens, q=0.99), 2),
+        }
+        for idx, (label, value) in enumerate(stats.items()):
+            ax.text(
+                0.98,
+                0.98 - idx * 0.05,
+                f"{label}: {value}",
+                transform=ax.transAxes,
+                ha="right",
+                va="top",
+                fontsize=11,
+            )
+
+        ax.set(
+            ylabel="Number of Documents",
+            xlabel="Document Word Count",
+            title="Distribution of Document Word Counts",
+        )
+        ax.tick_params(axis="both", labelsize=12)
+        if doc_lens:
+            ax.set_xlim(left=0, right=max(doc_lens) * 1.05)
+
+        fig = self._finalize_plot(fig, folder_path, show)
+        return fig, ax
+
+    def plot_distribution_by_topic(
+        self,
+        df: pd.DataFrame,
+        folder_path: str | None = None,
+        topic_column: str = "Dominant_Topic",
+        text_column: str = "Text",
+        bins: int = 100,
+        show: bool = True,
+    ) -> Tuple[Figure, np.ndarray]:
+        self._ensure_columns(df, [topic_column, text_column])
+        unique_topics = sorted(df[topic_column].dropna().unique())
+        if not unique_topics:
+            raise ValueError("No topics found to plot distribution.")
+
+        n_topics = len(unique_topics)
+        n_cols = min(3, n_topics)
+        n_rows = math.ceil(n_topics / n_cols)
+        cols = list(mcolors.TABLEAU_COLORS.values())
 
         fig, axes = plt.subplots(
-            2, 2, figsize=(16, 14), dpi=160, sharex=True, sharey=True
+            n_rows,
+            n_cols,
+            figsize=(6 * n_cols, 5 * n_rows),
+            dpi=160,
+            sharex=True,
+            sharey=True,
         )
+        if isinstance(axes, np.ndarray):
+            axes_flat = axes.flatten().tolist()
+        else:
+            axes_flat = [axes]
 
-        for i, ax in enumerate(axes.flatten()):
-            df_dominant_topic_sub = df.loc[df.Dominant_Topic == i, :]
-            doc_lens = [len(d) for d in df_dominant_topic_sub.Text]
-            ax.hist(doc_lens, bins=1000, color=cols[i])
-            ax.tick_params(axis="y", labelcolor=cols[i], color=cols[i])
-            sns.kdeplot(
-                doc_lens, color="black", fill=False, ax=ax.twinx(), warn_singular=False
+        for idx, topic in enumerate(unique_topics):
+            ax = axes_flat[idx]
+            topic_series = cast(
+                pd.Series,
+                df.loc[df[topic_column] == topic, text_column],
             )
-            ax.set(xlim=(0, 1000), xlabel="Document Word Count")
-            ax.set_ylabel("Number of Documents", color=cols[i])
-            ax.set_title("Topic: " + str(i), fontdict=dict(size=16, color=cols[i]))
+            topic_docs = topic_series.dropna()
+            doc_lens = topic_docs.map(len).tolist()
+            color = cols[idx % len(cols)]
+            if doc_lens:
+                ax.hist(doc_lens, bins=bins, color=color, alpha=0.7)
+                sns.kdeplot(
+                    doc_lens,
+                    color="black",
+                    fill=False,
+                    ax=ax.twinx(),
+                    warn_singular=False,
+                )
+            ax.set(xlabel="Document Word Count")
+            ax.set_ylabel("Number of Documents", color=color)
+            ax.set_title(f"Topic: {topic}", fontdict=dict(size=14, color=color))
+            ax.tick_params(axis="y", labelcolor=color, color=color)
+
+        for extra_ax in axes_flat[len(unique_topics) :]:
+            extra_ax.set_visible(False)
 
         fig.tight_layout()
-        fig.subplots_adjust(top=0.90)
-        plt.xticks(np.linspace(0, 1000, 9))
         fig.suptitle(
-            "Distribution of Document Word Counts by Dominant Topic", fontsize=22
+            "Distribution of Document Word Counts by Dominant Topic",
+            fontsize=20,
+            y=1.02,
         )
-        plt.show(block=False)
-        # save
-        if folder_path:
-            plt.savefig(folder_path)
-            plt.close()
 
-    def plot_wordcloud(self, topics, folder_path=None):
-        cols = [
-            color for name, color in mcolors.TABLEAU_COLORS.items()
-        ]  # more colors: 'mcolors.XKCD_COLORS'
+        fig = self._finalize_plot(fig, folder_path, show)
+        axes_array = np.array(axes_flat, dtype=object).reshape(n_rows, n_cols)
+        return fig, axes_array
 
-        fig, axes = plt.subplots(2, 2, figsize=(10, 10), sharex=True, sharey=True)
+    def plot_wordcloud(
+        self,
+        topics: Sequence[Tuple[int, Sequence[Tuple[str, float]]]],
+        folder_path: str | None = None,
+        max_words: int = 50,
+        show: bool = True,
+    ) -> Tuple[Figure, np.ndarray]:
+        if not topics:
+            raise ValueError("No topics provided for word cloud generation.")
 
-        for i, ax in enumerate(axes.flatten()):
-            fig.add_subplot(ax)
-            topic_words = dict(topics[i][1])
+        n_topics = len(topics)
+        n_cols = min(3, n_topics)
+        n_rows = math.ceil(n_topics / n_cols)
+        cols = list(mcolors.TABLEAU_COLORS.values())
+
+        fig, axes = plt.subplots(
+            n_rows,
+            n_cols,
+            figsize=(6 * n_cols, 4 * n_rows),
+            sharex=True,
+            sharey=True,
+        )
+        axes_flat = axes.flatten().tolist() if isinstance(axes, np.ndarray) else [axes]
+
+        for idx, (topic_id, words) in enumerate(topics):
+            ax = axes_flat[idx]
+            topic_words = dict(words)
+            color = cols[idx % len(cols)]
             cloud = WordCloud(
                 stopwords=STOPWORDS,
                 background_color="white",
-                width=250,
-                height=180,
-                max_words=5,
+                width=800,
+                height=400,
+                max_words=max_words,
                 colormap="tab10",
-                color_func=lambda *args, color=cols[i], **kwargs: color,
-                prefer_horizontal=1.0,
+                color_func=lambda *args, color=color, **kwargs: color,
+                prefer_horizontal=0.9,
             )
-            cloud.generate_from_frequencies(topic_words, max_font_size=300)
-            plt.gca().imshow(cloud)
-            plt.gca().set_title("Topic " + str(i), fontdict=dict(size=16))
-            plt.gca().axis("off")
+            cloud.generate_from_frequencies(topic_words)
+            ax.imshow(cloud)
+            ax.set_title(f"Topic {topic_id}", fontdict=dict(size=14))
+            ax.axis("off")
 
-        plt.subplots_adjust(wspace=0, hspace=0)
-        plt.axis("off")
-        plt.margins(x=0, y=0)
-        plt.tight_layout()
-        plt.show(block=False)
-        # save
-        if folder_path:
-            plt.savefig(folder_path)
-            plt.close()
+        for extra_ax in axes_flat[len(topics) :]:
+            extra_ax.set_visible(False)
 
-    def plot_importance(self, topics, processed_docs, folder_path=None):
-        data_flat = [w for w_list in processed_docs for w in w_list]
-        counter = Counter(data_flat)
+        fig.tight_layout()
 
-        out = []
-        for i, topic in topics:
-            for word, weight in topic:
-                out.append([word, i, weight, counter[word]])
+        fig = self._finalize_plot(fig, folder_path, show)
+        return fig, np.array(axes_flat).reshape(n_rows, n_cols)
 
-        df = pd.DataFrame(out, columns=["word", "topic_id", "importance", "word_count"])
+    def plot_top_terms(
+        self,
+        df: pd.DataFrame,
+        term_column: str = "term",
+        frequency_column: str = "frequency",
+        top_n: int = 20,
+        folder_path: str | None = None,
+        ascending: bool = False,
+        show: bool = True,
+    ) -> Tuple[Figure, Axes]:
+        if top_n <= 0:
+            raise ValueError("top_n must be greater than zero.")
 
-        # Plot Word Count and Weights of Topic Keywords
-        fig, axes = plt.subplots(2, 2, figsize=(16, 10), sharey=True, dpi=160)
-        cols = [color for name, color in mcolors.TABLEAU_COLORS.items()]
-        for i, ax in enumerate(axes.flatten()):
+        self._ensure_columns(df, [term_column, frequency_column])
+        subset = df[[term_column, frequency_column]].dropna()
+        if subset.empty:
+            raise ValueError("No data available to plot top terms.")
+
+        subset = subset.sort_values(frequency_column, ascending=ascending).head(top_n)
+        subset = subset.iloc[::-1]
+
+        fig, ax = plt.subplots(figsize=(10, max(4, top_n * 0.4)))
+        ax.barh(subset[term_column], subset[frequency_column], color="steelblue")
+        ax.set_xlabel("Frequency")
+        ax.set_ylabel("Term")
+        ax.set_title("Top Terms by Frequency")
+        for idx, value in enumerate(subset[frequency_column]):
+            ax.text(value, idx, f" {value}", va="center")
+        fig.tight_layout()
+
+        fig = self._finalize_plot(fig, folder_path, show)
+        return fig, ax
+
+    def plot_correlation_heatmap(
+        self,
+        df: pd.DataFrame,
+        columns: Sequence[str] | None = None,
+        folder_path: str | None = None,
+        cmap: str = "coolwarm",
+        show: bool = True,
+    ) -> Tuple[Figure, Axes]:
+        if columns:
+            self._ensure_columns(df, columns)
+            data = df[list(columns)]
+        else:
+            data = df
+        if data.empty:
+            raise ValueError("No data available to compute correlation heatmap.")
+
+        numeric_data = data.select_dtypes(include=[np.number])
+        if numeric_data.shape[1] < 2:
+            raise ValueError(
+                "At least two numeric columns are required for correlation heatmap."
+            )
+
+        corr = numeric_data.corr()
+        fig, ax = plt.subplots(figsize=(8, 6))
+        sns.heatmap(corr, ax=ax, cmap=cmap, annot=True, fmt=".2f", square=True)
+        ax.set_title("Correlation Heatmap")
+        fig.tight_layout()
+
+        fig = self._finalize_plot(fig, folder_path, show)
+        return fig, ax
+
+    def plot_importance(
+        self,
+        topics: Sequence[Tuple[int, Sequence[Tuple[str, float]]]],
+        processed_docs: Sequence[Sequence[str]],
+        folder_path: str | None = None,
+        show: bool = True,
+    ) -> Tuple[Figure, np.ndarray]:
+        if not topics:
+            raise ValueError("No topics provided to plot importance.")
+        if not processed_docs:
+            raise ValueError("No processed documents provided to plot importance.")
+
+        counter = Counter(word for doc in processed_docs for word in doc)
+        rows = []
+        for topic_id, words in topics:
+            for word, weight in words:
+                rows.append(
+                    {
+                        "word": word,
+                        "topic_id": topic_id,
+                        "importance": weight,
+                        "word_count": counter.get(word, 0),
+                    }
+                )
+
+        df = pd.DataFrame(rows)
+        if df.empty:
+            raise ValueError("Unable to build importance DataFrame from inputs.")
+
+        topic_ids = sorted(df["topic_id"].unique())
+        n_topics = len(topic_ids)
+        n_cols = min(3, n_topics)
+        n_rows = math.ceil(n_topics / n_cols)
+        cols = list(mcolors.TABLEAU_COLORS.values())
+
+        fig, axes = plt.subplots(
+            n_rows,
+            n_cols,
+            figsize=(7 * n_cols, 5 * n_rows),
+            sharey=False,
+            dpi=160,
+        )
+        axes_flat = axes.flatten().tolist() if isinstance(axes, np.ndarray) else [axes]
+
+        for idx, topic_id in enumerate(topic_ids):
+            ax = axes_flat[idx]
+            subset = df[df["topic_id"] == topic_id]
+            color = cols[idx % len(cols)]
             ax.bar(
-                x="word",
-                height="word_count",
-                data=df.loc[df.topic_id == i, :],
-                color=cols[i],
+                subset["word"],
+                subset["word_count"],
+                color=color,
                 width=0.5,
-                alpha=0.3,
+                alpha=0.4,
                 label="Word Count",
             )
             ax_twin = ax.twinx()
-            ax_twin.bar(
-                x="word",
-                height="importance",
-                data=df.loc[df.topic_id == i, :],
-                color=cols[i],
-                width=0.2,
-                label="Weights",
+            ax_twin.plot(
+                subset["word"],
+                subset["importance"],
+                color=color,
+                marker="o",
+                label="Importance",
             )
-            ax.set_ylabel("Word Count", color=cols[i])
-            ax_twin.set_ylim(0, 0.030)
-            ax.set_ylim(0, 3500)
-            ax.set_title("Topic: " + str(i), color=cols[i], fontsize=16)
-            ax.tick_params(axis="y", left=False)
-            ax.set_xticklabels(
-                df.loc[df.topic_id == i, "word"],
-                rotation=30,
-                horizontalalignment="right",
-            )
+            ax.set_title(f"Topic {topic_id}", color=color, fontsize=14)
+            ax.set_xlabel("Word")
+            ax.set_ylabel("Word Count", color=color)
+            ax.tick_params(axis="y", labelcolor=color)
+            ax_twin.set_ylabel("Importance", color=color)
+            ax_twin.tick_params(axis="y", labelcolor=color)
+            ax.set_xticklabels(subset["word"], rotation=30, ha="right")
             ax.legend(loc="upper left")
             ax_twin.legend(loc="upper right")
 
-        fig.tight_layout(w_pad=2)
-        fig.suptitle("Word Count and Importance of Topic Keywords", fontsize=22, y=1.05)
-        plt.show(block=False)
-        # save
-        if folder_path:
-            plt.savefig(folder_path)
-            plt.close()
+        for extra_ax in axes_flat[len(topic_ids) :]:
+            extra_ax.set_visible(False)
+
+        fig.tight_layout()
+        fig.suptitle(
+            "Word Count and Importance of Topic Keywords",
+            fontsize=20,
+            y=1.02,
+        )
+
+        fig = self._finalize_plot(fig, folder_path, show)
+        return fig, np.array(axes_flat).reshape(n_rows, n_cols)
 
     def sentence_chart(self, lda_model, text, start=0, end=13, folder_path=None):
         if lda_model is None:
@@ -376,20 +584,36 @@ class QRVisualize:
             plt.close()
 
     def update_annot(self, ind):
-        norm = plt.Normalize(1, 4)  # type: ignore
-        cmap = plt.cm.RdYlGn  # type: ignore
-        pos = self.sc.get_offsets()[ind["ind"][0]]  # type: ignore
-        self.annot.xy = pos  # type: ignore
+        if self.annot is None or self.sc is None or self.c is None:
+            raise RuntimeError("cluster_chart must be called before update_annot.")
+        indices_array = np.atleast_1d(ind.get("ind", []))
+        if indices_array.size == 0:
+            return
+        indices = indices_array.astype(int)
+        idx = int(indices[0])
+        offsets = np.asarray(self.sc.get_offsets())
+        pos = offsets[idx]
+        annot = self.annot
+        annot.xy = (float(pos[0]), float(pos[1]))
         text = "{}, {}".format(
-            " ".join(list(map(str, ind["ind"]))),
-            " ".join([self.names[n] for n in ind["ind"]]),
+            " ".join(list(map(str, indices))),
+            " ".join([self.names[n] for n in indices]),
         )
-        self.annot.set_text(text)
-        # Fix NameError: use self.c instead of c
-        self.annot.get_bbox_patch().set_facecolor(cmap(norm(self.c[ind["ind"][0]])))  # type: ignore
-        self.annot.get_bbox_patch().set_alpha(0.4)  # type: ignore
+        annot.set_text(text)
+        cmap = plt.get_cmap("RdYlGn")
+        norm = mcolors.Normalize(1, 4)
+        bbox = annot.get_bbox_patch()
+        if bbox is not None:
+            try:
+                color_value = float(self.c[idx])
+            except (TypeError, ValueError):
+                color_value = 1.0
+            bbox.set_facecolor(cmap(norm(color_value)))
+            bbox.set_alpha(0.4)
 
     def hover(self, event):
+        if self.annot is None or self.sc is None or self.fig is None or self.ax is None:
+            return
         vis = self.annot.get_visible()
         if event.inaxes == self.ax:
             cont, ind = self.sc.contains(event)
@@ -397,17 +621,16 @@ class QRVisualize:
                 self.update_annot(ind)
                 self.annot.set_visible(True)
                 self.fig.canvas.draw_idle()
-            else:
-                if vis:
-                    self.annot.set_visible(False)
-                    self.fig.canvas.draw_idle()
+            elif vis:
+                self.annot.set_visible(False)
+                self.fig.canvas.draw_idle()
 
     # https://stackoverflow.com/questions/7908636/how-to-add-hovering-annotations-to-a-plot
     def cluster_chart(self, data, folder_path=None):
         # Scatter plot for Text Cluster Prediction
         plt.figure(figsize=(6, 6))
         self.fig, self.ax = plt.subplots()
-        self.names = data["title"]
+        self.names = list(map(str, data["title"]))
         self.sc = plt.scatter(
             data["x"],
             data["y"],
@@ -416,7 +639,7 @@ class QRVisualize:
             edgecolors="black",
             linewidths=0.75,
         )
-        self.c = data["colour"]
+        self.c = np.asarray(data["colour"])
         self.annot = self.ax.annotate(
             "",
             xy=(0, 0),
