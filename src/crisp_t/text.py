@@ -314,6 +314,8 @@ class Text:
         for document in self._corpus.documents:
             if document.metadata.get(metadata_key) == metadata_value:
                 filtered_documents.append(document)
+            if document.id == metadata_value or document.name == metadata_value:
+                filtered_documents.append(document)
         self._corpus.documents = filtered_documents
         return filtered_documents
 
