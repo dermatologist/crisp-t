@@ -159,7 +159,7 @@ def main(
         # Load corpus from input file if provided
         if inp:
             click.echo(f"Loading corpus from: {inp}")
-            corpus = read_data.read_corpus_from_json(inp)
+            corpus = read_data.read_corpus_from_json(inp, ignore)
             text_analyzer = Text(corpus=corpus)
             click.echo(f"Loaded corpus with {text_analyzer.document_count()} documents")
             # Apply filters if provided

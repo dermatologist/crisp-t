@@ -175,7 +175,7 @@ class ReadData:
             self._corpus.df.to_csv(df_name, index=False)
         logger.info("Corpus written to %s", file_name)
 
-    def read_corpus_from_json(self, file_path=""):
+    def read_corpus_from_json(self, file_path="", comma_separated_ignore_words=""):
         """
         Read the corpus from a json file.
         """
@@ -193,6 +193,19 @@ class ReadData:
             self._corpus.df = pd.read_csv(df_name)
         else:
             self._corpus.df = None
+        # Remove ignore words from self._corpus.documents text
+        documents = []
+        for document in self._corpus.documents:
+            if comma_separated_ignore_words:
+                for word in comma_separated_ignore_words.split(","):
+                    document.text = re.sub(
+                        r"\b" + word.strip() + r"\b",
+                        "",
+                        document.text,
+                        flags=re.IGNORECASE,
+                    )
+            documents.append(document)
+        self._corpus.documents = documents
         return self._corpus
 
     # TODO IMPROVE
