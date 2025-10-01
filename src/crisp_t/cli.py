@@ -140,12 +140,23 @@ def main(
         # Load corpus from input file if provided
         if inp:
             click.echo(f"Loading corpus from: {inp}")
-            read_data.read_corpus_from_json(inp)
-            corpus = read_data.create_corpus(
-                name=f"Corpus from {inp}", description=f"Data loaded from {inp}"
-            )
+            corpus = read_data.read_corpus_from_json(inp)
             text_analyzer = Text(corpus=corpus)
             click.echo(f"Loaded corpus with {text_analyzer.document_count()} documents")
+            # Apply filters if provided
+            if filters:
+                try:
+                    for flt in filters:
+                        if "=" not in flt:
+                            raise ValueError("Filter must be in key=value format")
+                        key, value = flt.split("=", 1)
+                        text_analyzer.filter_documents(key.strip(), value.strip())
+                    click.echo(
+                        f"Applied filters {list(filters)}; remaining documents: {text_analyzer.document_count()}"
+                    )
+                except Exception as e:
+                    # Surface as CLI error with non-zero exit code
+                    raise click.ClickException(str(e))
 
         # Handle source option (URL or directory)
         if source:
@@ -161,13 +172,29 @@ def main(
                 click.echo(
                     f"✓ Successfully loaded {len(corpus.documents)} document(s) from {source}"
                 )
+                # Apply filters if provided
+                if filters:
+                    try:
+                        text_analyzer = Text(corpus=corpus)
+                        for flt in filters:
+                            if "=" not in flt:
+                                raise ValueError("Filter must be in key=value format")
+                            key, value = flt.split("=", 1)
+                            text_analyzer.filter_documents(key.strip(), value.strip())
+                        click.echo(
+                            f"Applied filters {list(filters)}; remaining documents: {text_analyzer.document_count()}"
+                        )
+                    except Exception as e:
+                        # Surface as CLI error with non-zero exit code
+                        raise click.ClickException(str(e))
 
-
+            except click.ClickException as e:
+                logger.error(f"Failed to read source {source}: {e}")
+                raise
             except Exception as e:
                 click.echo(f"✗ Error reading from source: {e}", err=True)
                 logger.error(f"Failed to read source {source}: {e}")
                 return
-
 
         # Load CSV data
         if csv:
@@ -224,6 +251,24 @@ def main(
                         click.echo(
                             f"Created corpus from CSV with {text_analyzer.document_count()} documents"
                         )
+                        # Apply filters if provided
+                        if filters:
+                            try:
+                                for flt in filters:
+                                    if "=" not in flt:
+                                        raise ValueError(
+                                            "Filter must be in key=value format"
+                                        )
+                                    key, value = flt.split("=", 1)
+                                    text_analyzer.filter_documents(
+                                        key.strip(), value.strip()
+                                    )
+                                click.echo(
+                                    f"Applied filters {list(filters)}; remaining documents: {text_analyzer.document_count()}"
+                                )
+                            except Exception as e:
+                                # Surface as CLI error with non-zero exit code
+                                raise click.ClickException(str(e))
                     else:
                         click.echo("No valid text data found in specified columns")
 
@@ -364,13 +409,16 @@ def main(
 
         click.echo("\n=== Analysis Complete ===")
 
+    except click.ClickException:
+        # Let Click handle and set non-zero exit code
+        raise
     except Exception as e:
-        click.echo(f"Error during analysis: {str(e)}")
+        # Convert unexpected exceptions to ClickException for non-zero exit code
         if verbose:
             import traceback
 
             traceback.print_exc()
-        return 1
+        raise click.ClickException(str(e))
 
 
 def _save_output(data, base_path: str, suffix: str):
