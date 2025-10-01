@@ -489,7 +489,7 @@ def _save_output(data, base_path: str, suffix: str):
         if output_path.suffix:
             # Use provided extension
             save_path = (
-                output_path.parent / f"{output_path.stem}_{suffix}{output_path.suffix}"
+                output_path / f"{output_path.stem}_{suffix}{output_path.suffix}"
             )
         else:
             # Default to JSON
