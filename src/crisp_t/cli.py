@@ -32,8 +32,8 @@ except ImportError:
 @click.option(
     "--covid", "-cf", default="", help="Download COVID narratives from the website"
 )
-@click.option("--inp", "-i", help="Load corpus from json file")
-@click.option("--out", "-o", default="", help="Write corpus to json ile")
+@click.option("--inp", "-i", help="Load corpus from a folder containing corpus.json")
+@click.option("--out", "-o", default="", help="Write corpus to a folder as corpus.json")
 @click.option("--csv", default="", help="CSV file name")
 @click.option(
     "--num", "-n", default=3, help="N (clusters/epochs, etc, depending on context)"
@@ -45,7 +45,12 @@ except ImportError:
     multiple=True,
     help="Document(s) or csv title(s) to analyze/compare",
 )
-@click.option("--filters", "-f", multiple=True, help="Filters to apply")
+@click.option(
+    "--filters",
+    "-f",
+    multiple=True,
+    help="Filters to apply as key=value (can be used multiple times)",
+)
 @click.option("--codedict", is_flag=True, help="Generate coding dictionary")
 @click.option("--topics", is_flag=True, help="Generate topic model")
 @click.option("--assign", is_flag=True, help="Assign documents to topics")
@@ -80,6 +85,11 @@ except ImportError:
 @click.option("--visualize", is_flag=True, help="Visualize words, topics or wordcloud")
 @click.option("--ignore", default="", help="Comma separated ignore words")
 @click.option("--source", "-s", help="Source URL or directory path to read data from")
+@click.option(
+    "--sources",
+    multiple=True,
+    help="Multiple sources (URLs or directories) to read data from; can be used multiple times",
+)
 def main(
     verbose,
     covid,
@@ -107,6 +117,7 @@ def main(
     visualize,
     ignore,
     source,
+    sources,
 ):
     """CRISP-T: Cross Industry Standard Process for Triangulation.
 
@@ -195,6 +206,43 @@ def main(
                 click.echo(f"✗ Error reading from source: {e}", err=True)
                 logger.error(f"Failed to read source {source}: {e}")
                 return
+
+        # Handle multiple sources
+        if sources:
+            loaded_any = False
+            for src in sources:
+                click.echo(f"Reading data from source: {src}")
+                try:
+                    read_data.read_source(
+                        src, comma_separated_ignore_words=ignore if ignore else None
+                    )
+                    loaded_any = True
+                except Exception as e:
+                    logger.error(f"Failed to read source {src}: {e}")
+                    raise click.ClickException(str(e))
+
+            if loaded_any:
+                corpus = read_data.create_corpus(
+                    name="Corpus from multiple sources",
+                    description=f"Data loaded from {len(sources)} sources",
+                )
+                click.echo(
+                    f"✓ Successfully loaded {len(corpus.documents)} document(s) from {len(sources)} sources"
+                )
+                # Apply filters if provided
+                if filters:
+                    try:
+                        text_analyzer = Text(corpus=corpus)
+                        for flt in filters:
+                            if "=" not in flt:
+                                raise ValueError("Filter must be in key=value format")
+                            key, value = flt.split("=", 1)
+                            text_analyzer.filter_documents(key.strip(), value.strip())
+                        click.echo(
+                            f"Applied filters {list(filters)}; remaining documents: {text_analyzer.document_count()}"
+                        )
+                    except Exception as e:
+                        raise click.ClickException(str(e))
 
         # Load CSV data
         if csv:

@@ -38,11 +38,11 @@ crisp-t [OPTIONS]
 
 ### Input/Output Options
 
-- `--inp, -i TEXT`: Input file in text format (.txt, .json)
-- `--csv TEXT`: CSV file name for numerical data analysis
-- `--out, -o TEXT`: Output file name for saving results
+- `--inp, -i PATH`: Load an existing corpus from a folder containing `corpus.json` (and optional `corpus_df.csv`)
+- `--csv PATH`: CSV file name for numerical data analysis
+- `--out, -o PATH`: When saving the corpus, provide a folder path; the CLI writes `corpus.json` (and `corpus_df.csv` if available) into that folder. When saving analysis results (topics, sentiment, etc.), this acts as a base path: files are written with suffixes, e.g., `results_topics.json`.
 - `--titles, -t TEXT`: Document(s) or CSV column(s) to analyze/compare (can be used multiple times)
-- `--ignore TEXT`: Comma-separated words to ignore during analysis
+- `--ignore TEXT`: Comma-separated words to ignore during ingestion (applies to `--source/--sources` and CSV text extraction)
 
 ### Analysis Options
 
@@ -68,21 +68,25 @@ crisp-t [OPTIONS]
 - `--visualize`: Generate visualizations (word clouds, topic charts, etc.)
 - `--num, -n INTEGER`: Number parameter (clusters, topics, epochs, etc.) - default: 3
 - `--rec, -r INTEGER`: Record parameter (top N results, recommendations) - default: 3
-- `--filters, -f TEXT`: Filters to apply (can be used multiple times)
+- `--filters, -f TEXT`: Filters to apply as `key=value` (can be used multiple times); keeps only documents where `document.metadata[key] == value`. Invalid formats raise an error.
 - `--verbose, -v`: Print verbose messages for debugging
+
+#### Data Sources
+- `--source, -s PATH|URL`: Read source data from a directory (reads .txt and .pdf) or from a URL
+- `--sources PATH|URL`: Provide multiple sources; can be used multiple times
 
 ### Examples
 
-#### Text Analysis from File
+#### Text Analysis from Corpus
 ```bash
-# Basic text analysis
-crisp-t --inp interview.txt --codedict --sentiment
+# Load an existing corpus and perform basic text analysis
+crisp-t --inp ./my_corpus_folder --codedict --sentiment
 
-# Comprehensive NLP analysis with output
-crisp-t --inp documents.txt --nlp --num 5 --out results
+# Comprehensive NLP analysis with output base path
+crisp-t --inp ./my_corpus_folder --nlp --num 5 --out results
 
 # Topic modeling with custom parameters
-crisp-t --inp corpus.txt --topics --assign --num 4 --rec 10
+crisp-t --inp ./my_corpus_folder --topics --assign --num 4 --rec 10
 ```
 
 #### CSV Data Analysis
@@ -105,12 +109,17 @@ crisp-t --csv mixed_data.csv --titles "qualitative_data,comments" --nlp --kmeans
 
 #### Advanced Usage
 ```bash
-# Custom analysis with filters and ignored words
-crisp-t --inp interviews.txt --nlp --filters "demographic:adult" --ignore "um,uh,like" --verbose
+# Ingest from a directory source with filters and ignored words
+crisp-t --source ./data_dir --nlp --filters "file_name=sample.txt" --ignore "um,uh,like" --verbose
 
-# Export results in different formats
-crisp-t --csv data.csv --titles responses --topics --out results.json
-crisp-t --csv data.csv --titles responses --topics --out results.csv
+# Ingest from multiple sources (directory + URL)
+crisp-t --sources ./data_dir --sources https://example.com/page --codedict
+
+# Save corpus to a folder
+crisp-t --source ./data_dir --out ./out_folder
+
+# Save analysis outputs using a base path
+crisp-t --inp ./my_corpus_folder --topics --out results
 ```
 
 ### Output Formats
@@ -120,12 +129,14 @@ Results can be saved in multiple formats:
 - **CSV**: For tabular data (DataFrames, topic assignments, etc.)
 - **Text**: For readable reports and summaries
 
-Output files are automatically named with suffixes indicating the analysis type:
+When saving analysis outputs via `--out`, files are automatically named with suffixes indicating the analysis type:
 - `*_coding_dictionary.json`: Qualitative coding results
 - `*_topics.json`: Topic modeling results
 - `*_sentiment.json`: Sentiment analysis results
 - `*_kmeans.json`: Clustering results
 - `*_svm_results.json`: Classification results
+
+When saving the corpus via `--out`, the CLI writes `corpus.json` (and `corpus_df.csv` if present) into the specified folder. If you pass a file path, only its parent directory is used for writing `corpus.json`.
 
 ## Example use
 
