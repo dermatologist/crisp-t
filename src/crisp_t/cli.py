@@ -146,9 +146,15 @@ def main(
     try:
         # Handle COVID data download
         if covid:
-            click.echo(f"Downloading COVID narratives from: {covid}")
-            # This would be implemented based on the specific COVID data source
-            click.echo("COVID data download functionality would be implemented here")
+            if not source:
+                raise click.ClickException("--source (output folder) is required when using --covid.")
+            click.echo(f"Downloading COVID narratives from: {covid} to {source}")
+            try:
+                from .utils import QRUtils
+                QRUtils.read_covid_narratives(source, covid)
+                click.echo(f"✓ COVID narratives downloaded to {source}")
+            except Exception as e:
+                raise click.ClickException(f"COVID download failed: {e}")
 
         # Load corpus from input file if provided
         if inp:
