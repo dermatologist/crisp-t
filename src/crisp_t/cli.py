@@ -159,7 +159,7 @@ def main(
         # Load corpus from input file if provided
         if inp:
             click.echo(f"Loading corpus from: {inp}")
-            corpus = read_data.read_corpus_from_json(inp, ignore)
+            corpus = read_data.read_corpus_from_json(inp, comma_separated_ignore_words=ignore if ignore else "")
             text_analyzer = Text(corpus=corpus)
             click.echo(f"Loaded corpus with {text_analyzer.document_count()} documents")
             # Apply filters if provided
@@ -493,7 +493,7 @@ def _save_output(data, base_path: str, suffix: str):
             )
         else:
             # Default to JSON
-            save_path = pathlib.Path(f"{base_path}_{suffix}.json")
+            save_path = output_path / f"{output_path.stem}_{suffix}.json"
 
         if isinstance(data, pd.DataFrame):
             if save_path.suffix == ".csv":
