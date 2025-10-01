@@ -448,12 +448,13 @@ def main(
             # This would generate appropriate visualizations based on the analysis performed
             click.echo("Visualization functionality integrated with analysis results")
 
-        # Save corpus if output specified
+        # Save corpus and csv if output directory is specified
         if out and corpus:
             output_path = pathlib.Path(out)
-            output_path.parent.mkdir(parents=True, exist_ok=True)
-            read_data.write_corpus_to_json(str(output_path.parent))
-            click.echo(f"✓ Corpus saved to {output_path.parent / 'corpus.json'}")
+            output_path.mkdir(parents=True, exist_ok=True)
+            read_data.write_corpus_to_json(str(output_path))
+            click.echo(f"✓ Corpus and csv saved to {output_path}")
+
 
         click.echo("\n=== Analysis Complete ===")
 
