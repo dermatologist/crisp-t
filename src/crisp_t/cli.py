@@ -40,10 +40,10 @@ except ImportError:
 )
 @click.option("--rec", "-r", default=3, help="Record (based on context)")
 @click.option(
-    "--titles",
+    "--unstructured",
     "-t",
     multiple=True,
-    help="Document(s) or csv title(s) to analyze/compare",
+    help="Csv columns with text data",
 )
 @click.option(
     "--filters",
@@ -84,6 +84,7 @@ except ImportError:
 @click.option("--pca", is_flag=True, help="Display PCA")
 @click.option("--visualize", is_flag=True, help="Visualize words, topics or wordcloud")
 @click.option("--ignore", default="", help="Comma separated ignore words")
+@click.option("--outcome", default="", help="Outcome variable for ML tasks")
 @click.option("--source", "-s", help="Source URL or directory path to read data from")
 @click.option(
     "--sources",
@@ -98,7 +99,7 @@ def main(
     csv,
     num,
     rec,
-    titles,
+    unstructured,
     filters,
     codedict,
     topics,
@@ -116,6 +117,7 @@ def main(
     pca,
     visualize,
     ignore,
+    outcome,
     source,
     sources,
 ):
@@ -250,7 +252,7 @@ def main(
             csv_path = pathlib.Path(csv)
             if csv_path.exists():
                 csv_analyzer = Csv()
-                text_columns = ",".join(titles) if titles else ""
+                text_columns = ",".join(unstructured) if unstructured else ""
                 ignore_columns = ignore if ignore else ""
 
                 csv_analyzer.comma_separated_text_columns = text_columns
@@ -390,7 +392,7 @@ def main(
 
         # Machine Learning Operations
         if ml_analyzer and ML_AVAILABLE:
-            target_col = titles[0] if titles else ""
+            target_col = outcome
 
             if kmeans:
                 click.echo("\n=== K-Means Clustering ===")
@@ -449,7 +451,7 @@ def main(
             click.echo("Visualization functionality integrated with analysis results")
 
         # Save corpus and csv if output directory is specified
-        if out and corpus:
+        if out and corpus and not filters:
             output_path = pathlib.Path(out)
             output_path.mkdir(parents=True, exist_ok=True)
             read_data.write_corpus_to_json(str(output_path))
