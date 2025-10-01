@@ -39,7 +39,7 @@ crisp-t [OPTIONS]
 ### Input/Output Options
 
 - `--inp, -i TEXT`: Input file in text format (.txt, .json)
-- `--csv TEXT`: CSV file name for numerical data analysis  
+- `--csv TEXT`: CSV file name for numerical data analysis
 - `--out, -o TEXT`: Output file name for saving results
 - `--titles, -t TEXT`: Document(s) or CSV column(s) to analyze/compare (can be used multiple times)
 - `--ignore TEXT`: Comma-separated words to ignore during analysis
@@ -58,7 +58,7 @@ crisp-t [OPTIONS]
 
 #### Machine Learning (requires `crisp-t[ml]`)
 - `--nnet`: Display neural network model accuracy
-- `--svm`: Display SVM confusion matrix  
+- `--svm`: Display SVM confusion matrix
 - `--knn`: Display K-nearest neighbors analysis
 - `--kmeans`: Display K-Means clustering results
 - `--cart`: Display association rules (CART)
@@ -122,7 +122,7 @@ Results can be saved in multiple formats:
 
 Output files are automatically named with suffixes indicating the analysis type:
 - `*_coding_dictionary.json`: Qualitative coding results
-- `*_topics.json`: Topic modeling results  
+- `*_topics.json`: Topic modeling results
 - `*_sentiment.json`: Sentiment analysis results
 - `*_kmeans.json`: Clustering results
 - `*_svm_results.json`: Classification results
@@ -136,7 +136,7 @@ Using this framework, business analysts can investigate how recurring concerns i
 
 ## Framework Documentation
 
-For detailed information about available functions, metadata handling, and theoretical frameworks, see the [comprehensive user instructions](notes/INSTRUCTION.md).
+For detailed information about available functions, metadata handling, and theoretical frameworks, see the [comprehensive user instructions](/notes/INSTRUCTION.md).
 
 ## Author
 
