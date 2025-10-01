@@ -50,7 +50,7 @@ def test_read_source_with_output(test_directory, output_directory):
     output_path = Path(output_directory) / "output" / "corpus.json"
 
     result = runner.invoke(
-        main, ["--source", test_directory, "--output-corpus", str(output_path)]
+        main, ["--source", test_directory, "--out", str(output_path)]
     )
 
     assert result.exit_code == 0

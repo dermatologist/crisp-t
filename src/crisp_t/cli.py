@@ -32,8 +32,8 @@ except ImportError:
 @click.option(
     "--covid", "-cf", default="", help="Download COVID narratives from the website"
 )
-@click.option("--inp", "-i", help="Input file in text format")
-@click.option("--out", "-o", default="", help="Output file name")
+@click.option("--inp", "-i", help="Load corpus from json file")
+@click.option("--out", "-o", default="", help="Write corpus to json ile")
 @click.option("--csv", default="", help="CSV file name")
 @click.option(
     "--num", "-n", default=3, help="N (clusters/epochs, etc, depending on context)"
@@ -80,7 +80,6 @@ except ImportError:
 @click.option("--visualize", is_flag=True, help="Visualize words, topics or wordcloud")
 @click.option("--ignore", default="", help="Comma separated ignore words")
 @click.option("--source", "-s", help="Source URL or directory path to read data from")
-@click.option("--output-corpus", help="Output path to save corpus JSON")
 def main(
     verbose,
     covid,
@@ -108,7 +107,6 @@ def main(
     visualize,
     ignore,
     source,
-    output_corpus,
 ):
     """CRISP-T: Cross Industry Standard Process for Triangulation.
 
@@ -139,6 +137,16 @@ def main(
             # This would be implemented based on the specific COVID data source
             click.echo("COVID data download functionality would be implemented here")
 
+        # Load corpus from input file if provided
+        if inp:
+            click.echo(f"Loading corpus from: {inp}")
+            read_data.read_corpus_from_json(inp)
+            corpus = read_data.create_corpus(
+                name=f"Corpus from {inp}", description=f"Data loaded from {inp}"
+            )
+            text_analyzer = Text(corpus=corpus)
+            click.echo(f"Loaded corpus with {text_analyzer.document_count()} documents")
+
         # Handle source option (URL or directory)
         if source:
             click.echo(f"Reading data from source: {source}")
@@ -154,57 +162,12 @@ def main(
                     f"✓ Successfully loaded {len(corpus.documents)} document(s) from {source}"
                 )
 
-                if output_corpus:
-                    output_path = pathlib.Path(output_corpus)
-                    output_path.parent.mkdir(parents=True, exist_ok=True)
-                    read_data.write_corpus_to_json(str(output_path.parent))
-                    click.echo(
-                        f"✓ Corpus saved to {output_path.parent / 'corpus.json'}"
-                    )
 
             except Exception as e:
                 click.echo(f"✗ Error reading from source: {e}", err=True)
                 logger.error(f"Failed to read source {source}: {e}")
                 return
 
-        # Load input data
-        if inp:
-            click.echo(f"Loading text data from: {inp}")
-            input_path = pathlib.Path(inp)
-            if input_path.exists():
-                if inp.endswith(".json"):
-                    corpus = read_data.load_corpus_from_json(input_path.parent)
-                elif inp.endswith(".txt"):
-                    # Load as single document
-                    with open(input_path, "r", encoding="utf-8") as f:
-                        content = f.read()
-
-                    # Create document and add to read_data
-                    from .model import Document
-
-                    document = Document(
-                        text=content,
-                        metadata={"source": inp},
-                        id="doc_0",
-                        score=0.0,
-                        name=f"Document from {inp}",
-                        description=f"Loaded from {inp}",
-                    )
-                    read_data._documents.append(document)
-                    corpus = read_data.create_corpus(
-                        name="Input Corpus", description=f"Loaded from {inp}"
-                    )
-                else:
-                    click.echo(f"Unsupported input file format: {inp}")
-                    return
-
-                text_analyzer = Text(corpus=corpus)
-                click.echo(
-                    f"Loaded corpus with {text_analyzer.document_count()} documents"
-                )
-            else:
-                click.echo(f"Input file not found: {inp}")
-                return
 
         # Load CSV data
         if csv:
@@ -395,9 +358,9 @@ def main(
         # Save corpus if output specified
         if out and corpus:
             output_path = pathlib.Path(out)
-            if output_path.suffix == ".json":
-                read_data.write_corpus_to_json(output_path.parent)
-                click.echo(f"Corpus saved to: {output_path}")
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+            read_data.write_corpus_to_json(str(output_path.parent))
+            click.echo(f"✓ Corpus saved to {output_path.parent / 'corpus.json'}")
 
         click.echo("\n=== Analysis Complete ===")
 
