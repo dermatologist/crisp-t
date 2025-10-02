@@ -197,13 +197,21 @@ class Csv:
             )
             return None
 
-    def read_xy(self, y: str, ignore_columns=True, numeric_only=False, filter_nans=True):
+    def read_xy(self, y: str, ignore_columns=True, numeric_only=False, filter_nans=True, comma_separated_include_columns: str = ""):
         """
         Read X and y variables from the DataFrame.
         """
         if self._df is None:
             logger.error("DataFrame is None. Cannot read X and y.")
             return None, None
+        if comma_separated_include_columns != "":
+            include_cols = [
+                col
+                for col in comma_separated_include_columns.split(",")
+                if col.strip() and col in self._df.columns
+            ]
+            self._df = self._df[include_cols + [y]] if y in self._df.columns else self._df[include_cols]
+            logger.info(f"DataFrame filtered to include columns: {include_cols + [y] if y in self._df.columns else include_cols}")
         if numeric_only:
             self._df = self._df.select_dtypes(include=[np.number])
             logger.info("DataFrame filtered to numeric columns only.")
