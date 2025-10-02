@@ -88,6 +88,7 @@ except ImportError:
 @click.option("--pca", is_flag=True, help="Display PCA")
 @click.option("--visualize", is_flag=True, help="Visualize words, topics or wordcloud")
 @click.option("--ignore", default="", help="Comma separated ignore words or columns depending on context")
+@click.option("--include", default="", help="Comma separated columns to include from csv")
 @click.option("--outcome", default="", help="Outcome variable for ML tasks")
 @click.option("--source", "-s", help="Source URL or directory path to read data from")
 @click.option(
@@ -122,6 +123,7 @@ def main(
     ml,
     visualize,
     ignore,
+    include,
     outcome,
     source,
     sources,
@@ -352,6 +354,8 @@ def main(
 
         # Initialize ML analyzer if available and ML functions are requested
         if ML_AVAILABLE and (nnet or cls or knn or kmeans or cart or pca or ml) and csv_analyzer:
+            if include:
+                csv_analyzer.comma_separated_include_columns(include)
             ml_analyzer = ML(csv=csv_analyzer)
         else:
             if (nnet or cls or knn or kmeans or cart or pca or ml) and not ML_AVAILABLE:
@@ -512,6 +516,17 @@ def main(
 
             if (cls or ml) and target_col:
                 click.echo("\n=== Classifier Evaluation ===")
+                click.echo("""
+                           Classifier
+                            - SVM: Support Vector Machine classifier with confusion matrix output.
+                            - Decision Tree: Decision Tree classifier with feature importance output.
+                Hint:   Use --outcome to specify the target variable for classification.
+                        Use --rec to adjust the number of top important features displayed.
+                """)
+                if not target_col:
+                    raise click.ClickException(
+                        "--outcome is required for classification tasks"
+                    )
                 click.echo("\n=== SVM ===")
                 try:
                     confusion_matrix = ml_analyzer.svm_confusion_matrix(
@@ -524,7 +539,7 @@ def main(
                     click.error(f"Error performing SVM classification: {e}")
                 click.echo("\n=== Decision Tree Classification ===")
                 try:
-                    cm, importance = ml_analyzer.get_decision_tree_classes(y=target_col)
+                    cm, importance = ml_analyzer.get_decision_tree_classes(y=target_col, top_n=rec)
                     click.echo("\n=== Feature Importance ===")
                     click.echo(
                         ml_analyzer.format_confusion_matrix_to_human_readable(
