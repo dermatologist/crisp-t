@@ -368,57 +368,75 @@ def main(
         if text_analyzer:
             if nlp or codedict:
                 click.echo("\n=== Generating Coding Dictionary ===")
-                text_analyzer.make_spacy_doc()
-                coding_dict = text_analyzer.print_coding_dictionary(num=num, top_n=rec)
-                if out:
-                    _save_output(coding_dict, out, "coding_dictionary")
+                try:
+                    text_analyzer.make_spacy_doc()
+                    coding_dict = text_analyzer.print_coding_dictionary(num=num, top_n=rec)
+                    if out:
+                        _save_output(coding_dict, out, "coding_dictionary")
+                except Exception as e:
+                    click.error(f"Error generating coding dictionary: {e}")
 
             if nlp or topics:
                 click.echo("\n=== Topic Modeling ===")
-                cluster_analyzer = Cluster(corpus=corpus)
-                cluster_analyzer.build_lda_model()
-                topics_result = cluster_analyzer.print_topics(
-                    num_words=rec, verbose=verbose
-                )
-                click.echo(f"Generated {len(topics_result)} topics")
-                if out:
-                    _save_output(topics_result, out, "topics")
-
-            if nlp or assign:
-                if "cluster_analyzer" not in locals():
+                try:
                     cluster_analyzer = Cluster(corpus=corpus)
                     cluster_analyzer.build_lda_model()
+                    topics_result = cluster_analyzer.print_topics(
+                        num_words=rec, verbose=verbose
+                    )
+                    click.echo(f"Generated {len(topics_result)} topics")
+                    if out:
+                        _save_output(topics_result, out, "topics")
+                except Exception as e:
+                    click.error(f"Error generating topics: {e}")
+
+            if nlp or assign:
                 click.echo("\n=== Document-Topic Assignments ===")
-                assignments = cluster_analyzer.format_topics_sentences(
-                    visualize=visualize
-                )
-                click.echo(f"Assigned {len(assignments)} documents to topics")
-                if out:
-                    _save_output(assignments, out, "topic_assignments")
+                try:
+                    if "cluster_analyzer" not in locals():
+                        cluster_analyzer = Cluster(corpus=corpus)
+                        cluster_analyzer.build_lda_model()
+                    assignments = cluster_analyzer.format_topics_sentences(
+                        visualize=visualize
+                    )
+                    click.echo(f"Assigned {len(assignments)} documents to topics")
+                    if out:
+                        _save_output(assignments, out, "topic_assignments")
+                except Exception as e:
+                    click.error(f"Error assigning topics: {e}")
 
             if nlp or cat:
                 click.echo("\n=== Category Analysis ===")
-                text_analyzer.make_spacy_doc()
-                categories = text_analyzer.print_categories(num=num)
-                if out:
-                    _save_output(categories, out, "categories")
+                try:
+                    text_analyzer.make_spacy_doc()
+                    categories = text_analyzer.print_categories(num=num)
+                    if out:
+                        _save_output(categories, out, "categories")
+                except Exception as e:
+                    click.error(f"Error generating categories: {e}")
 
             if nlp or summary:
                 click.echo("\n=== Text Summarization ===")
-                text_analyzer.make_spacy_doc()
-                summary_result = text_analyzer.generate_summary(weight=num)
-                click.echo("Generated text summary")
-                if out:
-                    _save_output(summary_result, out, "summary")
+                try:
+                    text_analyzer.make_spacy_doc()
+                    summary_result = text_analyzer.generate_summary(weight=num)
+                    click.echo("Generated text summary")
+                    if out:
+                        _save_output(summary_result, out, "summary")
+                except Exception as e:
+                    click.error(f"Error generating summary: {e}")
 
             if nlp or sentiment:
                 click.echo("\n=== Sentiment Analysis ===")
-                sentiment_analyzer = Sentiment(corpus=corpus)
-                sentiment_results = sentiment_analyzer.get_sentiment(
-                    documents=sentence, verbose=verbose
-                )
-                if out:
-                    _save_output(sentiment_results, out, "sentiment")
+                try:
+                    sentiment_analyzer = Sentiment(corpus=corpus)
+                    sentiment_results = sentiment_analyzer.get_sentiment(
+                        documents=sentence, verbose=verbose
+                    )
+                    if out:
+                        _save_output(sentiment_results, out, "sentiment")
+                except Exception as e:
+                    click.error(f"Error generating sentiment analysis: {e}")
 
         # Machine Learning Operations
         if ml_analyzer and ML_AVAILABLE:
@@ -426,48 +444,67 @@ def main(
 
             if kmeans or ml:
                 click.echo("\n=== K-Means Clustering ===")
-                clusters, members = ml_analyzer.get_kmeans(
-                    number_of_clusters=num, verbose=verbose
-                )
-                ml_analyzer.profile(members, number_of_clusters=num)
-                if out:
-                    _save_output(
-                        {"clusters": clusters, "members": members}, out, "kmeans"
+                try:
+                    clusters, members = ml_analyzer.get_kmeans(
+                        number_of_clusters=num, verbose=verbose
                     )
+                    ml_analyzer.profile(members, number_of_clusters=num)
+                    if out:
+                        _save_output(
+                            {"clusters": clusters, "members": members}, out, "kmeans"
+                        )
+                except Exception as e:
+                    click.error(f"Error performing K-Means clustering: {e}")
 
             if (svm or ml) and target_col:
                 click.echo("\n=== SVM Classification ===")
-                confusion_matrix = ml_analyzer.svm_confusion_matrix(
-                    y=target_col, test_size=0.25
-                )
-                if out:
-                    _save_output(confusion_matrix, out, "svm_results")
+                try:
+                    confusion_matrix = ml_analyzer.svm_confusion_matrix(
+                        y=target_col, test_size=0.25
+                    )
+                    if out:
+                        _save_output(confusion_matrix, out, "svm_results")
+                except Exception as e:
+                    click.error(f"Error performing SVM classification: {e}")
 
             if (nnet or ml) and target_col:
                 click.echo("\n=== Neural Network Classification ===")
-                predictions = ml_analyzer.get_nnet_predictions(y=target_col)
-                if out:
-                    _save_output(predictions, out, "nnet_results")
+                try:
+                    predictions = ml_analyzer.get_nnet_predictions(y=target_col)
+                    if out:
+                        _save_output(predictions, out, "nnet_results")
+                except Exception as e:
+                    click.error(f"Error performing Neural Network classification: {e}")
 
             if (knn or ml) and target_col:
                 click.echo("\n=== K-Nearest Neighbors ===")
-                knn_results = ml_analyzer.knn_search(y=target_col, n=num, r=rec)
-                if out:
-                    _save_output(knn_results, out, "knn_results")
+                try:
+                    knn_results = ml_analyzer.knn_search(y=target_col, n=num, r=rec)
+                    if out:
+                        _save_output(knn_results, out, "knn_results")
+                except Exception as e:
+                    click.error(f"Error performing K-Nearest Neighbors search: {e}")
 
             if (cart or ml) and target_col:
                 click.echo("\n=== Association Rules (CART) ===")
-                apriori_results = ml_analyzer.get_apriori(
-                    y=target_col, min_support=0.6, min_threshold=rec
-                )
-                if out:
-                    _save_output(apriori_results, out, "association_rules")
+                try:
+                    apriori_results = ml_analyzer.get_apriori(
+                        y=target_col, min_support=0.6, min_threshold=rec
+                    )
+                    if out:
+                        _save_output(apriori_results, out, "association_rules")
+                except Exception as e:
+                    click.error(f"Error generating association rules: {e}")
 
             if (pca or ml) and target_col:
                 click.echo("\n=== Principal Component Analysis ===")
-                pca_results = ml_analyzer.get_pca(y=target_col, n=num)
-                if out:
-                    _save_output(pca_results, out, "pca_results")
+                try:
+                    pca_results = ml_analyzer.get_pca(y=target_col, n=num)
+                    if out:
+                        _save_output(pca_results, out, "pca_results")
+                except Exception as e:
+                    click.error(f"Error performing Principal Component Analysis: {e}")
+                    
 
         elif (nnet or svm or knn or kmeans or cart or pca or ml) and not ML_AVAILABLE:
             click.echo("Machine learning features require additional dependencies.")
