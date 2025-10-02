@@ -138,6 +138,18 @@ class Csv:
         except Exception as e:
             logger.error(f"Error reading CSV file: {e}")
             raise
+        # ignore comma-separated ignore columns
+        if self._comma_separated_ignore_columns:
+            ignore_columns = [
+                col.strip()
+                for col in self._comma_separated_ignore_columns.split(",")
+                if col.strip()
+            ]
+            self._df.drop(columns=ignore_columns, inplace=True, errors="ignore")
+            logger.info(
+                f"Ignored columns: {ignore_columns}. Updated DataFrame shape: {self._df.shape}"
+            )
+            logger.debug(f"DataFrame content after dropping columns: {self._df.head()}")
         # ignore comma-separated text columns
         if self._comma_separated_text_columns:
             text_columns = [
@@ -164,6 +176,10 @@ class Csv:
             logger.error("DataFrame is None. Cannot write to CSV.")
 
     def mark_missing(self):
+        """ Mark missing values in the DataFrame.
+        Missing values are considered as empty strings and are replaced with NaN.
+        Rows with NaN values are then dropped from the DataFrame.
+        """
         if self._df is not None:
             self._df.replace("", np.nan, inplace=True)
             self._df.dropna(inplace=True)
@@ -171,6 +187,9 @@ class Csv:
             logger.error("DataFrame is None. Cannot mark missing values.")
 
     def mark_duplicates(self):
+        """ Mark duplicate rows in the DataFrame.
+        Duplicate rows are identified and dropped from the DataFrame.
+        """
         if self._df is not None:
             self._df.drop_duplicates(inplace=True)
         else:
@@ -187,6 +206,8 @@ class Csv:
             return None
 
     def get_columns(self):
+        """ Get the list of columns in the DataFrame.
+        """
         if self._df is not None:
             return self._df.columns.tolist()
         else:
@@ -194,6 +215,8 @@ class Csv:
             return []
 
     def get_column_types(self):
+        """ Get the data types of columns in the DataFrame.
+        """
         if self._df is not None:
             return self._df.dtypes.to_dict()
         else:
@@ -201,6 +224,8 @@ class Csv:
             return {}
 
     def get_column_values(self, column_name: str):
+        """ Get the unique values in a column of the DataFrame.
+        """
         if self._df is not None and column_name in self._df.columns:
             return self._df[column_name].tolist()
         else:
@@ -209,45 +234,55 @@ class Csv:
             )
             return None
 
-    def read_xy(self, y: str, ignore_columns=True, numeric_only=False, filter_nans=True, comma_separated_include_columns: str = ""):
+    def retain_numeric_columns_only(self):
+        """ Retain only numeric columns in the DataFrame.
+        """
+        if self._df is not None:
+            self._df = self._df.select_dtypes(include=[np.number])
+            logger.info("DataFrame filtered to numeric columns only.")
+        else:
+            logger.error("DataFrame is None. Cannot filter to numeric columns.")
+
+    def filter_nans(self):
+        """ Remove rows with NaN values from the DataFrame.
+        """
+        if self._df is not None:
+            self._df.dropna(inplace=True)
+            logger.info("Rows with NaN values dropped from DataFrame.")
+        else:
+            logger.error("DataFrame is None. Cannot filter NaN values.")
+
+    def comma_separated_include_columns(self, include_cols: str = ""):
+        """ Retain only specified columns in the DataFrame.
+        """
+        if include_cols == "":
+            return
+        if self._df is not None:
+            cols = [
+                col.strip()
+                for col in include_cols.split(",")
+                if col.strip() and col in self._df.columns
+            ]
+            self._df = self._df[cols]
+            logger.info(f"DataFrame filtered to include columns: {cols}")
+        else:
+            logger.error("DataFrame is None. Cannot filter to include columns.")
+
+    def read_xy(self, y: str):
         """
         Read X and y variables from the DataFrame.
         """
         if self._df is None:
             logger.error("DataFrame is None. Cannot read X and y.")
             return None, None
-        if comma_separated_include_columns != "":
-            include_cols = [
-                col
-                for col in comma_separated_include_columns.split(",")
-                if col.strip() and col in self._df.columns
-            ]
-            self._df = self._df[include_cols + [y]] if y in self._df.columns else self._df[include_cols]
-            logger.info(f"DataFrame filtered to include columns: {include_cols + [y] if y in self._df.columns else include_cols}")
-        if numeric_only:
-            self._df = self._df.select_dtypes(include=[np.number])
-            logger.info("DataFrame filtered to numeric columns only.")
-        if filter_nans:
-            self._df = self._df.dropna()
-            logger.info("Rows with NaN values dropped from DataFrame.")
+        # Split into X and y
         if y == "":
             self._y = None
         else:
             self._y = self._df[y]
-        ignore_cols = [
-            col
-            for col in self._comma_separated_ignore_columns.split(",")
-            if col.strip()
-        ]
         if y != "":
-            if ignore_columns and ignore_cols:
-                self._X = self._df.drop(columns=[y] + ignore_cols)
-            else:
                 self._X = self._df.drop(columns=[y])
         else:
-            if ignore_columns and ignore_cols:
-                self._X = self._df.drop(columns=ignore_cols)
-            else:
                 self._X = self._df.copy()
         logger.info(f"X and y variables set. X shape: {self._X.shape}")
         return self._X, self._y

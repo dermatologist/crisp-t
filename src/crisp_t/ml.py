@@ -97,7 +97,7 @@ class ML:
             raise ValueError(
                 "CSV data is not set. Please set self.csv before calling get_kmeans."
             )
-        X, _ = self._csv.read_xy("", ignore_columns=True, numeric_only=True)
+        X, _ = self._csv.read_xy("") # No output variable for clustering
         if X is None:
             raise ValueError(
                 "Input features X are None. Cannot perform KMeans clustering."
