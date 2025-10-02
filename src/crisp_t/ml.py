@@ -419,8 +419,8 @@ class ML:
         print(f'==== Top {top_n} important features ====\n')
         _importance =""
         for i, v in enumerate(top_n_indices):
-            print(f'Feature: {X.columns[i]}, Score: {v:.5f}')
-            _importance += f'Feature: {X.columns[i]}, Score: {v:.5f}\n'
+            print(f'Feature: {X.columns[v]}, Score: {importance[v]:.5f}')
+            _importance += f'Feature: {X.columns[v]}, Score: {importance[v]:.5f}\n'
 
         if self._csv.corpus is not None:
             self._csv.corpus.metadata["decision_tree_accuracy"] = f"Decision Tree accuracy for predicting {y}: {accuracy*100:.2f}%"
