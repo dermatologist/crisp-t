@@ -252,6 +252,15 @@ def main(
                     except Exception as e:
                         raise click.ClickException(str(e))
 
+        # Load csv from corpus.df if available
+        if corpus and corpus.df is not None:
+            click.echo("Loading CSV data from corpus.df")
+            csv_analyzer = Csv(corpus=corpus)
+            csv_analyzer.df = corpus.df
+            click.echo(f"Loaded CSV with shape: {csv_analyzer.get_shape()}")
+            if verbose:
+                click.echo(f"Columns: {csv_analyzer.get_columns()}")
+
         # Load CSV data
         if csv:
             click.echo(f"Loading CSV data from: {csv}")
@@ -268,6 +277,10 @@ def main(
                 click.echo(f"Loaded CSV with shape: {csv_analyzer.get_shape()}")
                 if verbose:
                     click.echo(f"Columns: {csv_analyzer.get_columns()}")
+
+                # Add df to corpus if available
+                if corpus:
+                    corpus.df = csv_analyzer.df
 
                 # Create corpus from CSV text columns if specified
                 if text_columns and not corpus:
@@ -328,12 +341,19 @@ def main(
                     else:
                         click.echo("No valid text data found in specified columns")
 
-                # Initialize ML analyzer if available and ML functions are requested
-                if ML_AVAILABLE and (nnet or svm or knn or kmeans or cart or pca):
-                    ml_analyzer = ML(csv=csv_analyzer)
             else:
                 click.echo(f"CSV file not found: {csv}")
                 return
+
+        # Initialize ML analyzer if available and ML functions are requested
+        if ML_AVAILABLE and (nnet or svm or knn or kmeans or cart or pca) and csv_analyzer:
+            ml_analyzer = ML(csv=csv_analyzer)
+        else:
+            if (nnet or svm or knn or kmeans or cart or pca) and not ML_AVAILABLE:
+                click.echo("Machine learning features require additional dependencies.")
+                click.echo("Install with: pip install crisp-t[ml]")
+            if (nnet or svm or knn or kmeans or cart or pca) and not csv_analyzer:
+                click.echo("ML analysis requires CSV data. Use --csv to provide a data file.")
 
         # Ensure we have data to work with
         if not corpus and not csv_analyzer:
