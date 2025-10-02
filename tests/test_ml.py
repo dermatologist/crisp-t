@@ -1,6 +1,5 @@
 import logging
-
-from pkg_resources import resource_filename
+from pathlib import Path
 
 from src.crisp_t.csv import Csv
 from src.crisp_t.ml import ML
@@ -18,7 +17,7 @@ def test_ml_initialization(csv_fixture):
 
 
 def test_get_kmeans(csv_fixture):
-    folder_path = resource_filename("src.crisp_t.resources", "food_coded.csv")
+    folder_path = str(Path(__file__).parent / "resources" / "food_coded.csv")
 
     csv_fixture.read_csv(folder_path)
     csv_fixture.drop_na()
@@ -36,7 +35,7 @@ def test_get_kmeans(csv_fixture):
 
 def test_profile(csv_fixture):
 
-    folder_path = resource_filename("src.crisp_t.resources", "food_coded.csv")
+    folder_path = str(Path(__file__).parent / "resources" / "food_coded.csv")
     _csv = csv_fixture
     _csv.read_csv(folder_path)
     _csv.drop_na()
@@ -49,7 +48,7 @@ def test_profile(csv_fixture):
 
 
 def test_get_nnet_predictions(csv_fixture):
-    folder_path = resource_filename("src.crisp_t.resources", "food_coded.csv")
+    folder_path = str(Path(__file__).parent / "resources" / "food_coded.csv")
     _csv = csv_fixture
     _csv.read_csv(folder_path)
     _csv.drop_na()
@@ -59,7 +58,7 @@ def test_get_nnet_predictions(csv_fixture):
 
 
 def test_svm_confusion_matrix(csv_fixture):
-    folder_path = resource_filename("src.crisp_t.resources", "food_coded.csv")
+    folder_path = str(Path(__file__).parent / "resources" / "food_coded.csv")
     _csv = csv_fixture
     _csv.read_csv(folder_path)
     _csv.drop_na()
@@ -69,8 +68,9 @@ def test_svm_confusion_matrix(csv_fixture):
     human_readable = ml.format_confusion_matrix_to_human_readable(confusion_matrix)
     print(human_readable)
 
+
 def test_knn_search(csv_fixture):
-    folder_path = resource_filename("src.crisp_t.resources", "food_coded.csv")
+    folder_path = str(Path(__file__).parent / "resources" / "food_coded.csv")
     _csv = csv_fixture
     _csv.read_csv(folder_path)
     _csv.drop_na()
@@ -81,7 +81,7 @@ def test_knn_search(csv_fixture):
 
 
 def test_get_xgb_classes(csv_fixture):
-    folder_path = resource_filename("src.crisp_t.resources", "food_coded.csv")
+    folder_path = str(Path(__file__).parent / "resources" / "food_coded.csv")
     _csv = csv_fixture
     _csv.read_csv(folder_path)
     _csv.drop_na()
@@ -91,8 +91,9 @@ def test_get_xgb_classes(csv_fixture):
     human_readable = ml.format_confusion_matrix_to_human_readable(xgb_classes)
     print(human_readable)
 
+
 # def test_get_apriori(csv_fixture):
-#     folder_path = resource_filename("src.crisp_t.resources", "food_coded.csv")
+#     folder_path = str(Path(__file__).parent / "resources" / "food_coded.csv")
 #     _csv = csv_fixture
 #     _csv.read_csv(folder_path)
 #     _csv.drop_na()
@@ -101,8 +102,9 @@ def test_get_xgb_classes(csv_fixture):
 #     assert apriori_rules is not None, "Apriori rules should not be None"
 #     print(apriori_rules)
 
+
 def test_get_pca(csv_fixture):
-    folder_path = resource_filename("src.crisp_t.resources", "food_coded.csv")
+    folder_path = str(Path(__file__).parent / "resources" / "food_coded.csv")
     _csv = csv_fixture
     _csv.read_csv(folder_path)
     _csv.drop_na()

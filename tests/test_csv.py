@@ -1,6 +1,6 @@
 import logging
+from pathlib import Path
 
-from pkg_resources import resource_filename
 from src.crisp_t.csv import Csv
 
 # setup logging
@@ -14,7 +14,7 @@ def test_csv_initialization(corpus_fixture):
 
 
 def test_read_csv(corpus_fixture):
-    folder_path = resource_filename("src.crisp_t.resources", "food_coded.csv")
+    folder_path = str(Path(__file__).parent / "resources" / "food_coded.csv")
     csv = Csv(
         corpus=corpus_fixture,
         comma_separated_text_columns="comfort_food,comfort_food_reasons,diet_current",
@@ -26,7 +26,7 @@ def test_read_csv(corpus_fixture):
 
 
 def test_mark_missing(corpus_fixture):
-    folder_path = resource_filename("src.crisp_t.resources", "food_coded.csv")
+    folder_path = str(Path(__file__).parent / "resources" / "food_coded.csv")
     csv = Csv(
         corpus=corpus_fixture,
         comma_separated_text_columns="comfort_food,comfort_food_reasons,diet_current",
@@ -38,7 +38,7 @@ def test_mark_missing(corpus_fixture):
 
 
 def test_read_xy(corpus_fixture):
-    folder_path = resource_filename("src.crisp_t.resources", "food_coded.csv")
+    folder_path = str(Path(__file__).parent / "resources" / "food_coded.csv")
     csv = Csv(
         corpus=corpus_fixture,
         comma_separated_text_columns="comfort_food,comfort_food_reasons,diet_current",
@@ -51,7 +51,7 @@ def test_read_xy(corpus_fixture):
 
 
 def test_oversample(corpus_fixture):
-    folder_path = resource_filename("src.crisp_t.resources", "food_coded.csv")
+    folder_path = str(Path(__file__).parent / "resources" / "food_coded.csv")
     csv = Csv(
         corpus=corpus_fixture,
         comma_separated_text_columns="comfort_food,comfort_food_reasons,diet_current",
