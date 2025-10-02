@@ -16,10 +16,8 @@ def test_ml_initialization(csv_fixture):
     assert ml._csv == csv_fixture, "Csv should be set correctly"
 
 
-def test_get_kmeans(csv_fixture):
-    folder_path = str(Path(__file__).parent / "resources" / "food_coded.csv")
-
-    csv_fixture.read_csv(folder_path)
+def test_get_kmeans(csv_fixture, csv_file_fixture):
+    csv_fixture.read_csv(csv_file_fixture)
     csv_fixture.drop_na()
     ml = ML(
         csv=csv_fixture,
@@ -33,34 +31,30 @@ def test_get_kmeans(csv_fixture):
     # [[3, 4, 9], [0, 1, 2, 7, 8, 10], [5], [6, 11], [12]]
 
 
-def test_profile(csv_fixture):
+def test_profile(csv_fixture, csv_file_fixture):
 
-    folder_path = str(Path(__file__).parent / "resources" / "food_coded.csv")
-    _csv = csv_fixture
-    _csv.read_csv(folder_path)
-    _csv.drop_na()
-    print(_csv)
-    ml = ML(csv=_csv)
+    csv_fixture.read_csv(csv_file_fixture)
+    csv_fixture.drop_na()
+    print(csv_fixture.df.head())  # Print the first few rows of the DataFrame for debugging
+    ml = ML(csv=csv_fixture)
     kmeans, members = ml.get_kmeans(number_of_clusters=5)
     profile = ml.profile(members, number_of_clusters=5)
     print(profile)
     assert profile is not None, "Profile should not be None"
 
 
-def test_get_nnet_predictions(csv_fixture):
-    folder_path = str(Path(__file__).parent / "resources" / "food_coded.csv")
+def test_get_nnet_predictions(csv_fixture, csv_file_fixture):
     _csv = csv_fixture
-    _csv.read_csv(folder_path)
+    _csv.read_csv(csv_file_fixture)
     _csv.drop_na()
     ml = ML(csv=_csv)
     predictions = ml.get_nnet_predictions(y="Gender")
     assert predictions is not None, "Predictions should not be None"
 
 
-def test_svm_confusion_matrix(csv_fixture):
-    folder_path = str(Path(__file__).parent / "resources" / "food_coded.csv")
+def test_svm_confusion_matrix(csv_fixture, csv_file_fixture):
     _csv = csv_fixture
-    _csv.read_csv(folder_path)
+    _csv.read_csv(csv_file_fixture)
     _csv.drop_na()
     ml = ML(csv=_csv)
     confusion_matrix = ml.svm_confusion_matrix(y="Gender")
@@ -69,10 +63,9 @@ def test_svm_confusion_matrix(csv_fixture):
     print(human_readable)
 
 
-def test_knn_search(csv_fixture):
-    folder_path = str(Path(__file__).parent / "resources" / "food_coded.csv")
+def test_knn_search(csv_fixture, csv_file_fixture):
     _csv = csv_fixture
-    _csv.read_csv(folder_path)
+    _csv.read_csv(csv_file_fixture)
     _csv.drop_na()
     ml = ML(csv=_csv)
     dist, ind = ml.knn_search(y="Gender", n=3, r=3)
@@ -80,10 +73,9 @@ def test_knn_search(csv_fixture):
     print(f"KNN search for Gender (n=3, record no 3): {ind} with distances {dist}")
 
 
-def test_get_xgb_classes(csv_fixture):
-    folder_path = str(Path(__file__).parent / "resources" / "food_coded.csv")
+def test_get_xgb_classes(csv_fixture, csv_file_fixture):
     _csv = csv_fixture
-    _csv.read_csv(folder_path)
+    _csv.read_csv(csv_file_fixture)
     _csv.drop_na()
     ml = ML(csv=_csv)
     xgb_classes = ml.get_xgb_classes(y="Gender")
@@ -92,10 +84,9 @@ def test_get_xgb_classes(csv_fixture):
     print(human_readable)
 
 
-# def test_get_apriori(csv_fixture):
-#     folder_path = str(Path(__file__).parent / "resources" / "food_coded.csv")
+# def test_get_apriori(csv_fixture, csv_file_fixture):
 #     _csv = csv_fixture
-#     _csv.read_csv(folder_path)
+#     _csv.read_csv(csv_file_fixture)
 #     _csv.drop_na()
 #     ml = ML(csv=_csv)
 #     apriori_rules = ml.get_apriori(y="Gender")
@@ -103,10 +94,9 @@ def test_get_xgb_classes(csv_fixture):
 #     print(apriori_rules)
 
 
-def test_get_pca(csv_fixture):
-    folder_path = str(Path(__file__).parent / "resources" / "food_coded.csv")
+def test_get_pca(csv_fixture, csv_file_fixture):
     _csv = csv_fixture
-    _csv.read_csv(folder_path)
+    _csv.read_csv(csv_file_fixture)
     _csv.drop_na()
     ml = ML(csv=_csv)
     pca_result = ml.get_pca(y="Gender")
