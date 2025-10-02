@@ -374,6 +374,8 @@ class Text:
             to_return.append(category)
         QRUtils.print_table(output)
         print("---------------------------\n")
+        if self._corpus is not None:
+            self._corpus.metadata["categories"] = output
         return to_return
 
     def category_basket(self, num=10):
