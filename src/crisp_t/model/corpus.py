@@ -40,8 +40,8 @@ class Corpus(BaseModel):
     df: Optional[pd.DataFrame] = Field(
         None, description="Numeric data associated with the corpus."
     )
-    visualization: Optional[Dict[str, Any]] = Field(
-        None, description="Visualization data associated with the corpus."
+    visualization: Dict[str, Any] = Field(
+        default_factory=dict, description="Visualization data associated with the corpus."
     )
     model_config = ConfigDict(
         arbitrary_types_allowed=True

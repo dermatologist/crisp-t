@@ -363,14 +363,16 @@ def main(
                     _save_output(topics_result, out, "topics")
 
             if nlp or assign:
-                if "cluster_analyzer" in locals():
-                    click.echo("\n=== Document-Topic Assignments ===")
-                    assignments = cluster_analyzer.format_topics_sentences(
-                        visualize=visualize
-                    )
-                    click.echo(f"Assigned {len(assignments)} documents to topics")
-                    if out:
-                        _save_output(assignments, out, "topic_assignments")
+                if "cluster_analyzer" not in locals():
+                    cluster_analyzer = Cluster(corpus=corpus)
+                    cluster_analyzer.build_lda_model()
+                click.echo("\n=== Document-Topic Assignments ===")
+                assignments = cluster_analyzer.format_topics_sentences(
+                    visualize=visualize
+                )
+                click.echo(f"Assigned {len(assignments)} documents to topics")
+                if out:
+                    _save_output(assignments, out, "topic_assignments")
 
             if nlp or cat:
                 click.echo("\n=== Category Analysis ===")
@@ -462,7 +464,6 @@ def main(
             output_path.mkdir(parents=True, exist_ok=True)
             read_data.write_corpus_to_json(str(output_path))
             click.echo(f"✓ Corpus and csv saved to {output_path}")
-
 
         click.echo("\n=== Analysis Complete ===")
 
