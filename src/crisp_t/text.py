@@ -234,14 +234,8 @@ class Text:
                 for dimension, f3 in self.dimensions(attribute, top_n):
                     if dimension not in _verbs:
                         output.append((verb, attribute, dimension))
-                        verb = "..."
-                        attribute = "..."
                         coding_dict.append(
-                            {
-                                "category": verb,
-                                "property": attribute,
-                                "dimension": dimension,
-                            }
+                            f"{verb} > {attribute} > {dimension}"
                         )
         # Add coding_dict to corpus metadata
         if self._corpus is not None:
