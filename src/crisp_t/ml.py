@@ -325,7 +325,7 @@ class ML:
         # [[2 0]
         #  [2 0]]
         if self._csv.corpus is not None:
-            self._csv.corpus.metadata["svm_confusion_matrix"] = f"Confusion Matrix for SVM predicting {y}:\n{_confusion_matrix}"
+            self._csv.corpus.metadata["svm_confusion_matrix"] = f"Confusion Matrix for SVM predicting {y}:\n{self.format_confusion_matrix_to_human_readable(_confusion_matrix)}"
         return _confusion_matrix
 
     def format_confusion_matrix_to_human_readable(self, confusion_matrix: np.ndarray) -> str:
@@ -416,12 +416,15 @@ class ML:
 
         # Display feature importance
         print(f'==== Top {top_n} important features ====\n')
+        _importance =""
         for i, v in enumerate(top_n_indices):
             print(f'Feature: {X.columns[i]}, Score: {v:.5f}')
+            _importance += f'Feature: {X.columns[i]}, Score: {v:.5f}\n'
 
         if self._csv.corpus is not None:
-            self._csv.corpus.metadata["decision_tree_confusion_matrix"] = f"Confusion Matrix for Decision Tree predicting {y}:\n{_confusion_matrix}"
-            self._csv.corpus.metadata["decision_tree_feature_importance"] = importance
+            self._csv.corpus.metadata["decision_tree_accuracy"] = f"Decision Tree accuracy for predicting {y}: {accuracy*100:.2f}%"
+            self._csv.corpus.metadata["decision_tree_confusion_matrix"] = f"Confusion Matrix for Decision Tree predicting {y}:\n{self.format_confusion_matrix_to_human_readable(_confusion_matrix)}"
+            self._csv.corpus.metadata["decision_tree_feature_importance"] = _importance
 
         return _confusion_matrix, importance
 
