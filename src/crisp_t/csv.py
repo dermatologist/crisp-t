@@ -302,13 +302,13 @@ class Csv:
 
             def to_one_hot(x):
                 if x in [1, True]:
-                    return 1
+                    return True
                 elif x in [0, False]:
-                    return 0
+                    return False
                 else:
-                    logger.warning(
-                        f"Unexpected value '{x}' encountered during one-hot encoding; mapping to 1."
-                    )
-                    return 1
+                    # logger.warning(
+                    #     f"Unexpected value '{x}' encountered during one-hot encoding; mapping to 1."
+                    # )
+                    return True
 
             self._df = self._df.applymap(to_one_hot) # type: ignore
