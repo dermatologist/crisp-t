@@ -44,6 +44,10 @@ def corpus_fixture():
 def csv_fixture(corpus_fixture):
     return Csv(corpus=corpus_fixture)
 
+@pytest.fixture
+def folder_path_fixture():
+    return str(Path(__file__).parent / "resources" / "")
+
 
 @pytest.fixture(autouse=True)
 def run_before_and_after_tests(corpus_fixture):

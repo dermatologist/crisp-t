@@ -8,9 +8,8 @@ from click.testing import CliRunner
 from src.crisp_t.cli import main
 
 
-def write_sample_corpus(tmp_path):
+def write_sample_corpus(tmp_path, folder_path_fixture):
     # Use packaged resources to build a corpus on disk
-    folder_path = str(Path(__file__).parent / "resources" / "")
     # Create a minimal corpus.json and corpus_df.csv using the CLI read_source path
     # We'll invoke the CLI to read from folder and write to tmp_path
     runner = CliRunner()
@@ -18,7 +17,7 @@ def write_sample_corpus(tmp_path):
         main,
         [
             "--source",
-            folder_path,
+            folder_path_fixture,
             "--out",
             str(tmp_path / "out.json"),
         ],
@@ -28,15 +27,14 @@ def write_sample_corpus(tmp_path):
     return tmp_path
 
 
-def test_filters_key_value_with_source(tmp_path):
-    folder_path = str(Path(__file__).parent / "resources" / "")
+def test_filters_key_value_with_source(tmp_path, folder_path_fixture):
     runner = CliRunner()
     # Expect filter by file_name based on resource file available
     result = runner.invoke(
         main,
         [
             "--source",
-            folder_path,
+            folder_path_fixture,
             "--filters",
             "file_name=sample.txt",
         ],
@@ -46,22 +44,20 @@ def test_filters_key_value_with_source(tmp_path):
     assert "Applied filters" in result.output
 
 
-def test_filters_invalid_format(tmp_path):
-    folder_path = str(Path(__file__).parent / "resources" / "")
+def test_filters_invalid_format(tmp_path, folder_path_fixture):
     runner = CliRunner()
     result = runner.invoke(
-        main, ["--source", folder_path, "--filters", "file_name:sample.txt"]
+        main, ["--source", folder_path_fixture, "--filters", "file_name:sample.txt"]
     )
     assert result.exit_code != 0
     assert "Filter must be in key=value format" in result.output
 
 
-def test_filters_with_inp_and_save(tmp_path):
+def test_filters_with_inp_and_save(tmp_path, folder_path_fixture):
     # First, create a corpus by reading from resources and writing to tmp dir
-    folder_path = str(Path(__file__).parent / "resources" / "")
     runner = CliRunner()
     result1 = runner.invoke(
-        main, ["--source", folder_path, "--out", str(tmp_path / "save.json")]
+        main, ["--source", folder_path_fixture, "--out", str(tmp_path)]
     )
     assert result1.exit_code == 0
     assert (tmp_path / "corpus.json").exists()
