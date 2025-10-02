@@ -272,9 +272,9 @@ class Csv:
         else:
             self._y = self._df[y]
         if y != "":
-                self._X = self._df.drop(columns=[y])
+            self._X = self._df.drop(columns=[y])
         else:
-                self._X = self._df.copy()
+            self._X = self._df.copy()
         logger.info(f"X and y variables set. X shape: {self._X.shape}")
         return self._X, self._y
 
@@ -326,6 +326,11 @@ class Csv:
         return self.read_xy(y)
 
     def one_hot_encode_strings_in_df(self, n=10, filter_high_cardinality=False):
+        """One-hot encode string (object) columns in the DataFrame.
+        This method converts categorical string columns into one-hot encoded columns.
+        Columns with more than n unique values can be optionally filtered out.
+        Used when # ValueError: could not convert string to float.
+        """
         if self._df is not None:
             categorical_cols = self._df.select_dtypes(include=["object"]).columns.tolist()
             # Remove categorical columns with more than n unique values
@@ -342,11 +347,10 @@ class Csv:
             logger.error("DataFrame is None. Cannot apply one-hot encoding.")
 
     def one_hot_encode_all_columns(self):
-        # The allowed values for a DataFrame are True, False, 0, 1. Found value 2
-        # Map all values to 0 or 1 for one-hot encoding:
-        # - 1 or True -> 1
-        # - 0 or False -> 0
-        # - Any other value -> 1 (with a warning)
+        """ One-hot encode all columns in the DataFrame.
+        This method converts all values in the DataFrame to boolean values.
+        Used for apriori algorithm which requires boolean values.
+        """
         if self._df is not None:
 
             def to_one_hot(x):

@@ -19,6 +19,7 @@ def test_ml_initialization(csv_fixture):
 def test_get_kmeans(csv_fixture, csv_file_fixture):
     csv_fixture.read_csv(csv_file_fixture)
     csv_fixture.drop_na()
+    csv_fixture.one_hot_encode_strings_in_df()  # ValueError: could not convert string to float: 'chocolate, chips, ice cream'
     ml = ML(
         csv=csv_fixture,
     )
@@ -35,6 +36,8 @@ def test_profile(csv_fixture, csv_file_fixture):
 
     csv_fixture.read_csv(csv_file_fixture)
     csv_fixture.drop_na()
+    csv_fixture.one_hot_encode_strings_in_df()  # ValueError: could not convert string to float: 'chocolate, chips, ice cream'
+
     print(csv_fixture.df.head())  # Print the first few rows of the DataFrame for debugging
     ml = ML(csv=csv_fixture)
     kmeans, members = ml.get_kmeans(number_of_clusters=5)
