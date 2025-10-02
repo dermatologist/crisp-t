@@ -2,6 +2,9 @@ import logging
 import pathlib
 from typing import List, Optional
 
+import warnings
+warnings.filterwarnings("ignore", category=DeprecationWarning)
+
 import click
 
 from . import __version__
@@ -28,7 +31,7 @@ except ImportError:
 
 
 @click.command()
-@click.option("--verbose", "-v", is_flag=False, help="Print verbose messages.")
+@click.option("--verbose", "-v", is_flag=True, help="Print verbose messages.")
 @click.option(
     "--covid", "-cf", default="", help="Download COVID narratives from the website"
 )
@@ -489,17 +492,23 @@ def main(
 
             if kmeans or ml:
                 click.echo("\n=== K-Means Clustering ===")
-                try:
-                    clusters, members = ml_analyzer.get_kmeans(
-                        number_of_clusters=num, verbose=verbose
+                click.echo("""
+                           K-Means clustering removes non-numeric columns.
+                           Additionally it removes NaN values.
+                           So combining with other ML options may not work as expected.
+                Hint:   Use --num to adjust the number of clusters generated.
+                """)
+                csv_analyzer.retain_numeric_columns_only()
+                csv_analyzer.drop_na()
+                _ml_analyzer = ML(csv=csv_analyzer)
+                clusters, members = _ml_analyzer.get_kmeans(
+                    number_of_clusters=num, verbose=verbose
+                )
+                _ml_analyzer.profile(members, number_of_clusters=num)
+                if out:
+                    _save_output(
+                        {"clusters": clusters, "members": members}, out, "kmeans"
                     )
-                    ml_analyzer.profile(members, number_of_clusters=num)
-                    if out:
-                        _save_output(
-                            {"clusters": clusters, "members": members}, out, "kmeans"
-                        )
-                except Exception as e:
-                    click.error(f"Error performing K-Means clustering: {e}")
 
             if (svm or ml) and target_col:
                 click.echo("\n=== SVM Classification ===")
