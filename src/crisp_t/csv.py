@@ -277,13 +277,14 @@ class Csv:
             self.one_hot_encode_all_columns()
         return self.read_xy(y)
 
-    def one_hot_encode_strings_in_df(self, n=10):
+    def one_hot_encode_strings_in_df(self, n=10, filter_high_cardinality=False):
         if self._df is not None:
             categorical_cols = self._df.select_dtypes(include=["object"]).columns.tolist()
             # Remove categorical columns with more than n unique values
-            categorical_cols = [
-                col for col in categorical_cols if self._df[col].nunique() <= n
-            ]
+            if filter_high_cardinality:
+                categorical_cols = [
+                    col for col in categorical_cols if self._df[col].nunique() <= n
+                ]
             if categorical_cols:
                 self._df = pd.get_dummies(self._df, columns=categorical_cols, drop_first=True)
                 logger.info("One-hot encoding applied to string columns.")

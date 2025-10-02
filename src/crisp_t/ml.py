@@ -6,7 +6,11 @@ from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KDTree
 from sklearn.preprocessing import StandardScaler
+from sklearn.datasets import make_classification
+from sklearn.tree import DecisionTreeClassifier
 from sklearn.svm import SVC
+
+from crisp_t import model
 
 from .csv import Csv
 
@@ -363,6 +367,39 @@ class ML:
             raise ValueError("NaN detected in target vector.")
 
         return X_np, Y_raw, X, Y
+
+    def get_decision_tree_classes(self, y: str, test_size=0.25, random_state=0):
+        X_np, Y_raw, X, Y = self._process_xy(y=y)
+        X_train, X_test, y_train, y_test = train_test_split(
+            X_np, Y_raw, test_size=test_size, random_state=random_state
+        )
+        # Issue #22
+        sc = StandardScaler()
+        y_test = y_test.astype("int")
+        y_train = y_train.astype("int")
+        X_train = sc.fit_transform(X_train)
+        X_test = sc.transform(X_test)
+        classifier = DecisionTreeClassifier(random_state=random_state) # type: ignore
+        classifier.fit(X_train, y_train)
+        y_pred = classifier.predict(X_test)
+        _confusion_matrix = confusion_matrix(y_test, y_pred)
+        print(f"Confusion Matrix for Decision Tree predicting {y}:\n{_confusion_matrix}")
+        # Output
+        # [[2 0]
+        #  [2 0]]
+
+        # Retrieve feature importance scores
+        importance = classifier.feature_importances_
+
+        # Display feature importance
+        for i, v in enumerate(importance):
+            print(f'Feature: {i}, Score: {v:.5f}')
+
+        if self._csv.corpus is not None:
+            self._csv.corpus.metadata["decision_tree_confusion_matrix"] = f"Confusion Matrix for Decision Tree predicting {y}:\n{_confusion_matrix}"
+            self._csv.corpus.metadata["decision_tree_feature_importance"] = importance
+
+        return _confusion_matrix
 
     def get_xgb_classes(self, y: str, oversample=False, test_size=0.25, random_state=0):
         X_np, Y_raw, X, Y = self._process_xy(y=y)

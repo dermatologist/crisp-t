@@ -462,10 +462,17 @@ def main(
                     confusion_matrix = ml_analyzer.svm_confusion_matrix(
                         y=target_col, test_size=0.25
                     )
+                    click.echo(ml_analyzer.format_confusion_matrix_to_human_readable(confusion_matrix))
                     if out:
                         _save_output(confusion_matrix, out, "svm_results")
                 except Exception as e:
                     click.error(f"Error performing SVM classification: {e}")
+                # try:
+                #     confusion_matrix = ml_analyzer.get_decision_tree(y=target_col)
+                #     if out:
+                #         _save_output(confusion_matrix, out, "decision_tree_results")
+                # except Exception as e:
+                #     click.error(f"Error performing Decision Tree classification: {e}")
 
             if (nnet or ml) and target_col:
                 click.echo("\n=== Neural Network Classification ===")
