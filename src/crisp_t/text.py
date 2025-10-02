@@ -211,6 +211,15 @@ class Text:
         return sorted(_words.items(), key=operator.itemgetter(1), reverse=True)[:index]
 
     def print_coding_dictionary(self, num=10, top_n=5):
+        """ Prints a coding dictionary based on common verbs, attributes, and dimensions.
+        "CATEGORY" is the common verb
+        "PROPERTY" is the common nouns associated with the verb
+        "DIMENSION" is the common adjectives/adverbs/verbs associated with the property
+        Args:
+            num (int, optional): Number of common verbs to consider. Defaults to 10.
+            top_n (int, optional): Number of top attributes and dimensions to consider for each verb. Defaults to 5.
+
+        """
         output = []
         coding_dict = []
         output.append(("CATEGORY", "PROPERTY", "DIMENSION"))

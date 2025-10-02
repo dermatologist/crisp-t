@@ -38,7 +38,7 @@ except ImportError:
 @click.option(
     "--num", "-n", default=3, help="N (clusters/epochs, etc, depending on context)"
 )
-@click.option("--rec", "-r", default=3, help="Record (based on context)")
+@click.option("--rec", "-r", default=3, help="Record or top_n (based on context)")
 @click.option(
     "--unstructured",
     "-t",
@@ -84,7 +84,7 @@ except ImportError:
 @click.option("--cart", is_flag=True, help="Display Association Rules")
 @click.option("--pca", is_flag=True, help="Display PCA")
 @click.option("--visualize", is_flag=True, help="Visualize words, topics or wordcloud")
-@click.option("--ignore", default="", help="Comma separated ignore words")
+@click.option("--ignore", default="", help="Comma separated ignore words or columns depending on context")
 @click.option("--outcome", default="", help="Outcome variable for ML tasks")
 @click.option("--source", "-s", help="Source URL or directory path to read data from")
 @click.option(
@@ -368,6 +368,14 @@ def main(
         if text_analyzer:
             if nlp or codedict:
                 click.echo("\n=== Generating Coding Dictionary ===")
+                click.echo("""
+                Coding Dictionary Format:
+                - CATEGORY: Common verbs representing main actions or themes.
+                - PROPERTY: Common nouns associated with each CATEGORY.
+                - DIMENSION: Common adjectives, adverbs, or verbs associated with each PROPERTY.
+
+                Hint: Use --ignore with a comma-separated list of words to exclude common but uninformative words.
+                """)
                 try:
                     text_analyzer.make_spacy_doc()
                     coding_dict = text_analyzer.print_coding_dictionary(num=num, top_n=rec)
