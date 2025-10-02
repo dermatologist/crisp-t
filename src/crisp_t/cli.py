@@ -28,7 +28,7 @@ except ImportError:
 
 
 @click.command()
-@click.option("--verbose", "-v", is_flag=True, help="Print verbose messages.")
+@click.option("--verbose", "-v", is_flag=False, help="Print verbose messages.")
 @click.option(
     "--covid", "-cf", default="", help="Download COVID narratives from the website"
 )
@@ -375,6 +375,8 @@ def main(
                 - DIMENSION: Common adjectives, adverbs, or verbs associated with each PROPERTY.
 
                 Hint: Use --ignore with a comma-separated list of words to exclude common but uninformative words.
+                    Use --num to adjust the number of categories displayed.
+                    Use --rec to adjust the number of top items displayed per section.
                 """)
                 try:
                     text_analyzer.make_spacy_doc()
@@ -386,13 +388,21 @@ def main(
 
             if nlp or topics:
                 click.echo("\n=== Topic Modeling ===")
+                click.echo("""
+                Topic Modeling Output Format:
+                Each topic is represented as a list of words with associated weights indicating their importance within the topic.
+                Example:
+                Topic 0: 0.116*"category" + 0.093*"comparison" + 0.070*"incident" + ...
+                Hint:  Use --num to adjust the number of topics generated.
+                        use --rec to adjust the number of words displayed per topic.
+                """)
                 try:
                     cluster_analyzer = Cluster(corpus=corpus)
-                    cluster_analyzer.build_lda_model()
+                    cluster_analyzer.build_lda_model(topics=num)
                     topics_result = cluster_analyzer.print_topics(
-                        num_words=rec, verbose=verbose
+                        num_words=rec
                     )
-                    click.echo(f"Generated {len(topics_result)} topics")
+                    click.echo(f"Generated {len(topics_result)} topics as above with the weights in brackets.")
                     if out:
                         _save_output(topics_result, out, "topics")
                 except Exception as e:
