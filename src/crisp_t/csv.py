@@ -243,15 +243,6 @@ class Csv:
         else:
             logger.error("DataFrame is None. Cannot filter to numeric columns.")
 
-    def filter_nans(self):
-        """ Remove rows with NaN values from the DataFrame.
-        """
-        if self._df is not None:
-            self._df.dropna(inplace=True)
-            logger.info("Rows with NaN values dropped from DataFrame.")
-        else:
-            logger.error("DataFrame is None. Cannot filter NaN values.")
-
     def comma_separated_include_columns(self, include_cols: str = ""):
         """ Retain only specified columns in the DataFrame.
         """
@@ -288,6 +279,8 @@ class Csv:
         return self._X, self._y
 
     def drop_na(self):
+        """ Drop rows with any NA values from the DataFrame.
+        """
         if self._df is not None:
             self._df.dropna(inplace=True)
             logger.info("Missing values dropped from DataFrame.")
