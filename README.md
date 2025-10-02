@@ -41,7 +41,7 @@ crisp-t [OPTIONS]
 - `--inp, -i PATH`: Load an existing corpus from a folder containing `corpus.json` (and optional `corpus_df.csv`)
 - `--csv PATH`: CSV file name for numerical data analysis
 - `--out, -o PATH`: When saving the corpus, provide a folder path; the CLI writes `corpus.json` (and `corpus_df.csv` if available) into that folder. When saving analysis results (topics, sentiment, etc.), this acts as a base path: files are written with suffixes, e.g., `results_topics.json`.
-- `--titles, -t TEXT`: Document(s) or CSV column(s) to analyze/compare (can be used multiple times)
+- `--unstructured, -t TEXT`: Document(s) or CSV column(s) to analyze/compare (can be used multiple times)
 - `--ignore TEXT`: Comma-separated words to ignore during ingestion (applies to `--source/--sources` and CSV text extraction)
 
 ### Analysis Options
