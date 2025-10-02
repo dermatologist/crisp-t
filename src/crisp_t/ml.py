@@ -252,7 +252,7 @@ class ML:
 
             accuracy = (preds_eval == y_eval).sum() / len(y_eval)
             print(
-                f"Predicting {y} with {X.shape[1]} features for {self._epochs} epochs gave an accuracy (convergence): {accuracy*100:.2f}%"
+                f"\nPredicting {y} with {X.shape[1]} features for {self._epochs} epochs gave an accuracy (convergence): {accuracy*100:.2f}%\n"
             )
             if _corpus is not None:
                 _corpus.metadata["nnet_predictions"] = f"Predicting {y} with {X.shape[1]} features for {self._epochs} epochs gave an accuracy (convergence): {accuracy*100:.2f}%"

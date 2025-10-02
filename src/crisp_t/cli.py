@@ -522,6 +522,7 @@ def main(
                             - Decision Tree: Decision Tree classifier with feature importance output.
                 Hint:   Use --outcome to specify the target variable for classification.
                         Use --rec to adjust the number of top important features displayed.
+                        Use --include to specify columns to include in the analysis (comma separated).
                 """)
                 if not target_col:
                     raise click.ClickException(
@@ -552,7 +553,16 @@ def main(
                     click.error(f"Error performing Decision Tree classification: {e}")
 
             if (nnet or ml) and target_col:
-                click.echo("\n=== Neural Network Classification ===")
+                click.echo("\n=== Neural Network Classification Accuracy ===")
+                click.echo("""
+                            Neural Network classifier with accuracy output.
+                Hint:   Use --outcome to specify the target variable for classification.
+                        Use --include to specify columns to include in the analysis (comma separated).
+                """)
+                if not target_col:
+                    raise click.ClickException(
+                        "--outcome is required for neural network tasks"
+                    )
                 try:
                     predictions = ml_analyzer.get_nnet_predictions(y=target_col)
                     if out:
