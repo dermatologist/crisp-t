@@ -374,7 +374,7 @@ def main(
                     if out:
                         _save_output(coding_dict, out, "coding_dictionary")
                 except Exception as e:
-                    click.error(f"Error generating coding dictionary: {e}")
+                    click.echo(f"Error generating coding dictionary: {e}")
 
             if nlp or topics:
                 click.echo("\n=== Topic Modeling ===")
