@@ -594,15 +594,33 @@ def main(
 
             if (cart or ml) and target_col:
                 click.echo("\n=== Association Rules (CART) ===")
-                # try:
-                #     apriori_results = ml_analyzer.get_apriori(
-                #         y=target_col, min_support=0.6, min_threshold=rec
-                #     )
-                #     if out:
-                #         _save_output(apriori_results, out, "association_rules")
-                # except Exception as e:
-                #     click.error(f"Error generating association rules: {e}")
-                click.echo("Association Rules functionality is currently disabled.")
+                click.echo("""
+                           Association Rules using the Apriori algorithm.
+                Hint:   Use --outcome to specify the target variable for association rules.
+                        Use --num to specify the minimum support (between 1 and 99).
+                        Use --rec to specify the minimum threshold for the rules (between 1 and 99).
+                        Use --include to specify columns to include in the analysis (comma separated).
+                """)
+                if not target_col:
+                    raise click.ClickException(
+                        "--outcome is required for association rules tasks"
+                    )
+                if not (1 <= num <= 99):
+                    raise click.ClickException("--num must be between 1 and 99 for min_support")
+                if not (1 <= rec <= 99):
+                    raise click.ClickException("--rec must be between 1 and 99 for min_threshold")
+                _min_support = float(num / 100)
+                _min_threshold = float(rec / 100)
+                click.echo(f"Using min_support={_min_support:.2f} and min_threshold={_min_threshold:.2f}")
+                try:
+                    apriori_results = ml_analyzer.get_apriori(
+                        y=target_col, min_support=_min_support, min_threshold=_min_threshold
+                    )
+                    click.echo(apriori_results)
+                    if out:
+                        _save_output(apriori_results, out, "association_rules")
+                except Exception as e:
+                    click.error(f"Error generating association rules: {e}")
 
             if (pca or ml) and target_col:
                 click.echo("\n=== Principal Component Analysis ===")

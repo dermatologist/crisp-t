@@ -449,12 +449,12 @@ class ML:
             raise ImportError("ML dependencies are not installed.")
 
     # TODO: Fix. This gets stuck
-    def get_apriori(self, y: str, min_support=0.9, use_colnames=True, min_threshold=3):
+    def get_apriori(self, y: str, min_support=0.9, use_colnames=True, min_threshold=0.5):
         if ML_INSTALLED:
             X_np, Y_raw, X, Y = self._process_xy(y=y, one_hot_encode_all=True)
             frequent_itemsets = apriori(X, min_support=min_support, use_colnames=use_colnames) # type: ignore
-            rules = association_rules(frequent_itemsets, metric="lift", min_threshold=min_threshold) # type: ignore
-            return rules
+            # rules = association_rules(frequent_itemsets, metric="lift", min_threshold=min_threshold) # type: ignore
+            return frequent_itemsets #, rules
         else:
             raise ImportError("ML dependencies are not installed.")
 
