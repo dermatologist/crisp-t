@@ -21,5 +21,5 @@ def test_read_corpus_from_json_ignore_words(read_data_fixture):
         for word in ignore_words.split(","):
             # Should not find the word as a whole word (case-insensitive)
             assert not re.search(
-                r"\\b" + re.escape(word) + r"\\b", doc.text, re.IGNORECASE
+                r"\b" + re.escape(word) + r"\b", doc.text, re.IGNORECASE
             ), f"Ignore word '{word}' found in document text: {doc.text}"
