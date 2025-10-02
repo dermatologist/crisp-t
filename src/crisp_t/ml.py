@@ -12,6 +12,7 @@ from sklearn.svm import SVC
 from sklearn.metrics import accuracy_score
 from sklearn.inspection import permutation_importance
 from sklearn.ensemble import RandomForestClassifier
+from tabulate import tabulate
 from crisp_t import model
 
 from .csv import Csv
@@ -451,12 +452,16 @@ class ML:
         else:
             raise ImportError("ML dependencies are not installed.")
 
-    # TODO: Fix. This gets stuck
     def get_apriori(self, y: str, min_support=0.9, use_colnames=True, min_threshold=0.5):
         if ML_INSTALLED:
             X_np, Y_raw, X, Y = self._process_xy(y=y, one_hot_encode_all=True)
             frequent_itemsets = apriori(X, min_support=min_support, use_colnames=use_colnames) # type: ignore
             # rules = association_rules(frequent_itemsets, metric="lift", min_threshold=min_threshold) # type: ignore
+            if self._csv.corpus is not None:
+                human_readable = tabulate(
+                    frequent_itemsets.head(10), headers="keys", tablefmt="pretty" # type: ignore
+                )
+                self._csv.corpus.metadata["apriori_frequent_itemsets"] = human_readable
             return frequent_itemsets #, rules
         else:
             raise ImportError("ML dependencies are not installed.")
