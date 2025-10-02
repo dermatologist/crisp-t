@@ -80,7 +80,7 @@ except ImportError:
 @click.option("--ml", is_flag=True, help="Generate all ML reports")
 @click.option("--nnet", is_flag=True, help="Display accuracy of a neural network model")
 @click.option(
-    "--svm", is_flag=True, help="Display confusion matrix from an svm classifier"
+    "--cls", is_flag=True, help="Display confusion matrix from classifiers (SVM, Decision Tree)"
 )
 @click.option("--knn", is_flag=True, help="Display nearest neighbours")
 @click.option("--kmeans", is_flag=True, help="Display KMeans clusters")
@@ -114,7 +114,7 @@ def main(
     sentence,
     nlp,
     nnet,
-    svm,
+    cls,
     knn,
     kmeans,
     cart,
@@ -351,13 +351,13 @@ def main(
                 return
 
         # Initialize ML analyzer if available and ML functions are requested
-        if ML_AVAILABLE and (nnet or svm or knn or kmeans or cart or pca or ml) and csv_analyzer:
+        if ML_AVAILABLE and (nnet or cls or knn or kmeans or cart or pca or ml) and csv_analyzer:
             ml_analyzer = ML(csv=csv_analyzer)
         else:
-            if (nnet or svm or knn or kmeans or cart or pca or ml) and not ML_AVAILABLE:
+            if (nnet or cls or knn or kmeans or cart or pca or ml) and not ML_AVAILABLE:
                 click.echo("Machine learning features require additional dependencies.")
                 click.echo("Install with: pip install crisp-t[ml]")
-            if (nnet or svm or knn or kmeans or cart or pca or ml) and not csv_analyzer:
+            if (nnet or cls or knn or kmeans or cart or pca or ml) and not csv_analyzer:
                 click.echo("ML analysis requires CSV data. Use --csv to provide a data file.")
 
         # Ensure we have data to work with
@@ -510,8 +510,8 @@ def main(
                         {"clusters": clusters, "members": members}, out, "kmeans"
                     )
 
-            if (svm or ml) and target_col:
-                click.echo("\n=== SVM Classification ===")
+            if (cls or ml) and target_col:
+                click.echo("\n=== Classifier Evaluation ===")
                 try:
                     confusion_matrix = ml_analyzer.svm_confusion_matrix(
                         y=target_col, test_size=0.25
@@ -573,7 +573,7 @@ def main(
                 except Exception as e:
                     click.error(f"Error performing Principal Component Analysis: {e}")
 
-        elif (nnet or svm or knn or kmeans or cart or pca or ml) and not ML_AVAILABLE:
+        elif (nnet or cls or knn or kmeans or cart or pca or ml) and not ML_AVAILABLE:
             click.echo("Machine learning features require additional dependencies.")
             click.echo("Install with: pip install crisp-t[ml]")
 

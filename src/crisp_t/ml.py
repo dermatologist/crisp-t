@@ -402,7 +402,8 @@ class ML:
         importance = results.importances_mean
 
         # Display feature importance
-        print("Feature Importance Scores: ", importance)
+        for i, v in enumerate(importance):
+            print(f'Feature: {X.columns[i]}, Score: {v:.5f}')
 
         if self._csv.corpus is not None:
             self._csv.corpus.metadata["decision_tree_confusion_matrix"] = f"Confusion Matrix for Decision Tree predicting {y}:\n{_confusion_matrix}"
