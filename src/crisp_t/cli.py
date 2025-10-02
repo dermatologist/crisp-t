@@ -43,7 +43,7 @@ except ImportError:
     "--unstructured",
     "-t",
     multiple=True,
-    help="Csv columns with text data",
+    help="Csv columns with text data that needs to be treated as text. (Ex. Free text comments)",
 )
 @click.option(
     "--filters",
