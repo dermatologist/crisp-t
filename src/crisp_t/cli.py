@@ -374,9 +374,10 @@ def main(
                 - PROPERTY: Common nouns associated with each CATEGORY.
                 - DIMENSION: Common adjectives, adverbs, or verbs associated with each PROPERTY.
 
-                Hint: Use --ignore with a comma-separated list of words to exclude common but uninformative words.
-                    Use --num to adjust the number of categories displayed.
-                    Use --rec to adjust the number of top items displayed per section.
+                Hint:   Use --ignore with a comma-separated list of words to exclude common but uninformative words.
+                        Use --filters to narrow down documents based on metadata.
+                        Use --num to adjust the number of categories displayed.
+                        Use --rec to adjust the number of top items displayed per section.
                 """)
                 try:
                     text_analyzer.make_spacy_doc()
@@ -393,8 +394,9 @@ def main(
                 Each topic is represented as a list of words with associated weights indicating their importance within the topic.
                 Example:
                 Topic 0: 0.116*"category" + 0.093*"comparison" + 0.070*"incident" + ...
-                Hint:  Use --num to adjust the number of topics generated.
-                        use --rec to adjust the number of words displayed per topic.
+                Hint:   Use --num to adjust the number of topics generated.
+                        Use --filters to narrow down documents based on metadata.
+                        Use --rec to adjust the number of words displayed per topic.
                 """)
                 try:
                     cluster_analyzer = Cluster(corpus=corpus)
@@ -420,7 +422,7 @@ def main(
                 try:
                     if "cluster_analyzer" not in locals():
                         cluster_analyzer = Cluster(corpus=corpus)
-                        cluster_analyzer.build_lda_model()
+                        cluster_analyzer.build_lda_model(topics=num)
                     assignments = cluster_analyzer.format_topics_sentences(
                         visualize=visualize
                     )
@@ -432,6 +434,12 @@ def main(
 
             if nlp or cat:
                 click.echo("\n=== Category Analysis ===")
+                click.echo("""
+                Category Analysis Output Format:
+                           A list of common concepts or themes in "bag_of_terms" with corresponding weights.
+                Hint:   Use --num to adjust the number of categories displayed.
+                        Use --filters to narrow down documents based on metadata.
+                """)
                 try:
                     text_analyzer.make_spacy_doc()
                     categories = text_analyzer.print_categories(num=num)
