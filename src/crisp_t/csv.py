@@ -197,7 +197,7 @@ class Csv:
             )
             return None
 
-    def read_xy(self, y: str, ignore_columns=True, numeric_only=False):
+    def read_xy(self, y: str, ignore_columns=True, numeric_only=False, filter_nans=True):
         """
         Read X and y variables from the DataFrame.
         """
@@ -207,6 +207,9 @@ class Csv:
         if numeric_only:
             self._df = self._df.select_dtypes(include=[np.number])
             logger.info("DataFrame filtered to numeric columns only.")
+        if filter_nans:
+            self._df = self._df.dropna()
+            logger.info("Rows with NaN values dropped from DataFrame.")
         if y == "":
             self._y = None
         else:
@@ -274,9 +277,13 @@ class Csv:
             self.one_hot_encode_all_columns()
         return self.read_xy(y)
 
-    def one_hot_encode_strings_in_df(self):
+    def one_hot_encode_strings_in_df(self, n=10):
         if self._df is not None:
             categorical_cols = self._df.select_dtypes(include=["object"]).columns.tolist()
+            # Remove categorical columns with more than n unique values
+            categorical_cols = [
+                col for col in categorical_cols if self._df[col].nunique() <= n
+            ]
             if categorical_cols:
                 self._df = pd.get_dummies(self._df, columns=categorical_cols, drop_first=True)
                 logger.info("One-hot encoding applied to string columns.")
@@ -304,4 +311,4 @@ class Csv:
                     )
                     return 1
 
-            self._df = self._df.applymap(to_one_hot)
+            self._df = self._df.applymap(to_one_hot) # type: ignore
