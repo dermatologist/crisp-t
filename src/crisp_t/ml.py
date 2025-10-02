@@ -17,6 +17,11 @@ from crisp_t import model
 from .csv import Csv
 
 logger = logging.getLogger(__name__)
+
+import warnings
+
+warnings.filterwarnings("ignore", category=DeprecationWarning)
+
 ML_INSTALLED = False
 torch = None
 
@@ -370,14 +375,14 @@ class ML:
 
         return X_np, Y_raw, X, Y
 
-    def get_decision_tree_classes(self, y: str, test_size=0.5, random_state=1):
+    def get_decision_tree_classes(self, y: str, top_n=5, test_size=0.5, random_state=1):
         X_np, Y_raw, X, Y = self._process_xy(y=y)
         X_train, X_test, y_train, y_test = train_test_split(
             X_np, Y_raw, test_size=test_size, random_state=random_state
         )
 
-        print(f"X_train shape: {X_train.shape}, y_train shape: {y_train.shape}")
-        print(f"X_test shape: {X_test.shape}, y_test shape: {y_test.shape}")
+        # print(f"X_train shape: {X_train.shape}, y_train shape: {y_train.shape}")
+        # print(f"X_test shape: {X_test.shape}, y_test shape: {y_test.shape}")
 
         # Train a RandomForestClassifier
         clf = RandomForestClassifier(n_estimators=100, random_state=42)
@@ -395,14 +400,19 @@ class ML:
         # [[2 0]
         #  [2 0]]
 
+
         accuracy = accuracy_score(y_test, y_pred)
-        print(f'Accuracy: {accuracy}')
+        print(f'\nAccuracy: {accuracy}\n')
 
         # Retrieve feature importance scores
         importance = results.importances_mean
 
+        # Get indices of top N important features
+        top_n_indices = np.argsort(importance)[-top_n:][::-1]
+
         # Display feature importance
-        for i, v in enumerate(importance):
+        print(f'==== Top {top_n} important features ====\n')
+        for i, v in enumerate(top_n_indices):
             print(f'Feature: {X.columns[i]}, Score: {v:.5f}')
 
         if self._csv.corpus is not None:

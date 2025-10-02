@@ -32,7 +32,9 @@ from .utils import QRUtils
 
 textacy.set_doc_extensions("extract.bags")  # type: ignore
 
+import warnings
 
+warnings.filterwarnings("ignore", category=DeprecationWarning)
 class Text:
 
     def __init__(

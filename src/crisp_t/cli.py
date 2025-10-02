@@ -512,6 +512,7 @@ def main(
 
             if (cls or ml) and target_col:
                 click.echo("\n=== Classifier Evaluation ===")
+                click.echo("\n=== SVM ===")
                 try:
                     confusion_matrix = ml_analyzer.svm_confusion_matrix(
                         y=target_col, test_size=0.25
@@ -524,6 +525,7 @@ def main(
                 click.echo("\n=== Decision Tree Classification ===")
                 try:
                     cm, importance = ml_analyzer.get_decision_tree_classes(y=target_col)
+                    click.echo("\n=== Feature Importance ===")
                     click.echo(
                         ml_analyzer.format_confusion_matrix_to_human_readable(
                             cm
