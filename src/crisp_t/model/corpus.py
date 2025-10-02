@@ -69,7 +69,7 @@ class Corpus(BaseModel):
             print(self.visualization)
         print("Metadata:")
         for key, value in self.metadata.items():
-            print(f" - {key}: {value}")
+            print(f" - {key}\n: {value}")
 
     def get_all_df_column_names(self):
         """

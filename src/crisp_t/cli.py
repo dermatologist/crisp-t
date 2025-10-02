@@ -91,6 +91,7 @@ except ImportError:
 @click.option("--include", default="", help="Comma separated columns to include from csv")
 @click.option("--outcome", default="", help="Outcome variable for ML tasks")
 @click.option("--source", "-s", help="Source URL or directory path to read data from")
+@click.option("--print", "-p", is_flag=True, help="Pretty print the corpus to console")
 @click.option(
     "--sources",
     multiple=True,
@@ -127,6 +128,7 @@ def main(
     outcome,
     source,
     sources,
+    print,
 ):
     """CRISP-T: Cross Industry Standard Process for Triangulation.
 
@@ -659,6 +661,10 @@ def main(
             output_path.mkdir(parents=True, exist_ok=True)
             read_data.write_corpus_to_json(str(output_path))
             click.echo(f"✓ Corpus and csv saved to {output_path}")
+
+        if print and corpus:
+            click.echo("\n=== Corpus Details ===")
+            click.echo(corpus.pretty_print())
 
         click.echo("\n=== Analysis Complete ===")
 
