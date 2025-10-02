@@ -83,7 +83,7 @@ class Cluster:
         self._bag_of_words = [
             self._dictionary.doc2bow(doc) for doc in self._processed_docs
         ]
-        self._corpus.metadata["bag_of_words"] = self._bag_of_words
+        #self._corpus.metadata["bag_of_words"] = self._bag_of_words
 
     def build_lda_model(self, topics: int = 0):
         if self._lda_model is None:
@@ -108,6 +108,7 @@ class Cluster:
         format this into human readable format as below:
         Topic 0: category(0.116), comparison(0.093), incident(0.070), theory(0.060), Theory(0.025)
         """
+        topics = ""
         print("\nTopics: \n")
         for topic in output:
             topic_num = topic[0]
@@ -117,7 +118,8 @@ class Cluster:
                 word = word.split("*")
                 words.append(f"{word[1].strip()}({word[0].strip()})")
             print(f"Topic {topic_num}: {', '.join(words)}")
-        self._corpus.metadata["topics"] = output
+            topics += f"Topic {topic_num}: {', '.join(words)}\n"
+        self._corpus.metadata["topics"] = topics
         return output
 
     def tokenize(self, spacy_doc):
