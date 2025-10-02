@@ -70,3 +70,92 @@ class Corpus(BaseModel):
         print("Metadata:")
         for key, value in self.metadata.items():
             print(f" - {key}: {value}")
+
+    def get_all_df_column_names(self):
+        """
+        Get a list of all column names in the DataFrame.
+
+        Returns:
+            List of column names.
+        """
+        if self.df is not None:
+            return self.df.columns.tolist()
+        return []
+
+    def get_row_count(self):
+        """
+        Get the number of rows in the DataFrame.
+
+        Returns:
+            Number of rows in the DataFrame, or 0 if DataFrame is None.
+        """
+        if self.df is not None:
+            return len(self.df)
+        return 0
+
+    def get_row_by_index(self, index: int) -> Optional[pd.Series]:
+        """
+        Get a row from the DataFrame by its index.
+
+        Args:
+            index: Index of the row to retrieve.
+        Returns:
+            Row as a pandas Series if index is valid, else None.
+        """
+        if self.df is not None and 0 <= index < len(self.df):
+            return self.df.iloc[index]
+        return None
+
+    def get_all_document_ids(self):
+        """
+        Get a list of all document IDs in the corpus.
+
+        Returns:
+            List of document IDs.
+        """
+        return [doc.id for doc in self.documents]
+
+    def get_document_by_id(self, document_id: str) -> Optional[Document]:
+        """
+        Get a document by its ID.
+
+        Args:
+            document_id: ID of the document to retrieve.
+
+        Returns:
+            Document object if found, else None.
+        """
+        for doc in self.documents:
+            if doc.id == document_id:
+                return doc
+        return None
+
+    def add_document(self, document: Document):
+        """
+        Add a document to the corpus.
+
+        Args:
+            document: Document object to add.
+        """
+        self.documents.append(document)
+
+    def remove_document_by_id(self, document_id: str):
+        """
+        Remove a document from the corpus by its ID.
+
+        Args:
+            document_id: ID of the document to remove.
+        """
+        self.documents = [
+            doc for doc in self.documents if doc.id != document_id
+        ]
+
+    def update_metadata(self, key: str, value: Any):
+        """
+        Update the metadata of the corpus.
+
+        Args:
+            key: Metadata key to update.
+            value: New value for the metadata key.
+        """
+        self.metadata[key] = value
