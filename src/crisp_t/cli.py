@@ -467,12 +467,13 @@ def main(
                         _save_output(confusion_matrix, out, "svm_results")
                 except Exception as e:
                     click.error(f"Error performing SVM classification: {e}")
-                # try:
-                #     confusion_matrix = ml_analyzer.get_decision_tree(y=target_col)
-                #     if out:
-                #         _save_output(confusion_matrix, out, "decision_tree_results")
-                # except Exception as e:
-                #     click.error(f"Error performing Decision Tree classification: {e}")
+                click.echo("\n=== Decision Tree Classification ===")
+                try:
+                    cm, importance = ml_analyzer.get_decision_tree_classes(y=target_col)
+                    if out:
+                        _save_output(cm, out, "decision_tree_results")
+                except Exception as e:
+                    click.error(f"Error performing Decision Tree classification: {e}")
 
             if (nnet or ml) and target_col:
                 click.echo("\n=== Neural Network Classification ===")
@@ -512,7 +513,6 @@ def main(
                         _save_output(pca_results, out, "pca_results")
                 except Exception as e:
                     click.error(f"Error performing Principal Component Analysis: {e}")
-
 
         elif (nnet or svm or knn or kmeans or cart or pca or ml) and not ML_AVAILABLE:
             click.echo("Machine learning features require additional dependencies.")

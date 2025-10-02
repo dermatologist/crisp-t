@@ -6,9 +6,9 @@ from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KDTree
 from sklearn.preprocessing import StandardScaler
-from sklearn.datasets import make_classification
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.svm import SVC
+from sklearn.metrics import accuracy_score
 
 from crisp_t import model
 
@@ -368,17 +368,17 @@ class ML:
 
         return X_np, Y_raw, X, Y
 
-    def get_decision_tree_classes(self, y: str, test_size=0.25, random_state=0):
+    def get_decision_tree_classes(self, y: str, test_size=0.5, random_state=1):
         X_np, Y_raw, X, Y = self._process_xy(y=y)
-        X_train, X_test, y_train, y_test = train_test_split(
-            X_np, Y_raw, test_size=test_size, random_state=random_state
-        )
-        # Issue #22
-        sc = StandardScaler()
-        y_test = y_test.astype("int")
-        y_train = y_train.astype("int")
-        X_train = sc.fit_transform(X_train)
-        X_test = sc.transform(X_test)
+        # X_train, X_test, y_train, y_test = train_test_split(
+        #     X_np, Y_raw, test_size=test_size, random_state=random_state
+        # )
+
+        X_train = X_np
+        X_test = X_np
+        y_train = Y_raw
+        y_test = Y_raw
+
         classifier = DecisionTreeClassifier(random_state=random_state) # type: ignore
         classifier.fit(X_train, y_train)
         y_pred = classifier.predict(X_test)
@@ -387,6 +387,9 @@ class ML:
         # Output
         # [[2 0]
         #  [2 0]]
+
+        accuracy = accuracy_score(y_test, y_pred)
+        print(f'Accuracy: {accuracy}')
 
         # Retrieve feature importance scores
         importance = classifier.feature_importances_
@@ -399,7 +402,7 @@ class ML:
             self._csv.corpus.metadata["decision_tree_confusion_matrix"] = f"Confusion Matrix for Decision Tree predicting {y}:\n{_confusion_matrix}"
             self._csv.corpus.metadata["decision_tree_feature_importance"] = importance
 
-        return _confusion_matrix
+        return _confusion_matrix, importance
 
     def get_xgb_classes(self, y: str, oversample=False, test_size=0.25, random_state=0):
         X_np, Y_raw, X, Y = self._process_xy(y=y)
