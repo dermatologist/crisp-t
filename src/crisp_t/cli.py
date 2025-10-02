@@ -487,14 +487,15 @@ def main(
 
             if (cart or ml) and target_col:
                 click.echo("\n=== Association Rules (CART) ===")
-                try:
-                    apriori_results = ml_analyzer.get_apriori(
-                        y=target_col, min_support=0.6, min_threshold=rec
-                    )
-                    if out:
-                        _save_output(apriori_results, out, "association_rules")
-                except Exception as e:
-                    click.error(f"Error generating association rules: {e}")
+                # try:
+                #     apriori_results = ml_analyzer.get_apriori(
+                #         y=target_col, min_support=0.6, min_threshold=rec
+                #     )
+                #     if out:
+                #         _save_output(apriori_results, out, "association_rules")
+                # except Exception as e:
+                #     click.error(f"Error generating association rules: {e}")
+                click.echo("Association Rules functionality is currently disabled.")
 
             if (pca or ml) and target_col:
                 click.echo("\n=== Principal Component Analysis ===")
@@ -504,7 +505,7 @@ def main(
                         _save_output(pca_results, out, "pca_results")
                 except Exception as e:
                     click.error(f"Error performing Principal Component Analysis: {e}")
-                    
+
 
         elif (nnet or svm or knn or kmeans or cart or pca or ml) and not ML_AVAILABLE:
             click.echo("Machine learning features require additional dependencies.")
