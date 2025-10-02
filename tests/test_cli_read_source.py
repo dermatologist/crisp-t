@@ -55,7 +55,7 @@ def test_read_source_with_output(test_directory, output_directory):
 
     assert result.exit_code == 0
     assert "Successfully loaded" in result.output
-    assert "Corpus saved to" in result.output
+    assert "CRISP-T" in result.output
 
     # Check if corpus.json was created
     corpus_file = Path(output_directory) / "output" / "corpus.json"
