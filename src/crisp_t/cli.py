@@ -470,6 +470,11 @@ def main(
                 click.echo("\n=== Decision Tree Classification ===")
                 try:
                     cm, importance = ml_analyzer.get_decision_tree_classes(y=target_col)
+                    click.echo(
+                        ml_analyzer.format_confusion_matrix_to_human_readable(
+                            cm
+                        )
+                    )
                     if out:
                         _save_output(cm, out, "decision_tree_results")
                 except Exception as e:

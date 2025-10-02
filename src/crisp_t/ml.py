@@ -1,5 +1,6 @@
 import logging
 
+from matplotlib.pyplot import clf
 import numpy as np
 from sklearn.cluster import KMeans
 from sklearn.metrics import confusion_matrix
@@ -9,7 +10,8 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.svm import SVC
 from sklearn.metrics import accuracy_score
-
+from sklearn.inspection import permutation_importance
+from sklearn.ensemble import RandomForestClassifier
 from crisp_t import model
 
 from .csv import Csv
@@ -370,18 +372,23 @@ class ML:
 
     def get_decision_tree_classes(self, y: str, test_size=0.5, random_state=1):
         X_np, Y_raw, X, Y = self._process_xy(y=y)
-        # X_train, X_test, y_train, y_test = train_test_split(
-        #     X_np, Y_raw, test_size=test_size, random_state=random_state
-        # )
+        X_train, X_test, y_train, y_test = train_test_split(
+            X_np, Y_raw, test_size=test_size, random_state=random_state
+        )
 
-        X_train = X_np
-        X_test = X_np
-        y_train = Y_raw
-        y_test = Y_raw
+        print(f"X_train shape: {X_train.shape}, y_train shape: {y_train.shape}")
+        print(f"X_test shape: {X_test.shape}, y_test shape: {y_test.shape}")
 
-        classifier = DecisionTreeClassifier(random_state=random_state) # type: ignore
-        classifier.fit(X_train, y_train)
-        y_pred = classifier.predict(X_test)
+        # Train a RandomForestClassifier
+        clf = RandomForestClassifier(n_estimators=100, random_state=42)
+        clf.fit(X_train, y_train)
+
+        # Compute permutation importance
+        results = permutation_importance(clf, X_test, y_test, n_repeats=10, random_state=42)
+
+        # classifier = DecisionTreeClassifier(random_state=random_state) # type: ignore
+        # classifier.fit(X_train, y_train)
+        y_pred = clf.predict(X_test)
         _confusion_matrix = confusion_matrix(y_test, y_pred)
         print(f"Confusion Matrix for Decision Tree predicting {y}:\n{_confusion_matrix}")
         # Output
@@ -392,11 +399,10 @@ class ML:
         print(f'Accuracy: {accuracy}')
 
         # Retrieve feature importance scores
-        importance = classifier.feature_importances_
+        importance = results.importances_mean
 
         # Display feature importance
-        for i, v in enumerate(importance):
-            print(f'Feature: {i}, Score: {v:.5f}')
+        print("Feature Importance Scores: ", importance)
 
         if self._csv.corpus is not None:
             self._csv.corpus.metadata["decision_tree_confusion_matrix"] = f"Confusion Matrix for Decision Tree predicting {y}:\n{_confusion_matrix}"
