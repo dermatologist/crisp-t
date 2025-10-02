@@ -74,6 +74,7 @@ except ImportError:
     help="Generate sentence-level scores when applicable",
 )
 @click.option("--nlp", is_flag=True, help="Generate all NLP reports")
+@click.option("--ml", is_flag=True, help="Generate all ML reports")
 @click.option("--nnet", is_flag=True, help="Display accuracy of a neural network model")
 @click.option(
     "--svm", is_flag=True, help="Display confusion matrix from an svm classifier"
@@ -115,6 +116,7 @@ def main(
     kmeans,
     cart,
     pca,
+    ml,
     visualize,
     ignore,
     outcome,
@@ -346,13 +348,13 @@ def main(
                 return
 
         # Initialize ML analyzer if available and ML functions are requested
-        if ML_AVAILABLE and (nnet or svm or knn or kmeans or cart or pca) and csv_analyzer:
+        if ML_AVAILABLE and (nnet or svm or knn or kmeans or cart or pca or ml) and csv_analyzer:
             ml_analyzer = ML(csv=csv_analyzer)
         else:
-            if (nnet or svm or knn or kmeans or cart or pca) and not ML_AVAILABLE:
+            if (nnet or svm or knn or kmeans or cart or pca or ml) and not ML_AVAILABLE:
                 click.echo("Machine learning features require additional dependencies.")
                 click.echo("Install with: pip install crisp-t[ml]")
-            if (nnet or svm or knn or kmeans or cart or pca) and not csv_analyzer:
+            if (nnet or svm or knn or kmeans or cart or pca or ml) and not csv_analyzer:
                 click.echo("ML analysis requires CSV data. Use --csv to provide a data file.")
 
         # Ensure we have data to work with
@@ -422,7 +424,7 @@ def main(
         if ml_analyzer and ML_AVAILABLE:
             target_col = outcome
 
-            if kmeans:
+            if kmeans or ml:
                 click.echo("\n=== K-Means Clustering ===")
                 clusters, members = ml_analyzer.get_kmeans(
                     number_of_clusters=num, verbose=verbose
@@ -433,7 +435,7 @@ def main(
                         {"clusters": clusters, "members": members}, out, "kmeans"
                     )
 
-            if svm and target_col:
+            if (svm or ml) and target_col:
                 click.echo("\n=== SVM Classification ===")
                 confusion_matrix = ml_analyzer.svm_confusion_matrix(
                     y=target_col, test_size=0.25
@@ -441,19 +443,19 @@ def main(
                 if out:
                     _save_output(confusion_matrix, out, "svm_results")
 
-            if nnet and target_col:
+            if (nnet or ml) and target_col:
                 click.echo("\n=== Neural Network Classification ===")
                 predictions = ml_analyzer.get_nnet_predictions(y=target_col)
                 if out:
                     _save_output(predictions, out, "nnet_results")
 
-            if knn and target_col:
+            if (knn or ml) and target_col:
                 click.echo("\n=== K-Nearest Neighbors ===")
                 knn_results = ml_analyzer.knn_search(y=target_col, n=num, r=rec)
                 if out:
                     _save_output(knn_results, out, "knn_results")
 
-            if cart and target_col:
+            if (cart or ml) and target_col:
                 click.echo("\n=== Association Rules (CART) ===")
                 apriori_results = ml_analyzer.get_apriori(
                     y=target_col, min_support=0.6, min_threshold=rec
@@ -461,13 +463,13 @@ def main(
                 if out:
                     _save_output(apriori_results, out, "association_rules")
 
-            if pca and target_col:
+            if (pca or ml) and target_col:
                 click.echo("\n=== Principal Component Analysis ===")
                 pca_results = ml_analyzer.get_pca(y=target_col, n=num)
                 if out:
                     _save_output(pca_results, out, "pca_results")
 
-        elif (nnet or svm or knn or kmeans or cart or pca) and not ML_AVAILABLE:
+        elif (nnet or svm or knn or kmeans or cart or pca or ml) and not ML_AVAILABLE:
             click.echo("Machine learning features require additional dependencies.")
             click.echo("Install with: pip install crisp-t[ml]")
 
