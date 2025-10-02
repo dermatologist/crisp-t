@@ -263,7 +263,7 @@ class Cluster:
             contents = pd.Series(self._processed_docs)
             sent_topics_df = pd.concat([sent_topics_df, contents], axis=1)
         # Add to visualize
-        self._corpus.visualization["sent_topics"] = sent_topics_df.reset_index( # type: ignore
+        self._corpus.visualization["assign_topics"] = sent_topics_df.reset_index( # type: ignore
             drop=False
         )
         print("\n Document Topics: \n")

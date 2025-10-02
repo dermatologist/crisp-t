@@ -410,6 +410,13 @@ def main(
 
             if nlp or assign:
                 click.echo("\n=== Document-Topic Assignments ===")
+                click.echo(
+                    """
+                Document-Topic Assignment Format:
+                Each document is assigned to the topic it is most associated with, along with the contribution percentage.
+                Hint: --visualize adds a DataFrame to corpus.visualization["assign_topics"] for visualization.
+                """
+                )
                 try:
                     if "cluster_analyzer" not in locals():
                         cluster_analyzer = Cluster(corpus=corpus)
