@@ -351,6 +351,8 @@ class Text:
                 continue
             for span in self.spans_with_common_nouns(key):
                 spans.append(span.text)
+        if self._corpus is not None:
+            self._corpus.metadata["summary"] = list(dict.fromkeys(spans))  # remove duplicates
         return list(dict.fromkeys(spans))  # remove duplicates
 
     def print_categories(self, spacy_doc=None, num=10):
