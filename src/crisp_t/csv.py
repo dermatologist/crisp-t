@@ -108,6 +108,18 @@ class Csv:
     @id_column.setter
     def id_column(self, value: str) -> None:
         self._id_column = value
+        # Add id column to the list of ignored columns
+        ignore_cols = [
+            col
+            for col in self._comma_separated_ignore_columns.split(",")
+            if col.strip()
+        ]
+        if value not in ignore_cols:
+            ignore_cols.append(value)
+            self._comma_separated_ignore_columns = ",".join(ignore_cols)
+            logger.debug(
+                f"ID column '{value}' added to ignore columns: {self._comma_separated_ignore_columns}"
+            )
         logger.info("ID column set successfully.")
         logger.debug(f"ID column: {self._id_column}")
 
