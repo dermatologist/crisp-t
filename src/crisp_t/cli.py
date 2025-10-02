@@ -450,10 +450,15 @@ def main(
 
             if nlp or summary:
                 click.echo("\n=== Text Summarization ===")
+                click.echo("""
+                Text Summarization Output Format: A list of important sentences representing the main points of the text.
+                Hint:   Use --num to adjust the number of sentences in the summary.
+                        Use --filters to narrow down documents based on metadata.
+                """)
                 try:
                     text_analyzer.make_spacy_doc()
                     summary_result = text_analyzer.generate_summary(weight=num)
-                    click.echo("Generated text summary")
+                    click.echo(summary_result)
                     if out:
                         _save_output(summary_result, out, "summary")
                 except Exception as e:
@@ -461,11 +466,18 @@ def main(
 
             if nlp or sentiment:
                 click.echo("\n=== Sentiment Analysis ===")
+                click.echo("""
+                Sentiment Analysis Output Format:
+                           neg, neu, pos, compound scores.
+                Hint:   Use --filters to narrow down documents based on metadata.
+                        Use --sentence to get document-level sentiment scores.
+                """)
                 try:
                     sentiment_analyzer = Sentiment(corpus=corpus)
                     sentiment_results = sentiment_analyzer.get_sentiment(
                         documents=sentence, verbose=verbose
                     )
+                    click.echo(sentiment_results)
                     if out:
                         _save_output(sentiment_results, out, "sentiment")
                 except Exception as e:
