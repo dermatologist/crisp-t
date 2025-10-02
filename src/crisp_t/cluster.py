@@ -266,6 +266,17 @@ class Cluster:
         self._corpus.visualization["sent_topics"] = sent_topics_df.reset_index( # type: ignore
             drop=False
         )
+        print("\n Document Topics: \n")
+        print(
+            tabulate(
+                sent_topics_df.head(10),  # type: ignore
+                headers="keys",
+                tablefmt="psql",
+                showindex=False,
+                numalign="left",
+                stralign="left",
+            )
+        )
         return sent_topics_df.reset_index(drop=False)
 
     # https://www.machinelearningplus.com/nlp/topic-modeling-visualization-how-to-present-results-lda-models/
