@@ -264,6 +264,11 @@ def main(
             click.echo("Loading CSV data from corpus.df")
             csv_analyzer = Csv(corpus=corpus)
             csv_analyzer.df = corpus.df
+            text_columns = ",".join(unstructured) if unstructured else ""
+            ignore_columns = ignore if ignore else ""
+
+            csv_analyzer.comma_separated_text_columns = text_columns
+            csv_analyzer.comma_separated_ignore_columns = ignore_columns
             click.echo(f"Loaded CSV with shape: {csv_analyzer.get_shape()}")
             if verbose:
                 click.echo(f"Columns: {csv_analyzer.get_columns()}")

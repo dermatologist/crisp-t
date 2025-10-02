@@ -70,6 +70,7 @@ class Csv:
         logger.debug(
             f"Comma-separated ignore columns: {self._comma_separated_ignore_columns}"
         )
+        self._process_columns()
 
     @property
     def id_column(self) -> str:
@@ -106,6 +107,7 @@ class Csv:
         logger.debug(
             f"Comma-separated text columns: {self._comma_separated_text_columns}"
         )
+        self._process_columns()
 
     @id_column.setter
     def id_column(self, value: str) -> None:
@@ -127,7 +129,7 @@ class Csv:
 
     # TODO remove @deprecated
     #! Do not use
-    def read_csv(self, file_path: str) -> pd.DataFrame:
+    def read_csv(self, file_path: str):
         """
         Read a CSV file and create a DataFrame.
         """
@@ -140,6 +142,9 @@ class Csv:
         except Exception as e:
             logger.error(f"Error reading CSV file: {e}")
             raise
+        return self._process_columns()
+
+    def _process_columns(self):
         # ignore comma-separated ignore columns
         if self._comma_separated_ignore_columns:
             ignore_columns = [
