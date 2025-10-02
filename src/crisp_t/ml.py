@@ -350,6 +350,10 @@ class ML:
         X_np, Y_raw, X, Y = self._process_xy(y=y)
         kdt = KDTree(X_np, leaf_size=2, metric="euclidean")
         dist, ind = kdt.query(X_np[r - 1 : r, :], k=n)
+        # Display results as human readable (1-based)
+        ind = (ind + 1).tolist()  # Convert to 1-based index
+        dist = dist.tolist()
+        print(f"\nKNN search for {y} (n={n}, record no: {r}): {ind} with distances {dist}\n")
         if self._csv.corpus is not None:
             self._csv.corpus.metadata["knn_search"] = f"KNN search for {y} (n={n}, record no: {r}): {ind} with distances {dist}"
         return dist, ind

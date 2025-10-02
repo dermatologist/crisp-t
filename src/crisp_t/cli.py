@@ -572,6 +572,19 @@ def main(
 
             if (knn or ml) and target_col:
                 click.echo("\n=== K-Nearest Neighbors ===")
+                click.echo("""
+                           K-Nearest Neighbors search results.
+                Hint:   Use --outcome to specify the target variable for KNN search.
+                        Use --rec to specify the record number to search from (1-based index).
+                        Use --num to specify the number of nearest neighbors to retrieve.
+                        Use --include to specify columns to include in the analysis (comma separated).
+                """)
+                if not target_col:
+                    raise click.ClickException(
+                        "--outcome is required for KNN search tasks"
+                    )
+                if rec < 1:
+                    raise click.ClickException("--rec must be a positive integer (1-based index)")
                 try:
                     knn_results = ml_analyzer.knn_search(y=target_col, n=num, r=rec)
                     if out:
