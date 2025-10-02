@@ -596,7 +596,7 @@ def main(
                 click.echo("\n=== Association Rules (CART) ===")
                 click.echo("""
                            Association Rules using the Apriori algorithm.
-                Hint:   Use --outcome to specify the target variable for association rules.
+                Hint:   Use --outcome to specify the target variable to remove from features.
                         Use --num to specify the minimum support (between 1 and 99).
                         Use --rec to specify the minimum threshold for the rules (between 1 and 99).
                         Use --include to specify columns to include in the analysis (comma separated).
@@ -624,6 +624,12 @@ def main(
 
             if (pca or ml) and target_col:
                 click.echo("\n=== Principal Component Analysis ===")
+                click.echo("""
+                           Principal Component Analysis (PCA) results.
+                Hint:   Use --outcome to specify the target variable to remove from features.
+                        Use --num to specify the number of principal components to generate.
+                        Use --include to specify columns to include in the analysis (comma separated).
+                """)
                 try:
                     pca_results = ml_analyzer.get_pca(y=target_col, n=num)
                     if out:
