@@ -380,7 +380,10 @@ class Csv:
             selected_df = self._df[self._df[column_name] == value]
             if selected_df.empty:
                 # try int search
-                selected_df = self._df[self._df[column_name] == int(value)]
+                try:
+                    selected_df = self._df[self._df[column_name] == int(value)]
+                except (ValueError, TypeError):
+                    logger.warning(f"Could not convert value '{value}' to int for column '{column_name}'.")
             logger.info(
                 f"Selected {selected_df.shape[0]} rows where {column_name} == {value}."
             )
