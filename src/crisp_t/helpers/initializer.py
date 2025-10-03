@@ -10,8 +10,20 @@ logger = logging.getLogger(__name__)
 def initialize_corpus(
     source=None,
     inp=None,
+    comma_separated_text_columns="",
     comma_separated_ignore_words="i,me,my,myself,we,our,ours,ourselves,you,your,yours,yourself,yourselves,he,him,his,himself,she,her,hers,herself,it,its,itself,they,them,their,theirs,themselves,what,which,who,whom,this,that,these,those,am,is,are,was,were,be,been,being,have,has,had,having,do,does,did,doing,a,an,the,and,but,if,or,because,as,until,while,of,at,by,for,with,about,against,between,into,through,during,before,after,above,below,to,from,up,down,in,out,on,off,over,under,again,further,then,once,here,there,when,where,why,how,all,any,both,each,few,more,most,other,some,such,no,nor,not,only,own,same,so,than,too,very,s,t,can,will,just,don,should,now",
 ):
+    """Initialize a corpus from source or input file.
+    Priority is given to source if both are provided.
+    If neither is provided, check for default folders 'crisp_source' or 'crisp_input' in current directory.
+    If still none, check environment variables CRISP_T_SOURCE or CRISP_T_INPUT.
+
+    Args:
+        source (str, optional): URL or directory to read data from.
+        inp (str, optional): Path to input text file or directory.
+        comma_separated_text_columns (str, optional): Comma-separated list of unstructured text columns in CSV files to be treated as text documents.
+        comma_separated_ignore_words (str, optional): Comma-separated stop words to ignore.
+    """
     # Handle source option (URL or directory)
     read_data = ReadData()
     # check if crisp folder exists in the current directory
@@ -25,8 +37,11 @@ def initialize_corpus(
         try:
             read_data.read_source(
                 source,
+                comma_separated_text_columns=comma_separated_text_columns,
                 comma_separated_ignore_words=(
-                    comma_separated_ignore_words if comma_separated_ignore_words else None
+                    comma_separated_ignore_words
+                    if comma_separated_ignore_words
+                    else None
                 ),
             )
             corpus = read_data.create_corpus(

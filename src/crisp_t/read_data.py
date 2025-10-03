@@ -290,7 +290,7 @@ class ReadData:
             self.create_corpus()
             return self._corpus
 
-    def read_source(self, source, comma_separated_ignore_words=None):
+    def read_source(self, source, comma_separated_ignore_words=None, comma_separated_text_columns=""):
         # if source is a url
         if source.startswith("http://") or source.startswith("https://"):
             response = requests.get(source)
@@ -380,6 +380,7 @@ class ReadData:
                     self.read_csv(
                         file_path,
                         comma_separated_ignore_words=comma_separated_ignore_words,
+                        comma_separated_text_columns=comma_separated_text_columns,
                         numeric=False,
                     )
         else:
