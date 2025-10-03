@@ -202,21 +202,7 @@ def main(
                 )
                 # Apply filters if provided
                 if filters:
-                    try:
-                        text_analyzer = Text(corpus=corpus)
-                        for flt in filters:
-                            if "=" not in flt:
-                                raise ValueError("Filter must be in key=value format")
-                            key, value = flt.split("=", 1)
-                            text_analyzer.filter_documents(key.strip(), value.strip())
-                        click.echo(
-                            f"Applied filters {list(filters)}; remaining documents: {text_analyzer.document_count()}"
-                        )
-                    except Exception as e:
-                        # Surface as CLI error with non-zero exit code
-                        click.echo(
-                            f"Probably no document metadata to filter, but let me check numeric metadata: {e}"
-                        )
+                    click.echo("Filters are not supported when using --source; skipping filters.")
 
             except click.ClickException as e:
                 logger.error(f"Failed to read source {source}: {e}")
@@ -250,18 +236,7 @@ def main(
                 )
                 # Apply filters if provided
                 if filters:
-                    try:
-                        text_analyzer = Text(corpus=corpus)
-                        for flt in filters:
-                            if "=" not in flt:
-                                raise ValueError("Filter must be in key=value format")
-                            key, value = flt.split("=", 1)
-                            text_analyzer.filter_documents(key.strip(), value.strip())
-                        click.echo(
-                            f"Applied filters {list(filters)}; remaining documents: {text_analyzer.document_count()}"
-                        )
-                    except Exception as e:
-                        raise click.ClickException(str(e))
+                    click.echo("Filters are not supported when using --sources; skipping filters.")
 
         # Load csv from corpus.df if available
         if corpus and corpus.df is not None:
@@ -277,91 +252,13 @@ def main(
 
         # Load CSV data
         if csv:
-            click.echo(f"Loading CSV data from: {csv}")
-            csv_path = pathlib.Path(csv)
-            if csv_path.exists():
-                csv_analyzer = Csv()
-                text_columns, ignore_columns = _process_csv(
-                    csv_analyzer, unstructured, ignore, filters
-                )
-                csv_analyzer.read_csv(str(csv_path))
-
-                click.echo(f"Loaded CSV with shape: {csv_analyzer.get_shape()}")
-                if verbose:
-                    click.echo(f"Columns: {csv_analyzer.get_columns()}")
-
-                # Add df to corpus if available
-                if corpus:
-                    corpus.df = csv_analyzer.df
-
-                # Create corpus from CSV text columns if specified
-                if text_columns and not corpus:
-                    df = csv_analyzer.df
-                    text_cols = [
-                        col.strip() for col in text_columns.split(",") if col.strip()
-                    ]
-
-                    # Add documents to read_data
-                    from .model import Document
-
-                    for idx, row in df.iterrows():
-                        combined_text = " ".join(
-                            [str(row[col]) for col in text_cols if col in df.columns]
-                        )
-                        if combined_text.strip() and combined_text.lower() != "nan":
-                            metadata = {
-                                col: row[col]
-                                for col in df.columns
-                                if col not in text_cols
-                            }
-                            document = Document(
-                                text=combined_text,
-                                metadata=metadata,
-                                id=str(idx),
-                                score=0.0,
-                                name=f"doc_{idx}",
-                                description=f"Document from CSV row {idx}",
-                            )
-                            read_data._documents.append(document)
-
-                    if read_data._documents:
-                        corpus = read_data.create_corpus(
-                            name="CSV Corpus", description=f"Loaded from {csv}"
-                        )
-                        text_analyzer = Text(corpus=corpus)
-                        click.echo(
-                            f"Created corpus from CSV with {text_analyzer.document_count()} documents"
-                        )
-                        # Apply filters if provided
-                        if filters:
-                            try:
-                                for flt in filters:
-                                    if "=" not in flt:
-                                        raise ValueError(
-                                            "Filter must be in key=value format"
-                                        )
-                                    key, value = flt.split("=", 1)
-                                    text_analyzer.filter_documents(
-                                        key.strip(), value.strip()
-                                    )
-                                click.echo(
-                                    f"Applied filters {list(filters)}; remaining documents: {text_analyzer.document_count()}"
-                                )
-                            except Exception as e:
-                                # Surface as CLI error with non-zero exit code
-                                raise click.ClickException(str(e))
-                    else:
-                        click.echo("No valid text data found in specified columns")
-
-            else:
-                click.echo(f"CSV file not found: {csv}")
-                return
+            click.echo(f"--csv option has been deprecated. Put csv file in --source folder instead.")
 
         # Initialize ML analyzer if available and ML functions are requested
         if ML_AVAILABLE and (nnet or cls or knn or kmeans or cart or pca or ml) and csv_analyzer:
             if include:
                 csv_analyzer.comma_separated_include_columns(include)
-            ml_analyzer = ML(csv=csv_analyzer)
+            ml_analyzer = ML(csv=csv_analyzer) # type: ignore
         else:
             if (nnet or cls or knn or kmeans or cart or pca or ml) and not ML_AVAILABLE:
                 click.echo("Machine learning features require additional dependencies.")
@@ -420,7 +317,7 @@ def main(
                     if out:
                         _save_output(topics_result, out, "topics")
                 except Exception as e:
-                    click.error(f"Error generating topics: {e}")
+                    click.echo(f"Error generating topics: {e}")
 
             if nlp or assign:
                 click.echo("\n=== Document-Topic Assignments ===")
@@ -443,7 +340,7 @@ def main(
                     if out:
                         _save_output(assignments, out, "topic_assignments")
                 except Exception as e:
-                    click.error(f"Error assigning topics: {e}")
+                    click.echo(f"Error assigning topics: {e}")
 
             if nlp or cat:
                 click.echo("\n=== Category Analysis ===")
@@ -459,7 +356,7 @@ def main(
                     if out:
                         _save_output(categories, out, "categories")
                 except Exception as e:
-                    click.error(f"Error generating categories: {e}")
+                    click.echo(f"Error generating categories: {e}")
 
             if nlp or summary:
                 click.echo("\n=== Text Summarization ===")
@@ -475,7 +372,7 @@ def main(
                     if out:
                         _save_output(summary_result, out, "summary")
                 except Exception as e:
-                    click.error(f"Error generating summary: {e}")
+                    click.echo(f"Error generating summary: {e}")
 
             if nlp or sentiment:
                 click.echo("\n=== Sentiment Analysis ===")
@@ -486,7 +383,7 @@ def main(
                         Use --sentence to get document-level sentiment scores.
                 """)
                 try:
-                    sentiment_analyzer = Sentiment(corpus=corpus)
+                    sentiment_analyzer = Sentiment(corpus=corpus) # type: ignore
                     sentiment_results = sentiment_analyzer.get_sentiment(
                         documents=sentence, verbose=verbose
                     )
@@ -494,7 +391,7 @@ def main(
                     if out:
                         _save_output(sentiment_results, out, "sentiment")
                 except Exception as e:
-                    click.error(f"Error generating sentiment analysis: {e}")
+                    click.echo(f"Error generating sentiment analysis: {e}")
 
         # Machine Learning Operations
         if ml_analyzer and ML_AVAILABLE:
@@ -543,7 +440,7 @@ def main(
                     if out:
                         _save_output(confusion_matrix, out, "svm_results")
                 except Exception as e:
-                    click.error(f"Error performing SVM classification: {e}")
+                    click.echo(f"Error performing SVM classification: {e}")
                 click.echo("\n=== Decision Tree Classification ===")
                 try:
                     cm, importance = ml_analyzer.get_decision_tree_classes(y=target_col, top_n=rec)
@@ -556,7 +453,7 @@ def main(
                     if out:
                         _save_output(cm, out, "decision_tree_results")
                 except Exception as e:
-                    click.error(f"Error performing Decision Tree classification: {e}")
+                    click.echo(f"Error performing Decision Tree classification: {e}")
 
             if (nnet or ml) and target_col:
                 click.echo("\n=== Neural Network Classification Accuracy ===")
@@ -574,7 +471,7 @@ def main(
                     if out:
                         _save_output(predictions, out, "nnet_results")
                 except Exception as e:
-                    click.error(f"Error performing Neural Network classification: {e}")
+                    click.echo(f"Error performing Neural Network classification: {e}")
 
             if (knn or ml) and target_col:
                 click.echo("\n=== K-Nearest Neighbors ===")
@@ -596,7 +493,7 @@ def main(
                     if out:
                         _save_output(knn_results, out, "knn_results")
                 except Exception as e:
-                    click.error(f"Error performing K-Nearest Neighbors search: {e}")
+                    click.echo(f"Error performing K-Nearest Neighbors search: {e}")
 
             if (cart or ml) and target_col:
                 click.echo("\n=== Association Rules (CART) ===")
@@ -626,7 +523,7 @@ def main(
                     if out:
                         _save_output(apriori_results, out, "association_rules")
                 except Exception as e:
-                    click.error(f"Error generating association rules: {e}")
+                    click.echo(f"Error generating association rules: {e}")
 
             if (pca or ml) and target_col:
                 click.echo("\n=== Principal Component Analysis ===")
@@ -641,7 +538,7 @@ def main(
                     if out:
                         _save_output(pca_results, out, "pca_results")
                 except Exception as e:
-                    click.error(f"Error performing Principal Component Analysis: {e}")
+                    click.echo(f"Error performing Principal Component Analysis: {e}")
 
         elif (nnet or cls or knn or kmeans or cart or pca or ml) and not ML_AVAILABLE:
             click.echo("Machine learning features require additional dependencies.")

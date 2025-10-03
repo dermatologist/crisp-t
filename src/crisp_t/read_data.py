@@ -27,6 +27,7 @@ import requests
 from pypdf import PdfReader
 
 from .model import Corpus, Document
+from .csv import Csv
 
 # Set up logging
 logging.basicConfig(
@@ -290,7 +291,7 @@ class ReadData:
             self.create_corpus()
             return self._corpus
 
-    def read_source(self, source, comma_separated_ignore_words=None):
+    def read_source(self, source, comma_separated_ignore_words=None, comma_separated_text_columns=""):
         # if source is a url
         if source.startswith("http://") or source.startswith("https://"):
             response = requests.get(source)
@@ -376,6 +377,11 @@ class ReadData:
                             description="",
                         )
                         self._documents.append(_document)
+                if file_name.endswith(".csv"):
+                    logger.info(f"Reading CSV file: {file_path}")
+                    self._df = Csv().read_csv(file_path)
+                    logger.info(f"CSV file read with shape: {self._df.shape}")
+
         else:
             raise ValueError(f"Source not found: {source}")
 

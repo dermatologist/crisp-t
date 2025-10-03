@@ -24,8 +24,6 @@ def test_cli_no_input():
     assert "No input data provided" in result.output
 
 
-
-
 def test_cli_csv_analysis():
     """Test CLI with CSV input."""
     runner = CliRunner()
@@ -40,11 +38,9 @@ def test_cli_csv_analysis():
     ])
 
     assert result.exit_code == 0
-    assert "Loaded CSV with shape" in result.output
-    assert "Created corpus from CSV with" in result.output
-    assert "=== Sentiment Analysis ===" in result.output
-
-
+    assert "CRISP-T" in result.output
+    assert "--csv option has been deprecated" in result.output
+    # assert "=== Sentiment Analysis ===" in result.output
 
 
 @pytest.mark.skipif(True, reason="ML dependencies not available in test environment")
@@ -52,7 +48,7 @@ def test_cli_ml_functionality():
     """Test ML functionality (if available)."""
     runner = CliRunner()
 
-    csv_file = "src/crisp_t/resources/numeric.csv"
+    csv_file = "src/crisp_t/resources/vis/numeric.csv"
 
     result = runner.invoke(main, [
         '--csv', csv_file,
