@@ -105,3 +105,34 @@ def test_get_pca(csv_fixture, csv_file_fixture):
     pca_result = ml.get_pca(y="Gender")
     assert pca_result is not None, "PCA result should not be None"
     print(pca_result)
+
+
+def test_get_regression_logistic(csv_fixture, csv_file_fixture):
+    """Test logistic regression with binary outcome (Gender)"""
+    _csv = csv_fixture
+    _csv.read_csv(csv_file_fixture)
+    _csv.drop_na()
+    ml = ML(csv=_csv)
+    regression_result = ml.get_regression(y="Gender")
+    assert regression_result is not None, "Regression result should not be None"
+    assert regression_result["model_type"] == "logistic", "Should use logistic regression for binary outcome"
+    assert "accuracy" in regression_result, "Should have accuracy metric"
+    assert "coefficients" in regression_result, "Should have coefficients"
+    assert "intercept" in regression_result, "Should have intercept"
+    print(f"Logistic Regression Results: {regression_result}")
+
+
+def test_get_regression_linear(csv_fixture, csv_file_fixture):
+    """Test linear regression with continuous outcome (GPA)"""
+    _csv = csv_fixture
+    _csv.read_csv(csv_file_fixture)
+    _csv.drop_na()
+    ml = ML(csv=_csv)
+    regression_result = ml.get_regression(y="GPA")
+    assert regression_result is not None, "Regression result should not be None"
+    assert regression_result["model_type"] == "linear", "Should use linear regression for continuous outcome"
+    assert "mse" in regression_result, "Should have MSE metric"
+    assert "r2" in regression_result, "Should have R² metric"
+    assert "coefficients" in regression_result, "Should have coefficients"
+    assert "intercept" in regression_result, "Should have intercept"
+    print(f"Linear Regression Results: {regression_result}")

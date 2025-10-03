@@ -85,6 +85,9 @@ CRISP-T (**CRoss** **I**ndustry **S**tandard **P**rocess for **T**riangulation) 
 - `svm_confusion_matrix(y, test_size=0.25, random_state=0)` - SVM classification with confusion matrix
 - `get_xgb_classes(y, oversample=False, test_size=0.25, random_state=0)` - XGBoost classification
 
+#### Regression
+- `get_regression(y)` - Linear or logistic regression (automatically detects binary outcomes for logistic regression vs continuous for linear regression)
+
 #### Pattern Mining
 - `get_apriori(y, min_support=0.9, use_colnames=True, min_threshold=3)` - Association rule mining
 - `knn_search(y, n=3, r=3)` - K-nearest neighbor search
@@ -118,6 +121,7 @@ CRISP-T (**CRoss** **I**ndustry **S**tandard **P**rocess for **T**riangulation) 
 - **Cross-validation results**: Model stability metrics
 - **Feature importance**: Variable significance rankings
 - **Confusion matrices**: Classification error patterns
+- **Regression metrics**: MSE, R², coefficients, and intercepts for linear and logistic regression models
 
 ### Association Rule Metadata
 - **Support values**: Frequency of item combinations

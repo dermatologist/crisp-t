@@ -3,7 +3,7 @@ import logging
 from matplotlib.pyplot import clf
 import numpy as np
 from sklearn.cluster import KMeans
-from sklearn.metrics import confusion_matrix
+from sklearn.metrics import confusion_matrix, mean_squared_error, r2_score
 from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KDTree
 from sklearn.preprocessing import StandardScaler
@@ -12,6 +12,7 @@ from sklearn.svm import SVC
 from sklearn.metrics import accuracy_score
 from sklearn.inspection import permutation_importance
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.linear_model import LinearRegression, LogisticRegression
 from tabulate import tabulate
 from crisp_t import model
 
@@ -535,3 +536,121 @@ class ML:
             )
 
         return result
+
+    def get_regression(self, y: str):
+        """
+        Perform linear or logistic regression based on the outcome variable type.
+        
+        If the outcome is binary, fit a logistic regression model.
+        Otherwise, fit a linear regression model.
+        
+        Args:
+            y (str): Target column name for the regression.
+        
+        Returns:
+            dict: Regression results including coefficients, intercept, and metrics.
+        """
+        if ML_INSTALLED is False:
+            logger.info(
+                "ML dependencies are not installed. Please install them by ```pip install crisp-t[ml] to use ML features."
+            )
+            return None
+
+        if self._csv is None:
+            raise ValueError(
+                "CSV data is not set. Please set self.csv before calling get_regression."
+            )
+
+        X_np, Y_raw, X, Y = self._process_xy(y=y)
+        
+        # Check if outcome is binary (logistic) or continuous (linear)
+        unique_values = np.unique(Y_raw)
+        num_unique = len(unique_values)
+        
+        # Determine if binary classification or regression
+        is_binary = num_unique == 2
+        
+        if is_binary:
+            # Logistic Regression
+            print(f"\n=== Logistic Regression for {y} ===")
+            print(f"Binary outcome detected with values: {unique_values}")
+            
+            model = LogisticRegression(max_iter=1000, random_state=42)
+            model.fit(X_np, Y_raw)
+            
+            # Predictions
+            y_pred = model.predict(X_np)
+            
+            # Accuracy
+            accuracy = accuracy_score(Y_raw, y_pred)
+            print(f"\nAccuracy: {accuracy*100:.2f}%")
+            
+            # Coefficients and Intercept
+            print(f"\nCoefficients:")
+            for i, coef in enumerate(model.coef_[0]):
+                feature_name = X.columns[i] if hasattr(X, 'columns') else f"Feature_{i}"
+                print(f"  {feature_name}: {coef:.5f}")
+            
+            print(f"\nIntercept: {model.intercept_[0]:.5f}")
+            
+            # Store in metadata
+            if self._csv.corpus is not None:
+                coef_str = "\n".join([
+                    f"  {X.columns[i] if hasattr(X, 'columns') else f'Feature_{i}'}: {coef:.5f}"
+                    for i, coef in enumerate(model.coef_[0])
+                ])
+                self._csv.corpus.metadata["logistic_regression_accuracy"] = f"Logistic Regression accuracy for predicting {y}: {accuracy*100:.2f}%"
+                self._csv.corpus.metadata["logistic_regression_coefficients"] = f"Coefficients:\n{coef_str}"
+                self._csv.corpus.metadata["logistic_regression_intercept"] = f"Intercept: {model.intercept_[0]:.5f}"
+            
+            return {
+                "model_type": "logistic",
+                "accuracy": accuracy,
+                "coefficients": model.coef_[0],
+                "intercept": model.intercept_[0],
+                "feature_names": X.columns.tolist() if hasattr(X, 'columns') else None
+            }
+        else:
+            # Linear Regression
+            print(f"\n=== Linear Regression for {y} ===")
+            print(f"Continuous outcome detected with {num_unique} unique values")
+            
+            model = LinearRegression()
+            model.fit(X_np, Y_raw)
+            
+            # Predictions
+            y_pred = model.predict(X_np)
+            
+            # Metrics
+            mse = mean_squared_error(Y_raw, y_pred)
+            r2 = r2_score(Y_raw, y_pred)
+            print(f"\nMean Squared Error (MSE): {mse:.5f}")
+            print(f"R² Score: {r2:.5f}")
+            
+            # Coefficients and Intercept
+            print(f"\nCoefficients:")
+            for i, coef in enumerate(model.coef_):
+                feature_name = X.columns[i] if hasattr(X, 'columns') else f"Feature_{i}"
+                print(f"  {feature_name}: {coef:.5f}")
+            
+            print(f"\nIntercept: {model.intercept_:.5f}")
+            
+            # Store in metadata
+            if self._csv.corpus is not None:
+                coef_str = "\n".join([
+                    f"  {X.columns[i] if hasattr(X, 'columns') else f'Feature_{i}'}: {coef:.5f}"
+                    for i, coef in enumerate(model.coef_)
+                ])
+                self._csv.corpus.metadata["linear_regression_mse"] = f"Linear Regression MSE for predicting {y}: {mse:.5f}"
+                self._csv.corpus.metadata["linear_regression_r2"] = f"Linear Regression R² for predicting {y}: {r2:.5f}"
+                self._csv.corpus.metadata["linear_regression_coefficients"] = f"Coefficients:\n{coef_str}"
+                self._csv.corpus.metadata["linear_regression_intercept"] = f"Intercept: {model.intercept_:.5f}"
+            
+            return {
+                "model_type": "linear",
+                "mse": mse,
+                "r2": r2,
+                "coefficients": model.coef_,
+                "intercept": model.intercept_,
+                "feature_names": X.columns.tolist() if hasattr(X, 'columns') else None
+            }
