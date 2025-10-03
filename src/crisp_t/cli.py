@@ -544,19 +544,6 @@ def main(
             click.echo("Machine learning features require additional dependencies.")
             click.echo("Install with: pip install crisp-t[ml]")
 
-        # Visualization
-        if visualize and corpus:
-            click.echo("\n=== Generating Visualizations ===")
-            _word_cloud = pathlib.Path(out) / "word_cloud.png" if out else None
-            viz = QRVisualize(corpus=corpus, folder_path=str(_word_cloud))
-            viz.plot_wordcloud()
-            _word_freq = pathlib.Path(out) / "word_frequencies.png" if out else None
-            viz.plot_frequency_distribution_of_words(
-                folder_path=str(_word_freq), show=False
-            )
-            # This would generate appropriate visualizations based on the analysis performed
-            click.echo("Visualization functionality integrated with analysis results")
-
         # Save corpus and csv if output directory is specified
         if out and corpus and not filters:
             output_path = pathlib.Path(out)

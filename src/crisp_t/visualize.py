@@ -38,10 +38,19 @@ class QRVisualize:
         self.c: np.ndarray | None = None
 
     @staticmethod
-    def _ensure_columns(df: pd.DataFrame, required: Iterable[str]) -> None:
+    def _ensure_columns(df: pd.DataFrame, required: Iterable[str]) -> pd.DataFrame:
+        df.columns = [
+            "Document_No",
+            "Title",
+            "Dominant_Topic",
+            "Topic_Perc_Contrib",
+            "Keywords",
+            "Text",
+        ]
         missing = [col for col in required if col not in df.columns]
         if missing:
             raise ValueError(f"Missing required columns: {missing}")
+        return df
 
     def _finalize_plot(
         self,
@@ -75,15 +84,7 @@ class QRVisualize:
                 df = pd.DataFrame(self.corpus.visualization["assign_topics"])
             except Exception as e:
                 raise ValueError(f"Failed to create DataFrame from corpus: {e}")
-        df.columns = [
-            "Document_No",
-            "Title",
-            "Dominant_Topic",
-            "Topic_Perc_Contrib",
-            "Keywords",
-            "Text",
-        ]
-        self._ensure_columns(df, [text_column])
+        df = self._ensure_columns(df, [text_column])
         doc_lens = df[text_column].dropna().map(len).tolist()
         if not doc_lens:
             raise ValueError("No documents available to plot frequency distribution.")
@@ -138,7 +139,7 @@ class QRVisualize:
                 df = pd.DataFrame(self.corpus.visualization["assign_topics"])
             except Exception as e:
                 raise ValueError(f"Failed to create DataFrame from corpus: {e}")
-        self._ensure_columns(df, [topic_column, text_column])
+        df = self._ensure_columns(df, [topic_column, text_column])
         unique_topics = sorted(df[topic_column].dropna().unique())
         if not unique_topics:
             raise ValueError("No topics found to plot distribution.")
@@ -269,7 +270,7 @@ class QRVisualize:
         if top_n <= 0:
             raise ValueError("top_n must be greater than zero.")
 
-        self._ensure_columns(df, [term_column, frequency_column])
+        df = self._ensure_columns(df, [term_column, frequency_column])
         subset = df[[term_column, frequency_column]].dropna()
         if subset.empty:
             raise ValueError("No data available to plot top terms.")
@@ -303,7 +304,7 @@ class QRVisualize:
             except Exception as e:
                 raise ValueError(f"Failed to create DataFrame from corpus: {e}")
         if columns:
-            self._ensure_columns(df, columns)
+            df = self._ensure_columns(df, columns)
             data = df[list(columns)]
         else:
             data = df
