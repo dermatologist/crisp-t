@@ -372,3 +372,22 @@ class Csv:
                     return True
 
             self._df = self._df.applymap(to_one_hot) # type: ignore
+
+    def filter_rows_by_column_value(self, column_name: str, value) -> pd.DataFrame:
+        """ Select rows from the DataFrame where the specified column matches the given value.
+        """
+        if self._df is not None and column_name in self._df.columns:
+            selected_df = self._df[self._df[column_name] == value]
+            if selected_df.empty:
+                # try int search
+                selected_df = self._df[self._df[column_name] == int(value)]
+            logger.info(
+                f"Selected {selected_df.shape[0]} rows where {column_name} == {value}."
+            )
+            self._df = selected_df
+            return selected_df
+        else:
+            logger.error(
+                f"Column {column_name} not found in DataFrame or DataFrame is None."
+            )
+            return pd.DataFrame()

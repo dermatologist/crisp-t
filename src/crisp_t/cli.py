@@ -184,7 +184,7 @@ def main(
                     )
                 except Exception as e:
                     # Surface as CLI error with non-zero exit code
-                    raise click.ClickException(str(e))
+                    click.echo(f"Probably no document metadata to filter, but let me check numeric metadata: {e}")
 
         # Handle source option (URL or directory)
         if source:
@@ -214,7 +214,9 @@ def main(
                         )
                     except Exception as e:
                         # Surface as CLI error with non-zero exit code
-                        raise click.ClickException(str(e))
+                        click.echo(
+                            f"Probably no document metadata to filter, but let me check numeric metadata: {e}"
+                        )
 
             except click.ClickException as e:
                 logger.error(f"Failed to read source {source}: {e}")
@@ -266,11 +268,7 @@ def main(
             click.echo("Loading CSV data from corpus.df")
             csv_analyzer = Csv(corpus=corpus)
             csv_analyzer.df = corpus.df
-            text_columns = ",".join(unstructured) if unstructured else ""
-            ignore_columns = ignore if ignore else ""
-
-            csv_analyzer.comma_separated_text_columns = text_columns
-            csv_analyzer.comma_separated_ignore_columns = ignore_columns
+            _process_csv(csv_analyzer, unstructured, ignore, filters)
             click.echo(f"Loaded CSV with shape: {csv_analyzer.get_shape()}")
             if verbose:
                 click.echo(f"Columns: {csv_analyzer.get_columns()}")
@@ -281,11 +279,7 @@ def main(
             csv_path = pathlib.Path(csv)
             if csv_path.exists():
                 csv_analyzer = Csv()
-                text_columns = ",".join(unstructured) if unstructured else ""
-                ignore_columns = ignore if ignore else ""
-
-                csv_analyzer.comma_separated_text_columns = text_columns
-                csv_analyzer.comma_separated_ignore_columns = ignore_columns
+                _process_csv(csv_analyzer, unstructured, ignore, filters)
                 csv_analyzer.read_csv(str(csv_path))
 
                 click.echo(f"Loaded CSV with shape: {csv_analyzer.get_shape()}")
@@ -715,6 +709,29 @@ def _save_output(data, base_path: str, suffix: str):
     except Exception as e:
         click.echo(f"Warning: Could not save output to {base_path}_{suffix}: {str(e)}")
 
+
+def _process_csv(csv_analyzer, unstructured, ignore, filters):
+    text_columns = ",".join(unstructured) if unstructured else ""
+    ignore_columns = ignore if ignore else ""
+    csv_analyzer.comma_separated_text_columns = text_columns
+    csv_analyzer.comma_separated_ignore_columns = ignore_columns
+    if filters:
+        try:
+            for flt in filters:
+                if "=" not in flt:
+                    raise ValueError("Filter must be in key=value format")
+                key, value = flt.split("=", 1)
+                csv_analyzer.filter_rows_by_column_value(
+                    key.strip(), value.strip()
+                )
+            click.echo(
+                f"Applied filters {list(filters)}; remaining rows: {csv_analyzer.get_shape()[0]}"
+            )
+        except Exception as e:
+            # Surface as CLI error with non-zero exit code
+            click.echo(
+                f"Probably no numeric metadata to filter, but let me check document metadata: {e}"
+            )
 
 if __name__ == "__main__":
     main()
