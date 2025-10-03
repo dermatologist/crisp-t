@@ -547,7 +547,9 @@ def main(
         # Visualization
         if visualize and corpus:
             click.echo("\n=== Generating Visualizations ===")
-            viz = QRVisualize()
+            _word_cloud = pathlib.Path(out) / "word_cloud.png" if out else None
+            viz = QRVisualize(corpus=corpus, folder_path=str(_word_cloud))
+            viz.plot_wordcloud()
             # This would generate appropriate visualizations based on the analysis performed
             click.echo("Visualization functionality integrated with analysis results")
 

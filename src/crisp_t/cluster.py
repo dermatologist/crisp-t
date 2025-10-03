@@ -93,7 +93,18 @@ class Cluster:
                 id2word=self._dictionary,
                 passes=self._passes,
             )
-        return self._lda_model.show_topics(formatted=False)
+        _word_cloud = self._lda_model.show_topics(formatted=False)
+        # Sanitize _word_cloud for JSON serialization
+        def _safe_topic(topic):
+            topic_num, words = topic
+            safe_words = [(str(w), float(p)) for w, p in words]
+            return [int(topic_num), safe_words]
+
+        safe_word_cloud = [_safe_topic(topic) for topic in _word_cloud]
+        if self._corpus is not None:
+            logging.info("Storing word cloud in corpus metadata")
+            self._corpus.visualization["word_cloud"] = safe_word_cloud
+        return _word_cloud
 
     def print_topics(self, num_words=5):
         if self._lda_model is None:

@@ -26,8 +26,10 @@ logging.basicConfig(level=logging.INFO)
 
 class QRVisualize:
 
-    def __init__(self) -> None:
+    def __init__(self, corpus: Corpus | None = None, folder_path: str | None = None) -> None:
         # Matplotlib figure components assigned lazily by plotting methods
+        self.corpus = corpus
+        self.folder_path = folder_path
         self.fig: Figure | None = None
         self.ax: Axes | None = None
         self.sc: PathCollection | None = None
@@ -41,12 +43,14 @@ class QRVisualize:
         if missing:
             raise ValueError(f"Missing required columns: {missing}")
 
-    @staticmethod
     def _finalize_plot(
+        self,
         fig: Figure,
         folder_path: str | None,
         show: bool,
     ) -> Figure:
+        if not folder_path:
+            folder_path = self.folder_path
         if folder_path:
             output_path = Path(folder_path)
             if output_path.parent:
@@ -60,12 +64,17 @@ class QRVisualize:
 
     def plot_frequency_distribution_of_words(
         self,
-        df: pd.DataFrame,
+        df: pd.DataFrame | None = None,
         folder_path: str | None = None,
         text_column: str = "Text",
         bins: int = 100,
         show: bool = True,
     ) -> Tuple[Figure, Axes]:
+        if df is None:
+            try:
+                df = pd.DataFrame(self.corpus.visualization["assign_topics"])
+            except Exception as e:
+                raise ValueError(f"Failed to create DataFrame from corpus: {e}")
         self._ensure_columns(df, [text_column])
         doc_lens = df[text_column].dropna().map(len).tolist()
         if not doc_lens:
@@ -109,13 +118,18 @@ class QRVisualize:
 
     def plot_distribution_by_topic(
         self,
-        df: pd.DataFrame,
+        df: pd.DataFrame | None = None,
         folder_path: str | None = None,
         topic_column: str = "Dominant_Topic",
         text_column: str = "Text",
         bins: int = 100,
         show: bool = True,
     ) -> Tuple[Figure, np.ndarray]:
+        if df is None:
+            try:
+                df = pd.DataFrame(self.corpus.visualization["assign_topics"])
+            except Exception as e:
+                raise ValueError(f"Failed to create DataFrame from corpus: {e}")
         self._ensure_columns(df, [topic_column, text_column])
         unique_topics = sorted(df[topic_column].dropna().unique())
         if not unique_topics:
@@ -178,14 +192,16 @@ class QRVisualize:
 
     def plot_wordcloud(
         self,
-        topics: Sequence[Tuple[int, Sequence[Tuple[str, float]]]],
+        topics = None,
         folder_path: str | None = None,
         max_words: int = 50,
         show: bool = True,
     ) -> Tuple[Figure, np.ndarray]:
         if not topics:
-            raise ValueError("No topics provided for word cloud generation.")
-
+            try:
+                topics = self.corpus.visualization["word_cloud"]
+            except Exception as e:
+                raise ValueError(f"Failed to retrieve topics from corpus: {e}")
         n_topics = len(topics)
         n_cols = min(3, n_topics)
         n_rows = math.ceil(n_topics / n_cols)
@@ -229,7 +245,7 @@ class QRVisualize:
 
     def plot_top_terms(
         self,
-        df: pd.DataFrame,
+        df: pd.DataFrame | None = None,
         term_column: str = "term",
         frequency_column: str = "frequency",
         top_n: int = 20,
@@ -237,6 +253,11 @@ class QRVisualize:
         ascending: bool = False,
         show: bool = True,
     ) -> Tuple[Figure, Axes]:
+        if df is None:
+            try:
+                df = pd.DataFrame(self.corpus.visualization["assign_topics"])
+            except Exception as e:
+                raise ValueError(f"Failed to create DataFrame from corpus: {e}")
         if top_n <= 0:
             raise ValueError("top_n must be greater than zero.")
 
@@ -262,12 +283,17 @@ class QRVisualize:
 
     def plot_correlation_heatmap(
         self,
-        df: pd.DataFrame,
+        df: pd.DataFrame | None = None,
         columns: Sequence[str] | None = None,
         folder_path: str | None = None,
         cmap: str = "coolwarm",
         show: bool = True,
     ) -> Tuple[Figure, Axes]:
+        if df is None:
+            try:
+                df = pd.DataFrame(self.corpus.visualization["assign_topics"])
+            except Exception as e:
+                raise ValueError(f"Failed to create DataFrame from corpus: {e}")
         if columns:
             self._ensure_columns(df, columns)
             data = df[list(columns)]
