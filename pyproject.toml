@@ -82,7 +82,9 @@ source-exclude = [
 ]
 
 [project.scripts]
-crisp-t = "crisp_t.cli:main"
+crisp = "crisp_t.cli:main"
+crispviz = "crisp_t.vizcli:main"
+crispt = "crisp_t.corpuscli:main"
 
 [project.optional-dependencies]
 ml = [
