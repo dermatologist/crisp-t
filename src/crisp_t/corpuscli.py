@@ -101,6 +101,11 @@ def _parse_relationship(value: str) -> tuple[str, str, str]:
     is_flag=True,
     help="Print all relationships in the corpus.",
 )
+@click.option(
+    "--relationships-for-keyword",
+    default=None,
+    help="Print all relationships involving a specific keyword.",
+)
 def main(
     verbose: bool,
     id: Optional[str],
@@ -120,6 +125,7 @@ def main(
     doc_ids: bool,
     doc_id: Optional[str],
     print_relationships: bool,
+    relationships_for_keyword: Optional[str],
 ):
     """
     CRISP-T Corpus CLI: create and manipulate a corpus quickly from the command line.
@@ -240,6 +246,11 @@ def main(
     if print_relationships:
         rels = corpus.get_relationships()
         click.echo(f"Relationships: {rels}")
+
+    # Print relationships for keyword
+    if relationships_for_keyword:
+        rels = corpus.get_all_relationships_for_keyword(relationships_for_keyword)
+        click.echo(f"Relationships for keyword '{relationships_for_keyword}': {rels}")
 
     if print_corpus:
         click.echo("\n=== Corpus Details ===")

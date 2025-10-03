@@ -1,3 +1,38 @@
+def test_relationships_for_keyword(tmp_path):
+    out_dir = tmp_path / "corpus_rels_kw"
+    out_dir.mkdir()
+    from src.crisp_t.model.corpus import Corpus
+    from src.crisp_t.model.document import Document
+
+    corpus = Corpus(
+        id="relidkw",
+        name="relnamekw",
+        description="reldesckw",
+        score=None,
+        documents=[
+            Document(
+                id="d1", name="n1", description=None, score=0.0, text="t1", metadata={}
+            )
+        ],
+        df=None,
+    )
+    corpus.add_relationship("text:foo", "num:bar", "correlates")
+    corpus.add_relationship("text:baz", "text:qux", "references")
+    corpus.add_relationship("text:foo", "text:qux", "contradicts")
+    from src.crisp_t.read_data import ReadData
+
+    rd = ReadData(corpus=corpus)
+    rd.write_corpus_to_json(out_dir, corpus=corpus)
+    # Keyword 'foo' should match two relationships
+    result = run_cli(
+        ["--inp", str(out_dir), "--relationships-for-keyword", "foo"], tmp_path=tmp_path
+    )
+    assert result.exit_code == 0, result.output
+    assert "Relationships for keyword 'foo':" in result.output
+    # Should contain two relationships with 'foo'
+    assert result.output.count("foo") >= 2
+
+
 def test_df_column_names_and_row_count(tmp_path):
     # Save corpus with DataFrame
     import pandas as pd

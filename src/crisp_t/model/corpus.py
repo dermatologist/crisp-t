@@ -170,8 +170,8 @@ class Corpus(BaseModel):
         Add a relationship between two documents in the corpus.
 
         Args:
-            first: keywords from text documents or columns from dataframe in the format text:keyword or num:column
-            second: keywords from text documents or columns from dataframe in the format text:keyword or num:column
+            first: keywords from text documents in the format text:keyword or columns from dataframe in the format numb:column
+            second: keywords from text documents in the format text:keyword or columns from dataframe in the format numb:column
             relation: Description of the relationship. (One of "correlates", "similar to", "cites", "references", "contradicts", etc.)
         """
         if "relationships" not in self.metadata:
@@ -195,3 +195,20 @@ class Corpus(BaseModel):
             List of relationships, or empty list if none exist.
         """
         return self.metadata.get("relationships", [])
+
+    def get_all_relationships_for_keyword(self, keyword: str):
+        """
+        Get all relationships involving a specific keyword.
+
+        Args:
+            keyword: Keyword to search for in relationships.
+
+        Returns:
+            List of relationships involving the keyword.
+        """
+        rels = self.get_relationships()
+        return [
+            rel
+            for rel in rels
+            if keyword in rel["first"] or keyword in rel["second"]
+        ]
