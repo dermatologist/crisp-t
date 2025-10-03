@@ -89,6 +89,18 @@ def _parse_relationship(value: str) -> tuple[str, str, str]:
     default=None,
     help="Load corpus from a folder or file containing corpus.json (load)",
 )
+# New options for Corpus methods
+@click.option("--df-cols", is_flag=True, help="Print all DataFrame column names.")
+@click.option("--df-row-count", is_flag=True, help="Print number of rows in DataFrame.")
+@click.option("--df-row", default=None, type=int, help="Print DataFrame row by index.")
+@click.option("--doc-ids", is_flag=True, help="Print all document IDs in the corpus.")
+@click.option("--doc-id", default=None, help="Print document by ID.")
+@click.option(
+    "--relationships",
+    "print_relationships",
+    is_flag=True,
+    help="Print all relationships in the corpus.",
+)
 def main(
     verbose: bool,
     id: Optional[str],
@@ -102,6 +114,12 @@ def main(
     print_corpus: bool,
     out: Optional[str],
     inp: Optional[str],
+    df_cols: bool,
+    df_row_count: bool,
+    df_row: Optional[int],
+    doc_ids: bool,
+    doc_id: Optional[str],
+    print_relationships: bool,
 ):
     """
     CRISP-T Corpus CLI: create and manipulate a corpus quickly from the command line.
@@ -186,6 +204,42 @@ def main(
         rd = ReadData(corpus=corpus)
         rd.write_corpus_to_json(out, corpus=corpus)
         click.echo(f"✓ Corpus saved to {out}")
+
+    # Print DataFrame column names
+    if df_cols:
+        cols = corpus.get_all_df_column_names()
+        click.echo(f"DataFrame columns: {cols}")
+
+    # Print DataFrame row count
+    if df_row_count:
+        count = corpus.get_row_count()
+        click.echo(f"DataFrame row count: {count}")
+
+    # Print DataFrame row by index
+    if df_row is not None:
+        row = corpus.get_row_by_index(df_row)
+        if row is not None:
+            click.echo(f"DataFrame row {df_row}: {row.to_dict()}")
+        else:
+            click.echo(f"No row at index {df_row}")
+
+    # Print all document IDs
+    if doc_ids:
+        ids = corpus.get_all_document_ids()
+        click.echo(f"Document IDs: {ids}")
+
+    # Print document by ID
+    if doc_id:
+        doc = corpus.get_document_by_id(doc_id)
+        if doc:
+            click.echo(f"Document {doc_id}: {doc.model_dump()}")
+        else:
+            click.echo(f"No document found with ID {doc_id}")
+
+    # Print relationships
+    if print_relationships:
+        rels = corpus.get_relationships()
+        click.echo(f"Relationships: {rels}")
 
     if print_corpus:
         click.echo("\n=== Corpus Details ===")

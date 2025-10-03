@@ -1,3 +1,145 @@
+def test_df_column_names_and_row_count(tmp_path):
+    # Save corpus with DataFrame
+    import pandas as pd
+
+    from src.crisp_t.model.corpus import Corpus
+    from src.crisp_t.model.document import Document
+
+    out_dir = tmp_path / "corpus_df"
+    out_dir.mkdir()
+    df = pd.DataFrame({"A": [1, 2], "B": [3, 4]})
+    corpus = Corpus(
+        id="dfid",
+        name="dfname",
+        description="dfdesc",
+        score=None,
+        documents=[
+            Document(
+                id="d1", name="n1", description=None, score=0.0, text="t1", metadata={}
+            )
+        ],
+        df=df,
+    )
+    from src.crisp_t.read_data import ReadData
+
+    rd = ReadData(corpus=corpus)
+    rd.write_corpus_to_json(out_dir, corpus=corpus)
+    # Load and test CLI
+    result = run_cli(
+        ["--inp", str(out_dir), "--df-cols", "--df-row-count"], tmp_path=tmp_path
+    )
+    assert result.exit_code == 0, result.output
+    assert "DataFrame columns: ['A', 'B']" in result.output
+    assert "DataFrame row count: 2" in result.output
+
+
+def test_df_row_by_index(tmp_path):
+    import pandas as pd
+
+    from src.crisp_t.model.corpus import Corpus
+    from src.crisp_t.model.document import Document
+
+    out_dir = tmp_path / "corpus_dfrow"
+    out_dir.mkdir()
+    df = pd.DataFrame({"A": [10, 20], "B": [30, 40]})
+    corpus = Corpus(
+        id="dfid2",
+        name="dfname2",
+        description="dfdesc2",
+        score=None,
+        documents=[
+            Document(
+                id="d2", name="n2", description=None, score=0.0, text="t2", metadata={}
+            )
+        ],
+        df=df,
+    )
+    from src.crisp_t.read_data import ReadData
+
+    rd = ReadData(corpus=corpus)
+    rd.write_corpus_to_json(out_dir, corpus=corpus)
+    # Valid index
+    result = run_cli(["--inp", str(out_dir), "--df-row", "1"], tmp_path=tmp_path)
+    assert result.exit_code == 0, result.output
+    assert "DataFrame row 1: {'A': 20, 'B': 40}" in result.output
+    # Invalid index
+    result2 = run_cli(["--inp", str(out_dir), "--df-row", "5"], tmp_path=tmp_path)
+    assert result2.exit_code == 0, result2.output
+    assert "No row at index 5" in result2.output
+
+
+def test_doc_ids_and_get_document(tmp_path):
+    out_dir = tmp_path / "corpus_docs"
+    out_dir.mkdir()
+    from src.crisp_t.model.corpus import Corpus
+    from src.crisp_t.model.document import Document
+
+    docs = [
+        Document(
+            id="d1", name="n1", description=None, score=0.0, text="t1", metadata={}
+        ),
+        Document(
+            id="d2", name="n2", description=None, score=0.0, text="t2", metadata={}
+        ),
+    ]
+    corpus = Corpus(
+        id="docid",
+        name="docname",
+        description="docdesc",
+        score=None,
+        documents=docs,
+        df=None,
+    )
+    from src.crisp_t.read_data import ReadData
+
+    rd = ReadData(corpus=corpus)
+    rd.write_corpus_to_json(out_dir, corpus=corpus)
+    # List IDs
+    result = run_cli(["--inp", str(out_dir), "--doc-ids"], tmp_path=tmp_path)
+    assert result.exit_code == 0, result.output
+    assert "Document IDs: ['d1', 'd2']" in result.output
+    # Get document by ID
+    result2 = run_cli(["--inp", str(out_dir), "--doc-id", "d2"], tmp_path=tmp_path)
+    assert result2.exit_code == 0, result2.output
+    assert "Document d2:" in result2.output
+    # Nonexistent ID
+    result3 = run_cli(["--inp", str(out_dir), "--doc-id", "dX"], tmp_path=tmp_path)
+    assert result3.exit_code == 0, result3.output
+    assert "No document found with ID dX" in result3.output
+
+
+def test_print_relationships(tmp_path):
+    out_dir = tmp_path / "corpus_rels"
+    out_dir.mkdir()
+    from src.crisp_t.model.corpus import Corpus
+    from src.crisp_t.model.document import Document
+
+    corpus = Corpus(
+        id="relid",
+        name="relname",
+        description="reldesc",
+        score=None,
+        documents=[
+            Document(
+                id="d1", name="n1", description=None, score=0.0, text="t1", metadata={}
+            )
+        ],
+        df=None,
+    )
+    corpus.add_relationship("text:foo", "num:bar", "correlates")
+    corpus.add_relationship("text:baz", "text:qux", "references")
+    from src.crisp_t.read_data import ReadData
+
+    rd = ReadData(corpus=corpus)
+    rd.write_corpus_to_json(out_dir, corpus=corpus)
+    result = run_cli(["--inp", str(out_dir), "--relationships"], tmp_path=tmp_path)
+    assert result.exit_code == 0, result.output
+    assert (
+        "Relationships: [{'first': 'text:foo', 'second': 'num:bar', 'relation': 'correlates'}, {'first': 'text:baz', 'second': 'text:qux', 'relation': 'references'}]"
+        in result.output
+    )
+
+
 import os
 import re
 from pathlib import Path
