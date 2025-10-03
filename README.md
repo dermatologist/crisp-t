@@ -26,27 +26,32 @@ You'll also need to download the spaCy English model:
 python -m spacy download en_core_web_sm
 ```
 
-## Command Line Interface
 
-CRISP-T provides a comprehensive command-line interface for analyzing textual and numerical data. The CLI supports various analysis types and can handle different input formats.
+## Command Line Scripts
 
-### Basic Usage
+CRISP-T now provides three main command-line scripts:
+
+- `crisp` — Main CLI for qualitative triangulation and analysis (see below)
+- `crispviz` — Visualization CLI for corpus data (word frequencies, topic charts, wordclouds, etc.)
+- `crispt` — Corpus manipulation CLI (create, edit, query, and manage corpus objects)
+
+All scripts are installed as entry points and can be run directly from the command line after installation.
+
+### crisp (Triangulation CLI)
 
 ```bash
-crisp-t [OPTIONS]
+crisp [OPTIONS]
 ```
 
-### Input/Output Options
+#### Input/Output Options
 
 - `--inp, -i PATH`: Load an existing corpus from a folder containing `corpus.json` (and optional `corpus_df.csv`)
-- `--csv PATH`: CSV file name for numerical data analysis
 - `--out, -o PATH`: When saving the corpus, provide a folder path; the CLI writes `corpus.json` (and `corpus_df.csv` if available) into that folder. When saving analysis results (topics, sentiment, etc.), this acts as a base path: files are written with suffixes, e.g., `results_topics.json`.
 - `--unstructured, -t TEXT`: Text CSV column(s) to analyze/compare (can be used multiple times)
-- `--ignore TEXT`: Comma-separated words to ignore during ingestion (applies to `--source/--sources` and CSV text extraction)
+- `--ignore TEXT`: Comma-separated words to ignore during ingestion (applies to `--source/--sources`)
 
-### Analysis Options
+#### Analysis Options
 
-#### Text Analysis
 - `--codedict`: Generate qualitative coding dictionary
 - `--topics`: Generate topic model using LDA
 - `--assign`: Assign documents to topics
@@ -55,16 +60,7 @@ crisp-t [OPTIONS]
 - `--sentiment`: Generate sentiment scores using VADER
 - `--sentence`: Generate sentence-level scores when applicable
 - `--nlp`: Generate all NLP reports (combines above text analyses)
-
-#### Machine Learning (requires `crisp-t[ml]`)
-- `--nnet`: Display neural network model accuracy
-- `--svm`: Display SVM confusion matrix
-- `--knn`: Display K-nearest neighbors analysis
-- `--kmeans`: Display K-Means clustering results
-- `--cart`: Display association rules (CART)
-- `--pca`: Display Principal Component Analysis
-
-#### Visualization and Configuration
+- `--nnet`, `--cls`, `--knn`, `--kmeans`, `--cart`, `--pca`, `--ml`: Machine learning and clustering options (requires `crisp-t[ml]`)
 - `--visualize`: Generate visualizations (word clouds, topic charts, etc.)
 - `--num, -n INTEGER`: Number parameter (clusters, topics, epochs, etc.) - default: 3
 - `--rec, -r INTEGER`: Record parameter (top N results, recommendations) - default: 3
@@ -72,54 +68,71 @@ crisp-t [OPTIONS]
 - `--verbose, -v`: Print verbose messages for debugging
 
 #### Data Sources
+
 - `--source, -s PATH|URL`: Read source data from a directory (reads .txt and .pdf) or from a URL
 - `--sources PATH|URL`: Provide multiple sources; can be used multiple times
 
-### Examples
+### crispviz (Visualization CLI)
 
-#### Text Analysis from Corpus
 ```bash
-# Load an existing corpus and perform basic text analysis
-crisp-t --inp ./my_corpus_folder --codedict --sentiment
-
-# Comprehensive NLP analysis with output base path
-crisp-t --inp ./my_corpus_folder --nlp --num 5 --out results
-
-# Topic modeling with custom parameters
-crisp-t --inp ./my_corpus_folder --topics --assign --num 4 --rec 10
+crispviz [OPTIONS]
 ```
 
-#### CSV Data Analysis
+- `--inp, --source, --sources`: Input corpus or sources
+- `--out`: Output directory for PNG images
+- Visualization flags: `--freq`, `--by-topic`, `--wordcloud`, `--top-terms`, `--corr-heatmap`
+- Optional params: `--bins`, `--top-n`, `--columns`
+
+### crispt (Corpus Manipulation CLI)
+
 ```bash
-# Analyze text columns from CSV
-crisp-t --csv survey_data.csv --titles "comments,feedback" --sentiment --codedict
-
-# Full analysis of CSV with both text and numerical data
-crisp-t --csv research_data.csv --titles "open_responses" --nlp --kmeans --pca --num 3
-
-# Machine learning analysis on numerical data
-crisp-t --csv dataset.csv --titles target_variable --svm --nnet --kmeans --num 5
+crispt [OPTIONS]
 ```
 
-#### Combined Analysis
+- `--id`, `--name`, `--description`: Corpus metadata
+- `--doc`: Add document as `id|name|text` or `id|text` (repeatable)
+- `--remove-doc`: Remove document by ID (repeatable)
+- `--meta`: Add/update corpus metadata as `key=value` (repeatable)
+- `--add-rel`: Add relationship as `first|second|relation` (repeatable)
+- `--clear-rel`: Clear all relationships
+- `--out`: Save corpus to folder/file as `corpus.json`
+- `--inp`: Load corpus from folder/file containing `corpus.json`
+- Query options:
+	- `--df-cols`: Print DataFrame column names
+	- `--df-row-count`: Print DataFrame row count
+	- `--df-row INDEX`: Print DataFrame row by index
+	- `--doc-ids`: Print all document IDs
+	- `--doc-id ID`: Print document by ID
+	- `--relationships`: Print all relationships
+	- `--relationships-for-keyword KEYWORD`: Print relationships involving a keyword
+
+### Example Usage
+
+#### Corpus Creation and Manipulation
 ```bash
-# Comprehensive triangulation analysis
-crisp-t --csv mixed_data.csv --titles "qualitative_data,comments" --nlp --kmeans --svm --visualize --out comprehensive_results
+# Create a new corpus and add documents
+crispt --id mycorpus --name "My Corpus" --doc "d1|Doc 1|Text" --doc "d2|Doc 2|More text" --out ./corpus_folder
+
+# Load and query corpus
+crispt --inp ./corpus_folder --doc-ids --relationships
+
+# Add relationships and query by keyword
+crispt --inp ./corpus_folder --add-rel "text:foo|num:bar|correlates" --relationships-for-keyword foo
 ```
 
-#### Advanced Usage
+#### Triangulation and Analysis
 ```bash
-# Ingest from a directory source with filters and ignored words
-crisp-t --source ./data_dir --nlp --filters "file_name=sample.txt" --ignore "um,uh,like" --verbose
+# Load corpus and perform text analysis
+crisp --inp ./corpus_folder --codedict --sentiment
 
-# Ingest from multiple sources (directory + URL)
-crisp-t --sources ./data_dir --sources https://example.com/page --codedict
+# Topic modeling and clustering
+crisp --inp ./corpus_folder --topics --assign --num 4 --rec 10
+```
 
-# Save corpus to a folder
-crisp-t --source ./data_dir --out ./out_folder
-
-# Save analysis outputs using a base path
-crisp-t --inp ./my_corpus_folder --topics --out results
+#### Visualization
+```bash
+# Generate word frequency and topic visualizations
+crispviz --inp ./corpus_folder --freq --by-topic --out ./viz_out
 ```
 
 ### Output Formats
@@ -134,7 +147,7 @@ When saving analysis outputs via `--out`, files are automatically named with suf
 - `*_topics.json`: Topic modeling results
 - `*_sentiment.json`: Sentiment analysis results
 - `*_kmeans.json`: Clustering results
-- `*_svm_results.json`: Classification results
+- `*_ml_results.json`: Classification results
 
 When saving the corpus via `--out`, the CLI writes `corpus.json` (and `corpus_df.csv` if present) into the specified folder. If you pass a file path, only its parent directory is used for writing `corpus.json`.
 

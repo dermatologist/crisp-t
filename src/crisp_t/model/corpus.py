@@ -57,16 +57,21 @@ class Corpus(BaseModel):
         print(f"Corpus ID: {self.id}")
         print(f"Name: {self.name}")
         print(f"Description: {self.description}")
-        print(f"Score: {self.score}")
+        # print(f"Score: {self.score}")
         print("Documents:")
         for doc in self.documents:
-            print(f" - {doc.name}")
+            print(f"   Name: {doc.name}")
+            print(f"   ID: {doc.id}")
+            # Print metadata as key-value pairs
+            for key, value in doc.metadata.items():
+                print(f"      - {key}: {value}")
+            print()
         if self.df is not None:
             print("DataFrame:")
             print(self.df.head())
         if self.visualization is not None:
             print("Visualization:")
-            print(self.visualization)
+            print(self.visualization.keys())
         print("Metadata:")
         for key, value in self.metadata.items():
             print(f" - {key}\n: {value}")
@@ -159,3 +164,51 @@ class Corpus(BaseModel):
             value: New value for the metadata key.
         """
         self.metadata[key] = value
+
+    def add_relationship(self, first: str, second: str, relation: str):
+        """
+        Add a relationship between two documents in the corpus.
+
+        Args:
+            first: keywords from text documents in the format text:keyword or columns from dataframe in the format numb:column
+            second: keywords from text documents in the format text:keyword or columns from dataframe in the format numb:column
+            relation: Description of the relationship. (One of "correlates", "similar to", "cites", "references", "contradicts", etc.)
+        """
+        if "relationships" not in self.metadata:
+            self.metadata["relationships"] = []
+        self.metadata["relationships"].append(
+            {"first": first, "second": second, "relation": relation}
+        )
+
+    def clear_relationships(self):
+        """
+        Clear all relationships in the corpus metadata.
+        """
+        if "relationships" in self.metadata:
+            self.metadata["relationships"] = []
+
+    def get_relationships(self):
+        """
+        Get all relationships in the corpus metadata.
+
+        Returns:
+            List of relationships, or empty list if none exist.
+        """
+        return self.metadata.get("relationships", [])
+
+    def get_all_relationships_for_keyword(self, keyword: str):
+        """
+        Get all relationships involving a specific keyword.
+
+        Args:
+            keyword: Keyword to search for in relationships.
+
+        Returns:
+            List of relationships involving the keyword.
+        """
+        rels = self.get_relationships()
+        return [
+            rel
+            for rel in rels
+            if keyword in rel["first"] or keyword in rel["second"]
+        ]

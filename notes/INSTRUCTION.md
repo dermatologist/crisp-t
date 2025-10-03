@@ -256,9 +256,33 @@ CRISP-T (**CRoss** **I**ndustry **S**tandard **P**rocess for **T**riangulation) 
 
 This systematic approach ensures comprehensive analysis while maintaining theoretical rigor and methodological transparency.
 
-## CLI Ingestion and Filtering (Quick Reference)
 
-- Use `--source PATH|URL` to ingest from a single directory (reads .txt and .pdf) or URL. Use `--sources` multiple times to ingest from several locations.
+## Command Line Scripts (Quick Reference)
+
+CRISP-T now provides three main command-line scripts:
+
+- `crisp` — Main CLI for triangulation and analysis
+- `crispviz` — Visualization CLI for corpus data
+- `crispt` — Corpus manipulation CLI
+
+### crisp (Triangulation CLI)
+- Use `--source PATH|URL` to ingest from a directory (reads .txt and .pdf) or URL. Use `--sources` multiple times to ingest from several locations.
 - Use `--inp PATH` to load an existing corpus from a folder containing `corpus.json` (and optional `corpus_df.csv`).
 - Use `--out PATH` to save the corpus to a folder (as `corpus.json`) or to act as a base path for analysis outputs (e.g., `results_topics.json`).
 - Use `--filters key=value` (repeatable) to retain only documents with matching metadata values; invalid formats raise an error.
+
+### crispviz (Visualization CLI)
+- Use `--inp`, `--source`, or `--sources` to specify input corpus or sources
+- Use `--out` to specify output directory for PNG images
+- Visualization flags: `--freq`, `--by-topic`, `--wordcloud`, `--top-terms`, `--corr-heatmap`
+
+### crispt (Corpus Manipulation CLI)
+- Use `--id`, `--name`, `--description` to set corpus metadata
+- Use `--doc` to add documents (`id|name|text` or `id|text`)
+- Use `--remove-doc` to remove documents by ID
+- Use `--meta` to add/update corpus metadata
+- Use `--add-rel` to add relationships
+- Use `--clear-rel` to clear all relationships
+- Use `--out` to save corpus to folder/file as `corpus.json`
+- Use `--inp` to load corpus from folder/file containing `corpus.json`
+- Query options: `--df-cols`, `--df-row-count`, `--df-row INDEX`, `--doc-ids`, `--doc-id ID`, `--relationships`, `--relationships-for-keyword KEYWORD`
