@@ -26,7 +26,9 @@ logging.basicConfig(level=logging.INFO)
 
 class QRVisualize:
 
-    def __init__(self, corpus: Corpus | None = None, folder_path: str | None = None) -> None:
+    def __init__(
+        self, corpus: Corpus | None = None, folder_path: str | None = None
+    ) -> None:
         # Matplotlib figure components assigned lazily by plotting methods
         self.corpus = corpus
         self.folder_path = folder_path
@@ -39,18 +41,28 @@ class QRVisualize:
 
     @staticmethod
     def _ensure_columns(df: pd.DataFrame, required: Iterable[str]) -> pd.DataFrame:
-        df.columns = [
-            "Document_No",
-            "Title",
-            "Dominant_Topic",
-            "Topic_Perc_Contrib",
-            "Keywords",
-            "Text",
-        ]
+        """Ensure that the DataFrame has the required columns.
+
+        Behavior:
+        - If all required columns already exist, return df unchanged.
+        - If the DataFrame has exactly the same number of columns as required,
+          rename columns positionally to match the required names.
+        - Otherwise, raise a ValueError listing the missing columns.
+        """
+        required = list(required)
+        # Fast path: all required columns present
         missing = [col for col in required if col not in df.columns]
-        if missing:
-            raise ValueError(f"Missing required columns: {missing}")
-        return df
+        if not missing:
+            return df
+
+        # If shape matches, attempt a positional rename
+        if len(df.columns) == len(required):
+            df = df.copy()
+            df.columns = required
+            return df
+
+        # Otherwise, cannot satisfy required columns
+        raise ValueError(f"Missing required columns: {missing}")
 
     def _finalize_plot(
         self,
@@ -201,7 +213,7 @@ class QRVisualize:
 
     def plot_wordcloud(
         self,
-        topics = None,
+        topics=None,
         folder_path: str | None = None,
         max_words: int = 50,
         show: bool = True,

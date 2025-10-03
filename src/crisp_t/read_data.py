@@ -26,8 +26,8 @@ import pandas as pd
 import requests
 from pypdf import PdfReader
 
-from .model import Corpus, Document
 from .csv import Csv
+from .model import Corpus, Document
 
 # Set up logging
 logging.basicConfig(
@@ -164,25 +164,33 @@ class ReadData:
                 return document
         raise ValueError("Document not found: %s" % doc_id)
 
-    def write_corpus_to_json(self, file_path=""):
+    def write_corpus_to_json(self, file_path="", corpus=None):
         """
         Write the corpus to a json file.
+
+        Accepts either a directory path or an explicit file path ending with
+        'corpus.json'. In both cases, a sibling 'corpus_df.csv' will be written
+        next to the json if a DataFrame is available.
         """
         from pathlib import Path
 
-        file_path = Path(file_path)
-        file_name = file_path / "corpus.json"
-        df_name = file_path / "corpus_df.csv"
-        if self._source:
-            file_path = Path(self._source) / file_name
-        if not self._corpus:
+        path = Path(file_path)
+        # Determine targets
+        if path.suffix:  # treat as explicit file path
+            file_name = path
+            df_name = path.with_name("corpus_df.csv")
+        else:
+            file_name = path / "corpus.json"
+            df_name = path / "corpus_df.csv"
+
+        corp = corpus if corpus is not None else self._corpus
+        if not corp:
             raise ValueError("No corpus found. Please create a corpus first.")
+        file_name.parent.mkdir(parents=True, exist_ok=True)
         with open(file_name, "w") as f:
-            json.dump(
-                self._corpus.model_dump(exclude={"df", "visualization"}), f, indent=4
-            )
-        if self._corpus.df is not None and not self._corpus.df.empty:
-            self._corpus.df.to_csv(df_name, index=False)
+            json.dump(corp.model_dump(exclude={"df", "visualization"}), f, indent=4)
+        if getattr(corp, "df", None) is not None and not corp.df.empty:
+            corp.df.to_csv(df_name, index=False)
         logger.info("Corpus written to %s", file_name)
 
     def read_corpus_from_json(self, file_path="", comma_separated_ignore_words=""):
@@ -291,7 +299,9 @@ class ReadData:
             self.create_corpus()
             return self._corpus
 
-    def read_source(self, source, comma_separated_ignore_words=None, comma_separated_text_columns=""):
+    def read_source(
+        self, source, comma_separated_ignore_words=None, comma_separated_text_columns=""
+    ):
         # if source is a url
         if source.startswith("http://") or source.startswith("https://"):
             response = requests.get(source)
