@@ -268,7 +268,9 @@ def main(
             click.echo("Loading CSV data from corpus.df")
             csv_analyzer = Csv(corpus=corpus)
             csv_analyzer.df = corpus.df
-            _process_csv(csv_analyzer, unstructured, ignore, filters)
+            text_columns, ignore_columns =_process_csv(
+                    csv_analyzer, unstructured, ignore, filters
+            )
             click.echo(f"Loaded CSV with shape: {csv_analyzer.get_shape()}")
             if verbose:
                 click.echo(f"Columns: {csv_analyzer.get_columns()}")
@@ -279,7 +281,9 @@ def main(
             csv_path = pathlib.Path(csv)
             if csv_path.exists():
                 csv_analyzer = Csv()
-                _process_csv(csv_analyzer, unstructured, ignore, filters)
+                text_columns, ignore_columns = _process_csv(
+                    csv_analyzer, unstructured, ignore, filters
+                )
                 csv_analyzer.read_csv(str(csv_path))
 
                 click.echo(f"Loaded CSV with shape: {csv_analyzer.get_shape()}")
@@ -732,6 +736,7 @@ def _process_csv(csv_analyzer, unstructured, ignore, filters):
             click.echo(
                 f"Probably no numeric metadata to filter, but let me check document metadata: {e}"
             )
+    return text_columns, ignore_columns
 
 if __name__ == "__main__":
     main()
