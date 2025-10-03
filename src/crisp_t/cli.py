@@ -722,12 +722,13 @@ def _process_csv(csv_analyzer, unstructured, ignore, filters):
     if filters:
         try:
             for flt in filters:
-                if "=" not in flt:
-                    raise ValueError("Filter must be in key=value format")
-                key, value = flt.split("=", 1)
-                csv_analyzer.filter_rows_by_column_value(
-                    key.strip(), value.strip()
-                )
+                if "=" in flt:
+                    key, value = flt.split("=", 1)
+                elif ":" in flt:
+                    key, value = flt.split(":", 1)
+                else:
+                    raise ValueError("Filter must be in key=value or key:value format")
+                csv_analyzer.filter_rows_by_column_value(key.strip(), value.strip())
             click.echo(
                 f"Applied filters {list(filters)}; remaining rows: {csv_analyzer.get_shape()[0]}"
             )
@@ -737,6 +738,7 @@ def _process_csv(csv_analyzer, unstructured, ignore, filters):
                 f"Probably no numeric metadata to filter, but let me check document metadata: {e}"
             )
     return text_columns, ignore_columns
+
 
 if __name__ == "__main__":
     main()
