@@ -140,12 +140,15 @@ def main(
     viz = QRVisualize(corpus=corpus)
 
     # Helper: build LDA if by-topic or wordcloud requested
+    cluster_instance = None
     def ensure_topics():
-        cluster = Cluster(corpus=corpus)
-        cluster.build_lda_model(topics=topics_num)
-        # Populate visualization structures used by QRVisualize
-        cluster.format_topics_sentences(visualize=True)
-        return cluster
+        nonlocal cluster_instance
+        if cluster_instance is None:
+            cluster_instance = Cluster(corpus=corpus)
+            cluster_instance.build_lda_model(topics=topics_num)
+            # Populate visualization structures used by QRVisualize
+            cluster_instance.format_topics_sentences(visualize=True)
+        return cluster_instance
 
     # 1) Word frequency distribution
     if freq:
