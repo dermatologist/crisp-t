@@ -550,6 +550,10 @@ def main(
             _word_cloud = pathlib.Path(out) / "word_cloud.png" if out else None
             viz = QRVisualize(corpus=corpus, folder_path=str(_word_cloud))
             viz.plot_wordcloud()
+            _word_freq = pathlib.Path(out) / "word_frequencies.png" if out else None
+            viz.plot_frequency_distribution_of_words(
+                folder_path=str(_word_freq), show=False
+            )
             # This would generate appropriate visualizations based on the analysis performed
             click.echo("Visualization functionality integrated with analysis results")
 

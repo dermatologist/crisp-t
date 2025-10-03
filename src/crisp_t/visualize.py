@@ -75,6 +75,14 @@ class QRVisualize:
                 df = pd.DataFrame(self.corpus.visualization["assign_topics"])
             except Exception as e:
                 raise ValueError(f"Failed to create DataFrame from corpus: {e}")
+        df.columns = [
+            "Document_No",
+            "Title",
+            "Dominant_Topic",
+            "Topic_Perc_Contrib",
+            "Keywords",
+            "Text",
+        ]
         self._ensure_columns(df, [text_column])
         doc_lens = df[text_column].dropna().map(len).tolist()
         if not doc_lens:
