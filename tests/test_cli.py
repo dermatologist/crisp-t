@@ -52,7 +52,7 @@ def test_cli_ml_functionality():
     """Test ML functionality (if available)."""
     runner = CliRunner()
 
-    csv_file = "src/crisp_t/resources/numeric.csv"
+    csv_file = "src/crisp_t/resources/vis/numeric.csv"
 
     result = runner.invoke(main, [
         '--csv', csv_file,

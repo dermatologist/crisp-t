@@ -27,6 +27,7 @@ import requests
 from pypdf import PdfReader
 
 from .model import Corpus, Document
+from .csv import Csv
 
 # Set up logging
 logging.basicConfig(
@@ -377,12 +378,10 @@ class ReadData:
                         )
                         self._documents.append(_document)
                 if file_name.endswith(".csv"):
-                    self.read_csv(
-                        file_path,
-                        comma_separated_ignore_words=comma_separated_ignore_words,
-                        comma_separated_text_columns=comma_separated_text_columns,
-                        numeric=False,
-                    )
+                    logger.info(f"Reading CSV file: {file_path}")
+                    self._df = Csv().read_csv(file_path)
+                    logger.info(f"CSV file read with shape: {self._df.shape}")
+
         else:
             raise ValueError(f"Source not found: {source}")
 
