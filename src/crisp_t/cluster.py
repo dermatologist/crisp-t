@@ -94,6 +94,7 @@ class Cluster:
                 passes=self._passes,
             )
         _word_cloud = self._lda_model.show_topics(formatted=False)
+
         # Sanitize _word_cloud for JSON serialization
         def _safe_topic(topic):
             topic_num, words = topic
@@ -333,6 +334,7 @@ class Cluster:
         # Add original text to the end of the output
         if visualize:
             contents = pd.Series(self._processed_docs)
+            contents.name = "Text"
             sent_topics_df = pd.concat([sent_topics_df, contents], axis=1)
         # Add to visualize (store as JSON-serializable records)
         self._corpus.visualization["assign_topics"] = sent_topics_df.reset_index(
