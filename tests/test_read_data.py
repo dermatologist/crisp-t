@@ -47,8 +47,12 @@ def test_corpus_is_saved_as_json(read_data_fixture):
     assert "documents" in data, "JSON data should contain 'documents' key"
     assert len(data["documents"]) > 0, "'documents' key should have documents"
     # clean up
-    # os.remove(file_name)
-    # assert not os.path.exists(file_name), "Corpus JSON file should be deleted"
+    os.remove(file_name)
+    assert not os.path.exists(file_name), "Corpus JSON file should be deleted"
+    file_name = file_path + "/corpus_df.csv"
+    if os.path.exists(file_name):
+        os.remove(file_name)
+        assert not os.path.exists(file_name), "Corpus CSV file should be deleted"
 
 
 def test_corpus_as_dataframe(read_data_fixture):

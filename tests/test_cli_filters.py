@@ -24,6 +24,7 @@ def write_sample_corpus(tmp_path, folder_path_fixture):
     )
     assert result.exit_code == 0
     assert (tmp_path / "corpus.json").exists()
+    delete_corpus_df_in_temp_path(tmp_path)
     return tmp_path
 
 
@@ -41,6 +42,7 @@ def test_filters_key_value_with_source(tmp_path, folder_path_fixture):
     )
     assert result.exit_code == 0
     # Should print remaining documents after filtering
+    delete_corpus_df_in_temp_path(tmp_path)
     assert "Applied filters" in result.output
 
 
@@ -50,7 +52,8 @@ def test_filters_invalid_format(tmp_path, folder_path_fixture):
         main, ["--source", folder_path_fixture, "--filters", "file_name:sample.txt"]
     )
     assert result.exit_code == 0
-    assert "Filter must be in" in result.output
+    assert "Filters are not supported when using --source" in result.output
+    delete_corpus_df_in_temp_path(tmp_path)
 
 
 def test_filters_with_inp_and_save(tmp_path, folder_path_fixture):
@@ -76,3 +79,10 @@ def test_filters_with_inp_and_save(tmp_path, folder_path_fixture):
     )
     assert result2.exit_code == 0
     assert (tmp_path / "corpus.json").exists()
+    delete_corpus_df_in_temp_path(tmp_path)
+
+
+def delete_corpus_df_in_temp_path(tmp_path):
+    corpus_df_path = Path(tmp_path) / "corpus_df.csv"
+    if corpus_df_path.exists():
+        os.remove(corpus_df_path)
