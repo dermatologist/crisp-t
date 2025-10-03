@@ -387,7 +387,7 @@ class Csv:
             self._df = selected_df
             return selected_df
         else:
-            logger.error(
+            logger.warning(
                 f"Column {column_name} not found in DataFrame or DataFrame is None."
             )
             return pd.DataFrame()
