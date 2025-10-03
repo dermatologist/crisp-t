@@ -317,9 +317,9 @@ class Text:
             raise ValueError("Corpus is not set")
         filtered_documents = []
         for document in self._corpus.documents:
-            if document.metadata.get(metadata_key) == metadata_value:
+            if metadata_value in document.metadata.get(metadata_key):
                 filtered_documents.append(document)
-            if document.id == metadata_value or document.name == metadata_value:
+            if metadata_value in document.id or metadata_value in document.text:
                 filtered_documents.append(document)
         self._corpus.documents = filtered_documents
         return filtered_documents

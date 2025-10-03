@@ -440,6 +440,7 @@ def main(
                     assignments = cluster_analyzer.format_topics_sentences(
                         visualize=visualize
                     )
+                    document_assignments = cluster_analyzer.print_clusters()
                     click.echo(f"Assigned {len(assignments)} documents to topics")
                     if out:
                         _save_output(assignments, out, "topic_assignments")
