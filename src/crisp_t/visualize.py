@@ -39,8 +39,7 @@ class QRVisualize:
         self.names: list[str] = []
         self.c: np.ndarray | None = None
 
-    @staticmethod
-    def _ensure_columns(df: pd.DataFrame, required: Iterable[str]) -> pd.DataFrame:
+    def _ensure_columns(self, df: pd.DataFrame, required: Iterable[str]) -> pd.DataFrame:
         """Ensure that the DataFrame has the required columns.
 
         Behavior:
