@@ -30,6 +30,11 @@ from typing import List, Dict, Any, Optional
 from .model import Corpus
 from .text import Text
 
+import logging
+
+# Set the logging level for the 'gensim' logger
+logging.getLogger("gensim").setLevel(logging.WARNING)
+
 
 class Cluster:
 
@@ -78,19 +83,19 @@ class Cluster:
         self._bag_of_words = [
             self._dictionary.doc2bow(doc) for doc in self._processed_docs
         ]
-        self._corpus.metadata["bag_of_words"] = self._bag_of_words
+        #self._corpus.metadata["bag_of_words"] = self._bag_of_words
 
-    def build_lda_model(self):
+    def build_lda_model(self, topics: int = 0):
         if self._lda_model is None:
             self._lda_model = LdaModel(
                 self._bag_of_words,
-                num_topics=self._num_topics,
+                num_topics=topics if topics != 0 else self._num_topics,
                 id2word=self._dictionary,
                 passes=self._passes,
             )
         return self._lda_model.show_topics(formatted=False)
 
-    def print_topics(self, num_words=5, verbose=False):
+    def print_topics(self, num_words=5):
         if self._lda_model is None:
             self.build_lda_model()
         if self._lda_model is None:
@@ -103,17 +108,18 @@ class Cluster:
         format this into human readable format as below:
         Topic 0: category(0.116), comparison(0.093), incident(0.070), theory(0.060), Theory(0.025)
         """
-        if verbose:
-            print("\nTopics: \n")
-            for topic in output:
-                topic_num = topic[0]
-                topic_words = topic[1]
-                words = []
-                for word in topic_words.split("+"):
-                    word = word.split("*")
-                    words.append(f"{word[1].strip()}({word[0].strip()})")
-                print(f"Topic {topic_num}: {', '.join(words)}")
-        self._corpus.metadata["topics"] = output
+        topics = ""
+        print("\nTopics: \n")
+        for topic in output:
+            topic_num = topic[0]
+            topic_words = topic[1]
+            words = []
+            for word in topic_words.split("+"):
+                word = word.split("*")
+                words.append(f"{word[1].strip()}({word[0].strip()})")
+            print(f"Topic {topic_num}: {', '.join(words)}")
+            topics += f"Topic {topic_num}: {', '.join(words)}\n"
+        self._corpus.metadata["topics"] = topics
         return output
 
     def tokenize(self, spacy_doc):
@@ -259,8 +265,19 @@ class Cluster:
             contents = pd.Series(self._processed_docs)
             sent_topics_df = pd.concat([sent_topics_df, contents], axis=1)
         # Add to visualize
-        self._corpus.visualization["sent_topics"] = sent_topics_df.reset_index( # type: ignore
+        self._corpus.visualization["assign_topics"] = sent_topics_df.reset_index( # type: ignore
             drop=False
+        )
+        print("\n Document Topics: \n")
+        print(
+            tabulate(
+                sent_topics_df.head(10),  # type: ignore
+                headers="keys",
+                tablefmt="psql",
+                showindex=False,
+                numalign="left",
+                stralign="left",
+            )
         )
         return sent_topics_df.reset_index(drop=False)
 

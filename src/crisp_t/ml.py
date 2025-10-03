@@ -1,16 +1,28 @@
 import logging
 
+from matplotlib.pyplot import clf
 import numpy as np
 from sklearn.cluster import KMeans
 from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KDTree
 from sklearn.preprocessing import StandardScaler
+from sklearn.tree import DecisionTreeClassifier
 from sklearn.svm import SVC
+from sklearn.metrics import accuracy_score
+from sklearn.inspection import permutation_importance
+from sklearn.ensemble import RandomForestClassifier
+from tabulate import tabulate
+from crisp_t import model
 
 from .csv import Csv
 
 logger = logging.getLogger(__name__)
+
+import warnings
+
+warnings.filterwarnings("ignore", category=DeprecationWarning)
+
 ML_INSTALLED = False
 torch = None
 
@@ -91,7 +103,7 @@ class ML:
             raise ValueError(
                 "CSV data is not set. Please set self.csv before calling get_kmeans."
             )
-        X, _ = self._csv.read_xy("", ignore_columns=True, numeric_only=True)
+        X, _ = self._csv.read_xy("") # No output variable for clustering
         if X is None:
             raise ValueError(
                 "Input features X are None. Cannot perform KMeans clustering."
@@ -241,7 +253,7 @@ class ML:
 
             accuracy = (preds_eval == y_eval).sum() / len(y_eval)
             print(
-                f"Predicting {y} with {X.shape[1]} features for {self._epochs} epochs gave an accuracy (convergence): {accuracy*100:.2f}%"
+                f"\nPredicting {y} with {X.shape[1]} features for {self._epochs} epochs gave an accuracy (convergence): {accuracy*100:.2f}%\n"
             )
             if _corpus is not None:
                 _corpus.metadata["nnet_predictions"] = f"Predicting {y} with {X.shape[1]} features for {self._epochs} epochs gave an accuracy (convergence): {accuracy*100:.2f}%"
@@ -314,7 +326,7 @@ class ML:
         # [[2 0]
         #  [2 0]]
         if self._csv.corpus is not None:
-            self._csv.corpus.metadata["svm_confusion_matrix"] = f"Confusion Matrix for SVM predicting {y}:\n{_confusion_matrix}"
+            self._csv.corpus.metadata["svm_confusion_matrix"] = f"Confusion Matrix for SVM predicting {y}:\n{self.format_confusion_matrix_to_human_readable(_confusion_matrix)}"
         return _confusion_matrix
 
     def format_confusion_matrix_to_human_readable(self, confusion_matrix: np.ndarray) -> str:
@@ -339,6 +351,10 @@ class ML:
         X_np, Y_raw, X, Y = self._process_xy(y=y)
         kdt = KDTree(X_np, leaf_size=2, metric="euclidean")
         dist, ind = kdt.query(X_np[r - 1 : r, :], k=n)
+        # Display results as human readable (1-based)
+        ind = (ind + 1).tolist()  # Convert to 1-based index
+        dist = dist.tolist()
+        print(f"\nKNN search for {y} (n={n}, record no: {r}): {ind} with distances {dist}\n")
         if self._csv.corpus is not None:
             self._csv.corpus.metadata["knn_search"] = f"KNN search for {y} (n={n}, record no: {r}): {ind} with distances {dist}"
         return dist, ind
@@ -364,6 +380,55 @@ class ML:
 
         return X_np, Y_raw, X, Y
 
+    def get_decision_tree_classes(self, y: str, top_n=5, test_size=0.5, random_state=1):
+        X_np, Y_raw, X, Y = self._process_xy(y=y)
+        X_train, X_test, y_train, y_test = train_test_split(
+            X_np, Y_raw, test_size=test_size, random_state=random_state
+        )
+
+        # print(f"X_train shape: {X_train.shape}, y_train shape: {y_train.shape}")
+        # print(f"X_test shape: {X_test.shape}, y_test shape: {y_test.shape}")
+
+        # Train a RandomForestClassifier
+        clf = RandomForestClassifier(n_estimators=100, random_state=42)
+        clf.fit(X_train, y_train)
+
+        # Compute permutation importance
+        results = permutation_importance(clf, X_test, y_test, n_repeats=10, random_state=42)
+
+        # classifier = DecisionTreeClassifier(random_state=random_state) # type: ignore
+        # classifier.fit(X_train, y_train)
+        y_pred = clf.predict(X_test)
+        _confusion_matrix = confusion_matrix(y_test, y_pred)
+        print(f"Confusion Matrix for Decision Tree predicting {y}:\n{_confusion_matrix}")
+        # Output
+        # [[2 0]
+        #  [2 0]]
+
+
+        accuracy = accuracy_score(y_test, y_pred)
+        print(f'\nAccuracy: {accuracy}\n')
+
+        # Retrieve feature importance scores
+        importance = results.importances_mean
+
+        # Get indices of top N important features
+        top_n_indices = np.argsort(importance)[-top_n:][::-1]
+
+        # Display feature importance
+        print(f'==== Top {top_n} important features ====\n')
+        _importance =""
+        for i, v in enumerate(top_n_indices):
+            print(f'Feature: {X.columns[v]}, Score: {importance[v]:.5f}')
+            _importance += f'Feature: {X.columns[v]}, Score: {importance[v]:.5f}\n'
+
+        if self._csv.corpus is not None:
+            self._csv.corpus.metadata["decision_tree_accuracy"] = f"Decision Tree accuracy for predicting {y}: {accuracy*100:.2f}%"
+            self._csv.corpus.metadata["decision_tree_confusion_matrix"] = f"Confusion Matrix for Decision Tree predicting {y}:\n{self.format_confusion_matrix_to_human_readable(_confusion_matrix)}"
+            self._csv.corpus.metadata["decision_tree_feature_importance"] = _importance
+
+        return _confusion_matrix, importance
+
     def get_xgb_classes(self, y: str, oversample=False, test_size=0.25, random_state=0):
         X_np, Y_raw, X, Y = self._process_xy(y=y)
         if ML_INSTALLED:
@@ -387,13 +452,17 @@ class ML:
         else:
             raise ImportError("ML dependencies are not installed.")
 
-    # TODO: Fix. This gets stuck
-    def get_apriori(self, y: str, min_support=0.9, use_colnames=True, min_threshold=3):
+    def get_apriori(self, y: str, min_support=0.9, use_colnames=True, min_threshold=0.5):
         if ML_INSTALLED:
             X_np, Y_raw, X, Y = self._process_xy(y=y, one_hot_encode_all=True)
             frequent_itemsets = apriori(X, min_support=min_support, use_colnames=use_colnames) # type: ignore
-            rules = association_rules(frequent_itemsets, metric="lift", min_threshold=min_threshold) # type: ignore
-            return rules
+            # rules = association_rules(frequent_itemsets, metric="lift", min_threshold=min_threshold) # type: ignore
+            if self._csv.corpus is not None:
+                human_readable = tabulate(
+                    frequent_itemsets.head(10), headers="keys", tablefmt="pretty" # type: ignore
+                )
+                self._csv.corpus.metadata["apriori_frequent_itemsets"] = human_readable
+            return frequent_itemsets #, rules
         else:
             raise ImportError("ML dependencies are not installed.")
 

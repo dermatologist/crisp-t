@@ -70,7 +70,7 @@ CRISP-T (**CRoss** **I**ndustry **S**tandard **P**rocess for **T**riangulation) 
 
 #### Feature Engineering
 - `read_xy(y, ignore_columns=True, numeric_only=False)` - Separates features and target
-- `oversample()` - Applies oversampling for imbalanced data  
+- `oversample()` - Applies oversampling for imbalanced data
 - `one_hot_encode_strings_in_df()` - Encodes categorical variables
 - `prepare_data(y, oversample=False, one_hot_encode_all=False)` - Comprehensive data preparation
 
@@ -154,7 +154,7 @@ CRISP-T (**CRoss** **I**ndustry **S**tandard **P**rocess for **T**riangulation) 
    # Load textual data
    corpus = read_data.create_corpus(name="Study", description="Analysis")
    text = Text(corpus=corpus)
-   
+
    # Load numerical data
    csv = Csv()
    csv.read_csv("data.csv", comma_separated_text_columns="text_col1,text_col2")
@@ -255,3 +255,10 @@ CRISP-T (**CRoss** **I**ndustry **S**tandard **P**rocess for **T**riangulation) 
 - [ ] Results validated with domain expertise
 
 This systematic approach ensures comprehensive analysis while maintaining theoretical rigor and methodological transparency.
+
+## CLI Ingestion and Filtering (Quick Reference)
+
+- Use `--source PATH|URL` to ingest from a single directory (reads .txt and .pdf) or URL. Use `--sources` multiple times to ingest from several locations.
+- Use `--inp PATH` to load an existing corpus from a folder containing `corpus.json` (and optional `corpus_df.csv`).
+- Use `--out PATH` to save the corpus to a folder (as `corpus.json`) or to act as a base path for analysis outputs (e.g., `results_topics.json`).
+- Use `--filters key=value` (repeatable) to retain only documents with matching metadata values; invalid formats raise an error.

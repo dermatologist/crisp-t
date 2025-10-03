@@ -32,7 +32,9 @@ from .utils import QRUtils
 
 textacy.set_doc_extensions("extract.bags")  # type: ignore
 
+import warnings
 
+warnings.filterwarnings("ignore", category=DeprecationWarning)
 class Text:
 
     def __init__(
@@ -211,6 +213,15 @@ class Text:
         return sorted(_words.items(), key=operator.itemgetter(1), reverse=True)[:index]
 
     def print_coding_dictionary(self, num=10, top_n=5):
+        """ Prints a coding dictionary based on common verbs, attributes, and dimensions.
+        "CATEGORY" is the common verb
+        "PROPERTY" is the common nouns associated with the verb
+        "DIMENSION" is the common adjectives/adverbs/verbs associated with the property
+        Args:
+            num (int, optional): Number of common verbs to consider. Defaults to 10.
+            top_n (int, optional): Number of top attributes and dimensions to consider for each verb. Defaults to 5.
+
+        """
         output = []
         coding_dict = []
         output.append(("CATEGORY", "PROPERTY", "DIMENSION"))
@@ -223,14 +234,8 @@ class Text:
                 for dimension, f3 in self.dimensions(attribute, top_n):
                     if dimension not in _verbs:
                         output.append((verb, attribute, dimension))
-                        verb = "..."
-                        attribute = "..."
                         coding_dict.append(
-                            {
-                                "category": verb,
-                                "property": attribute,
-                                "dimension": dimension,
-                            }
+                            f"{verb} > {attribute} > {dimension}"
                         )
         # Add coding_dict to corpus metadata
         if self._corpus is not None:
@@ -314,6 +319,8 @@ class Text:
         for document in self._corpus.documents:
             if document.metadata.get(metadata_key) == metadata_value:
                 filtered_documents.append(document)
+            if document.id == metadata_value or document.name == metadata_value:
+                filtered_documents.append(document)
         self._corpus.documents = filtered_documents
         return filtered_documents
 
@@ -344,6 +351,8 @@ class Text:
                 continue
             for span in self.spans_with_common_nouns(key):
                 spans.append(span.text)
+        if self._corpus is not None:
+            self._corpus.metadata["summary"] = list(dict.fromkeys(spans))  # remove duplicates
         return list(dict.fromkeys(spans))  # remove duplicates
 
     def print_categories(self, spacy_doc=None, num=10):
@@ -367,6 +376,8 @@ class Text:
             to_return.append(category)
         QRUtils.print_table(output)
         print("---------------------------\n")
+        if self._corpus is not None:
+            self._corpus.metadata["categories"] = output
         return to_return
 
     def category_basket(self, num=10):

@@ -9,7 +9,9 @@ from .model import Corpus
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+import warnings
 
+warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 class Csv:
 
@@ -68,6 +70,7 @@ class Csv:
         logger.debug(
             f"Comma-separated ignore columns: {self._comma_separated_ignore_columns}"
         )
+        self._process_columns()
 
     @property
     def id_column(self) -> str:
@@ -104,16 +107,29 @@ class Csv:
         logger.debug(
             f"Comma-separated text columns: {self._comma_separated_text_columns}"
         )
+        self._process_columns()
 
     @id_column.setter
     def id_column(self, value: str) -> None:
         self._id_column = value
+        # Add id column to the list of ignored columns
+        ignore_cols = [
+            col
+            for col in self._comma_separated_ignore_columns.split(",")
+            if col.strip()
+        ]
+        if value not in ignore_cols:
+            ignore_cols.append(value)
+            self._comma_separated_ignore_columns = ",".join(ignore_cols)
+            logger.debug(
+                f"ID column '{value}' added to ignore columns: {self._comma_separated_ignore_columns}"
+            )
         logger.info("ID column set successfully.")
         logger.debug(f"ID column: {self._id_column}")
 
     # TODO remove @deprecated
     #! Do not use
-    def read_csv(self, file_path: str) -> pd.DataFrame:
+    def read_csv(self, file_path: str):
         """
         Read a CSV file and create a DataFrame.
         """
@@ -126,6 +142,21 @@ class Csv:
         except Exception as e:
             logger.error(f"Error reading CSV file: {e}")
             raise
+        return self._process_columns()
+
+    def _process_columns(self):
+        # ignore comma-separated ignore columns
+        if self._comma_separated_ignore_columns:
+            ignore_columns = [
+                col.strip()
+                for col in self._comma_separated_ignore_columns.split(",")
+                if col.strip()
+            ]
+            self._df.drop(columns=ignore_columns, inplace=True, errors="ignore")
+            logger.info(
+                f"Ignored columns: {ignore_columns}. Updated DataFrame shape: {self._df.shape}"
+            )
+            logger.debug(f"DataFrame content after dropping columns: {self._df.head()}")
         # ignore comma-separated text columns
         if self._comma_separated_text_columns:
             text_columns = [
@@ -152,6 +183,10 @@ class Csv:
             logger.error("DataFrame is None. Cannot write to CSV.")
 
     def mark_missing(self):
+        """ Mark missing values in the DataFrame.
+        Missing values are considered as empty strings and are replaced with NaN.
+        Rows with NaN values are then dropped from the DataFrame.
+        """
         if self._df is not None:
             self._df.replace("", np.nan, inplace=True)
             self._df.dropna(inplace=True)
@@ -159,6 +194,9 @@ class Csv:
             logger.error("DataFrame is None. Cannot mark missing values.")
 
     def mark_duplicates(self):
+        """ Mark duplicate rows in the DataFrame.
+        Duplicate rows are identified and dropped from the DataFrame.
+        """
         if self._df is not None:
             self._df.drop_duplicates(inplace=True)
         else:
@@ -175,6 +213,8 @@ class Csv:
             return None
 
     def get_columns(self):
+        """ Get the list of columns in the DataFrame.
+        """
         if self._df is not None:
             return self._df.columns.tolist()
         else:
@@ -182,6 +222,8 @@ class Csv:
             return []
 
     def get_column_types(self):
+        """ Get the data types of columns in the DataFrame.
+        """
         if self._df is not None:
             return self._df.dtypes.to_dict()
         else:
@@ -189,6 +231,8 @@ class Csv:
             return {}
 
     def get_column_values(self, column_name: str):
+        """ Get the unique values in a column of the DataFrame.
+        """
         if self._df is not None and column_name in self._df.columns:
             return self._df[column_name].tolist()
         else:
@@ -197,39 +241,53 @@ class Csv:
             )
             return None
 
-    def read_xy(self, y: str, ignore_columns=True, numeric_only=False):
+    def retain_numeric_columns_only(self):
+        """ Retain only numeric columns in the DataFrame.
+        """
+        if self._df is not None:
+            self._df = self._df.select_dtypes(include=[np.number])
+            logger.info("DataFrame filtered to numeric columns only.")
+        else:
+            logger.error("DataFrame is None. Cannot filter to numeric columns.")
+
+    def comma_separated_include_columns(self, include_cols: str = ""):
+        """ Retain only specified columns in the DataFrame.
+        """
+        if include_cols == "":
+            return
+        if self._df is not None:
+            cols = [
+                col.strip()
+                for col in include_cols.split(",")
+                if col.strip() and col in self._df.columns
+            ]
+            self._df = self._df[cols]
+            logger.info(f"DataFrame filtered to include columns: {cols}")
+        else:
+            logger.error("DataFrame is None. Cannot filter to include columns.")
+
+    def read_xy(self, y: str):
         """
         Read X and y variables from the DataFrame.
         """
         if self._df is None:
             logger.error("DataFrame is None. Cannot read X and y.")
             return None, None
-        if numeric_only:
-            self._df = self._df.select_dtypes(include=[np.number])
-            logger.info("DataFrame filtered to numeric columns only.")
+        # Split into X and y
         if y == "":
             self._y = None
         else:
             self._y = self._df[y]
-        ignore_cols = [
-            col
-            for col in self._comma_separated_ignore_columns.split(",")
-            if col.strip()
-        ]
         if y != "":
-            if ignore_columns and ignore_cols:
-                self._X = self._df.drop(columns=[y] + ignore_cols)
-            else:
-                self._X = self._df.drop(columns=[y])
+            self._X = self._df.drop(columns=[y])
         else:
-            if ignore_columns and ignore_cols:
-                self._X = self._df.drop(columns=ignore_cols)
-            else:
-                self._X = self._df.copy()
+            self._X = self._df.copy()
         logger.info(f"X and y variables set. X shape: {self._X.shape}")
         return self._X, self._y
 
     def drop_na(self):
+        """ Drop rows with any NA values from the DataFrame.
+        """
         if self._df is not None:
             self._df.dropna(inplace=True)
             logger.info("Missing values dropped from DataFrame.")
@@ -274,9 +332,19 @@ class Csv:
             self.one_hot_encode_all_columns()
         return self.read_xy(y)
 
-    def one_hot_encode_strings_in_df(self):
+    def one_hot_encode_strings_in_df(self, n=10, filter_high_cardinality=False):
+        """One-hot encode string (object) columns in the DataFrame.
+        This method converts categorical string columns into one-hot encoded columns.
+        Columns with more than n unique values can be optionally filtered out.
+        Used when # ValueError: could not convert string to float.
+        """
         if self._df is not None:
             categorical_cols = self._df.select_dtypes(include=["object"]).columns.tolist()
+            # Remove categorical columns with more than n unique values
+            if filter_high_cardinality:
+                categorical_cols = [
+                    col for col in categorical_cols if self._df[col].nunique() <= n
+                ]
             if categorical_cols:
                 self._df = pd.get_dummies(self._df, columns=categorical_cols, drop_first=True)
                 logger.info("One-hot encoding applied to string columns.")
@@ -286,22 +354,21 @@ class Csv:
             logger.error("DataFrame is None. Cannot apply one-hot encoding.")
 
     def one_hot_encode_all_columns(self):
-        # The allowed values for a DataFrame are True, False, 0, 1. Found value 2
-        # Map all values to 0 or 1 for one-hot encoding:
-        # - 1 or True -> 1
-        # - 0 or False -> 0
-        # - Any other value -> 1 (with a warning)
+        """ One-hot encode all columns in the DataFrame.
+        This method converts all values in the DataFrame to boolean values.
+        Used for apriori algorithm which requires boolean values.
+        """
         if self._df is not None:
 
             def to_one_hot(x):
                 if x in [1, True]:
-                    return 1
+                    return True
                 elif x in [0, False]:
-                    return 0
+                    return False
                 else:
-                    logger.warning(
-                        f"Unexpected value '{x}' encountered during one-hot encoding; mapping to 1."
-                    )
-                    return 1
+                    # logger.warning(
+                    #     f"Unexpected value '{x}' encountered during one-hot encoding; mapping to 1."
+                    # )
+                    return True
 
-            self._df = self._df.applymap(to_one_hot)
+            self._df = self._df.applymap(to_one_hot) # type: ignore

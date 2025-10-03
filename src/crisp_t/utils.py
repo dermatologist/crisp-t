@@ -8,7 +8,7 @@ class QRUtils(object):
         pass
 
     @staticmethod
-    def read_covid_narratives(output_folder, url="root-url-here"):
+    def read_covid_narratives(output_folder, url):
         os.makedirs(output_folder, exist_ok=True)
         for doc_count in range(1, 115):
             _url = f"https://{url}/items/show/{doc_count}"

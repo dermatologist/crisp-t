@@ -24,7 +24,7 @@ def test_build_lda_model(corpus_fixture):
 def test_print_topics(corpus_fixture):
     cluster = Cluster(corpus=corpus_fixture)
     cluster.build_lda_model()
-    topics = cluster.print_topics(num_words=5, verbose=False)
+    topics = cluster.print_topics(num_words=5)
     assert (
         len(topics) == cluster._num_topics
     ), "Number of topics should match the specified number"
@@ -42,7 +42,7 @@ def test_print_clusters(corpus_fixture):
 def test_format_topics_sentences(corpus_fixture):
     cluster = Cluster(corpus=corpus_fixture)
     cluster.build_lda_model()
-    topics = cluster.print_topics(num_words=5, verbose=False)
+    topics = cluster.print_topics(num_words=5)
     pandas_df = cluster.format_topics_sentences(topics)
     # print pandas dataframe using tabulate
     print(pandas_df.head())
