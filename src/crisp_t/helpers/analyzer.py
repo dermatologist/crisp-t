@@ -30,7 +30,12 @@ def get_text_analyzer(corpus, filters=None):
             click.echo(f"Probably no document metadata to filter, but let me check numeric metadata: {e}")
     return text_analyzer
 
-def get_csv_analyzer(corpus, comma_separated_unstructured_text_columns=None, comma_separated_ignore_columns=None, filters=None):
+def get_csv_analyzer(
+    corpus,
+    comma_separated_unstructured_text_columns=None,
+    comma_separated_ignore_columns=None,
+    filters=None
+):
     if corpus and corpus.df is not None:
         click.echo("Loading CSV data from corpus.df")
         csv_analyzer = Csv(corpus=corpus)
@@ -44,7 +49,12 @@ def get_csv_analyzer(corpus, comma_separated_unstructured_text_columns=None, com
         raise ValueError("Corpus or corpus.df is not set")
 
 
-def _process_csv(csv_analyzer, comma_separated_unstructured_text_columns=None, comma_separated_ignore_columns=None, filters=None):
+def _process_csv(
+    csv_analyzer,
+    comma_separated_unstructured_text_columns=None,
+    comma_separated_ignore_columns=None,
+    filters=None
+):
     text_columns = comma_separated_unstructured_text_columns if comma_separated_unstructured_text_columns else ""
     ignore_columns = comma_separated_ignore_columns if comma_separated_ignore_columns else ""
     csv_analyzer.comma_separated_text_columns = text_columns

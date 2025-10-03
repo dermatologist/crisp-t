@@ -27,7 +27,7 @@ def initialize_corpus(
     # Handle source option (URL or directory)
     read_data = ReadData()
     # check if crisp folder exists in the current directory
-    if not source and  os.path.exists("crisp_source"):
+    if not source and os.path.exists("crisp_source"):
         source = "crisp_source"
     source = source or os.getenv("CRISP_T_SOURCE")
     if inp and source:
@@ -61,8 +61,8 @@ def initialize_corpus(
             return
         return corpus
 
-    # Handle inp option (text file or directory
-    if not inp and  os.path.exists("crisp_input"):
+    # Handle inp option (text file or directory)
+    if not inp and os.path.exists("crisp_input"):
         inp = "crisp_input"
     inp = inp or os.getenv("CRISP_T_INPUT")
     # Load corpus from input file if provided
