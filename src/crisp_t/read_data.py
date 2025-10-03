@@ -376,6 +376,12 @@ class ReadData:
                             description="",
                         )
                         self._documents.append(_document)
+                if file_name.endswith(".csv"):
+                    self.read_csv(
+                        file_path,
+                        comma_separated_ignore_words=comma_separated_ignore_words,
+                        numeric=False,
+                    )
         else:
             raise ValueError(f"Source not found: {source}")
 
