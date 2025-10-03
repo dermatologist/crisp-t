@@ -317,9 +317,15 @@ class Text:
             raise ValueError("Corpus is not set")
         filtered_documents = []
         for document in self._corpus.documents:
-            if metadata_value in document.metadata.get(metadata_key):
+            meta_val = document.metadata.get(metadata_key)
+            # Check meta_val is not None and is iterable (str, list, tuple, set)
+            if meta_val is not None and isinstance(meta_val, (str, list, tuple, set)):
+                if metadata_value in meta_val:
+                    filtered_documents.append(document)
+            # Check document.id and document.text are not None and are str
+            if isinstance(document.id, str) and metadata_value in document.id:
                 filtered_documents.append(document)
-            if metadata_value in document.id or metadata_value in document.text:
+            if isinstance(document.name, str) and metadata_value in document.name:
                 filtered_documents.append(document)
         self._corpus.documents = filtered_documents
         return filtered_documents
