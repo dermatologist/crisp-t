@@ -17,20 +17,20 @@ You should have received a copy of the GNU General Public License
 along with crisp-t.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-import pandas as pd
+import logging
+from typing import Any, Dict, List, Optional
+
 import numpy as np
+import pandas as pd
 from gensim import corpora
-from gensim.models.ldamodel import LdaModel
 from gensim.models import Word2Vec
-from sklearn.manifold import TSNE
+from gensim.models.ldamodel import LdaModel
 from sklearn.cluster import KMeans
+from sklearn.manifold import TSNE
 from tabulate import tabulate
-from typing import List, Dict, Any, Optional
 
 from .model import Corpus
 from .text import Text
-
-import logging
 
 # Set the logging level for the 'gensim' logger
 logging.getLogger("gensim").setLevel(logging.WARNING)
@@ -83,7 +83,7 @@ class Cluster:
         self._bag_of_words = [
             self._dictionary.doc2bow(doc) for doc in self._processed_docs
         ]
-        #self._corpus.metadata["bag_of_words"] = self._bag_of_words
+        # self._corpus.metadata["bag_of_words"] = self._bag_of_words
 
     def build_lda_model(self, topics: int = 0):
         if self._lda_model is None:
@@ -129,6 +129,42 @@ class Cluster:
             if not token.is_stop and not token.is_punct and not token.is_space
         ]
 
+    def _json_safe(self, obj):
+        """
+        Convert numpy/pandas objects and dtypes (e.g., np.int64, np.float32, ndarray,
+        DataFrame, Series) into JSON-serializable Python built-in types.
+        """
+        # Local imports to avoid top-level hard dependencies for type checking
+        try:
+            import numpy as _np
+        except Exception:  # pragma: no cover - numpy is already a dependency
+            _np = None
+        try:
+            import pandas as _pd
+        except Exception:  # pragma: no cover - pandas is already a dependency
+            _pd = None
+
+        if _np is not None:
+            if isinstance(obj, (_np.integer,)):
+                return int(obj)
+            if isinstance(obj, (_np.floating,)):
+                return float(obj)
+            if isinstance(obj, _np.ndarray):
+                return obj.tolist()
+
+        if _pd is not None:
+            if isinstance(obj, _pd.DataFrame):
+                return obj.to_dict(orient="records")
+            if isinstance(obj, _pd.Series):
+                return obj.tolist()
+
+        if isinstance(obj, dict):
+            # Ensure keys are strings in JSON
+            return {str(k): self._json_safe(v) for k, v in obj.items()}
+        if isinstance(obj, (list, tuple, set)):
+            return [self._json_safe(x) for x in obj]
+        return obj
+
     def print_clusters(self, verbose=False):
         if self._lda_model is None:
             self.build_lda_model()
@@ -164,8 +200,9 @@ class Cluster:
             if doc_id in clusters:
                 cluster = clusters[doc_id][0][0]
                 probability = clusters[doc_id][0][1]
-                doc.metadata["cluster"] = cluster
-                doc.metadata["probability"] = probability
+                # Cast to JSON-serializable scalars
+                doc.metadata["cluster"] = int(cluster)
+                doc.metadata["probability"] = float(probability)
                 documents_copy.append(doc)
             else:
                 # If the document ID is not found in clusters, keep it unchanged
@@ -175,7 +212,19 @@ class Cluster:
             self._corpus.documents = documents_copy
         # Add cluster information to corpus metadata
         if self._corpus is not None:
-            self._corpus.metadata["clusters"] = clusters
+            # Sanitize clusters to be JSON-safe
+            safe_clusters = {}
+            for k, v in clusters.items():
+                safe_pairs = []
+                for pair in v:
+                    try:
+                        topic_idx, prob = pair
+                    except Exception:
+                        # Unexpected shape; make a safe conversion
+                        topic_idx, prob = pair[0], pair[1] if len(pair) > 1 else 0.0
+                    safe_pairs.append([int(topic_idx), float(prob)])
+                safe_clusters[str(k)] = safe_pairs
+            self._corpus.metadata["clusters"] = safe_clusters
         return clusters
 
     def format_topics_sentences(self, visualize=False):
@@ -195,13 +244,17 @@ class Cluster:
             row = row_list[0] if self._lda_model.per_word_topics else row_list
             # print(row)
             if isinstance(row, list):
+                # Ensure all prop_topic values are native Python float
+                row = [(topic_num, float(prop_topic)) for topic_num, prop_topic in row]
                 row = sorted(row, key=lambda x: (x[1]), reverse=True)
             elif (
                 isinstance(row, tuple)
                 and len(row) == 2
                 and all(isinstance(x, (int, float)) for x in row)
             ):
-                row = [row]
+                # Convert prop_topic to native float if needed
+                topic_num, prop_topic = row
+                row = [(topic_num, float(prop_topic))]
             else:
                 row = []
             # Get the Dominant topic, Perc Contribution and Keywords for each document
@@ -212,10 +265,10 @@ class Cluster:
                     new_row = pd.DataFrame(
                         [
                             [
-                                self._ids[i],
+                                str(self._ids[i]),
                                 int(topic_num),
-                                round(prop_topic, 4),
-                                topic_keywords,
+                                float(round(prop_topic, 4)),
+                                str(topic_keywords),
                             ]
                         ],
                         columns=[
@@ -241,17 +294,23 @@ class Cluster:
         documents = self._corpus.documents if self._corpus is not None else []
         # Add topic information to the documents metadata
         for doc in documents:
-            doc_id = doc.id
-            if doc_id in sent_topics_df["Title"].values:
-                topic = sent_topics_df[sent_topics_df["Title"] == doc_id][
-                    "Dominant_Topic"
-                ].values[0]
-                probability = sent_topics_df[sent_topics_df["Title"] == doc_id][
-                    "Perc_Contribution"
-                ].values[0]
-                keywords = sent_topics_df[sent_topics_df["Title"] == doc_id][
-                    "Topic_Keywords"
-                ].values[0]
+            doc_id_str = str(doc.id)
+            if doc_id_str in sent_topics_df["Title"].values:
+                topic = int(
+                    sent_topics_df[sent_topics_df["Title"] == doc_id_str][
+                        "Dominant_Topic"
+                    ].values[0]
+                )
+                probability = float(
+                    sent_topics_df[sent_topics_df["Title"] == doc_id_str][
+                        "Perc_Contribution"
+                    ].values[0]
+                )
+                keywords = str(
+                    sent_topics_df[sent_topics_df["Title"] == doc_id_str][
+                        "Topic_Keywords"
+                    ].values[0]
+                )
                 doc.metadata["topic"] = topic
                 doc.metadata["probability"] = probability
                 doc.metadata["keywords"] = keywords
@@ -264,10 +323,12 @@ class Cluster:
         if visualize:
             contents = pd.Series(self._processed_docs)
             sent_topics_df = pd.concat([sent_topics_df, contents], axis=1)
-        # Add to visualize
-        self._corpus.visualization["assign_topics"] = sent_topics_df.reset_index( # type: ignore
+        # Add to visualize (store as JSON-serializable records)
+        self._corpus.visualization["assign_topics"] = sent_topics_df.reset_index(
             drop=False
-        )
+        ).to_dict(
+            orient="records"
+        )  # type: ignore
         print("\n Document Topics: \n")
         print(
             tabulate(
@@ -295,8 +356,10 @@ class Cluster:
                 ],
                 axis=0,
             )
-        # Add to visualize
-        self._corpus.visualization["most_representative_docs"] = sent_topics_sorteddf_mallet # type: ignore
+        # Add to visualize (JSON-serializable)
+        self._corpus.visualization["most_representative_docs"] = (
+            sent_topics_sorteddf_mallet.to_dict(orient="records")  # type: ignore
+        )
         return sent_topics_sorteddf_mallet
 
     def topics_per_document(self, start=0, end=1):
@@ -317,10 +380,18 @@ class Cluster:
             dominant_topic = sorted(topic_percs, key=lambda x: x[1], reverse=True)[0][0]
             dominant_topics.append((i, dominant_topic))
             topic_percentages.append(topic_percs)
-        # Add to corpus metadata
+        # Add to corpus metadata (JSON-serializable)
         if self._corpus is not None:
-            self._corpus.metadata["dominant_topics"] = dominant_topics
-            self._corpus.metadata["topic_percentages"] = topic_percentages
+            self._corpus.metadata["dominant_topics"] = [
+                [int(idx), int(topic)] for idx, topic in dominant_topics
+            ]
+            safe_topic_percentages = []
+            for doc_topics in topic_percentages:
+                safe_doc_topics = []
+                for topic_idx, prob in doc_topics:
+                    safe_doc_topics.append([int(topic_idx), float(prob)])
+                safe_topic_percentages.append(safe_doc_topics)
+            self._corpus.metadata["topic_percentages"] = safe_topic_percentages
         return (dominant_topics, topic_percentages)
 
     def doc_vectorizer(self, doc, model):
@@ -372,6 +443,6 @@ class Cluster:
                     stralign="left",
                 )
             )
-        # Add to visualization
-        self._corpus.visualization["vectorizer"] = data # type: ignore
+        # Add to visualization (JSON-serializable)
+        self._corpus.visualization["vectorizer"] = data.to_dict(orient="records")  # type: ignore
         return data

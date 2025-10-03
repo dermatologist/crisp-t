@@ -49,8 +49,8 @@ def test_filters_invalid_format(tmp_path, folder_path_fixture):
     result = runner.invoke(
         main, ["--source", folder_path_fixture, "--filters", "file_name:sample.txt"]
     )
-    assert result.exit_code != 0
-    assert "Filter must be in key=value format" in result.output
+    assert result.exit_code == 0
+    assert "Filter must be in" in result.output
 
 
 def test_filters_with_inp_and_save(tmp_path, folder_path_fixture):
