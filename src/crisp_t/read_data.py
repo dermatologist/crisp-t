@@ -111,8 +111,13 @@ class ReadData:
         if not self._corpus:
             self.create_corpus()
         if self._corpus:
-            print(self._corpus.model_dump_json(indent=4, exclude ={"df", "visualization"}))
-            logger.info("Corpus: %s", self._corpus.model_dump_json(indent=4, exclude ={"df", "visualization"}))
+            print(
+                self._corpus.model_dump_json(indent=4, exclude={"df", "visualization"})
+            )
+            logger.info(
+                "Corpus: %s",
+                self._corpus.model_dump_json(indent=4, exclude={"df", "visualization"}),
+            )
         else:
             logger.error("No corpus available to pretty print.")
 
@@ -162,15 +167,19 @@ class ReadData:
         """
         Write the corpus to a json file.
         """
-        # filename is <file_path> + "corpus.json"
-        file_name = os.path.join(file_path, "corpus.json")
-        df_name = os.path.join(file_path, "corpus_df.csv")
+        from pathlib import Path
+
+        file_path = Path(file_path)
+        file_name = file_path / "corpus.json"
+        df_name = file_path / "corpus_df.csv"
         if self._source:
-            file_path = os.path.join(self._source, file_name)
+            file_path = Path(self._source) / file_name
         if not self._corpus:
             raise ValueError("No corpus found. Please create a corpus first.")
         with open(file_name, "w") as f:
-            json.dump(self._corpus.model_dump(exclude ={"df", "visualization"}), f, indent=4)
+            json.dump(
+                self._corpus.model_dump(exclude={"df", "visualization"}), f, indent=4
+            )
         if self._corpus.df is not None and not self._corpus.df.empty:
             self._corpus.df.to_csv(df_name, index=False)
         logger.info("Corpus written to %s", file_name)
@@ -179,17 +188,20 @@ class ReadData:
         """
         Read the corpus from a json file.
         """
-        file_name = os.path.join(file_path, "corpus.json")
-        df_name = os.path.join(file_path, "corpus_df.csv")
+        from pathlib import Path
+
+        file_path = Path(file_path)
+        file_name = file_path / "corpus.json"
+        df_name = file_path / "corpus_df.csv"
         if self._source:
-            file_name = os.path.join(self._source, file_name)
-        if not os.path.exists(file_name):
-            raise ValueError("File not found: %s" % file_name)
+            file_name = Path(self._source) / file_name
+        if not file_name.exists():
+            raise ValueError(f"File not found: {file_name}")
         with open(file_name, "r") as f:
             data = json.load(f)
             self._corpus = Corpus.model_validate(data)
-            logger.info("Corpus read from %s", file_name)
-        if os.path.exists(df_name):
+            logger.info(f"Corpus read from {file_name}")
+        if df_name.exists():
             self._corpus.df = pd.read_csv(df_name)
         else:
             self._corpus.df = None
@@ -223,8 +235,11 @@ class ReadData:
         """
         Read the corpus from a csv file.
         """
-        if not os.path.exists(file_name):
-            raise ValueError("File not found: %s" % file_name)
+        from pathlib import Path
+
+        file_name = Path(file_name)
+        if not file_name.exists():
+            raise ValueError(f"File not found: {file_name}")
         df = pd.read_csv(file_name)
         original_df = df.copy()
         if comma_separated_text_columns:
@@ -239,7 +254,7 @@ class ReadData:
         for index, row in original_df.iterrows():
             read_from_file = ""
             for column in text_columns:
-                read_from_file += str(row[column]) + " "
+                read_from_file += f"{row[column]} "
             # remove comma separated ignore words
             if comma_separated_ignore_words:
                 for word in comma_separated_ignore_words.split(","):
@@ -268,7 +283,7 @@ class ReadData:
                 description="",
             )
             self._documents.append(_document)
-        logger.info("Corpus read from %s", file_name)
+        logger.info(f"Corpus read from {file_name}")
         if numeric:
             return self._df
         else:
@@ -301,11 +316,15 @@ class ReadData:
                 )
                 self._documents.append(_document)
         elif os.path.exists(source):
+            from pathlib import Path
+
+            source_path = Path(source)
             self._source = source
-            logger.info("Reading data from folder: %s", source)
+            logger.info(f"Reading data from folder: {source}")
             for file_name in os.listdir(source):
+                file_path = source_path / file_name
                 if file_name.endswith(".txt"):
-                    with open(os.path.join(source, file_name), "r") as f:
+                    with open(file_path, "r") as f:
                         read_from_file = f.read()
                         # remove comma separated ignore words
                         if comma_separated_ignore_words:
@@ -320,7 +339,7 @@ class ReadData:
                         _document = Document(
                             text=read_from_file,
                             metadata={
-                                "source": os.path.join(source, file_name),
+                                "source": str(file_path),
                                 "file_name": file_name,
                             },
                             id=file_name,
@@ -330,7 +349,7 @@ class ReadData:
                         )
                         self._documents.append(_document)
                 if file_name.endswith(".pdf"):
-                    with open(os.path.join(source, file_name), "rb") as f:
+                    with open(file_path, "rb") as f:
                         reader = PdfReader(f)
                         read_from_file = ""
                         for page in reader.pages:
@@ -348,7 +367,7 @@ class ReadData:
                         _document = Document(
                             text=read_from_file,
                             metadata={
-                                "source": os.path.join(source, file_name),
+                                "source": str(file_path),
                                 "file_name": file_name,
                             },
                             id=file_name,
@@ -358,7 +377,7 @@ class ReadData:
                         )
                         self._documents.append(_document)
         else:
-            raise ValueError("Source not found: %s" % source)
+            raise ValueError(f"Source not found: {source}")
 
     def corpus_as_dataframe(self):
         """
