@@ -175,6 +175,9 @@ python -m crisp_t.mcp
 ```
 
 ### Configuring MCP Clients
+<p align="center">
+  <img src="https://github.com/dermatologist/crisp-t/blob/develop/notes/crisp.gif" />
+</p>
 
 #### Claude Desktop
 
