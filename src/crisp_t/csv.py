@@ -171,6 +171,8 @@ class Csv:
                     logger.debug(f"Column {col} content: {self._df[col].head()}")
                 else:
                     logger.warning(f"Column {col} not found in DataFrame.")
+        # ignore all columns with names starting with "metadata_"
+        self._df = self._df.loc[:, ~self._df.columns.str.startswith("metadata_")]
         return self._df
 
     def write_csv(self, file_path: str, index: bool = False) -> None:
