@@ -181,25 +181,25 @@ def main(
                 raise click.ClickException(f"COVID download failed: {e}")
 
         # Build corpus using helpers (source preferred over inp)
-        if source or inp:
-            try:
-                text_cols = ",".join(unstructured) if unstructured else ""
-                corpus = initialize_corpus(
-                    source=source,
-                    inp=inp,
-                    comma_separated_text_columns=text_cols,
-                    comma_separated_ignore_words=(ignore if ignore else None),
-                )
-                # If filters were provided with ':' while using --source, emit guidance message
-                if source and filters:
-                    if any(":" in flt and "=" not in flt for flt in filters):
-                        click.echo("Filters are not supported when using --source")
-            except click.ClickException:
-                raise
-            except Exception as e:
-                click.echo(f"✗ Error initializing corpus: {e}", err=True)
-                logger.error(f"Failed to initialize corpus: {e}")
-                return
+        # if not source or inp, use default folders or env vars
+        try:
+            text_cols = ",".join(unstructured) if unstructured else ""
+            corpus = initialize_corpus(
+                source=source,
+                inp=inp,
+                comma_separated_text_columns=text_cols,
+                comma_separated_ignore_words=(ignore if ignore else None),
+            )
+            # If filters were provided with ':' while using --source, emit guidance message
+            if source and filters:
+                if any(":" in flt and "=" not in flt for flt in filters):
+                    click.echo("Filters are not supported when using --source")
+        except click.ClickException:
+            raise
+        except Exception as e:
+            click.echo(f"✗ Error initializing corpus: {e}", err=True)
+            logger.error(f"Failed to initialize corpus: {e}")
+            return
 
         # Handle multiple sources (unchanged behavior, but no filters applied here)
         if sources and not corpus:
@@ -271,7 +271,7 @@ def main(
         # Ensure we have data to work with
         if not corpus and not csv_analyzer:
             click.echo(
-                "No input data provided. Use --inp for text files or --csv for data files."
+                "No input data provided. Use --inp for text files"
             )
             return
 

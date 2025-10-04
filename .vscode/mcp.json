@@ -1,0 +1,8 @@
+{
+  "servers": {
+      "crisp": {
+      "command": "uv",
+      "args": ["run", "crisp-mcp"],
+    }
+  }
+}

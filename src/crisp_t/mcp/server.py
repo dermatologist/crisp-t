@@ -8,26 +8,26 @@ as tools, resources, and prompts.
 
 import json
 import logging
-from typing import Any, Optional
+from typing import Any, Optional, cast
 
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
 from mcp.types import (
+    GetPromptResult,
+    Prompt,
+    PromptMessage,
     Resource,
     TextContent,
     Tool,
-    Prompt,
-    GetPromptResult,
-    PromptMessage,
 )
 
-from ..helpers.initializer import initialize_corpus
-from ..helpers.analyzer import get_csv_analyzer, get_text_analyzer
-from ..read_data import ReadData
-from ..text import Text
-from ..sentiment import Sentiment
 from ..cluster import Cluster
 from ..csv import Csv
+from ..helpers.analyzer import get_csv_analyzer, get_text_analyzer
+from ..helpers.initializer import initialize_corpus
+from ..read_data import ReadData
+from ..sentiment import Sentiment
+from ..text import Text
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -41,6 +41,8 @@ try:
 except ImportError:
     ML_AVAILABLE = False
     logger.warning("ML dependencies not available")
+    # Provide a placeholder for ML to satisfy type checkers when unavailable
+    ML = cast(Any, None)
 
 # Global state for the server
 _corpus = None
@@ -49,21 +51,26 @@ _csv_analyzer = None
 _ml_analyzer = None
 
 
-def _init_corpus(inp: Optional[str] = None, source: Optional[str] = None, text_columns: str = "", ignore_words: str = ""):
+def _init_corpus(
+    inp: Optional[str] = None,
+    source: Optional[str] = None,
+    text_columns: str = "",
+    ignore_words: str = "",
+):
     """Initialize corpus from input path or source."""
     global _corpus, _text_analyzer, _csv_analyzer
-    
+
     try:
         _corpus = initialize_corpus(
             source=source,
             inp=inp,
             comma_separated_text_columns=text_columns,
-            comma_separated_ignore_words=ignore_words if ignore_words else None,
+            comma_separated_ignore_words=ignore_words or "",
         )
-        
+
         if _corpus:
             _text_analyzer = get_text_analyzer(_corpus, filters=[])
-            
+
             # Initialize CSV analyzer if DataFrame is present
             if getattr(_corpus, "df", None) is not None:
                 _csv_analyzer = get_csv_analyzer(
@@ -72,7 +79,7 @@ def _init_corpus(inp: Optional[str] = None, source: Optional[str] = None, text_c
                     comma_separated_ignore_columns="",
                     filters=[],
                 )
-        
+
         return True
     except Exception as e:
         logger.error(f"Failed to initialize corpus: {e}")
@@ -87,37 +94,42 @@ app = Server("crisp-t")
 async def list_resources() -> list[Resource]:
     """List available resources - corpus documents."""
     resources = []
-    
+
     if _corpus and _corpus.documents:
         for doc in _corpus.documents:
             resources.append(
                 Resource(
-                    uri=f"corpus://document/{doc.id}",
+                    uri=cast(Any, f"corpus://document/{doc.id}"),
                     name=f"Document: {doc.name or doc.id}",
                     description=doc.description or f"Text content of document {doc.id}",
                     mimeType="text/plain",
                 )
             )
-    
+
     return resources
 
 
 @app.read_resource()
-async def read_resource(uri: str) -> str:
-    """Read a corpus document by URI."""
-    if not uri.startswith("corpus://document/"):
+async def read_resource(uri: Any) -> list[TextContent]:
+    """Read a corpus document by URI.
+
+    Returns a list of TextContent items to conform to MCP's expected
+    function output schema for resource reads.
+    """
+    uri_str = str(uri)
+    if not uri_str.startswith("corpus://document/"):
         raise ValueError(f"Unknown resource URI: {uri}")
-    
-    doc_id = uri.replace("corpus://document/", "")
-    
+
+    doc_id = uri_str.replace("corpus://document/", "")
+
     if not _corpus:
         raise ValueError("No corpus loaded. Use load_corpus tool first.")
-    
+
     doc = _corpus.get_document_by_id(doc_id)
     if not doc:
         raise ValueError(f"Document not found: {doc_id}")
-    
-    return doc.text
+
+    return [TextContent(type="text", text=doc.text)]
 
 
 @app.list_tools()
@@ -127,301 +139,546 @@ async def list_tools() -> list[Tool]:
         # Corpus management tools
         Tool(
             name="load_corpus",
-            description="Load a corpus from a folder containing corpus.json or from a source directory/URL. This is the first step in most analyses.",
+            description="Load a corpus from a folder containing corpus.json or from a source directory/URL. Run this first before any analysis.",
             inputSchema={
                 "type": "object",
                 "properties": {
                     "inp": {
                         "type": "string",
-                        "description": "Path to folder containing corpus.json"
+                        "description": "Path to folder containing corpus.json",
                     },
                     "source": {
                         "type": "string",
-                        "description": "Source directory or URL to read data from"
+                        "description": "Source directory or URL to read data from",
                     },
                     "text_columns": {
                         "type": "string",
-                        "description": "Comma-separated text column names (for CSV data)"
+                        "description": "Comma-separated text column names (for CSV data)",
                     },
                     "ignore_words": {
                         "type": "string",
-                        "description": "Comma-separated words to ignore during analysis"
-                    }
-                }
-            }
+                        "description": "Comma-separated words to ignore during analysis",
+                    },
+                },
+            },
         ),
         Tool(
             name="save_corpus",
-            description="Save the current corpus to a folder as corpus.json",
+            description="Save the current corpus to a folder as corpus.json. Use this to persist your work after analysis or transformation.",
             inputSchema={
                 "type": "object",
                 "properties": {
                     "out": {
                         "type": "string",
-                        "description": "Output folder path to save corpus"
+                        "description": "Output folder path to save corpus",
                     }
                 },
-                "required": ["out"]
-            }
+                "required": ["out"],
+            },
         ),
         Tool(
             name="add_document",
-            description="Add a new document to the corpus",
+            description="Add a new document to the corpus. Use this to expand your dataset with new text entries.",
             inputSchema={
                 "type": "object",
                 "properties": {
                     "doc_id": {"type": "string", "description": "Unique document ID"},
                     "text": {"type": "string", "description": "Document text content"},
-                    "name": {"type": "string", "description": "Optional document name"}
+                    "name": {"type": "string", "description": "Optional document name"},
                 },
-                "required": ["doc_id", "text"]
-            }
+                "required": ["doc_id", "text"],
+            },
         ),
         Tool(
             name="remove_document",
-            description="Remove a document from the corpus by ID",
+            description="Remove a document from the corpus by ID. Use this to clean up or curate your corpus.",
             inputSchema={
                 "type": "object",
                 "properties": {
                     "doc_id": {"type": "string", "description": "Document ID to remove"}
                 },
-                "required": ["doc_id"]
-            }
+                "required": ["doc_id"],
+            },
         ),
         Tool(
             name="get_document",
-            description="Get a document by ID from the corpus",
+            description="Get a document by ID from the corpus. Use this to inspect or retrieve specific documents for review.",
             inputSchema={
                 "type": "object",
                 "properties": {
                     "doc_id": {"type": "string", "description": "Document ID"}
                 },
-                "required": ["doc_id"]
-            }
+                "required": ["doc_id"],
+            },
         ),
         Tool(
             name="list_documents",
-            description="List all document IDs in the corpus",
-            inputSchema={"type": "object", "properties": {}}
+            description="List all document IDs in the corpus. Use this to enumerate all available documents for batch operations.",
+            inputSchema={"type": "object", "properties": {}},
         ),
         Tool(
             name="add_relationship",
-            description="Add a relationship between text keywords and numeric columns. Used to link topic modeling results with dataframe columns.",
+            description="Add a relationship between text keywords and numeric columns. Link topic modeling results with DataFrame columns for triangulation.",
             inputSchema={
                 "type": "object",
                 "properties": {
-                    "first": {"type": "string", "description": "First entity (e.g., 'text:keyword')"},
-                    "second": {"type": "string", "description": "Second entity (e.g., 'num:column')"},
-                    "relation": {"type": "string", "description": "Relationship type (e.g., 'correlates')"}
+                    "first": {
+                        "type": "string",
+                        "description": "First entity (e.g., 'text:keyword')",
+                    },
+                    "second": {
+                        "type": "string",
+                        "description": "Second entity (e.g., 'numb:column')",
+                    },
+                    "relation": {
+                        "type": "string",
+                        "description": "Relationship type (e.g., 'correlates')",
+                    },
                 },
-                "required": ["first", "second", "relation"]
-            }
+                "required": ["first", "second", "relation"],
+            },
         ),
         Tool(
             name="get_relationships",
-            description="Get all relationships in the corpus",
-            inputSchema={"type": "object", "properties": {}}
+            description="Get all relationships in the corpus. Review established links between text and numeric data.",
+            inputSchema={"type": "object", "properties": {}},
         ),
         Tool(
             name="get_relationships_for_keyword",
-            description="Get relationships involving a specific keyword",
+            description="Get relationships involving a specific keyword. Explore connections for a particular topic or term.",
             inputSchema={
                 "type": "object",
                 "properties": {
-                    "keyword": {"type": "string", "description": "Keyword to search for"}
+                    "keyword": {
+                        "type": "string",
+                        "description": "Keyword to search for",
+                    }
                 },
-                "required": ["keyword"]
-            }
+                "required": ["keyword"],
+            },
         ),
-        
         # NLP/Text Analysis Tools
         Tool(
             name="generate_coding_dictionary",
-            description="Generate a qualitative coding dictionary with categories (verbs), properties (nouns), and dimensions (adjectives/adverbs). Useful for understanding the main themes and concepts in the corpus.",
+            description="""
+            Generate a qualitative coding dictionary with categories (verbs), properties (nouns), and dimensions (adjectives/adverbs). Useful for understanding the main themes and concepts in the corpus.
+
+            Tips:
+              - Use ignore to exclude common but uninformative words.
+              - Use filters to narrow down documents based on metadata (key=value).
+              - Adjust num (categories) and top_n (items per section).
+            """,
             inputSchema={
                 "type": "object",
                 "properties": {
-                    "num": {"type": "integer", "description": "Number of categories to extract", "default": 3},
-                    "top_n": {"type": "integer", "description": "Top N items per category", "default": 3}
-                }
-            }
+                    "num": {
+                        "type": "integer",
+                        "description": "Number of categories to extract",
+                        "default": 3,
+                    },
+                    "top_n": {
+                        "type": "integer",
+                        "description": "Top N items per category",
+                        "default": 3,
+                    },
+                    "ignore": {
+                        "type": "array",
+                        "description": "List of words to ignore",
+                        "items": {"type": "string"},
+                    },
+                    "filters": {
+                        "type": "array",
+                        "description": "Filters to apply on documents (key=value or key:value)",
+                        "items": {"type": "string"},
+                    },
+                },
+            },
         ),
         Tool(
             name="topic_modeling",
-            description="Perform LDA topic modeling to discover latent topics in the corpus. Returns topics with their associated keywords and weights, useful for categorizing documents by theme.",
+            description="""
+            Perform LDA topic modeling to discover latent topics in the corpus. Returns topics with their associated keywords and weights, useful for categorizing documents by theme.
+
+            Tips:
+              - Set num_topics (number of topics).
+              - Set num_words (words to show per topic).
+            """,
             inputSchema={
                 "type": "object",
                 "properties": {
-                    "num_topics": {"type": "integer", "description": "Number of topics to generate", "default": 3},
-                    "num_words": {"type": "integer", "description": "Number of words per topic", "default": 5}
-                }
-            }
+                    "num_topics": {
+                        "type": "integer",
+                        "description": "Number of topics to generate",
+                        "default": 3,
+                    },
+                    "num_words": {
+                        "type": "integer",
+                        "description": "Number of words per topic",
+                        "default": 5,
+                    },
+                },
+            },
         ),
         Tool(
             name="assign_topics",
-            description="Assign documents to their dominant topics with contribution percentages. These topic assignments can be used as keywords to filter or categorize documents.",
+            description="""
+            Assign documents to their dominant topics with contribution percentages. These topic assignments can be used as keywords to filter or categorize documents.
+
+            Note: Use the results to create keywords for filtering/categorization.
+            """,
             inputSchema={
                 "type": "object",
                 "properties": {
-                    "num_topics": {"type": "integer", "description": "Number of topics (should match topic_modeling)", "default": 3}
-                }
-            }
+                    "num_topics": {
+                        "type": "integer",
+                        "description": "Number of topics (should match topic_modeling)",
+                        "default": 3,
+                    }
+                },
+            },
         ),
         Tool(
             name="extract_categories",
-            description="Extract common categories/concepts from the corpus as bag-of-terms with weights",
+            description="""
+            Extract common categories/concepts from the corpus as bag-of-terms with weights
+
+            Tip: Adjust num to change how many categories are returned.
+            """,
             inputSchema={
                 "type": "object",
                 "properties": {
-                    "num": {"type": "integer", "description": "Number of categories", "default": 10}
-                }
-            }
+                    "num": {
+                        "type": "integer",
+                        "description": "Number of categories",
+                        "default": 10,
+                    }
+                },
+            },
         ),
         Tool(
             name="generate_summary",
-            description="Generate an extractive text summary of the entire corpus",
+            description="""
+            Generate an extractive text summary of the entire corpus
+
+            Tip: Increase weight for longer summaries.
+            """,
             inputSchema={
                 "type": "object",
                 "properties": {
-                    "weight": {"type": "integer", "description": "Summary weight/length parameter", "default": 10}
-                }
-            }
+                    "weight": {
+                        "type": "integer",
+                        "description": "Summary weight/length parameter",
+                        "default": 10,
+                    }
+                },
+            },
         ),
         Tool(
             name="sentiment_analysis",
-            description="Perform VADER sentiment analysis on the corpus, providing positive, negative, neutral, and compound scores",
+            description="""
+            Perform VADER sentiment analysis on the corpus, providing positive, negative, neutral, and compound scores
+
+            Tips:
+              - Set documents=true to analyze at document level.
+              - Set verbose=true for detailed output.
+            """,
             inputSchema={
                 "type": "object",
                 "properties": {
-                    "documents": {"type": "boolean", "description": "Analyze at document level", "default": False},
-                    "verbose": {"type": "boolean", "description": "Verbose output", "default": True}
-                }
-            }
+                    "documents": {
+                        "type": "boolean",
+                        "description": "Analyze at document level",
+                        "default": False,
+                    },
+                    "verbose": {
+                        "type": "boolean",
+                        "description": "Verbose output",
+                        "default": True,
+                    },
+                },
+            },
         ),
-        
         # DataFrame/CSV Tools
         Tool(
             name="get_df_columns",
-            description="Get all column names from the DataFrame",
-            inputSchema={"type": "object", "properties": {}}
+            description="Get all column names from the DataFrame. Use this to inspect available features for analysis.",
+            inputSchema={"type": "object", "properties": {}},
         ),
         Tool(
             name="get_df_row_count",
-            description="Get the number of rows in the DataFrame",
-            inputSchema={"type": "object", "properties": {}}
+            description="Get the number of rows in the DataFrame. Useful for understanding dataset size before analysis.",
+            inputSchema={"type": "object", "properties": {}},
         ),
         Tool(
             name="get_df_row",
-            description="Get a specific row from the DataFrame by index",
+            description="Get a specific row from the DataFrame by index. Use this to inspect individual records for debugging or exploration.",
             inputSchema={
                 "type": "object",
                 "properties": {
                     "index": {"type": "integer", "description": "Row index"}
                 },
-                "required": ["index"]
-            }
+                "required": ["index"],
+            },
+        ),
+        Tool(
+            name="reset_corpus_state",
+            description="Reset the global corpus, text analyzer, and CSV analyzer state. Clear all loaded data and start fresh.",
+            inputSchema={
+                "type": "object",
+                "properties": {},
+            },
         ),
     ]
-    
+
     # Add ML tools if available
     if ML_AVAILABLE:
-        tools.extend([
-            Tool(
-                name="kmeans_clustering",
-                description="Perform K-Means clustering on numeric data. Useful for segmenting data into groups based on similarity.",
-                inputSchema={
-                    "type": "object",
-                    "properties": {
-                        "num_clusters": {"type": "integer", "description": "Number of clusters", "default": 3},
-                        "outcome": {"type": "string", "description": "Optional outcome variable to exclude"}
-                    }
-                }
-            ),
-            Tool(
-                name="decision_tree_classification",
-                description="Train a decision tree classifier and return variable importance rankings. Shows which features are most predictive of the outcome.",
-                inputSchema={
-                    "type": "object",
-                    "properties": {
-                        "outcome": {"type": "string", "description": "Target/outcome variable"},
-                        "top_n": {"type": "integer", "description": "Top N important features", "default": 10}
+        tools.extend(
+            [
+                Tool(
+                    name="kmeans_clustering",
+                    description="""
+                Perform K-Means clustering on numeric data. Useful for segmenting data into groups based on similarity.
+                Required: specify columns to include as a comma-separated list (include).
+
+                Args:
+                    num_clusters (int): The number of clusters to form.
+                    include (str): Comma-separated columns to include in clustering.
+                """,
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "num_clusters": {
+                                "type": "integer",
+                                "description": "Number of clusters",
+                                "default": 3,
+                            },
+                            "outcome": {
+                                "type": "string",
+                                "description": "Optional outcome variable to exclude",
+                            },
+                            "include": {
+                                "type": "string",
+                                "description": "Comma-separated list of columns to include",
+                            },
+                        },
+                        "required": ["include"],
                     },
-                    "required": ["outcome"]
-                }
-            ),
-            Tool(
-                name="svm_classification",
-                description="Perform SVM classification and return confusion matrix",
-                inputSchema={
-                    "type": "object",
-                    "properties": {
-                        "outcome": {"type": "string", "description": "Target/outcome variable"}
+                ),
+                Tool(
+                    name="decision_tree_classification",
+                    description="""
+                Train a decision tree classifier and return variable importance rankings. Shows which features are most predictive of the outcome.
+                Required: specify columns to include in the classification as a comma-separated list (include).
+
+                    Args:
+                        outcome (str): The target variable for classification.
+                        top_n (int): The number of top features to return.
+                        include (str): Comma-separated list of columns to include.
+                """,
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "outcome": {
+                                "type": "string",
+                                "description": "Target/outcome variable",
+                            },
+                            "top_n": {
+                                "type": "integer",
+                                "description": "Top N important features",
+                                "default": 10,
+                            },
+                            "include": {
+                                "type": "string",
+                                "description": "Comma-separated columns to include",
+                            },
+                        },
+                        "required": ["outcome", "include"],
                     },
-                    "required": ["outcome"]
-                }
-            ),
-            Tool(
-                name="neural_network_classification",
-                description="Train a neural network classifier and return predictions with accuracy",
-                inputSchema={
-                    "type": "object",
-                    "properties": {
-                        "outcome": {"type": "string", "description": "Target/outcome variable"}
+                ),
+                Tool(
+                    name="svm_classification",
+                    description="""
+                Perform SVM classification and return confusion matrix
+                Required: specify columns to include in the classification as a comma-separated list (include).
+
+                Args:
+                    outcome (str): The target variable for classification.
+                    include (str): Comma-separated list of columns to include.
+                """,
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "outcome": {
+                                "type": "string",
+                                "description": "Target/outcome variable",
+                            },
+                            "include": {
+                                "type": "string",
+                                "description": "Comma-separated columns to include",
+                            },
+                        },
+                        "required": ["outcome", "include"],
                     },
-                    "required": ["outcome"]
-                }
-            ),
-            Tool(
-                name="regression_analysis",
-                description="Perform linear or logistic regression (auto-detects based on outcome). Returns coefficients for each factor/predictor, showing their relationship with the outcome variable.",
-                inputSchema={
-                    "type": "object",
-                    "properties": {
-                        "outcome": {"type": "string", "description": "Target/outcome variable"}
+                ),
+                Tool(
+                    name="neural_network_classification",
+                    description="""
+                Train a neural network classifier and return predictions with accuracy
+                Required: specify columns to include in the classification as a comma-separated list (include).
+
+                Args:
+                    outcome (str): The target variable for classification.
+                    include (str): Comma-separated list of columns to include.
+                """,
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "outcome": {
+                                "type": "string",
+                                "description": "Target/outcome variable",
+                            },
+                            "include": {
+                                "type": "string",
+                                "description": "Comma-separated columns to include",
+                            },
+                        },
+                        "required": ["outcome", "include"],
                     },
-                    "required": ["outcome"]
-                }
-            ),
-            Tool(
-                name="pca_analysis",
-                description="Perform Principal Component Analysis for dimensionality reduction",
-                inputSchema={
-                    "type": "object",
-                    "properties": {
-                        "outcome": {"type": "string", "description": "Variable to exclude from PCA"},
-                        "n_components": {"type": "integer", "description": "Number of components", "default": 3}
+                ),
+                Tool(
+                    name="regression_analysis",
+                    description="""
+                Perform linear or logistic regression (auto-detects based on outcome). Returns coefficients for each factor/predictor, showing their relationship with the outcome variable.
+                Required: specify columns to include in the regression as a comma-separated list (include).
+
+                Args:
+                    outcome (str): The target variable for regression.
+                    include (str): Comma-separated list of columns to include.
+                """,
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "outcome": {
+                                "type": "string",
+                                "description": "Target/outcome variable",
+                            },
+                            "include": {
+                                "type": "string",
+                                "description": "Comma-separated columns to include",
+                            },
+                        },
+                        "required": ["outcome", "include"],
                     },
-                    "required": ["outcome"]
-                }
-            ),
-            Tool(
-                name="association_rules",
-                description="Generate association rules using Apriori algorithm",
-                inputSchema={
-                    "type": "object",
-                    "properties": {
-                        "outcome": {"type": "string", "description": "Variable to exclude"},
-                        "min_support": {"type": "integer", "description": "Min support (1-99)", "default": 50},
-                        "min_threshold": {"type": "integer", "description": "Min threshold (1-99)", "default": 50}
+                ),
+                Tool(
+                    name="pca_analysis",
+                    description="""
+                Perform Principal Component Analysis for dimensionality reduction
+                Required: specify columns to include in the PCA as a comma-separated list (include).
+
+                Args:
+                    outcome (str): The variable to exclude from PCA.
+                    n_components (int): The number of components to keep.
+                    include (str): Comma-separated list of columns to include.
+
+                """,
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "outcome": {
+                                "type": "string",
+                                "description": "Variable to exclude from PCA",
+                            },
+                            "n_components": {
+                                "type": "integer",
+                                "description": "Number of components",
+                                "default": 3,
+                            },
+                            "include": {
+                                "type": "string",
+                                "description": "Comma-separated columns to include",
+                            },
+                        },
+                        "required": ["outcome", "include"],
                     },
-                    "required": ["outcome"]
-                }
-            ),
-            Tool(
-                name="knn_search",
-                description="Find K-nearest neighbors for a specific record",
-                inputSchema={
-                    "type": "object",
-                    "properties": {
-                        "outcome": {"type": "string", "description": "Target variable"},
-                        "n": {"type": "integer", "description": "Number of neighbors", "default": 3},
-                        "record": {"type": "integer", "description": "Record index (1-based)", "default": 1}
+                ),
+                Tool(
+                    name="association_rules",
+                    description="""
+                Generate association rules using Apriori algorithm
+                Required: specify columns to include in the analysis as a comma-separated list (include).
+
+                Args:
+                    outcome (str): Variable to exclude from rules mining.
+                    min_support (int): Minimum support as percent (1-99).
+                    min_threshold (int): Minimum confidence as percent (1-99).
+                    include (str): Comma-separated list of columns to include.
+                """,
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "outcome": {
+                                "type": "string",
+                                "description": "Variable to exclude",
+                            },
+                            "min_support": {
+                                "type": "integer",
+                                "description": "Min support (1-99)",
+                                "default": 50,
+                            },
+                            "min_threshold": {
+                                "type": "integer",
+                                "description": "Min threshold (1-99)",
+                                "default": 50,
+                            },
+                            "include": {
+                                "type": "string",
+                                "description": "Comma-separated columns to include",
+                            },
+                        },
+                        "required": ["outcome", "include"],
                     },
-                    "required": ["outcome"]
-                }
-            ),
-        ])
-    
+                ),
+                Tool(
+                    name="knn_search",
+                    description="""
+                Find K-nearest neighbors for a specific record
+                Required: specify columns to include in the search as a comma-separated list (include).
+
+                Args:
+                    outcome (str): The target variable (excluded from features).
+                    n (int): The number of neighbors to find.
+                    record (int): The record index (1-based) to find neighbors for.
+                    include (str): Comma-separated columns to include.
+                """,
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "outcome": {
+                                "type": "string",
+                                "description": "Target variable",
+                            },
+                            "n": {
+                                "type": "integer",
+                                "description": "Number of neighbors",
+                                "default": 3,
+                            },
+                            "record": {
+                                "type": "integer",
+                                "description": "Record index (1-based)",
+                                "default": 1,
+                            },
+                            "include": {
+                                "type": "string",
+                                "description": "Comma-separated columns to include",
+                            },
+                        },
+                        "required": ["outcome", "include"],
+                    },
+                ),
+            ]
+        )
+
     return tools
 
 
@@ -429,7 +686,7 @@ async def list_tools() -> list[Tool]:
 async def call_tool(name: str, arguments: Any) -> list[TextContent]:
     """Handle tool calls."""
     global _corpus, _text_analyzer, _csv_analyzer, _ml_analyzer
-    
+
     try:
         # Corpus Management Tools
         if name == "load_corpus":
@@ -437,307 +694,397 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
             source = arguments.get("source")
             text_columns = arguments.get("text_columns", "")
             ignore_words = arguments.get("ignore_words", "")
-            
+
             if _init_corpus(inp, source, text_columns, ignore_words):
                 doc_count = len(_corpus.documents) if _corpus else 0
-                return [TextContent(
-                    type="text",
-                    text=f"Corpus loaded successfully with {doc_count} document(s)"
-                )]
+                return [
+                    TextContent(
+                        type="text",
+                        text=f"Corpus loaded successfully with {doc_count} document(s)",
+                    )
+                ]
             else:
                 return [TextContent(type="text", text="Failed to load corpus")]
-        
+
         elif name == "save_corpus":
             if not _corpus:
                 return [TextContent(type="text", text="No corpus loaded")]
-            
+
             out = arguments["out"]
             read_data = ReadData(corpus=_corpus)
             read_data.write_corpus_to_json(out, corpus=_corpus)
             return [TextContent(type="text", text=f"Corpus saved to {out}")]
-        
+
         elif name == "add_document":
             if not _corpus:
                 return [TextContent(type="text", text="No corpus loaded")]
-            
+
             from ..model.document import Document
+
             doc = Document(
                 id=arguments["doc_id"],
                 text=arguments["text"],
                 name=arguments.get("name"),
                 description=None,
                 score=0.0,
-                metadata={}
+                metadata={},
             )
             _corpus.add_document(doc)
-            return [TextContent(type="text", text=f"Document {arguments['doc_id']} added")]
-        
+            return [
+                TextContent(type="text", text=f"Document {arguments['doc_id']} added")
+            ]
+
         elif name == "remove_document":
             if not _corpus:
                 return [TextContent(type="text", text="No corpus loaded")]
-            
+
             _corpus.remove_document_by_id(arguments["doc_id"])
-            return [TextContent(type="text", text=f"Document {arguments['doc_id']} removed")]
-        
+            return [
+                TextContent(type="text", text=f"Document {arguments['doc_id']} removed")
+            ]
+
         elif name == "get_document":
             if not _corpus:
                 return [TextContent(type="text", text="No corpus loaded")]
-            
+
             doc = _corpus.get_document_by_id(arguments["doc_id"])
             if doc:
-                return [TextContent(type="text", text=json.dumps(doc.model_dump(), indent=2, default=str))]
+                return [
+                    TextContent(
+                        type="text",
+                        text=json.dumps(doc.model_dump(), indent=2, default=str),
+                    )
+                ]
             return [TextContent(type="text", text="Document not found")]
-        
+
         elif name == "list_documents":
             if not _corpus:
                 return [TextContent(type="text", text="No corpus loaded")]
-            
+
             doc_ids = _corpus.get_all_document_ids()
             return [TextContent(type="text", text=json.dumps(doc_ids, indent=2))]
-        
+
         elif name == "add_relationship":
             if not _corpus:
                 return [TextContent(type="text", text="No corpus loaded")]
-            
+
             _corpus.add_relationship(
-                arguments["first"],
-                arguments["second"],
-                arguments["relation"]
+                arguments["first"], arguments["second"], arguments["relation"]
             )
             return [TextContent(type="text", text="Relationship added")]
-        
+
         elif name == "get_relationships":
             if not _corpus:
                 return [TextContent(type="text", text="No corpus loaded")]
-            
+
             rels = _corpus.get_relationships()
             return [TextContent(type="text", text=json.dumps(rels, indent=2))]
-        
+
         elif name == "get_relationships_for_keyword":
             if not _corpus:
                 return [TextContent(type="text", text="No corpus loaded")]
-            
+
             rels = _corpus.get_all_relationships_for_keyword(arguments["keyword"])
             return [TextContent(type="text", text=json.dumps(rels, indent=2))]
-        
+
         # NLP/Text Analysis Tools
         elif name == "generate_coding_dictionary":
             if not _text_analyzer:
                 return [TextContent(type="text", text="No corpus loaded")]
-            
+
             _text_analyzer.make_spacy_doc()
             result = _text_analyzer.print_coding_dictionary(
-                num=arguments.get("num", 3),
-                top_n=arguments.get("top_n", 3)
+                num=arguments.get("num", 3), top_n=arguments.get("top_n", 3)
             )
-            return [TextContent(type="text", text=json.dumps(result, indent=2, default=str))]
-        
+            return [
+                TextContent(type="text", text=json.dumps(result, indent=2, default=str))
+            ]
+
         elif name == "topic_modeling":
             if not _corpus:
                 return [TextContent(type="text", text="No corpus loaded")]
-            
+
             cluster = Cluster(corpus=_corpus)
             cluster.build_lda_model(topics=arguments.get("num_topics", 3))
             result = cluster.print_topics(num_words=arguments.get("num_words", 5))
-            return [TextContent(type="text", text=json.dumps(result, indent=2, default=str))]
-        
+            return [
+                TextContent(type="text", text=json.dumps(result, indent=2, default=str))
+            ]
+
         elif name == "assign_topics":
             if not _corpus:
                 return [TextContent(type="text", text="No corpus loaded")]
-            
+
             cluster = Cluster(corpus=_corpus)
             cluster.build_lda_model(topics=arguments.get("num_topics", 3))
             result = cluster.format_topics_sentences(visualize=False)
-            return [TextContent(type="text", text=json.dumps(result, indent=2, default=str))]
-        
+            return [
+                TextContent(type="text", text=json.dumps(result, indent=2, default=str))
+            ]
+
         elif name == "extract_categories":
             if not _text_analyzer:
                 return [TextContent(type="text", text="No corpus loaded")]
-            
+
             _text_analyzer.make_spacy_doc()
             result = _text_analyzer.print_categories(num=arguments.get("num", 10))
-            return [TextContent(type="text", text=json.dumps(result, indent=2, default=str))]
-        
+            return [
+                TextContent(type="text", text=json.dumps(result, indent=2, default=str))
+            ]
+
         elif name == "generate_summary":
             if not _text_analyzer:
                 return [TextContent(type="text", text="No corpus loaded")]
-            
+
             _text_analyzer.make_spacy_doc()
             result = _text_analyzer.generate_summary(weight=arguments.get("weight", 10))
             return [TextContent(type="text", text=str(result))]
-        
+
         elif name == "sentiment_analysis":
             if not _corpus:
                 return [TextContent(type="text", text="No corpus loaded")]
-            
+
             sentiment = Sentiment(corpus=_corpus)
             result = sentiment.get_sentiment(
                 documents=arguments.get("documents", False),
-                verbose=arguments.get("verbose", True)
+                verbose=arguments.get("verbose", True),
             )
             return [TextContent(type="text", text=str(result))]
-        
+
         # DataFrame/CSV Tools
         elif name == "get_df_columns":
             if not _corpus:
                 return [TextContent(type="text", text="No corpus loaded")]
-            
+
             cols = _corpus.get_all_df_column_names()
             return [TextContent(type="text", text=json.dumps(cols, indent=2))]
-        
+
         elif name == "get_df_row_count":
             if not _corpus:
                 return [TextContent(type="text", text="No corpus loaded")]
-            
+
             count = _corpus.get_row_count()
             return [TextContent(type="text", text=f"Row count: {count}")]
-        
+
         elif name == "get_df_row":
             if not _corpus:
                 return [TextContent(type="text", text="No corpus loaded")]
-            
+
             row = _corpus.get_row_by_index(arguments["index"])
             if row is not None:
-                return [TextContent(type="text", text=json.dumps(row.to_dict(), indent=2, default=str))]
+                return [
+                    TextContent(
+                        type="text",
+                        text=json.dumps(row.to_dict(), indent=2, default=str),
+                    )
+                ]
             return [TextContent(type="text", text="Row not found")]
-        
+
         # ML Tools
         elif name == "kmeans_clustering":
             if not _csv_analyzer:
                 return [TextContent(type="text", text="No CSV data available")]
-            
+            else:
+                if "include" in arguments:
+                    _csv_analyzer.comma_separated_include_columns(
+                        arguments.get("include") + "," + arguments.get("outcome", "")
+                    )
+
             if not ML_AVAILABLE:
                 return [TextContent(type="text", text="ML dependencies not available")]
-            
+
             _csv_analyzer.retain_numeric_columns_only()
+
             _csv_analyzer.drop_na()
             ml = ML(csv=_csv_analyzer)
             clusters, members = ml.get_kmeans(
-                number_of_clusters=arguments.get("num_clusters", 3),
-                verbose=False
+                number_of_clusters=arguments.get("num_clusters", 3), verbose=False
             )
-            return [TextContent(type="text", text=json.dumps({
-                "clusters": clusters,
-                "members": members
-            }, indent=2, default=str))]
-        
+            return [
+                TextContent(
+                    type="text",
+                    text=json.dumps(
+                        {"clusters": clusters, "members": members},
+                        indent=2,
+                        default=str,
+                    ),
+                )
+            ]
+
         elif name == "decision_tree_classification":
             if not _csv_analyzer:
                 return [TextContent(type="text", text="No CSV data available")]
-            
+            else:
+                if "include" in arguments:
+                    _csv_analyzer.comma_separated_include_columns(
+                        arguments.get("include") + "," + arguments.get("outcome", "")
+                    )
+
             if not ML_AVAILABLE:
                 return [TextContent(type="text", text="ML dependencies not available")]
-            
+
             if not _ml_analyzer:
                 _ml_analyzer = ML(csv=_csv_analyzer)
-            
+
             cm, importance = _ml_analyzer.get_decision_tree_classes(
-                y=arguments["outcome"],
-                top_n=arguments.get("top_n", 10)
+                y=arguments["outcome"], top_n=arguments.get("top_n", 10)
             )
-            return [TextContent(type="text", text=json.dumps({
-                "confusion_matrix": cm,
-                "feature_importance": importance
-            }, indent=2, default=str))]
-        
+            return [
+                TextContent(
+                    type="text",
+                    text=json.dumps(
+                        {"confusion_matrix": cm, "feature_importance": importance},
+                        indent=2,
+                        default=str,
+                    ),
+                )
+            ]
+
         elif name == "svm_classification":
             if not _csv_analyzer:
                 return [TextContent(type="text", text="No CSV data available")]
-            
+            else:
+                if "include" in arguments:
+                    _csv_analyzer.comma_separated_include_columns(
+                        arguments.get("include") + "," + arguments.get("outcome", "")
+                    )
+
             if not ML_AVAILABLE:
                 return [TextContent(type="text", text="ML dependencies not available")]
-            
+
             if not _ml_analyzer:
                 _ml_analyzer = ML(csv=_csv_analyzer)
-            
+
             result = _ml_analyzer.svm_confusion_matrix(
-                y=arguments["outcome"],
-                test_size=0.25
+                y=arguments["outcome"], test_size=0.25
             )
-            return [TextContent(type="text", text=json.dumps(result, indent=2, default=str))]
-        
+            return [
+                TextContent(type="text", text=json.dumps(result, indent=2, default=str))
+            ]
+
         elif name == "neural_network_classification":
             if not _csv_analyzer:
                 return [TextContent(type="text", text="No CSV data available")]
-            
+            else:
+                if "include" in arguments:
+                    _csv_analyzer.comma_separated_include_columns(
+                        arguments.get("include") + "," + arguments.get("outcome", "")
+                    )
+
             if not ML_AVAILABLE:
                 return [TextContent(type="text", text="ML dependencies not available")]
-            
+
             if not _ml_analyzer:
                 _ml_analyzer = ML(csv=_csv_analyzer)
-            
+
             result = _ml_analyzer.get_nnet_predictions(y=arguments["outcome"])
-            return [TextContent(type="text", text=json.dumps(result, indent=2, default=str))]
-        
+            return [
+                TextContent(type="text", text=json.dumps(result, indent=2, default=str))
+            ]
+
         elif name == "regression_analysis":
             if not _csv_analyzer:
                 return [TextContent(type="text", text="No CSV data available")]
-            
+            else:
+                if "include" in arguments:
+                    _csv_analyzer.comma_separated_include_columns(
+                        arguments.get("include") + "," + arguments.get("outcome", "")
+                    )
+
             if not ML_AVAILABLE:
                 return [TextContent(type="text", text="ML dependencies not available")]
-            
+
             if not _ml_analyzer:
                 _ml_analyzer = ML(csv=_csv_analyzer)
-            
+
             result = _ml_analyzer.get_regression(y=arguments["outcome"])
-            return [TextContent(type="text", text=json.dumps(result, indent=2, default=str))]
-        
+            return [
+                TextContent(type="text", text=json.dumps(result, indent=2, default=str))
+            ]
+
         elif name == "pca_analysis":
             if not _csv_analyzer:
                 return [TextContent(type="text", text="No CSV data available")]
-            
+            else:
+                if "include" in arguments:
+                    _csv_analyzer.comma_separated_include_columns(
+                        arguments.get("include") + "," + arguments.get("outcome", "")
+                    )
+
             if not ML_AVAILABLE:
                 return [TextContent(type="text", text="ML dependencies not available")]
-            
+
             if not _ml_analyzer:
                 _ml_analyzer = ML(csv=_csv_analyzer)
-            
+
             result = _ml_analyzer.get_pca(
-                y=arguments["outcome"],
-                n=arguments.get("n_components", 3)
+                y=arguments["outcome"], n=arguments.get("n_components", 3)
             )
-            return [TextContent(type="text", text=json.dumps(result, indent=2, default=str))]
-        
+            return [
+                TextContent(type="text", text=json.dumps(result, indent=2, default=str))
+            ]
+
         elif name == "association_rules":
             if not _csv_analyzer:
                 return [TextContent(type="text", text="No CSV data available")]
-            
+            else:
+                if "include" in arguments:
+                    _csv_analyzer.comma_separated_include_columns(
+                        arguments.get("include") + "," + arguments.get("outcome", "")
+                    )
+
             if not ML_AVAILABLE:
                 return [TextContent(type="text", text="ML dependencies not available")]
-            
+
             if not _ml_analyzer:
                 _ml_analyzer = ML(csv=_csv_analyzer)
-            
+
             min_support = arguments.get("min_support", 50) / 100
             min_threshold = arguments.get("min_threshold", 50) / 100
-            
+
             result = _ml_analyzer.get_apriori(
                 y=arguments["outcome"],
                 min_support=min_support,
-                min_threshold=min_threshold
+                min_threshold=min_threshold,
             )
             return [TextContent(type="text", text=str(result))]
-        
+
         elif name == "knn_search":
             if not _csv_analyzer:
                 return [TextContent(type="text", text="No CSV data available")]
-            
+            else:
+                if "include" in arguments:
+                    _csv_analyzer.comma_separated_include_columns(
+                        arguments.get("include") + "," + arguments.get("outcome", "")
+                    )
+
             if not ML_AVAILABLE:
                 return [TextContent(type="text", text="ML dependencies not available")]
-            
+
             if not _ml_analyzer:
                 _ml_analyzer = ML(csv=_csv_analyzer)
-            
+
             result = _ml_analyzer.knn_search(
                 y=arguments["outcome"],
                 n=arguments.get("n", 3),
-                r=arguments.get("record", 1)
+                r=arguments.get("record", 1),
             )
-            return [TextContent(type="text", text=json.dumps(result, indent=2, default=str))]
-        
+            return [
+                TextContent(type="text", text=json.dumps(result, indent=2, default=str))
+            ]
+
+        elif name == "reset_corpus_state":
+            _corpus = None
+            _text_analyzer = None
+            _csv_analyzer = None
+            _ml_analyzer = None
+            return [
+                TextContent(type="text", text="Global corpus state has been reset.")
+            ]
+
         else:
             return [TextContent(type="text", text=f"Unknown tool: {name}")]
-    
+
     except Exception as e:
         logger.error(f"Error executing tool {name}: {e}", exc_info=True)
         return [TextContent(type="text", text=f"Error: {str(e)}")]
@@ -750,20 +1097,22 @@ async def list_prompts() -> list[Prompt]:
         Prompt(
             name="analysis_workflow",
             description="Step-by-step guide for conducting a complete CRISP-T analysis based on INSTRUCTIONS.md",
-            arguments=[]
+            arguments=[],
         ),
         Prompt(
             name="triangulation_guide",
             description="Guide for triangulating qualitative and quantitative findings",
-            arguments=[]
+            arguments=[],
         ),
     ]
 
 
 @app.get_prompt()
-async def get_prompt(name: str, arguments: dict[str, str] | None = None) -> GetPromptResult:
+async def get_prompt(
+    name: str, arguments: dict[str, str] | None = None
+) -> GetPromptResult:
     """Get a specific prompt."""
-    
+
     if name == "analysis_workflow":
         return GetPromptResult(
             description="Complete analysis workflow for CRISP-T",
@@ -853,12 +1202,12 @@ Follow these steps to conduct a comprehensive analysis:
 - Decision trees and regression provide variable importance and coefficients
 - Link text findings (topics) with numeric data using relationships
 - Save frequently to preserve your analysis state
-"""
-                    )
+""",
+                    ),
                 )
-            ]
+            ],
         )
-    
+
     elif name == "triangulation_guide":
         return GetPromptResult(
             description="Guide for triangulating findings",
@@ -871,7 +1220,7 @@ Follow these steps to conduct a comprehensive analysis:
 
 ## What is Triangulation?
 
-Triangulation involves validating findings by comparing and contrasting results from different analytical methods or data sources. In CRISP-T, this means linking textual insights with numerical patterns.
+Triangulation involves validating findings by comparing and contrasting results from different analytical methods or data sources. In CRISP-T, this means linking textual insights with numeric patterns.
 
 ## Key Strategies
 
@@ -918,20 +1267,16 @@ After topic modeling:
 - Use multiple analytical approaches
 - Save corpus frequently to preserve metadata
 - Revisit and refine relationships as analysis progresses
-"""
-                    )
+""",
+                    ),
                 )
-            ]
+            ],
         )
-    
+
     raise ValueError(f"Unknown prompt: {name}")
 
 
 async def main():
     """Main entry point for the MCP server."""
     async with stdio_server() as (read_stream, write_stream):
-        await app.run(
-            read_stream,
-            write_stream,
-            app.create_initialization_options()
-        )
+        await app.run(read_stream, write_stream, app.create_initialization_options())
