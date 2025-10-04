@@ -21,12 +21,6 @@ For machine learning features:
 pip install crisp-t[ml]
 ```
 
-You'll also need to download the spaCy English model:
-```bash
-python -m spacy download en_core_web_sm
-```
-
-
 ## Command Line Scripts
 
 CRISP-T now provides three main command-line scripts:

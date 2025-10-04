@@ -27,7 +27,7 @@ from mlxtend.preprocessing import TransactionEncoder
 from mlxtend.frequent_patterns import apriori
 from mlxtend.frequent_patterns import association_rules
 
-from .model import Corpus
+from .model import Corpus, SpacyManager
 from .utils import QRUtils
 
 textacy.set_doc_extensions("extract.bags")  # type: ignore
@@ -42,6 +42,7 @@ class Text:
     ):
         self._corpus = corpus
         self._lang = lang
+        self._spacy_manager = SpacyManager(self._lang)
         self._max_length = max_length
         self._spacy_doc = None
         self._lemma = {}
@@ -134,7 +135,7 @@ class Text:
         for document in self._corpus.documents:
             text += self.process_text(document.text) + " \n"
             metadata = document.metadata
-        nlp = spacy.load(self._lang)
+        nlp = self._spacy_manager.get_model()
         nlp.max_length = self._max_length
         self._spacy_doc = nlp(text)
         return self._spacy_doc
@@ -147,7 +148,7 @@ class Text:
         for document in self._corpus.documents:
             text = self.process_text(document.text)
             metadata = document.metadata
-            nlp = spacy.load(self._lang)
+            nlp = self._spacy_manager.get_model()
             nlp.max_length = self._max_length
             spacy_doc = nlp(text)
             spacy_docs.append(spacy_doc)
