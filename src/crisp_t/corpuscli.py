@@ -9,6 +9,7 @@ import click
 
 from .model.corpus import Corpus
 from .model.document import Document
+from .helpers.initializer import initialize_corpus
 
 
 def _parse_kv(value: str) -> tuple[str, str]:
@@ -72,7 +73,7 @@ def _parse_relationship(value: str) -> tuple[str, str, str]:
     "relationships",
     multiple=True,
     help=(
-        "Add a relationship as 'first|second|relation' (e.g., text:term|num:col|correlates)."
+        "Add a relationship as 'first|second|relation' (e.g., text:term|numb:col|correlates)."
     ),
 )
 @click.option(
@@ -141,16 +142,8 @@ def main(
     click.echo("_________________________________________")
 
     # Load corpus from --inp if provided
-    corpus = None
-    if inp:
-        from .helpers.initializer import initialize_corpus
-
-        corpus = initialize_corpus(inp=inp)
-        if corpus:
-            click.echo(f"✓ Loaded corpus from {inp}")
-        else:
-            raise click.ClickException(f"Failed to load corpus from {inp}")
-    else:
+    corpus = initialize_corpus(inp=inp)
+    if not corpus:
         # Build initial corpus from CLI args
         if not id:
             raise click.ClickException("--id is required when not using --inp.")
