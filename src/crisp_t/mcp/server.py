@@ -110,8 +110,12 @@ async def list_resources() -> list[Resource]:
 
 
 @app.read_resource()
-async def read_resource(uri: Any) -> str:
-    """Read a corpus document by URI."""
+async def read_resource(uri: Any) -> list[TextContent]:
+    """Read a corpus document by URI.
+
+    Returns a list of TextContent items to conform to MCP's expected
+    function output schema for resource reads.
+    """
     uri_str = str(uri)
     if not uri_str.startswith("corpus://document/"):
         raise ValueError(f"Unknown resource URI: {uri}")
@@ -125,7 +129,7 @@ async def read_resource(uri: Any) -> str:
     if not doc:
         raise ValueError(f"Document not found: {doc_id}")
 
-    return doc.text
+    return [TextContent(type="text", text=doc.text)]
 
 
 @app.list_tools()
@@ -883,7 +887,7 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
             else:
                 if "include" in arguments:
                     _csv_analyzer.comma_separated_include_columns(
-                        arguments.get("include")+"," + arguments.get("outcome", "")
+                        arguments.get("include") + "," + arguments.get("outcome", "")
                     )
 
             if not ML_AVAILABLE:
@@ -913,7 +917,7 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
             else:
                 if "include" in arguments:
                     _csv_analyzer.comma_separated_include_columns(
-                        arguments.get("include")+"," + arguments.get("outcome", "")
+                        arguments.get("include") + "," + arguments.get("outcome", "")
                     )
 
             if not ML_AVAILABLE:
@@ -942,7 +946,7 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
             else:
                 if "include" in arguments:
                     _csv_analyzer.comma_separated_include_columns(
-                        arguments.get("include")+"," + arguments.get("outcome", "")
+                        arguments.get("include") + "," + arguments.get("outcome", "")
                     )
 
             if not ML_AVAILABLE:
@@ -964,7 +968,7 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
             else:
                 if "include" in arguments:
                     _csv_analyzer.comma_separated_include_columns(
-                        arguments.get("include")+"," + arguments.get("outcome", "")
+                        arguments.get("include") + "," + arguments.get("outcome", "")
                     )
 
             if not ML_AVAILABLE:
@@ -984,7 +988,7 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
             else:
                 if "include" in arguments:
                     _csv_analyzer.comma_separated_include_columns(
-                        arguments.get("include")+"," + arguments.get("outcome", "")
+                        arguments.get("include") + "," + arguments.get("outcome", "")
                     )
 
             if not ML_AVAILABLE:
@@ -1004,7 +1008,7 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
             else:
                 if "include" in arguments:
                     _csv_analyzer.comma_separated_include_columns(
-                        arguments.get("include")+"," + arguments.get("outcome", "")
+                        arguments.get("include") + "," + arguments.get("outcome", "")
                     )
 
             if not ML_AVAILABLE:
@@ -1026,7 +1030,7 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
             else:
                 if "include" in arguments:
                     _csv_analyzer.comma_separated_include_columns(
-                        arguments.get("include")+"," + arguments.get("outcome", "")
+                        arguments.get("include") + "," + arguments.get("outcome", "")
                     )
 
             if not ML_AVAILABLE:
@@ -1051,7 +1055,7 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
             else:
                 if "include" in arguments:
                     _csv_analyzer.comma_separated_include_columns(
-                        arguments.get("include")+"," + arguments.get("outcome", "")
+                        arguments.get("include") + "," + arguments.get("outcome", "")
                     )
 
             if not ML_AVAILABLE:
