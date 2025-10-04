@@ -60,7 +60,8 @@ crisp [OPTIONS]
 - `--sentiment`: Generate sentiment scores using VADER
 - `--sentence`: Generate sentence-level scores when applicable
 - `--nlp`: Generate all NLP reports (combines above text analyses)
-- `--nnet`, `--cls`, `--knn`, `--kmeans`, `--cart`, `--pca`, `--ml`: Machine learning and clustering options (requires `crisp-t[ml]`)
+- `--nnet`, `--cls`, `--knn`, `--kmeans`, `--cart`, `--pca`, `--regression`, `--ml`: Machine learning and clustering options (requires `crisp-t[ml]`)
+  - `--regression`: Perform linear or logistic regression (automatically detects binary outcomes for logistic regression)
 - `--visualize`: Generate visualizations (word clouds, topic charts, etc.)
 - `--num, -n INTEGER`: Number parameter (clusters, topics, epochs, etc.) - default: 3
 - `--rec, -r INTEGER`: Record parameter (top N results, recommendations) - default: 3

@@ -90,6 +90,7 @@ except ImportError:
 @click.option("--kmeans", is_flag=True, help="Display KMeans clusters")
 @click.option("--cart", is_flag=True, help="Display Association Rules")
 @click.option("--pca", is_flag=True, help="Display PCA")
+@click.option("--regression", is_flag=True, help="Display linear or logistic regression results")
 @click.option("--visualize", is_flag=True, help="Visualize words, topics or wordcloud")
 @click.option(
     "--ignore",
@@ -131,6 +132,7 @@ def main(
     kmeans,
     cart,
     pca,
+    regression,
     ml,
     visualize,
     ignore,
@@ -247,17 +249,17 @@ def main(
         # Initialize ML analyzer if available and ML functions are requested
         if (
             ML_AVAILABLE
-            and (nnet or cls or knn or kmeans or cart or pca or ml)
+            and (nnet or cls or knn or kmeans or cart or pca or regression or ml)
             and csv_analyzer
         ):
             if include:
                 csv_analyzer.comma_separated_include_columns(include)
             ml_analyzer = ML(csv=csv_analyzer)  # type: ignore
         else:
-            if (nnet or cls or knn or kmeans or cart or pca or ml) and not ML_AVAILABLE:
+            if (nnet or cls or knn or kmeans or cart or pca or regression or ml) and not ML_AVAILABLE:
                 click.echo("Machine learning features require additional dependencies.")
                 click.echo("Install with: pip install crisp-t[ml]")
-            if (nnet or cls or knn or kmeans or cart or pca or ml) and not csv_analyzer:
+            if (nnet or cls or knn or kmeans or cart or pca or regression or ml) and not csv_analyzer:
                 click.echo(
                     "ML analysis requires CSV data. Use --csv to provide a data file."
                 )
@@ -578,7 +580,25 @@ def main(
                 except Exception as e:
                     click.echo(f"Error performing Principal Component Analysis: {e}")
 
-        elif (nnet or cls or knn or kmeans or cart or pca or ml) and not ML_AVAILABLE:
+            if (regression or ml) and target_col:
+                click.echo("\n=== Regression Analysis ===")
+                click.echo(
+                    """
+                           Regression Analysis (Linear or Logistic Regression).
+                           Automatically detects binary outcomes for logistic regression.
+                           Otherwise uses linear regression for continuous outcomes.
+                Hint:   Use --outcome to specify the target variable for regression.
+                        Use --include to specify columns to include in the analysis (comma separated).
+                """
+                )
+                try:
+                    regression_results = ml_analyzer.get_regression(y=target_col)
+                    if out:
+                        _save_output(regression_results, out, "regression_results")
+                except Exception as e:
+                    click.echo(f"Error performing regression analysis: {e}")
+
+        elif (nnet or cls or knn or kmeans or cart or pca or regression or ml) and not ML_AVAILABLE:
             click.echo("Machine learning features require additional dependencies.")
             click.echo("Install with: pip install crisp-t[ml]")
 
