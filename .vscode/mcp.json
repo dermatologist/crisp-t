@@ -1,7 +1,8 @@
 {
   "servers": {
       "crisp": {
-      "command": "~/venv/torch/bin/crisp-mcp"
+      "command": "uv",
+      "args": ["run", "crisp-mcp"],
     }
   }
 }
