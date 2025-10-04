@@ -132,8 +132,6 @@ class ML:
 
     def _get_members(self, clusters, number_of_clusters=3):
         _df = self._csv.df
-        # Create a column called numeric_cluster and assign cluster labels
-        _df["numeric_cluster"] = clusters
         self._csv.df = _df
         members = []
         for i in range(number_of_clusters):
@@ -540,13 +538,13 @@ class ML:
     def get_regression(self, y: str):
         """
         Perform linear or logistic regression based on the outcome variable type.
-        
+
         If the outcome is binary, fit a logistic regression model.
         Otherwise, fit a linear regression model.
-        
+
         Args:
             y (str): Target column name for the regression.
-        
+
         Returns:
             dict: Regression results including coefficients, intercept, and metrics.
         """
@@ -562,37 +560,37 @@ class ML:
             )
 
         X_np, Y_raw, X, Y = self._process_xy(y=y)
-        
+
         # Check if outcome is binary (logistic) or continuous (linear)
         unique_values = np.unique(Y_raw)
         num_unique = len(unique_values)
-        
+
         # Determine if binary classification or regression
         is_binary = num_unique == 2
-        
+
         if is_binary:
             # Logistic Regression
             print(f"\n=== Logistic Regression for {y} ===")
             print(f"Binary outcome detected with values: {unique_values}")
-            
+
             model = LogisticRegression(max_iter=1000, random_state=42)
             model.fit(X_np, Y_raw)
-            
+
             # Predictions
             y_pred = model.predict(X_np)
-            
+
             # Accuracy
             accuracy = accuracy_score(Y_raw, y_pred)
             print(f"\nAccuracy: {accuracy*100:.2f}%")
-            
+
             # Coefficients and Intercept
             print(f"\nCoefficients:")
             for i, coef in enumerate(model.coef_[0]):
                 feature_name = X.columns[i] if hasattr(X, 'columns') else f"Feature_{i}"
                 print(f"  {feature_name}: {coef:.5f}")
-            
+
             print(f"\nIntercept: {model.intercept_[0]:.5f}")
-            
+
             # Store in metadata
             if self._csv.corpus is not None:
                 coef_str = "\n".join([
@@ -602,7 +600,7 @@ class ML:
                 self._csv.corpus.metadata["logistic_regression_accuracy"] = f"Logistic Regression accuracy for predicting {y}: {accuracy*100:.2f}%"
                 self._csv.corpus.metadata["logistic_regression_coefficients"] = f"Coefficients:\n{coef_str}"
                 self._csv.corpus.metadata["logistic_regression_intercept"] = f"Intercept: {model.intercept_[0]:.5f}"
-            
+
             return {
                 "model_type": "logistic",
                 "accuracy": accuracy,
@@ -614,27 +612,27 @@ class ML:
             # Linear Regression
             print(f"\n=== Linear Regression for {y} ===")
             print(f"Continuous outcome detected with {num_unique} unique values")
-            
+
             model = LinearRegression()
             model.fit(X_np, Y_raw)
-            
+
             # Predictions
             y_pred = model.predict(X_np)
-            
+
             # Metrics
             mse = mean_squared_error(Y_raw, y_pred)
             r2 = r2_score(Y_raw, y_pred)
             print(f"\nMean Squared Error (MSE): {mse:.5f}")
             print(f"R² Score: {r2:.5f}")
-            
+
             # Coefficients and Intercept
             print(f"\nCoefficients:")
             for i, coef in enumerate(model.coef_):
                 feature_name = X.columns[i] if hasattr(X, 'columns') else f"Feature_{i}"
                 print(f"  {feature_name}: {coef:.5f}")
-            
+
             print(f"\nIntercept: {model.intercept_:.5f}")
-            
+
             # Store in metadata
             if self._csv.corpus is not None:
                 coef_str = "\n".join([
@@ -645,7 +643,7 @@ class ML:
                 self._csv.corpus.metadata["linear_regression_r2"] = f"Linear Regression R² for predicting {y}: {r2:.5f}"
                 self._csv.corpus.metadata["linear_regression_coefficients"] = f"Coefficients:\n{coef_str}"
                 self._csv.corpus.metadata["linear_regression_intercept"] = f"Intercept: {model.intercept_:.5f}"
-            
+
             return {
                 "model_type": "linear",
                 "mse": mse,
