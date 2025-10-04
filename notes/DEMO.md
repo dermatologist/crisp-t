@@ -75,3 +75,12 @@ crispt --add-rel "text:work|numb:self_time|correlates" --out crisp_input
 
 
 ## MCP Server for agentic AI
+
+* load corpus from /Users/bpunn/temp/crisp_input
+* use available tools
+* What are the columns in df?
+* Do a regression using time_bp,time_dp,travel_time,self_time with relaxed as outcome
+* Interpret the results
+* Is self_time or related concepts occur frequently in documents?
+* can you ignore "interviewer,interviewee" and assign topics again? Yes.
+* What are the topics in documents with keyword "work"?
