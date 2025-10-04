@@ -205,7 +205,7 @@ def main(
 
     # Save corpus to --out if provided
     if out:
-        from src.crisp_t.read_data import ReadData
+        from .read_data import ReadData
 
         rd = ReadData(corpus=corpus)
         rd.write_corpus_to_json(out, corpus=corpus)

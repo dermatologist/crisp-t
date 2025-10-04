@@ -86,7 +86,7 @@ source-exclude = [
 crisp = "crisp_t.cli:main"
 crispviz = "crisp_t.vizcli:main"
 crispt = "crisp_t.corpuscli:main"
-crisp-mcp = "crisp_t.mcp:main"
+crisp-mcp = "crisp_t.mcp.__main__:run_server"
 
 [project.optional-dependencies]
 ml = [
