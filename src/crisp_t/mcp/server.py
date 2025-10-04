@@ -866,7 +866,7 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                 return [TextContent(type="text", text="No CSV data available")]
             else:
                 if "include" in arguments:
-                    _csv_analyzer.comma_separated_include_columns(arguments["include"])
+                    _csv_analyzer.comma_separated_include_columns(arguments.get("include"))
 
             if not ML_AVAILABLE:
                 return [TextContent(type="text", text="ML dependencies not available")]
@@ -894,7 +894,7 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                 return [TextContent(type="text", text="No CSV data available")]
             else:
                 if "include" in arguments:
-                    _csv_analyzer.comma_separated_include_columns(arguments["include"])
+                    _csv_analyzer.comma_separated_include_columns(arguments.get("include"))
 
             if not ML_AVAILABLE:
                 return [TextContent(type="text", text="ML dependencies not available")]
@@ -921,7 +921,7 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                 return [TextContent(type="text", text="No CSV data available")]
             else:
                 if "include" in arguments:
-                    _csv_analyzer.comma_separated_include_columns(arguments["include"])
+                    _csv_analyzer.comma_separated_include_columns(arguments.get("include"))
 
             if not ML_AVAILABLE:
                 return [TextContent(type="text", text="ML dependencies not available")]
@@ -941,7 +941,7 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                 return [TextContent(type="text", text="No CSV data available")]
             else:
                 if "include" in arguments:
-                    _csv_analyzer.comma_separated_include_columns(arguments["include"])
+                    _csv_analyzer.comma_separated_include_columns(arguments.get("include"))
 
             if not ML_AVAILABLE:
                 return [TextContent(type="text", text="ML dependencies not available")]
@@ -959,7 +959,7 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                 return [TextContent(type="text", text="No CSV data available")]
             else:
                 if "include" in arguments:
-                    _csv_analyzer.comma_separated_include_columns(arguments["include"])
+                    _csv_analyzer.comma_separated_include_columns(arguments.get("include"))
 
             if not ML_AVAILABLE:
                 return [TextContent(type="text", text="ML dependencies not available")]
@@ -977,7 +977,7 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                 return [TextContent(type="text", text="No CSV data available")]
             else:
                 if "include" in arguments:
-                    _csv_analyzer.comma_separated_include_columns(arguments["include"])
+                    _csv_analyzer.comma_separated_include_columns(arguments.get("include"))
 
             if not ML_AVAILABLE:
                 return [TextContent(type="text", text="ML dependencies not available")]
@@ -997,7 +997,7 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                 return [TextContent(type="text", text="No CSV data available")]
             else:
                 if "include" in arguments:
-                    _csv_analyzer.comma_separated_include_columns(arguments["include"])
+                    _csv_analyzer.comma_separated_include_columns(arguments.get("include"))
 
             if not ML_AVAILABLE:
                 return [TextContent(type="text", text="ML dependencies not available")]
@@ -1020,7 +1020,7 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                 return [TextContent(type="text", text="No CSV data available")]
             else:
                 if "include" in arguments:
-                    _csv_analyzer.comma_separated_include_columns(arguments["include"])
+                    _csv_analyzer.comma_separated_include_columns(arguments.get("include"))
 
             if not ML_AVAILABLE:
                 return [TextContent(type="text", text="ML dependencies not available")]
