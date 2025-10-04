@@ -624,7 +624,7 @@ async def list_tools() -> list[Tool]:
                     description="""
                 Find K-nearest neighbors for a specific record
                 It is mandatory to specify columns to include in the search as a comma-separated list.
-                
+
                 Args:
                     outcome (str): The target variable for classification.
                     n (int): The number of neighbors to find.
@@ -864,11 +864,15 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
         elif name == "kmeans_clustering":
             if not _csv_analyzer:
                 return [TextContent(type="text", text="No CSV data available")]
+            else:
+                if "include" in arguments:
+                    _csv_analyzer.comma_separated_include_columns(arguments["include"])
 
             if not ML_AVAILABLE:
                 return [TextContent(type="text", text="ML dependencies not available")]
 
             _csv_analyzer.retain_numeric_columns_only()
+
             _csv_analyzer.drop_na()
             ml = ML(csv=_csv_analyzer)
             clusters, members = ml.get_kmeans(
@@ -888,6 +892,9 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
         elif name == "decision_tree_classification":
             if not _csv_analyzer:
                 return [TextContent(type="text", text="No CSV data available")]
+            else:
+                if "include" in arguments:
+                    _csv_analyzer.comma_separated_include_columns(arguments["include"])
 
             if not ML_AVAILABLE:
                 return [TextContent(type="text", text="ML dependencies not available")]
@@ -912,6 +919,9 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
         elif name == "svm_classification":
             if not _csv_analyzer:
                 return [TextContent(type="text", text="No CSV data available")]
+            else:
+                if "include" in arguments:
+                    _csv_analyzer.comma_separated_include_columns(arguments["include"])
 
             if not ML_AVAILABLE:
                 return [TextContent(type="text", text="ML dependencies not available")]
@@ -929,6 +939,9 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
         elif name == "neural_network_classification":
             if not _csv_analyzer:
                 return [TextContent(type="text", text="No CSV data available")]
+            else:
+                if "include" in arguments:
+                    _csv_analyzer.comma_separated_include_columns(arguments["include"])
 
             if not ML_AVAILABLE:
                 return [TextContent(type="text", text="ML dependencies not available")]
@@ -944,6 +957,9 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
         elif name == "regression_analysis":
             if not _csv_analyzer:
                 return [TextContent(type="text", text="No CSV data available")]
+            else:
+                if "include" in arguments:
+                    _csv_analyzer.comma_separated_include_columns(arguments["include"])
 
             if not ML_AVAILABLE:
                 return [TextContent(type="text", text="ML dependencies not available")]
@@ -959,6 +975,9 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
         elif name == "pca_analysis":
             if not _csv_analyzer:
                 return [TextContent(type="text", text="No CSV data available")]
+            else:
+                if "include" in arguments:
+                    _csv_analyzer.comma_separated_include_columns(arguments["include"])
 
             if not ML_AVAILABLE:
                 return [TextContent(type="text", text="ML dependencies not available")]
@@ -976,6 +995,9 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
         elif name == "association_rules":
             if not _csv_analyzer:
                 return [TextContent(type="text", text="No CSV data available")]
+            else:
+                if "include" in arguments:
+                    _csv_analyzer.comma_separated_include_columns(arguments["include"])
 
             if not ML_AVAILABLE:
                 return [TextContent(type="text", text="ML dependencies not available")]
@@ -996,6 +1018,9 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
         elif name == "knn_search":
             if not _csv_analyzer:
                 return [TextContent(type="text", text="No CSV data available")]
+            else:
+                if "include" in arguments:
+                    _csv_analyzer.comma_separated_include_columns(arguments["include"])
 
             if not ML_AVAILABLE:
                 return [TextContent(type="text", text="ML dependencies not available")]
