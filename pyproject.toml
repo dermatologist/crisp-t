@@ -33,7 +33,7 @@ dependencies = [
     "seaborn",
     "wordcloud",
     "tabulate",
-    "pip"
+    "mcp"
 ]
 
 
@@ -54,6 +54,7 @@ dev = [
     "mkdocs>=1.4.2",
     "mkdocs-material>=8.5.10",
     "mkdocstrings[python]>=0.26.1",
+    "pytest-asyncio>=1.2.0",
 ]
 
 [build-system]
@@ -85,6 +86,7 @@ source-exclude = [
 crisp = "crisp_t.cli:main"
 crispviz = "crisp_t.vizcli:main"
 crispt = "crisp_t.corpuscli:main"
+crisp-mcp = "crisp_t.mcp.__main__:run_server"
 
 [project.optional-dependencies]
 ml = [
