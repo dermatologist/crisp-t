@@ -1,15 +1,18 @@
 site_name: crisp-t
 repo_url: https://github.com/dermatologist/crisp-t
 site_url: https://dermatologist.github.io/crisp-t
-site_description: Qualitative Research support tools in Python!
+site_description: OMOP CDM utils in Python
 site_author: Bell Eapen
 edit_uri: edit/main/docs/
 repo_name: dermatologist/crisp-t
-copyright: Maintained by <a href="https://dermatologist.com">dermatologist</a>.
+copyright: Maintained by <a href="https://github.com/dermatologist">dermatologist</a>.
 
 nav:
   - Home: index.md
   - Modules: modules.md
+  - Contributing: contributing.md
+  - Changelog: changelog.md
+  - MCP: MCP_SERVER.md
 plugins:
   - search
   - mkdocstrings:
@@ -44,6 +47,10 @@ extra:
       link: https://github.com/dermatologist/crisp-t
     - icon: fontawesome/brands/python
       link: https://pypi.org/project/crisp-t
+    - icon: fontawesome/brands/linkedin
+      link: https://www.linkedin.com/in/beapen
+    - icon: fontawesome/solid/home
+      link: https://nuchange.ca
 
 markdown_extensions:
   - toc:
