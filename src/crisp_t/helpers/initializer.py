@@ -26,7 +26,11 @@ def initialize_corpus(
     """
     # Handle source option (URL or directory)
     read_data = ReadData()
-    # check if crisp folder exists in the current directory
+    # check if crisp folder exists in the current directory or home directory
+    if not source and os.path.exists(os.path.join(os.path.expanduser("~"), "crisp_source")):
+        source = os.path.join(os.path.expanduser("~"), "crisp_source")
+    if not source and os.path.exists(os.path.join(os.getcwd(), "crisp_source")):
+        source = os.path.join(os.getcwd(), "crisp_source")
     if not source and os.path.exists("crisp_source"):
         source = "crisp_source"
     source = source or os.getenv("CRISP_T_SOURCE")
@@ -49,7 +53,7 @@ def initialize_corpus(
                 description=f"Data loaded from {source}",
             )
             click.echo(
-                f"✓ Successfully loaded {len(corpus.documents)} document(s) from {source}"
+                f"✓ Successfully loaded {len(corpus.documents)} document(s) from {source}" # type: ignore
             )
 
         except click.ClickException as e:
@@ -61,7 +65,11 @@ def initialize_corpus(
             return
         return corpus
 
-    # Handle inp option (text file or directory)
+    # Handle inp option (text file or directory). It can be in the home directory or current directory
+    if not inp and os.path.exists(os.path.join(os.path.expanduser("~"), "crisp_input")):
+        inp = os.path.join(os.path.expanduser("~"), "crisp_input")
+    if not inp and os.path.exists(os.path.join(os.getcwd(), "crisp_input")):
+        inp = os.path.join(os.getcwd(), "crisp_input")
     if not inp and os.path.exists("crisp_input"):
         inp = "crisp_input"
     inp = inp or os.getenv("CRISP_T_INPUT")
