@@ -152,6 +152,106 @@ When saving analysis outputs via `--out`, files are automatically named with suf
 
 When saving the corpus via `--out`, the CLI writes `corpus.json` (and `corpus_df.csv` if present) into the specified folder. If you pass a file path, only its parent directory is used for writing `corpus.json`.
 
+## MCP Server
+
+CRISP-T provides a Model Context Protocol (MCP) server that exposes all functionality as tools, resources, and prompts. This enables integration with AI assistants and other MCP-compatible clients.
+
+### Starting the MCP Server
+
+The MCP server runs via stdio and can be started with:
+
+```bash
+crisp-mcp
+```
+
+Or using Python directly:
+
+```bash
+python -m crisp_t.mcp
+```
+
+### Configuring MCP Clients
+
+#### Claude Desktop
+
+Add to your Claude Desktop configuration file:
+
+**MacOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+**Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+
+```json
+{
+  "mcpServers": {
+    "crisp-t": {
+      "command": "crisp-mcp"
+    }
+  }
+}
+```
+
+#### Using with Other MCP Clients
+
+The server can be used with any MCP-compatible client. Configure your client to run the `crisp-mcp` command via stdio.
+
+### Available Tools
+
+The MCP server provides tools for:
+
+**Corpus Management**
+- `load_corpus` - Load corpus from folder or source
+- `save_corpus` - Save corpus to folder
+- `add_document` - Add new document
+- `remove_document` - Remove document by ID
+- `get_document` - Get document details
+- `list_documents` - List all document IDs
+- `add_relationship` - Link text keywords with numeric columns
+- `get_relationships` - Get all relationships
+- `get_relationships_for_keyword` - Query relationships by keyword
+
+**NLP/Text Analysis**
+- `generate_coding_dictionary` - Extract categories, properties, dimensions
+- `topic_modeling` - Discover topics using LDA
+- `assign_topics` - Assign documents to topics (creates keyword labels)
+- `extract_categories` - Extract common concepts
+- `generate_summary` - Generate extractive summary
+- `sentiment_analysis` - VADER sentiment analysis
+
+**DataFrame/CSV Operations**
+- `get_df_columns` - Get DataFrame column names
+- `get_df_row_count` - Get number of rows
+- `get_df_row` - Get specific row by index
+
+**Machine Learning** (requires `crisp-t[ml]`)
+- `kmeans_clustering` - K-Means clustering
+- `decision_tree_classification` - Decision tree with feature importance
+- `svm_classification` - SVM classification
+- `neural_network_classification` - Neural network classification
+- `regression_analysis` - Linear/logistic regression with coefficients
+- `pca_analysis` - Principal Component Analysis
+- `association_rules` - Apriori association rules
+- `knn_search` - K-nearest neighbors search
+
+### Resources
+
+The server exposes corpus documents as resources:
+- `corpus://document/{id}` - Access document text by ID
+
+### Prompts
+
+- `analysis_workflow` - Complete step-by-step analysis guide based on INSTRUCTIONS.md
+- `triangulation_guide` - Guide for triangulating qualitative and quantitative findings
+
+### Example Usage via MCP
+
+1. Load a corpus: `load_corpus` with `inp="/path/to/corpus"`
+2. Perform topic modeling: `topic_modeling` with `num_topics=5`
+3. Assign documents to topics: `assign_topics` (creates keyword labels for documents)
+4. Run regression: `regression_analysis` with `outcome="target_var"` (returns coefficients)
+5. Link findings: `add_relationship` with `first="text:healthcare"`, `second="num:satisfaction"`, `relation="correlates"`
+6. Save results: `save_corpus` with `out="/path/to/output"`
+
+The workflow enables AI assistants to help conduct comprehensive analyses by combining text analytics, machine learning, and triangulation of qualitative-quantitative findings.
+
 ## Example use
 
 A company collects:
