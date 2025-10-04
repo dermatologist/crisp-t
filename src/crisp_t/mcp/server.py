@@ -8,7 +8,7 @@ as tools, resources, and prompts.
 
 import json
 import logging
-from typing import Any, Optional
+from typing import Any, Optional, cast
 
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
@@ -41,6 +41,8 @@ try:
 except ImportError:
     ML_AVAILABLE = False
     logger.warning("ML dependencies not available")
+    # Provide a placeholder for ML to satisfy type checkers when unavailable
+    ML = cast(Any, None)
 
 # Global state for the server
 _corpus = None
@@ -63,7 +65,7 @@ def _init_corpus(
             source=source,
             inp=inp,
             comma_separated_text_columns=text_columns,
-            comma_separated_ignore_words=ignore_words if ignore_words else None,
+            comma_separated_ignore_words=ignore_words or "",
         )
 
         if _corpus:
@@ -97,7 +99,7 @@ async def list_resources() -> list[Resource]:
         for doc in _corpus.documents:
             resources.append(
                 Resource(
-                    uri=f"corpus://document/{doc.id}",
+                    uri=cast(Any, f"corpus://document/{doc.id}"),
                     name=f"Document: {doc.name or doc.id}",
                     description=doc.description or f"Text content of document {doc.id}",
                     mimeType="text/plain",
@@ -108,12 +110,13 @@ async def list_resources() -> list[Resource]:
 
 
 @app.read_resource()
-async def read_resource(uri: str) -> str:
+async def read_resource(uri: Any) -> str:
     """Read a corpus document by URI."""
-    if not uri.startswith("corpus://document/"):
+    uri_str = str(uri)
+    if not uri_str.startswith("corpus://document/"):
         raise ValueError(f"Unknown resource URI: {uri}")
 
-    doc_id = uri.replace("corpus://document/", "")
+    doc_id = uri_str.replace("corpus://document/", "")
 
     if not _corpus:
         raise ValueError("No corpus loaded. Use load_corpus tool first.")
@@ -132,7 +135,7 @@ async def list_tools() -> list[Tool]:
         # Corpus management tools
         Tool(
             name="load_corpus",
-            description="Load a corpus from a folder containing corpus.json or from a source directory/URL. Hint: Always run this first before any analysis.",
+            description="Load a corpus from a folder containing corpus.json or from a source directory/URL. Run this first before any analysis.",
             inputSchema={
                 "type": "object",
                 "properties": {
@@ -157,7 +160,7 @@ async def list_tools() -> list[Tool]:
         ),
         Tool(
             name="save_corpus",
-            description="Save the current corpus to a folder as corpus.json. Hint: Use to persist your work after analysis or transformation.",
+            description="Save the current corpus to a folder as corpus.json. Use this to persist your work after analysis or transformation.",
             inputSchema={
                 "type": "object",
                 "properties": {
@@ -171,7 +174,7 @@ async def list_tools() -> list[Tool]:
         ),
         Tool(
             name="add_document",
-            description="Add a new document to the corpus. Hint: Use to expand your dataset with new text entries.",
+            description="Add a new document to the corpus. Use this to expand your dataset with new text entries.",
             inputSchema={
                 "type": "object",
                 "properties": {
@@ -184,7 +187,7 @@ async def list_tools() -> list[Tool]:
         ),
         Tool(
             name="remove_document",
-            description="Remove a document from the corpus by ID. Hint: Use to clean up or curate your corpus.",
+            description="Remove a document from the corpus by ID. Use this to clean up or curate your corpus.",
             inputSchema={
                 "type": "object",
                 "properties": {
@@ -195,7 +198,7 @@ async def list_tools() -> list[Tool]:
         ),
         Tool(
             name="get_document",
-            description="Get a document by ID from the corpus. Hint: Use to inspect or retrieve specific documents for review.",
+            description="Get a document by ID from the corpus. Use this to inspect or retrieve specific documents for review.",
             inputSchema={
                 "type": "object",
                 "properties": {
@@ -206,12 +209,12 @@ async def list_tools() -> list[Tool]:
         ),
         Tool(
             name="list_documents",
-            description="List all document IDs in the corpus. Hint: Use to enumerate all available documents for batch operations.",
+            description="List all document IDs in the corpus. Use this to enumerate all available documents for batch operations.",
             inputSchema={"type": "object", "properties": {}},
         ),
         Tool(
             name="add_relationship",
-            description="Add a relationship between text keywords and numeric columns. Hint: Use to link topic modeling results with dataframe columns for triangulation.",
+            description="Add a relationship between text keywords and numeric columns. Link topic modeling results with DataFrame columns for triangulation.",
             inputSchema={
                 "type": "object",
                 "properties": {
@@ -233,12 +236,12 @@ async def list_tools() -> list[Tool]:
         ),
         Tool(
             name="get_relationships",
-            description="Get all relationships in the corpus. Hint: Use to review all established links between text and numeric data.",
+            description="Get all relationships in the corpus. Review established links between text and numeric data.",
             inputSchema={"type": "object", "properties": {}},
         ),
         Tool(
             name="get_relationships_for_keyword",
-            description="Get relationships involving a specific keyword. Hint: Use to explore connections for a particular topic or term.",
+            description="Get relationships involving a specific keyword. Explore connections for a particular topic or term.",
             inputSchema={
                 "type": "object",
                 "properties": {
@@ -256,10 +259,10 @@ async def list_tools() -> list[Tool]:
             description="""
             Generate a qualitative coding dictionary with categories (verbs), properties (nouns), and dimensions (adjectives/adverbs). Useful for understanding the main themes and concepts in the corpus.
 
-            Hint:   Use --ignore with a comma-separated list of words to exclude common but uninformative words.
-                    Use --filters to narrow down documents based on metadata.
-                    Use --num to adjust the number of categories displayed.
-                    Use --top_n to adjust the number of top items displayed per section.
+            Tips:
+              - Use ignore to exclude common but uninformative words.
+              - Use filters to narrow down documents based on metadata (key=value).
+              - Adjust num (categories) and top_n (items per section).
             """,
             inputSchema={
                 "type": "object",
@@ -276,11 +279,13 @@ async def list_tools() -> list[Tool]:
                     },
                     "ignore": {
                         "type": "array",
-                        "description": "Comma-separated words to ignore",
+                        "description": "List of words to ignore",
+                        "items": {"type": "string"},
                     },
                     "filters": {
                         "type": "array",
                         "description": "Filters to apply on documents (key=value or key:value)",
+                        "items": {"type": "string"},
                     },
                 },
             },
@@ -290,8 +295,9 @@ async def list_tools() -> list[Tool]:
             description="""
             Perform LDA topic modeling to discover latent topics in the corpus. Returns topics with their associated keywords and weights, useful for categorizing documents by theme.
 
-            Hint:   Use --num_topics to adjust the number of topics generated.
-                    Use --num_words to adjust the number of words displayed per topic.
+            Tips:
+              - Set num_topics (number of topics).
+              - Set num_words (words to show per topic).
             """,
             inputSchema={
                 "type": "object",
@@ -314,7 +320,7 @@ async def list_tools() -> list[Tool]:
             description="""
             Assign documents to their dominant topics with contribution percentages. These topic assignments can be used as keywords to filter or categorize documents.
 
-            Hint: --visualize adds a DataFrame to corpus.visualization[\"assign_topics\"] for visualization.
+            Note: Use the results to create keywords for filtering/categorization.
             """,
             inputSchema={
                 "type": "object",
@@ -332,7 +338,7 @@ async def list_tools() -> list[Tool]:
             description="""
             Extract common categories/concepts from the corpus as bag-of-terms with weights
 
-            Hint:   Use --num to adjust the number of categories displayed.
+            Tip: Adjust num to change how many categories are returned.
             """,
             inputSchema={
                 "type": "object",
@@ -350,7 +356,7 @@ async def list_tools() -> list[Tool]:
             description="""
             Generate an extractive text summary of the entire corpus
 
-            Hint:   Use --weight to adjust the number of sentences in the summary.
+            Tip: Increase weight for longer summaries.
             """,
             inputSchema={
                 "type": "object",
@@ -368,8 +374,9 @@ async def list_tools() -> list[Tool]:
             description="""
             Perform VADER sentiment analysis on the corpus, providing positive, negative, neutral, and compound scores
 
-            Hint:   Use --documents to analyze at document level.
-                    Use --verbose for verbose output.
+            Tips:
+              - Set documents=true to analyze at document level.
+              - Set verbose=true for detailed output.
             """,
             inputSchema={
                 "type": "object",
@@ -390,23 +397,31 @@ async def list_tools() -> list[Tool]:
         # DataFrame/CSV Tools
         Tool(
             name="get_df_columns",
-            description="Get all column names from the DataFrame. Hint: Use this to inspect available features for analysis.",
+            description="Get all column names from the DataFrame. Use this to inspect available features for analysis.",
             inputSchema={"type": "object", "properties": {}},
         ),
         Tool(
             name="get_df_row_count",
-            description="Get the number of rows in the DataFrame. Hint: Useful for understanding dataset size before analysis.",
+            description="Get the number of rows in the DataFrame. Useful for understanding dataset size before analysis.",
             inputSchema={"type": "object", "properties": {}},
         ),
         Tool(
             name="get_df_row",
-            description="Get a specific row from the DataFrame by index. Hint: Use to inspect individual records for debugging or exploration.",
+            description="Get a specific row from the DataFrame by index. Use this to inspect individual records for debugging or exploration.",
             inputSchema={
                 "type": "object",
                 "properties": {
                     "index": {"type": "integer", "description": "Row index"}
                 },
                 "required": ["index"],
+            },
+        ),
+        Tool(
+            name="reset_corpus_state",
+            description="Reset the global corpus, text analyzer, and CSV analyzer state. Clear all loaded data and start fresh.",
+            inputSchema={
+                "type": "object",
+                "properties": {},
             },
         ),
     ]
@@ -419,7 +434,7 @@ async def list_tools() -> list[Tool]:
                     name="kmeans_clustering",
                     description="""
                 Perform K-Means clustering on numeric data. Useful for segmenting data into groups based on similarity.
-                It is mandatory to specify columns to include in the clustering as a comma-separated list.
+                Required: specify columns to include as a comma-separated list (include).
 
                 Args:
                     num_clusters (int): The number of clusters to form.
@@ -442,13 +457,14 @@ async def list_tools() -> list[Tool]:
                                 "description": "Comma-separated list of columns to include",
                             },
                         },
+                        "required": ["include"],
                     },
                 ),
                 Tool(
                     name="decision_tree_classification",
                     description="""
                 Train a decision tree classifier and return variable importance rankings. Shows which features are most predictive of the outcome.
-                It is mandatory to specify columns to include in the classification as a comma-separated list.
+                Required: specify columns to include in the classification as a comma-separated list (include).
 
                     Args:
                         outcome (str): The target variable for classification.
@@ -472,14 +488,14 @@ async def list_tools() -> list[Tool]:
                                 "description": "Comma-separated columns to include",
                             },
                         },
-                        "required": ["outcome"],
+                        "required": ["outcome", "include"],
                     },
                 ),
                 Tool(
                     name="svm_classification",
                     description="""
                 Perform SVM classification and return confusion matrix
-                It is mandatory to specify columns to include in the classification as a comma-separated list.
+                Required: specify columns to include in the classification as a comma-separated list (include).
 
                 Args:
                     outcome (str): The target variable for classification.
@@ -497,14 +513,14 @@ async def list_tools() -> list[Tool]:
                                 "description": "Comma-separated columns to include",
                             },
                         },
-                        "required": ["outcome"],
+                        "required": ["outcome", "include"],
                     },
                 ),
                 Tool(
                     name="neural_network_classification",
                     description="""
                 Train a neural network classifier and return predictions with accuracy
-                It is mandatory to specify columns to include in the classification as a comma-separated list.
+                Required: specify columns to include in the classification as a comma-separated list (include).
 
                 Args:
                     outcome (str): The target variable for classification.
@@ -522,14 +538,14 @@ async def list_tools() -> list[Tool]:
                                 "description": "Comma-separated columns to include",
                             },
                         },
-                        "required": ["outcome"],
+                        "required": ["outcome", "include"],
                     },
                 ),
                 Tool(
                     name="regression_analysis",
                     description="""
                 Perform linear or logistic regression (auto-detects based on outcome). Returns coefficients for each factor/predictor, showing their relationship with the outcome variable.
-                It is mandatory to specify columns to include in the regression as a comma-separated list.
+                Required: specify columns to include in the regression as a comma-separated list (include).
 
                 Args:
                     outcome (str): The target variable for regression.
@@ -547,14 +563,14 @@ async def list_tools() -> list[Tool]:
                                 "description": "Comma-separated columns to include",
                             },
                         },
-                        "required": ["outcome"],
+                        "required": ["outcome", "include"],
                     },
                 ),
                 Tool(
                     name="pca_analysis",
                     description="""
                 Perform Principal Component Analysis for dimensionality reduction
-                It is mandatory to specify columns to include in the PCA as a comma-separated list.
+                Required: specify columns to include in the PCA as a comma-separated list (include).
 
                 Args:
                     outcome (str): The variable to exclude from PCA.
@@ -579,19 +595,19 @@ async def list_tools() -> list[Tool]:
                                 "description": "Comma-separated columns to include",
                             },
                         },
-                        "required": ["outcome"],
+                        "required": ["outcome", "include"],
                     },
                 ),
                 Tool(
                     name="association_rules",
                     description="""
                 Generate association rules using Apriori algorithm
-                It is mandatory to specify columns to include in the analysis as a comma-separated list.
+                Required: specify columns to include in the analysis as a comma-separated list (include).
 
                 Args:
-                    outcome (str): The target variable for classification.
-                    min_support (int): The minimum support for the rules.
-                    min_threshold (float): The minimum threshold for the rules.
+                    outcome (str): Variable to exclude from rules mining.
+                    min_support (int): Minimum support as percent (1-99).
+                    min_threshold (int): Minimum confidence as percent (1-99).
                     include (str): Comma-separated list of columns to include.
                 """,
                     inputSchema={
@@ -608,7 +624,7 @@ async def list_tools() -> list[Tool]:
                             },
                             "min_threshold": {
                                 "type": "integer",
-                                "description": "Min threshold (1-99)",
+                                "description": "Min confidence threshold (1-99)",
                                 "default": 50,
                             },
                             "include": {
@@ -616,17 +632,17 @@ async def list_tools() -> list[Tool]:
                                 "description": "Comma-separated columns to include",
                             },
                         },
-                        "required": ["outcome"],
+                        "required": ["outcome", "include"],
                     },
                 ),
                 Tool(
                     name="knn_search",
                     description="""
                 Find K-nearest neighbors for a specific record
-                It is mandatory to specify columns to include in the search as a comma-separated list.
+                Required: specify columns to include in the search as a comma-separated list (include).
 
                 Args:
-                    outcome (str): The target variable for classification.
+                    outcome (str): The target variable (excluded from features).
                     n (int): The number of neighbors to find.
                     record (int): The record index (1-based) to find neighbors for.
                     include (str): Comma-separated columns to include.
@@ -653,7 +669,7 @@ async def list_tools() -> list[Tool]:
                                 "description": "Comma-separated columns to include",
                             },
                         },
-                        "required": ["outcome"],
+                        "required": ["outcome", "include"],
                     },
                 ),
             ]
@@ -866,7 +882,9 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                 return [TextContent(type="text", text="No CSV data available")]
             else:
                 if "include" in arguments:
-                    _csv_analyzer.comma_separated_include_columns(arguments.get("include"))
+                    _csv_analyzer.comma_separated_include_columns(
+                        arguments.get("include")
+                    )
 
             if not ML_AVAILABLE:
                 return [TextContent(type="text", text="ML dependencies not available")]
@@ -894,7 +912,9 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                 return [TextContent(type="text", text="No CSV data available")]
             else:
                 if "include" in arguments:
-                    _csv_analyzer.comma_separated_include_columns(arguments.get("include"))
+                    _csv_analyzer.comma_separated_include_columns(
+                        arguments.get("include")
+                    )
 
             if not ML_AVAILABLE:
                 return [TextContent(type="text", text="ML dependencies not available")]
@@ -921,7 +941,9 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                 return [TextContent(type="text", text="No CSV data available")]
             else:
                 if "include" in arguments:
-                    _csv_analyzer.comma_separated_include_columns(arguments.get("include"))
+                    _csv_analyzer.comma_separated_include_columns(
+                        arguments.get("include")
+                    )
 
             if not ML_AVAILABLE:
                 return [TextContent(type="text", text="ML dependencies not available")]
@@ -941,7 +963,9 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                 return [TextContent(type="text", text="No CSV data available")]
             else:
                 if "include" in arguments:
-                    _csv_analyzer.comma_separated_include_columns(arguments.get("include"))
+                    _csv_analyzer.comma_separated_include_columns(
+                        arguments.get("include")
+                    )
 
             if not ML_AVAILABLE:
                 return [TextContent(type="text", text="ML dependencies not available")]
@@ -959,7 +983,9 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                 return [TextContent(type="text", text="No CSV data available")]
             else:
                 if "include" in arguments:
-                    _csv_analyzer.comma_separated_include_columns(arguments.get("include"))
+                    _csv_analyzer.comma_separated_include_columns(
+                        arguments.get("include")
+                    )
 
             if not ML_AVAILABLE:
                 return [TextContent(type="text", text="ML dependencies not available")]
@@ -977,7 +1003,9 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                 return [TextContent(type="text", text="No CSV data available")]
             else:
                 if "include" in arguments:
-                    _csv_analyzer.comma_separated_include_columns(arguments.get("include"))
+                    _csv_analyzer.comma_separated_include_columns(
+                        arguments.get("include")
+                    )
 
             if not ML_AVAILABLE:
                 return [TextContent(type="text", text="ML dependencies not available")]
@@ -997,7 +1025,9 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                 return [TextContent(type="text", text="No CSV data available")]
             else:
                 if "include" in arguments:
-                    _csv_analyzer.comma_separated_include_columns(arguments.get("include"))
+                    _csv_analyzer.comma_separated_include_columns(
+                        arguments.get("include")
+                    )
 
             if not ML_AVAILABLE:
                 return [TextContent(type="text", text="ML dependencies not available")]
@@ -1020,7 +1050,9 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                 return [TextContent(type="text", text="No CSV data available")]
             else:
                 if "include" in arguments:
-                    _csv_analyzer.comma_separated_include_columns(arguments.get("include"))
+                    _csv_analyzer.comma_separated_include_columns(
+                        arguments.get("include")
+                    )
 
             if not ML_AVAILABLE:
                 return [TextContent(type="text", text="ML dependencies not available")]
@@ -1035,6 +1067,15 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
             )
             return [
                 TextContent(type="text", text=json.dumps(result, indent=2, default=str))
+            ]
+
+        elif name == "reset_corpus_state":
+            _corpus = None
+            _text_analyzer = None
+            _csv_analyzer = None
+            _ml_analyzer = None
+            return [
+                TextContent(type="text", text="Global corpus state has been reset.")
             ]
 
         else:
@@ -1175,7 +1216,7 @@ Follow these steps to conduct a comprehensive analysis:
 
 ## What is Triangulation?
 
-Triangulation involves validating findings by comparing and contrasting results from different analytical methods or data sources. In CRISP-T, this means linking textual insights with numerical patterns.
+Triangulation involves validating findings by comparing and contrasting results from different analytical methods or data sources. In CRISP-T, this means linking textual insights with numeric patterns.
 
 ## Key Strategies
 
