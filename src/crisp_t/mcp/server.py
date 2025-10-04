@@ -628,7 +628,7 @@ async def list_tools() -> list[Tool]:
                             },
                             "min_threshold": {
                                 "type": "integer",
-                                "description": "Min confidence threshold (1-99)",
+                                "description": "Min threshold (1-99)",
                                 "default": 50,
                             },
                             "include": {
@@ -1074,6 +1074,7 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
             ]
 
         elif name == "reset_corpus_state":
+            global _corpus, _text_analyzer, _csv_analyzer, _ml_analyzer
             _corpus = None
             _text_analyzer = None
             _csv_analyzer = None
