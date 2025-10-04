@@ -33,7 +33,6 @@ dependencies = [
     "seaborn",
     "wordcloud",
     "tabulate",
-    "pip",
     "mcp"
 ]
 
