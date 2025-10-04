@@ -1,0 +1,7 @@
+{
+  "servers": {
+      "crisp": {
+      "command": "~/venv/torch/bin/crisp-mcp"
+    }
+  }
+}
