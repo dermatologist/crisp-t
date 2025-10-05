@@ -257,72 +257,73 @@ async def list_tools() -> list[Tool]:
                 "required": ["keyword"],
             },
         ),
-        # NLP/Text Analysis Tools
-        Tool(
-            name="generate_coding_dictionary",
-            description="""
-            Generate a qualitative coding dictionary with categories (verbs), properties (nouns), and dimensions (adjectives/adverbs). Useful for understanding the main themes and concepts in the corpus.
+        # ! NLP/Text Analysis Tools
+        # Tool(
+        #     name="generate_coding_dictionary",
+        #     description="""
+        #     Generate a qualitative coding dictionary with categories (verbs), properties (nouns), and dimensions (adjectives/adverbs). Useful for understanding the main themes and concepts in the corpus.
 
-            Tips:
-              - Use ignore to exclude common but uninformative words.
-              - Use filters to narrow down documents based on metadata (key=value).
-              - Adjust num (categories) and top_n (items per section).
-            """,
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "num": {
-                        "type": "integer",
-                        "description": "Number of categories to extract",
-                        "default": 3,
-                    },
-                    "top_n": {
-                        "type": "integer",
-                        "description": "Top N items per category",
-                        "default": 3,
-                    },
-                    "ignore": {
-                        "type": "array",
-                        "description": "List of words to ignore",
-                        "items": {"type": "string"},
-                    },
-                    "filters": {
-                        "type": "array",
-                        "description": "Filters to apply on documents (key=value or key:value)",
-                        "items": {"type": "string"},
-                    },
-                },
-            },
-        ),
-        Tool(
-            name="topic_modeling",
-            description="""
-            Perform LDA topic modeling to discover latent topics in the corpus. Returns topics with their associated keywords and weights, useful for categorizing documents by theme.
+        #     Tips:
+        #       - Use ignore to exclude common but uninformative words.
+        #       - Use filters to narrow down documents based on metadata (key=value).
+        #       - Adjust num (categories) and top_n (items per section).
+        #     """,
+        #     inputSchema={
+        #         "type": "object",
+        #         "properties": {
+        #             "num": {
+        #                 "type": "integer",
+        #                 "description": "Number of categories to extract",
+        #                 "default": 3,
+        #             },
+        #             "top_n": {
+        #                 "type": "integer",
+        #                 "description": "Top N items per category",
+        #                 "default": 3,
+        #             },
+        #             "ignore": {
+        #                 "type": "array",
+        #                 "description": "List of words to ignore",
+        #                 "items": {"type": "string"},
+        #             },
+        #             "filters": {
+        #                 "type": "array",
+        #                 "description": "Filters to apply on documents (key=value or key:value)",
+        #                 "items": {"type": "string"},
+        #             },
+        #         },
+        #     },
+        # ),
+        # Tool(
+        #     name="topic_modeling",
+        #     description="""
+        #     Perform LDA topic modeling to discover latent topics in the corpus. Returns topics with their associated keywords and weights, useful for categorizing documents by theme.
 
-            Tips:
-              - Set num_topics (number of topics).
-              - Set num_words (words to show per topic).
-            """,
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "num_topics": {
-                        "type": "integer",
-                        "description": "Number of topics to generate",
-                        "default": 3,
-                    },
-                    "num_words": {
-                        "type": "integer",
-                        "description": "Number of words per topic",
-                        "default": 5,
-                    },
-                },
-            },
-        ),
+        #     Tips:
+        #       - Set num_topics (number of topics).
+        #       - Set num_words (words to show per topic).
+        #     """,
+        #     inputSchema={
+        #         "type": "object",
+        #         "properties": {
+        #             "num_topics": {
+        #                 "type": "integer",
+        #                 "description": "Number of topics to generate",
+        #                 "default": 3,
+        #             },
+        #             "num_words": {
+        #                 "type": "integer",
+        #                 "description": "Number of words per topic",
+        #                 "default": 5,
+        #             },
+        #         },
+        #     },
+        # ),
         Tool(
             name="assign_topics",
             description="""
-            Assign documents to their dominant topics with contribution percentages. These topic assignments can be used as keywords to filter or categorize documents.
+            Assign documents to their dominant topics, themes and keywords with contribution percentages.
+            These topic assignments can be used as keywords to filter or categorize documents.
 
             Note: Use the results to create keywords for filtering/categorization.
             """,
