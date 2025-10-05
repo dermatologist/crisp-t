@@ -44,7 +44,7 @@ CRISP-T now provides three main command-line scripts:
 
 All scripts are installed as entry points and can be run directly from the command line after installation.
 
-### crisp (Triangulation CLI)
+### crisp (Analytical CLI)
 
 ```bash
 crisp [OPTIONS]
@@ -54,7 +54,7 @@ crisp [OPTIONS]
 
 - `--inp, -i PATH`: Load an existing corpus from a folder containing `corpus.json` (and optional `corpus_df.csv`)
 - `--out, -o PATH`: When saving the corpus, provide a folder path; the CLI writes `corpus.json` (and `corpus_df.csv` if available) into that folder. When saving analysis results (topics, sentiment, etc.), this acts as a base path: files are written with suffixes, e.g., `results_topics.json`.
-- `--unstructured, -t TEXT`: Text CSV column(s) to analyze/compare (can be used multiple times)
+- `--unstructured, -t TEXT`: Text CSV column(s) to analyze/compare (can be used multiple times). This is useful when you have free-form text data in a DataFrame. If this is provided, those columns are used as documents.
 - `--ignore TEXT`: Comma-separated words to ignore during ingestion (applies to `--source/--sources`)
 
 #### Analysis Options
