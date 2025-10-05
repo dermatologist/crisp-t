@@ -101,3 +101,7 @@ crisp --include relaxed,self_time,sleep_bal,time_dp,travel_time,home_env --cls -
 * Is self_time or related concepts occur frequently in documents?
 * can you ignore "interviewer,interviewee" and assign topics again? Yes.
 * What are the topics in documents with keyword "work"?
+
+<p align="center">
+  <img src="https://github.com/dermatologist/crisp-t/blob/develop/notes/crisp.gif" />
+</p>
