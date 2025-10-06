@@ -262,7 +262,6 @@ async def list_tools() -> list[Tool]:
         #     name="generate_coding_dictionary",
         #     description="""
         #     Generate a qualitative coding dictionary with categories (verbs), properties (nouns), and dimensions (adjectives/adverbs). Useful for understanding the main themes and concepts in the corpus.
-
         #     Tips:
         #       - Use ignore to exclude common but uninformative words.
         #       - Use filters to narrow down documents based on metadata (key=value).
@@ -298,7 +297,6 @@ async def list_tools() -> list[Tool]:
         #     name="topic_modeling",
         #     description="""
         #     Perform LDA topic modeling to discover latent topics in the corpus. Returns topics with their associated keywords and weights, useful for categorizing documents by theme.
-
         #     Tips:
         #       - Set num_topics (number of topics).
         #       - Set num_words (words to show per topic).
@@ -420,6 +418,92 @@ async def list_tools() -> list[Tool]:
                 },
                 "required": ["index"],
             },
+        ),
+        # CSV Column/DataFrame operations
+        Tool(
+            name="bin_a_column",
+            description="Bin a numeric column into a specified number of bins.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "column_name": {
+                        "type": "string",
+                        "description": "Name of the numeric column to bin",
+                    },
+                    "bins": {
+                        "type": "integer",
+                        "description": "Number of bins",
+                        "default": 2,
+                    },
+                },
+                "required": ["column_name"],
+            },
+        ),
+        Tool(
+            name="one_hot_encode_column",
+            description="One-hot encode a specific categorical column.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "column_name": {
+                        "type": "string",
+                        "description": "Name of the column to one-hot encode",
+                    }
+                },
+                "required": ["column_name"],
+            },
+        ),
+        Tool(
+            name="filter_rows_by_column_value",
+            description="Filter DataFrame rows where a column equals a specific value.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "column_name": {
+                        "type": "string",
+                        "description": "Column to filter on",
+                    },
+                    "value": {
+                        "type": "string",
+                        "description": "Value to match (numeric values are auto-detected)",
+                    },
+                },
+                "required": ["column_name", "value"],
+            },
+        ),
+        Tool(
+            name="oversample",
+            description="Apply random oversampling to balance classes (requires prior X/y preparation).",
+            inputSchema={"type": "object", "properties": {}},
+        ),
+        Tool(
+            name="restore_oversample",
+            description="Restore X and y to their original (pre-oversampling) values.",
+            inputSchema={"type": "object", "properties": {}},
+        ),
+        Tool(
+            name="get_column_types",
+            description="Get data types of all DataFrame columns.",
+            inputSchema={"type": "object", "properties": {}},
+        ),
+        Tool(
+            name="get_column_values",
+            description="Get values from a specific DataFrame column.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "column_name": {
+                        "type": "string",
+                        "description": "Column name to retrieve values from",
+                    }
+                },
+                "required": ["column_name"],
+            },
+        ),
+        Tool(
+            name="retain_numeric_columns_only",
+            description="Retain only numeric columns in the DataFrame.",
+            inputSchema={"type": "object", "properties": {}},
         ),
         Tool(
             name="reset_corpus_state",
@@ -881,6 +965,73 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                 ]
             return [TextContent(type="text", text="Row not found")]
 
+        # CSV Column/DataFrame operations
+        elif name == "bin_a_column":
+            if not _csv_analyzer:
+                return [TextContent(type="text", text="No CSV data available")]
+
+            msg = _csv_analyzer.bin_a_column(
+                column_name=arguments["column_name"], bins=arguments.get("bins", 2)
+            )
+            return [TextContent(type="text", text=str(msg))]
+
+        elif name == "one_hot_encode_column":
+            if not _csv_analyzer:
+                return [TextContent(type="text", text="No CSV data available")]
+
+            msg = _csv_analyzer.one_hot_encode_column(
+                column_name=arguments["column_name"]
+            )
+            return [TextContent(type="text", text=str(msg))]
+
+        elif name == "filter_rows_by_column_value":
+            if not _csv_analyzer:
+                return [TextContent(type="text", text="No CSV data available")]
+
+            msg = _csv_analyzer.filter_rows_by_column_value(
+                column_name=arguments["column_name"], value=arguments["value"], mcp=True
+            )
+            return [TextContent(type="text", text=str(msg))]
+
+        elif name == "oversample":
+            if not _csv_analyzer:
+                return [TextContent(type="text", text="No CSV data available")]
+
+            result = _csv_analyzer.oversample(mcp=True)
+            return [TextContent(type="text", text=str(result))]
+
+        elif name == "restore_oversample":
+            if not _csv_analyzer:
+                return [TextContent(type="text", text="No CSV data available")]
+
+            result = _csv_analyzer.restore_oversample(mcp=True)
+            return [TextContent(type="text", text=str(result))]
+
+        elif name == "get_column_types":
+            if not _csv_analyzer:
+                return [TextContent(type="text", text="No CSV data available")]
+
+            types = _csv_analyzer.get_column_types()
+            return [
+                TextContent(type="text", text=json.dumps(types, indent=2, default=str))
+            ]
+
+        elif name == "get_column_values":
+            if not _csv_analyzer:
+                return [TextContent(type="text", text="No CSV data available")]
+
+            values = _csv_analyzer.get_column_values(arguments["column_name"])
+            return [
+                TextContent(type="text", text=json.dumps(values, indent=2, default=str))
+            ]
+
+        elif name == "retain_numeric_columns_only":
+            if not _csv_analyzer:
+                return [TextContent(type="text", text="No CSV data available")]
+
+            _csv_analyzer.retain_numeric_columns_only()
+            return [TextContent(type="text", text="Retained numeric columns only.")]
+
         # ML Tools
         elif name == "kmeans_clustering":
             if not _csv_analyzer:
@@ -899,7 +1050,9 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
             _csv_analyzer.drop_na()
             ml = ML(csv=_csv_analyzer)
             result = ml.get_kmeans(
-                number_of_clusters=arguments.get("num_clusters", 3), verbose=False, mcp=True
+                number_of_clusters=arguments.get("num_clusters", 3),
+                verbose=False,
+                mcp=True,
             )
             return [TextContent(type="text", text=str(result))]
 
@@ -1021,7 +1174,7 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                 y=arguments["outcome"],
                 min_support=min_support,
                 min_threshold=min_threshold,
-                mcp=True
+                mcp=True,
             )
             return [TextContent(type="text", text=str(result))]
 
@@ -1044,7 +1197,7 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                 y=arguments["outcome"],
                 n=arguments.get("n", 3),
                 r=arguments.get("record", 1),
-                mcp=True
+                mcp=True,
             )
             return [TextContent(type="text", text=str(result))]
 
