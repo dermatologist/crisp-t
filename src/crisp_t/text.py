@@ -310,7 +310,7 @@ class Text:
         return sorted(_ad.items(), key=operator.itemgetter(1), reverse=True)[:index]
 
     # filter documents in the corpus based on metadata
-    def filter_documents(self, metadata_key, metadata_value):
+    def filter_documents(self, metadata_key, metadata_value, mcp=False):
         """
         Filter documents in the corpus based on metadata.
         """
@@ -329,6 +329,8 @@ class Text:
             if isinstance(document.name, str) and metadata_value in document.name:
                 filtered_documents.append(document)
         self._corpus.documents = filtered_documents
+        if mcp:
+            return f"Filtered {len(filtered_documents)} documents with {metadata_key} containing {metadata_value}"
         return filtered_documents
 
     # get the count of documents in the corpus
