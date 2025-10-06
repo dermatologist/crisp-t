@@ -1,5 +1,7 @@
 # 🔍 CRISP-T (Sense-making from Text and Numbers!)
 
+**Unraveling the art and science of computational triangulation!**
+
 [![Release](https://img.shields.io/github/v/release/dermatologist/crisp-t)](https://img.shields.io/github/v/release/dermatologist/crisp-t)
 [![Build status](https://img.shields.io/github/actions/workflow/status/dermatologist/crisp-t/pytest.yml?branch=develop)](https://github.com/dermatologist/crisp-t/actions/workflows/pytest.yml?query=branch%3Adevelop)
 [![codecov](https://codecov.io/gh/dermatologist/crisp-t/branch/develop/graph/badge.svg)](https://codecov.io/gh/dermatologist/crisp-t)
