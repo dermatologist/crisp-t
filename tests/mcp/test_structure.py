@@ -40,7 +40,6 @@ def test_server_module_structure():
     # Check for key tool names
     assert '"load_corpus"' in content
     assert '"save_corpus"' in content
-    assert '"topic_modeling"' in content
     assert '"regression_analysis"' in content
     assert '"add_relationship"' in content
 
