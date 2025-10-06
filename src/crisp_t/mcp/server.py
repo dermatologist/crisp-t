@@ -919,7 +919,7 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                 _ml_analyzer = ML(csv=_csv_analyzer)
 
             result = _ml_analyzer.get_decision_tree_classes(
-                y=arguments["outcome"], top_n=arguments.get("top_n", 10)
+                y=arguments["outcome"], top_n=arguments.get("top_n", 10), mcp=True
             )
             return [TextContent(type="text", text=str(result))]
 
@@ -939,7 +939,7 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                 _ml_analyzer = ML(csv=_csv_analyzer)
 
             result = _ml_analyzer.svm_confusion_matrix(
-                y=arguments["outcome"], test_size=0.25
+                y=arguments["outcome"], test_size=0.25, mcp=True
             )
             return [TextContent(type="text", text=str(result))]
 
@@ -958,7 +958,7 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
             if not _ml_analyzer:
                 _ml_analyzer = ML(csv=_csv_analyzer)
 
-            result = _ml_analyzer.get_nnet_predictions(y=arguments["outcome"])
+            result = _ml_analyzer.get_nnet_predictions(y=arguments["outcome"], mcp=True)
             return [TextContent(type="text", text=str(result))]
 
         elif name == "regression_analysis":
@@ -976,7 +976,7 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
             if not _ml_analyzer:
                 _ml_analyzer = ML(csv=_csv_analyzer)
 
-            result = _ml_analyzer.get_regression(y=arguments["outcome"])
+            result = _ml_analyzer.get_regression(y=arguments["outcome"], mcp=True)
             return [TextContent(type="text", text=str(result))]
 
         elif name == "pca_analysis":
@@ -995,7 +995,7 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                 _ml_analyzer = ML(csv=_csv_analyzer)
 
             result = _ml_analyzer.get_pca(
-                y=arguments["outcome"], n=arguments.get("n_components", 3)
+                y=arguments["outcome"], n=arguments.get("n_components", 3), mcp=True
             )
             return [TextContent(type="text", text=str(result))]
 
@@ -1021,6 +1021,7 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                 y=arguments["outcome"],
                 min_support=min_support,
                 min_threshold=min_threshold,
+                mcp=True
             )
             return [TextContent(type="text", text=str(result))]
 
@@ -1043,6 +1044,7 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                 y=arguments["outcome"],
                 n=arguments.get("n", 3),
                 r=arguments.get("record", 1),
+                mcp=True
             )
             return [TextContent(type="text", text=str(result))]
 
