@@ -334,6 +334,40 @@ class Csv:
             self.one_hot_encode_all_columns()
         return self.read_xy(y)
 
+    def bin_a_column(self, column_name: str, bins: int = 2):
+        """ Bin a numeric column into specified number of bins.
+        """
+        if self._df is not None and column_name in self._df.columns:
+            if pd.api.types.is_numeric_dtype(self._df[column_name]):
+                self._df[column_name] = pd.cut(
+                    self._df[column_name], bins=bins, labels=False
+                )
+                logger.info(f"Column {column_name} binned into {bins} bins.")
+            else:
+                logger.warning(f"Column {column_name} is not numeric. Cannot bin.")
+        else:
+            logger.warning(
+                f"Column {column_name} not found in DataFrame or DataFrame is None."
+            )
+
+    def one_hot_encode_column(self, column_name: str):
+        """One-hot encode a specific column in the DataFrame.
+        This method converts a categorical column into one-hot encoded columns.
+        Used when # ValueError: could not convert string to float.
+        """
+        if self._df is not None and column_name in self._df.columns:
+            if pd.api.types.is_object_dtype(self._df[column_name]):
+                self._df = pd.get_dummies(
+                    self._df, columns=[column_name], drop_first=True
+                )
+                logger.info(f"One-hot encoding applied to column {column_name}.")
+            else:
+                logger.warning(f"Column {column_name} is not of object type.")
+        else:
+            logger.error(
+                f"Column {column_name} not found in DataFrame or DataFrame is None."
+            )
+
     def one_hot_encode_strings_in_df(self, n=10, filter_high_cardinality=False):
         """One-hot encode string (object) columns in the DataFrame.
         This method converts categorical string columns into one-hot encoded columns.
