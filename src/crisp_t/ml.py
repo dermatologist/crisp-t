@@ -676,6 +676,8 @@ class ML:
                 return f"""
                 Linear Regression MSE for predicting {y}: {mse:.5f}
                 R²: {r2:.5f}
+                Feature Names:
+                {X.columns.tolist() if hasattr(X, 'columns') else None}
                 Coefficients:
                 {model.coef_}
                 Intercept: {model.intercept_:.5f}
