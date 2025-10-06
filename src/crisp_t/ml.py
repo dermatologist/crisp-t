@@ -613,12 +613,13 @@ class ML:
 
             print(f"\nIntercept: {model.intercept_[0]:.5f}")
 
-            # Store in metadata
-            if self._csv.corpus is not None:
-                coef_str = "\n".join([
+            coef_str = "\n".join([
                     f"  {X.columns[i] if hasattr(X, 'columns') else f'Feature_{i}'}: {coef:.5f}"
                     for i, coef in enumerate(model.coef_[0])
-                ])
+             ])
+
+            # Store in metadata
+            if self._csv.corpus is not None:
                 self._csv.corpus.metadata["logistic_regression_accuracy"] = f"Logistic Regression accuracy for predicting {y}: {accuracy*100:.2f}%"
                 self._csv.corpus.metadata["logistic_regression_coefficients"] = f"Coefficients:\n{coef_str}"
                 self._csv.corpus.metadata["logistic_regression_intercept"] = f"Intercept: {model.intercept_[0]:.5f}"
@@ -627,7 +628,7 @@ class ML:
                 return f"""
                 Logistic Regression accuracy for predicting {y}: {accuracy*100:.2f}%
                 Coefficients:
-                {model.coef_[0]}
+                {coef_str}
                 Intercept: {model.intercept_[0]:.5f}
                 """
             return {
@@ -662,24 +663,24 @@ class ML:
 
             print(f"\nIntercept: {model.intercept_:.5f}")
 
-            # Store in metadata
-            if self._csv.corpus is not None:
-                coef_str = "\n".join([
+            coef_str = "\n".join([
                     f"  {X.columns[i] if hasattr(X, 'columns') else f'Feature_{i}'}: {coef:.5f}"
                     for i, coef in enumerate(model.coef_)
-                ])
+            ])
+
+            # Store in metadata
+            if self._csv.corpus is not None:
                 self._csv.corpus.metadata["linear_regression_mse"] = f"Linear Regression MSE for predicting {y}: {mse:.5f}"
                 self._csv.corpus.metadata["linear_regression_r2"] = f"Linear Regression R² for predicting {y}: {r2:.5f}"
                 self._csv.corpus.metadata["linear_regression_coefficients"] = f"Coefficients:\n{coef_str}"
                 self._csv.corpus.metadata["linear_regression_intercept"] = f"Intercept: {model.intercept_:.5f}"
+
             if mcp:
                 return f"""
                 Linear Regression MSE for predicting {y}: {mse:.5f}
                 R²: {r2:.5f}
-                Feature Names:
-                {X.columns.tolist() if hasattr(X, 'columns') else None}
-                Coefficients:
-                {model.coef_}
+                Feature Names and Coefficients:
+                {coef_str}
                 Intercept: {model.intercept_:.5f}
                 """
             return {
