@@ -898,19 +898,10 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
 
             _csv_analyzer.drop_na()
             ml = ML(csv=_csv_analyzer)
-            clusters, members = ml.get_kmeans(
-                number_of_clusters=arguments.get("num_clusters", 3), verbose=False
+            result = ml.get_kmeans(
+                number_of_clusters=arguments.get("num_clusters", 3), verbose=False, mcp=True
             )
-            return [
-                TextContent(
-                    type="text",
-                    text=json.dumps(
-                        {"clusters": clusters, "members": members},
-                        indent=2,
-                        default=str,
-                    ),
-                )
-            ]
+            return [TextContent(type="text", text=str(result))]
 
         elif name == "decision_tree_classification":
             if not _csv_analyzer:
@@ -927,19 +918,10 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
             if not _ml_analyzer:
                 _ml_analyzer = ML(csv=_csv_analyzer)
 
-            cm, importance = _ml_analyzer.get_decision_tree_classes(
+            result = _ml_analyzer.get_decision_tree_classes(
                 y=arguments["outcome"], top_n=arguments.get("top_n", 10)
             )
-            return [
-                TextContent(
-                    type="text",
-                    text=json.dumps(
-                        {"confusion_matrix": cm, "feature_importance": importance},
-                        indent=2,
-                        default=str,
-                    ),
-                )
-            ]
+            return [TextContent(type="text", text=str(result))]
 
         elif name == "svm_classification":
             if not _csv_analyzer:
@@ -959,9 +941,7 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
             result = _ml_analyzer.svm_confusion_matrix(
                 y=arguments["outcome"], test_size=0.25
             )
-            return [
-                TextContent(type="text", text=json.dumps(result, indent=2, default=str))
-            ]
+            return [TextContent(type="text", text=str(result))]
 
         elif name == "neural_network_classification":
             if not _csv_analyzer:
@@ -979,9 +959,7 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                 _ml_analyzer = ML(csv=_csv_analyzer)
 
             result = _ml_analyzer.get_nnet_predictions(y=arguments["outcome"])
-            return [
-                TextContent(type="text", text=json.dumps(result, indent=2, default=str))
-            ]
+            return [TextContent(type="text", text=str(result))]
 
         elif name == "regression_analysis":
             if not _csv_analyzer:
@@ -999,9 +977,7 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                 _ml_analyzer = ML(csv=_csv_analyzer)
 
             result = _ml_analyzer.get_regression(y=arguments["outcome"])
-            return [
-                TextContent(type="text", text=json.dumps(result, indent=2, default=str))
-            ]
+            return [TextContent(type="text", text=str(result))]
 
         elif name == "pca_analysis":
             if not _csv_analyzer:
@@ -1021,9 +997,7 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
             result = _ml_analyzer.get_pca(
                 y=arguments["outcome"], n=arguments.get("n_components", 3)
             )
-            return [
-                TextContent(type="text", text=json.dumps(result, indent=2, default=str))
-            ]
+            return [TextContent(type="text", text=str(result))]
 
         elif name == "association_rules":
             if not _csv_analyzer:
@@ -1070,9 +1044,7 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                 n=arguments.get("n", 3),
                 r=arguments.get("record", 1),
             )
-            return [
-                TextContent(type="text", text=json.dumps(result, indent=2, default=str))
-            ]
+            return [TextContent(type="text", text=str(result))]
 
         elif name == "reset_corpus_state":
             _corpus = None
