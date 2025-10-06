@@ -397,6 +397,30 @@ async def list_tools() -> list[Tool]:
                 },
             },
         ),
+        # Text/Corpus filtering tools
+        Tool(
+            name="filter_documents",
+            description="Filter corpus documents based on a metadata key/value, document id, or name substring. Updates the active corpus.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "metadata_key": {
+                        "type": "string",
+                        "description": "Metadata key to search (optional if filtering by id/name)",
+                    },
+                    "metadata_value": {
+                        "type": "string",
+                        "description": "Value to look for in metadata, id, or name",
+                    },
+                },
+                "required": ["metadata_value"],
+            },
+        ),
+        Tool(
+            name="document_count",
+            description="Return the number of documents currently in the active corpus (after any filters).",
+            inputSchema={"type": "object", "properties": {}},
+        ),
         # DataFrame/CSV Tools
         Tool(
             name="get_df_columns",
@@ -935,6 +959,31 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                 verbose=arguments.get("verbose", True),
             )
             return [TextContent(type="text", text=str(result))]
+
+        # Text/Corpus filtering tools
+        elif name == "filter_documents":
+            if not _text_analyzer:
+                return [TextContent(type="text", text="No corpus loaded")]
+
+            metadata_key = arguments.get("metadata_key", "keywords")
+            metadata_value = arguments.get("metadata_value")
+            if not metadata_value:
+                return [TextContent(type="text", text="metadata_value is required")]
+
+            msg = _text_analyzer.filter_documents(
+                metadata_key=metadata_key, metadata_value=metadata_value, mcp=True
+            )
+            return [TextContent(type="text", text=str(msg))]
+
+        elif name == "document_count":
+            if not _text_analyzer:
+                return [TextContent(type="text", text="No corpus loaded")]
+
+            try:
+                count = _text_analyzer.document_count()
+            except Exception as e:
+                return [TextContent(type="text", text=f"Error: {e}")]
+            return [TextContent(type="text", text=f"Document count: {count}")]
 
         # DataFrame/CSV Tools
         elif name == "get_df_columns":
