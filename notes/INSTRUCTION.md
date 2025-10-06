@@ -268,8 +268,9 @@ CRISP-T now provides three main command-line scripts:
 - `crisp` — Main CLI for triangulation and analysis
 - `crispviz` — Visualization CLI for corpus data
 - `crispt` — Corpus manipulation CLI
+- `crisp-mcp` -- MCP Server for agentic AI
 
-### crisp (Triangulation CLI)
+### crisp (Analytical CLI)
 - Use `--source PATH|URL` to ingest from a directory (reads .txt and .pdf) or URL. Use `--sources` multiple times to ingest from several locations.
 - Use `--inp PATH` to load an existing corpus from a folder containing `corpus.json` (and optional `corpus_df.csv`).
 - Use `--out PATH` to save the corpus to a folder (as `corpus.json`) or to act as a base path for analysis outputs (e.g., `results_topics.json`).

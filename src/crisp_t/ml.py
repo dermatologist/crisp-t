@@ -99,7 +99,7 @@ class ML:
         else:
             raise ValueError(f"The input belongs to {type(value)} instead of Csv.")
 
-    def get_kmeans(self, number_of_clusters=3, seed=42, verbose=True):
+    def get_kmeans(self, number_of_clusters=3, seed=42, verbose=True, mcp=False):
         if self._csv is None:
             raise ValueError(
                 "CSV data is not set. Please set self.csv before calling get_kmeans."
@@ -123,11 +123,13 @@ class ML:
             if self._csv.corpus is not None:
                 self._csv.corpus.metadata["kmeans"] = f"KMeans clustering with {number_of_clusters} clusters. Inertia: {kmeans.inertia_}"
         # Add members info to corpus metadata
-        if self._csv.corpus is not None:
-            members_info = "\n".join(
+        members_info = "\n".join(
                 [f"Cluster {i}: {len(members[i])} members" for i in range(number_of_clusters)]
             )
+        if self._csv.corpus is not None:
             self._csv.corpus.metadata["kmeans_members"] = f"KMeans clustering members:\n{members_info}"
+        if mcp:
+            return members_info
         return self._clusters, members
 
     def _get_members(self, clusters, number_of_clusters=3):
@@ -166,7 +168,7 @@ class ML:
             self._csv.corpus = _corpus
         return members
 
-    def get_nnet_predictions(self, y: str):
+    def get_nnet_predictions(self, y: str, mcp=False):
         """
         Extended: Handles binary (BCELoss) and multi-class (CrossEntropyLoss).
         Returns list of predicted original class labels.
@@ -256,6 +258,8 @@ class ML:
             )
             if _corpus is not None:
                 _corpus.metadata["nnet_predictions"] = f"Predicting {y} with {X.shape[1]} features for {self._epochs} epochs gave an accuracy (convergence): {accuracy*100:.2f}%"
+            if mcp:
+                return f"Predicting {y} with {X.shape[1]} features for {self._epochs} epochs gave an accuracy (convergence): {accuracy*100:.2f}%"
             return preds
 
         # Multi-class path
@@ -292,13 +296,15 @@ class ML:
         preds = [idx_to_class[i] for i in pred_indices]
         accuracy = (pred_indices == Y_idx).sum() / len(Y_idx)
         print(
-            f"Predicting {y} with {X.shape[1]} features for {self._epochs} gave an accuracy (convergence): {accuracy*100:.2f}%"
+            f"\nPredicting {y} with {X.shape[1]} features for {self._epochs} gave an accuracy (convergence): {accuracy*100:.2f}%\n"
         )
         if _corpus is not None:
             _corpus.metadata["nnet_predictions"] = f"Predicting {y} with {X.shape[1]} features for {self._epochs} gave an accuracy (convergence): {accuracy*100:.2f}%"
+        if mcp:
+            return f"Predicting {y} with {X.shape[1]} features for {self._epochs} gave an accuracy (convergence): {accuracy*100:.2f}%"
         return preds
 
-    def svm_confusion_matrix(self, y: str, test_size=0.25, random_state=0):
+    def svm_confusion_matrix(self, y: str, test_size=0.25, random_state=0, mcp=False):
         """Generate confusion matrix for SVM
 
         Returns:
@@ -326,6 +332,10 @@ class ML:
         #  [2 0]]
         if self._csv.corpus is not None:
             self._csv.corpus.metadata["svm_confusion_matrix"] = f"Confusion Matrix for SVM predicting {y}:\n{self.format_confusion_matrix_to_human_readable(_confusion_matrix)}"
+
+        if mcp:
+            return f"Confusion Matrix for SVM predicting {y}:\n{self.format_confusion_matrix_to_human_readable(_confusion_matrix)}"
+
         return _confusion_matrix
 
     def format_confusion_matrix_to_human_readable(self, confusion_matrix: np.ndarray) -> str:
@@ -346,7 +356,7 @@ class ML:
         )
 
     # https://stackoverflow.com/questions/45419203/python-numpy-extracting-a-row-from-an-array
-    def knn_search(self, y: str, n=3, r=3):
+    def knn_search(self, y: str, n=3, r=3, mcp=False):
         X_np, Y_raw, X, Y = self._process_xy(y=y)
         kdt = KDTree(X_np, leaf_size=2, metric="euclidean")
         dist, ind = kdt.query(X_np[r - 1 : r, :], k=n)
@@ -356,6 +366,8 @@ class ML:
         print(f"\nKNN search for {y} (n={n}, record no: {r}): {ind} with distances {dist}\n")
         if self._csv.corpus is not None:
             self._csv.corpus.metadata["knn_search"] = f"KNN search for {y} (n={n}, record no: {r}): {ind} with distances {dist}"
+        if mcp:
+            return f"KNN search for {y} (n={n}, record no: {r}): {ind} with distances {dist}"
         return dist, ind
 
     def _process_xy(self, y: str, oversample=False, one_hot_encode_all=False):
@@ -379,7 +391,7 @@ class ML:
 
         return X_np, Y_raw, X, Y
 
-    def get_decision_tree_classes(self, y: str, top_n=5, test_size=0.5, random_state=1):
+    def get_decision_tree_classes(self, y: str, top_n=5, test_size=0.5, random_state=1, mcp=False):
         X_np, Y_raw, X, Y = self._process_xy(y=y)
         X_train, X_test, y_train, y_test = train_test_split(
             X_np, Y_raw, test_size=test_size, random_state=random_state
@@ -404,7 +416,6 @@ class ML:
         # [[2 0]
         #  [2 0]]
 
-
         accuracy = accuracy_score(y_test, y_pred)
         print(f'\nAccuracy: {accuracy}\n')
 
@@ -425,10 +436,14 @@ class ML:
             self._csv.corpus.metadata["decision_tree_accuracy"] = f"Decision Tree accuracy for predicting {y}: {accuracy*100:.2f}%"
             self._csv.corpus.metadata["decision_tree_confusion_matrix"] = f"Confusion Matrix for Decision Tree predicting {y}:\n{self.format_confusion_matrix_to_human_readable(_confusion_matrix)}"
             self._csv.corpus.metadata["decision_tree_feature_importance"] = _importance
-
+        if mcp:
+            return f"""
+            Confusion Matrix for Decision Tree predicting {y}:\n{self.format_confusion_matrix_to_human_readable(_confusion_matrix)}\nTop {top_n} important features:\n{_importance}
+            Accuracy: {accuracy*100:.2f}%
+            """
         return _confusion_matrix, importance
 
-    def get_xgb_classes(self, y: str, oversample=False, test_size=0.25, random_state=0):
+    def get_xgb_classes(self, y: str, oversample=False, test_size=0.25, random_state=0, mcp=False):
         X_np, Y_raw, X, Y = self._process_xy(y=y)
         if ML_INSTALLED:
             # ValueError: Invalid classes inferred from unique values of `y`.  Expected: [0 1], got [1 2]
@@ -447,25 +462,31 @@ class ML:
             #  [2 0]]
             if self._csv.corpus is not None:
                 self._csv.corpus.metadata["xgb_confusion_matrix"] = f"Confusion Matrix for XGBoost predicting {y}:\n{_confusion_matrix}"
+            if mcp:
+                return f"""
+                Confusion Matrix for XGBoost predicting {y}:\n{self.format_confusion_matrix_to_human_readable(_confusion_matrix)}
+                """
             return _confusion_matrix
         else:
             raise ImportError("ML dependencies are not installed.")
 
-    def get_apriori(self, y: str, min_support=0.9, use_colnames=True, min_threshold=0.5):
+    def get_apriori(self, y: str, min_support=0.9, use_colnames=True, min_threshold=0.5, mcp=False):
         if ML_INSTALLED:
             X_np, Y_raw, X, Y = self._process_xy(y=y, one_hot_encode_all=True)
             frequent_itemsets = apriori(X, min_support=min_support, use_colnames=use_colnames) # type: ignore
             # rules = association_rules(frequent_itemsets, metric="lift", min_threshold=min_threshold) # type: ignore
-            if self._csv.corpus is not None:
-                human_readable = tabulate(
+            human_readable = tabulate(
                     frequent_itemsets.head(10), headers="keys", tablefmt="pretty" # type: ignore
                 )
+            if self._csv.corpus is not None:
                 self._csv.corpus.metadata["apriori_frequent_itemsets"] = human_readable
+            if mcp:
+                return f"Frequent itemsets (top 10):\n{human_readable}"
             return frequent_itemsets #, rules
         else:
             raise ImportError("ML dependencies are not installed.")
 
-    def get_pca(self, y: str, n: int = 3):
+    def get_pca(self, y: str, n: int = 3, mcp=False):
         """
         Perform a manual PCA (no sklearn PCA) on the feature matrix for target y.
 
@@ -532,10 +553,11 @@ class ML:
                 f"PCA kept {n} components explaining "
                 f"{cum_var_exp[n-1]:.2f}% variance."
             )
-
+        if mcp:
+            return f"PCA kept {n} components explaining {cum_var_exp[n-1]:.2f}% variance."
         return result
 
-    def get_regression(self, y: str):
+    def get_regression(self, y: str, mcp=False):
         """
         Perform linear or logistic regression based on the outcome variable type.
 
@@ -591,16 +613,24 @@ class ML:
 
             print(f"\nIntercept: {model.intercept_[0]:.5f}")
 
-            # Store in metadata
-            if self._csv.corpus is not None:
-                coef_str = "\n".join([
+            coef_str = "\n".join([
                     f"  {X.columns[i] if hasattr(X, 'columns') else f'Feature_{i}'}: {coef:.5f}"
                     for i, coef in enumerate(model.coef_[0])
-                ])
+             ])
+
+            # Store in metadata
+            if self._csv.corpus is not None:
                 self._csv.corpus.metadata["logistic_regression_accuracy"] = f"Logistic Regression accuracy for predicting {y}: {accuracy*100:.2f}%"
                 self._csv.corpus.metadata["logistic_regression_coefficients"] = f"Coefficients:\n{coef_str}"
                 self._csv.corpus.metadata["logistic_regression_intercept"] = f"Intercept: {model.intercept_[0]:.5f}"
 
+            if mcp:
+                return f"""
+                Logistic Regression accuracy for predicting {y}: {accuracy*100:.2f}%
+                Coefficients:
+                {coef_str}
+                Intercept: {model.intercept_[0]:.5f}
+                """
             return {
                 "model_type": "logistic",
                 "accuracy": accuracy,
@@ -633,17 +663,26 @@ class ML:
 
             print(f"\nIntercept: {model.intercept_:.5f}")
 
-            # Store in metadata
-            if self._csv.corpus is not None:
-                coef_str = "\n".join([
+            coef_str = "\n".join([
                     f"  {X.columns[i] if hasattr(X, 'columns') else f'Feature_{i}'}: {coef:.5f}"
                     for i, coef in enumerate(model.coef_)
-                ])
+            ])
+
+            # Store in metadata
+            if self._csv.corpus is not None:
                 self._csv.corpus.metadata["linear_regression_mse"] = f"Linear Regression MSE for predicting {y}: {mse:.5f}"
                 self._csv.corpus.metadata["linear_regression_r2"] = f"Linear Regression R² for predicting {y}: {r2:.5f}"
                 self._csv.corpus.metadata["linear_regression_coefficients"] = f"Coefficients:\n{coef_str}"
                 self._csv.corpus.metadata["linear_regression_intercept"] = f"Intercept: {model.intercept_:.5f}"
 
+            if mcp:
+                return f"""
+                Linear Regression MSE for predicting {y}: {mse:.5f}
+                R²: {r2:.5f}
+                Feature Names and Coefficients:
+                {coef_str}
+                Intercept: {model.intercept_:.5f}
+                """
             return {
                 "model_type": "linear",
                 "mse": mse,

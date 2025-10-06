@@ -257,72 +257,71 @@ async def list_tools() -> list[Tool]:
                 "required": ["keyword"],
             },
         ),
-        # NLP/Text Analysis Tools
-        Tool(
-            name="generate_coding_dictionary",
-            description="""
-            Generate a qualitative coding dictionary with categories (verbs), properties (nouns), and dimensions (adjectives/adverbs). Useful for understanding the main themes and concepts in the corpus.
-
-            Tips:
-              - Use ignore to exclude common but uninformative words.
-              - Use filters to narrow down documents based on metadata (key=value).
-              - Adjust num (categories) and top_n (items per section).
-            """,
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "num": {
-                        "type": "integer",
-                        "description": "Number of categories to extract",
-                        "default": 3,
-                    },
-                    "top_n": {
-                        "type": "integer",
-                        "description": "Top N items per category",
-                        "default": 3,
-                    },
-                    "ignore": {
-                        "type": "array",
-                        "description": "List of words to ignore",
-                        "items": {"type": "string"},
-                    },
-                    "filters": {
-                        "type": "array",
-                        "description": "Filters to apply on documents (key=value or key:value)",
-                        "items": {"type": "string"},
-                    },
-                },
-            },
-        ),
-        Tool(
-            name="topic_modeling",
-            description="""
-            Perform LDA topic modeling to discover latent topics in the corpus. Returns topics with their associated keywords and weights, useful for categorizing documents by theme.
-
-            Tips:
-              - Set num_topics (number of topics).
-              - Set num_words (words to show per topic).
-            """,
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "num_topics": {
-                        "type": "integer",
-                        "description": "Number of topics to generate",
-                        "default": 3,
-                    },
-                    "num_words": {
-                        "type": "integer",
-                        "description": "Number of words per topic",
-                        "default": 5,
-                    },
-                },
-            },
-        ),
+        # ! NLP/Text Analysis Tools
+        # Tool(
+        #     name="generate_coding_dictionary",
+        #     description="""
+        #     Generate a qualitative coding dictionary with categories (verbs), properties (nouns), and dimensions (adjectives/adverbs). Useful for understanding the main themes and concepts in the corpus.
+        #     Tips:
+        #       - Use ignore to exclude common but uninformative words.
+        #       - Use filters to narrow down documents based on metadata (key=value).
+        #       - Adjust num (categories) and top_n (items per section).
+        #     """,
+        #     inputSchema={
+        #         "type": "object",
+        #         "properties": {
+        #             "num": {
+        #                 "type": "integer",
+        #                 "description": "Number of categories to extract",
+        #                 "default": 3,
+        #             },
+        #             "top_n": {
+        #                 "type": "integer",
+        #                 "description": "Top N items per category",
+        #                 "default": 3,
+        #             },
+        #             "ignore": {
+        #                 "type": "array",
+        #                 "description": "List of words to ignore",
+        #                 "items": {"type": "string"},
+        #             },
+        #             "filters": {
+        #                 "type": "array",
+        #                 "description": "Filters to apply on documents (key=value or key:value)",
+        #                 "items": {"type": "string"},
+        #             },
+        #         },
+        #     },
+        # ),
+        # Tool(
+        #     name="topic_modeling",
+        #     description="""
+        #     Perform LDA topic modeling to discover latent topics in the corpus. Returns topics with their associated keywords and weights, useful for categorizing documents by theme.
+        #     Tips:
+        #       - Set num_topics (number of topics).
+        #       - Set num_words (words to show per topic).
+        #     """,
+        #     inputSchema={
+        #         "type": "object",
+        #         "properties": {
+        #             "num_topics": {
+        #                 "type": "integer",
+        #                 "description": "Number of topics to generate",
+        #                 "default": 3,
+        #             },
+        #             "num_words": {
+        #                 "type": "integer",
+        #                 "description": "Number of words per topic",
+        #                 "default": 5,
+        #             },
+        #         },
+        #     },
+        # ),
         Tool(
             name="assign_topics",
             description="""
-            Assign documents to their dominant topics with contribution percentages. These topic assignments can be used as keywords to filter or categorize documents.
+            Assign documents to their dominant topics, themes and keywords with contribution percentages.
+            These topic assignments can be used as keywords to filter or categorize documents.
 
             Note: Use the results to create keywords for filtering/categorization.
             """,
@@ -419,6 +418,92 @@ async def list_tools() -> list[Tool]:
                 },
                 "required": ["index"],
             },
+        ),
+        # CSV Column/DataFrame operations
+        Tool(
+            name="bin_a_column",
+            description="Bin a numeric column into a specified number of bins.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "column_name": {
+                        "type": "string",
+                        "description": "Name of the numeric column to bin",
+                    },
+                    "bins": {
+                        "type": "integer",
+                        "description": "Number of bins",
+                        "default": 2,
+                    },
+                },
+                "required": ["column_name"],
+            },
+        ),
+        Tool(
+            name="one_hot_encode_column",
+            description="One-hot encode a specific categorical column.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "column_name": {
+                        "type": "string",
+                        "description": "Name of the column to one-hot encode",
+                    }
+                },
+                "required": ["column_name"],
+            },
+        ),
+        Tool(
+            name="filter_rows_by_column_value",
+            description="Filter DataFrame rows where a column equals a specific value.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "column_name": {
+                        "type": "string",
+                        "description": "Column to filter on",
+                    },
+                    "value": {
+                        "type": "string",
+                        "description": "Value to match (numeric values are auto-detected)",
+                    },
+                },
+                "required": ["column_name", "value"],
+            },
+        ),
+        Tool(
+            name="oversample",
+            description="Apply random oversampling to balance classes (requires prior X/y preparation).",
+            inputSchema={"type": "object", "properties": {}},
+        ),
+        Tool(
+            name="restore_oversample",
+            description="Restore X and y to their original (pre-oversampling) values.",
+            inputSchema={"type": "object", "properties": {}},
+        ),
+        Tool(
+            name="get_column_types",
+            description="Get data types of all DataFrame columns.",
+            inputSchema={"type": "object", "properties": {}},
+        ),
+        Tool(
+            name="get_column_values",
+            description="Get values from a specific DataFrame column.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "column_name": {
+                        "type": "string",
+                        "description": "Column name to retrieve values from",
+                    }
+                },
+                "required": ["column_name"],
+            },
+        ),
+        Tool(
+            name="retain_numeric_columns_only",
+            description="Retain only numeric columns in the DataFrame.",
+            inputSchema={"type": "object", "properties": {}},
         ),
         Tool(
             name="reset_corpus_state",
@@ -880,6 +965,73 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                 ]
             return [TextContent(type="text", text="Row not found")]
 
+        # CSV Column/DataFrame operations
+        elif name == "bin_a_column":
+            if not _csv_analyzer:
+                return [TextContent(type="text", text="No CSV data available")]
+
+            msg = _csv_analyzer.bin_a_column(
+                column_name=arguments["column_name"], bins=arguments.get("bins", 2)
+            )
+            return [TextContent(type="text", text=str(msg))]
+
+        elif name == "one_hot_encode_column":
+            if not _csv_analyzer:
+                return [TextContent(type="text", text="No CSV data available")]
+
+            msg = _csv_analyzer.one_hot_encode_column(
+                column_name=arguments["column_name"]
+            )
+            return [TextContent(type="text", text=str(msg))]
+
+        elif name == "filter_rows_by_column_value":
+            if not _csv_analyzer:
+                return [TextContent(type="text", text="No CSV data available")]
+
+            msg = _csv_analyzer.filter_rows_by_column_value(
+                column_name=arguments["column_name"], value=arguments["value"], mcp=True
+            )
+            return [TextContent(type="text", text=str(msg))]
+
+        elif name == "oversample":
+            if not _csv_analyzer:
+                return [TextContent(type="text", text="No CSV data available")]
+
+            result = _csv_analyzer.oversample(mcp=True)
+            return [TextContent(type="text", text=str(result))]
+
+        elif name == "restore_oversample":
+            if not _csv_analyzer:
+                return [TextContent(type="text", text="No CSV data available")]
+
+            result = _csv_analyzer.restore_oversample(mcp=True)
+            return [TextContent(type="text", text=str(result))]
+
+        elif name == "get_column_types":
+            if not _csv_analyzer:
+                return [TextContent(type="text", text="No CSV data available")]
+
+            types = _csv_analyzer.get_column_types()
+            return [
+                TextContent(type="text", text=json.dumps(types, indent=2, default=str))
+            ]
+
+        elif name == "get_column_values":
+            if not _csv_analyzer:
+                return [TextContent(type="text", text="No CSV data available")]
+
+            values = _csv_analyzer.get_column_values(arguments["column_name"])
+            return [
+                TextContent(type="text", text=json.dumps(values, indent=2, default=str))
+            ]
+
+        elif name == "retain_numeric_columns_only":
+            if not _csv_analyzer:
+                return [TextContent(type="text", text="No CSV data available")]
+
+            _csv_analyzer.retain_numeric_columns_only()
+            return [TextContent(type="text", text="Retained numeric columns only.")]
+
         # ML Tools
         elif name == "kmeans_clustering":
             if not _csv_analyzer:
@@ -897,19 +1049,12 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
 
             _csv_analyzer.drop_na()
             ml = ML(csv=_csv_analyzer)
-            clusters, members = ml.get_kmeans(
-                number_of_clusters=arguments.get("num_clusters", 3), verbose=False
+            result = ml.get_kmeans(
+                number_of_clusters=arguments.get("num_clusters", 3),
+                verbose=False,
+                mcp=True,
             )
-            return [
-                TextContent(
-                    type="text",
-                    text=json.dumps(
-                        {"clusters": clusters, "members": members},
-                        indent=2,
-                        default=str,
-                    ),
-                )
-            ]
+            return [TextContent(type="text", text=str(result))]
 
         elif name == "decision_tree_classification":
             if not _csv_analyzer:
@@ -926,19 +1071,10 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
             if not _ml_analyzer:
                 _ml_analyzer = ML(csv=_csv_analyzer)
 
-            cm, importance = _ml_analyzer.get_decision_tree_classes(
-                y=arguments["outcome"], top_n=arguments.get("top_n", 10)
+            result = _ml_analyzer.get_decision_tree_classes(
+                y=arguments["outcome"], top_n=arguments.get("top_n", 10), mcp=True
             )
-            return [
-                TextContent(
-                    type="text",
-                    text=json.dumps(
-                        {"confusion_matrix": cm, "feature_importance": importance},
-                        indent=2,
-                        default=str,
-                    ),
-                )
-            ]
+            return [TextContent(type="text", text=str(result))]
 
         elif name == "svm_classification":
             if not _csv_analyzer:
@@ -956,11 +1092,9 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                 _ml_analyzer = ML(csv=_csv_analyzer)
 
             result = _ml_analyzer.svm_confusion_matrix(
-                y=arguments["outcome"], test_size=0.25
+                y=arguments["outcome"], test_size=0.25, mcp=True
             )
-            return [
-                TextContent(type="text", text=json.dumps(result, indent=2, default=str))
-            ]
+            return [TextContent(type="text", text=str(result))]
 
         elif name == "neural_network_classification":
             if not _csv_analyzer:
@@ -977,10 +1111,8 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
             if not _ml_analyzer:
                 _ml_analyzer = ML(csv=_csv_analyzer)
 
-            result = _ml_analyzer.get_nnet_predictions(y=arguments["outcome"])
-            return [
-                TextContent(type="text", text=json.dumps(result, indent=2, default=str))
-            ]
+            result = _ml_analyzer.get_nnet_predictions(y=arguments["outcome"], mcp=True)
+            return [TextContent(type="text", text=str(result))]
 
         elif name == "regression_analysis":
             if not _csv_analyzer:
@@ -997,10 +1129,8 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
             if not _ml_analyzer:
                 _ml_analyzer = ML(csv=_csv_analyzer)
 
-            result = _ml_analyzer.get_regression(y=arguments["outcome"])
-            return [
-                TextContent(type="text", text=json.dumps(result, indent=2, default=str))
-            ]
+            result = _ml_analyzer.get_regression(y=arguments["outcome"], mcp=True)
+            return [TextContent(type="text", text=str(result))]
 
         elif name == "pca_analysis":
             if not _csv_analyzer:
@@ -1018,11 +1148,9 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                 _ml_analyzer = ML(csv=_csv_analyzer)
 
             result = _ml_analyzer.get_pca(
-                y=arguments["outcome"], n=arguments.get("n_components", 3)
+                y=arguments["outcome"], n=arguments.get("n_components", 3), mcp=True
             )
-            return [
-                TextContent(type="text", text=json.dumps(result, indent=2, default=str))
-            ]
+            return [TextContent(type="text", text=str(result))]
 
         elif name == "association_rules":
             if not _csv_analyzer:
@@ -1046,6 +1174,7 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                 y=arguments["outcome"],
                 min_support=min_support,
                 min_threshold=min_threshold,
+                mcp=True,
             )
             return [TextContent(type="text", text=str(result))]
 
@@ -1068,10 +1197,9 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                 y=arguments["outcome"],
                 n=arguments.get("n", 3),
                 r=arguments.get("record", 1),
+                mcp=True,
             )
-            return [
-                TextContent(type="text", text=json.dumps(result, indent=2, default=str))
-            ]
+            return [TextContent(type="text", text=str(result))]
 
         elif name == "reset_corpus_state":
             _corpus = None

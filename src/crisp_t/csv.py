@@ -296,7 +296,7 @@ class Csv:
         else:
             logger.error("DataFrame is None. Cannot drop missing values.")
 
-    def oversample(self):
+    def oversample(self, mcp: bool = False):
         self._X_original = self._X
         self._y_original = self._y
         try:
@@ -319,11 +319,15 @@ class Csv:
             return
         self._X = X
         self._y = y
+        if mcp:
+            return f"Oversampling completed. New X shape: {self._X.shape}"
         return X, y
 
-    def restore_oversample(self):
+    def restore_oversample(self, mcp: bool = False):
         self._X = self._X_original
         self._y = self._y_original
+        if mcp:
+            return f"Oversampling restored. X shape: {self._X.shape}, y shape: {self._y.shape}" # type: ignore
 
     def prepare_data(self, y: str, oversample=False, one_hot_encode_all=False):
         self.mark_missing()
@@ -333,6 +337,44 @@ class Csv:
         if one_hot_encode_all:
             self.one_hot_encode_all_columns()
         return self.read_xy(y)
+
+    def bin_a_column(self, column_name: str, bins: int = 2):
+        """ Bin a numeric column into specified number of bins.
+        """
+        if self._df is not None and column_name in self._df.columns:
+            if pd.api.types.is_numeric_dtype(self._df[column_name]):
+                self._df[column_name] = pd.cut(
+                    self._df[column_name], bins=bins, labels=False
+                )
+                logger.info(f"Column {column_name} binned into {bins} bins.")
+                return "I have binned the column. Please proceed."
+            else:
+                logger.warning(f"Column {column_name} is not numeric. Cannot bin.")
+        else:
+            logger.warning(
+                f"Column {column_name} not found in DataFrame or DataFrame is None."
+            )
+        return "I cannot bin the column. Please check the logs for more information."
+
+    def one_hot_encode_column(self, column_name: str):
+        """One-hot encode a specific column in the DataFrame.
+        This method converts a categorical column into one-hot encoded columns.
+        Used when # ValueError: could not convert string to float.
+        """
+        if self._df is not None and column_name in self._df.columns:
+            if pd.api.types.is_object_dtype(self._df[column_name]):
+                self._df = pd.get_dummies(
+                    self._df, columns=[column_name], drop_first=True
+                )
+                logger.info(f"One-hot encoding applied to column {column_name}.")
+                return "I have one-hot encoded the column. Please proceed."
+            else:
+                logger.warning(f"Column {column_name} is not of object type.")
+        else:
+            logger.error(
+                f"Column {column_name} not found in DataFrame or DataFrame is None."
+            )
+        return "I cannot one-hot encode the column. Please check the logs for more information."
 
     def one_hot_encode_strings_in_df(self, n=10, filter_high_cardinality=False):
         """One-hot encode string (object) columns in the DataFrame.
@@ -375,7 +417,7 @@ class Csv:
 
             self._df = self._df.applymap(to_one_hot) # type: ignore
 
-    def filter_rows_by_column_value(self, column_name: str, value) -> pd.DataFrame:
+    def filter_rows_by_column_value(self, column_name: str, value, mcp: bool = False):
         """ Select rows from the DataFrame where the specified column matches the given value.
         """
         if self._df is not None and column_name in self._df.columns:
@@ -390,9 +432,12 @@ class Csv:
                 f"Selected {selected_df.shape[0]} rows where {column_name} == {value}."
             )
             self._df = selected_df
-            return selected_df
+            if mcp:
+                return f"Selected {selected_df.shape[0]} rows where {column_name} == {value}."
         else:
             logger.warning(
                 f"Column {column_name} not found in DataFrame or DataFrame is None."
             )
+            if mcp:
+                return f"Column {column_name} not found in DataFrame or DataFrame is None."
             return pd.DataFrame()
