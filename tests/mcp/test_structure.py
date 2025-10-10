@@ -15,10 +15,21 @@ def test_server_module_structure():
         )
         return True
     """Test that the server module has the required structure."""
+    # Determine the correct home directory prefix based on OS
+    import platform
+
+    system = platform.system()
+    if system == "Windows":
+        prefix = "C:/Users/runneradmin/work/crisp-t/crisp-t"
+    elif system == "Darwin":
+        prefix = "/Users/runner/work/crisp-t/crisp-t"
+    else:
+        prefix = "/home/runner/work/crisp-t/crisp-t"
+    server_path = f"{prefix}/src/crisp_t/mcp/server.py"
     # Import the server module
     spec = importlib.util.spec_from_file_location(
         "crisp_t.mcp.server",
-        "/home/runner/work/crisp-t/crisp-t/src/crisp_t/mcp/server.py",
+        server_path,
     )
     server_module = importlib.util.module_from_spec(spec)
 
@@ -26,7 +37,7 @@ def test_server_module_structure():
     # This is a basic smoke test
 
     # Read the file and check for key patterns
-    with open("/home/runner/work/crisp-t/crisp-t/src/crisp_t/mcp/server.py", "r") as f:
+    with open(server_path, "r") as f:
         content = f.read()
 
     # Check for required decorators and functions
@@ -59,9 +70,17 @@ def test_main_entry_point():
         )
         return True
     """Test that __main__.py has the correct structure."""
-    with open(
-        "/home/runner/work/crisp-t/crisp-t/src/crisp_t/mcp/__main__.py", "r"
-    ) as f:
+    import platform
+
+    system = platform.system()
+    if system == "Windows":
+        prefix = "C:/Users/runneradmin/work/crisp-t/crisp-t"
+    elif system == "Darwin":
+        prefix = "/Users/runner/work/crisp-t/crisp-t"
+    else:
+        prefix = "/home/runner/work/crisp-t/crisp-t"
+    main_path = f"{prefix}/src/crisp_t/mcp/__main__.py"
+    with open(main_path, "r") as f:
         content = f.read()
 
     assert "def run_server()" in content
@@ -79,9 +98,17 @@ def test_init_module():
         )
         return True
     """Test that __init__.py exports correctly."""
-    with open(
-        "/home/runner/work/crisp-t/crisp-t/src/crisp_t/mcp/__init__.py", "r"
-    ) as f:
+    import platform
+
+    system = platform.system()
+    if system == "Windows":
+        prefix = "C:/Users/runneradmin/work/crisp-t/crisp-t"
+    elif system == "Darwin":
+        prefix = "/Users/runner/work/crisp-t/crisp-t"
+    else:
+        prefix = "/home/runner/work/crisp-t/crisp-t"
+    init_path = f"{prefix}/src/crisp_t/mcp/__init__.py"
+    with open(init_path, "r") as f:
         content = f.read()
 
     assert "from .server import app, main" in content
