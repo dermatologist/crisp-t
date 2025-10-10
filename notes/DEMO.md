@@ -10,6 +10,8 @@
 ## Import data
 
 * Run the following command to import data from `crisp_source` folder to `crisp_input` folder.
+* `--source` reads data from a directory (reads .txt, .pdf and a single .csv) or from a URL
+
 ```bash
 crisp --source crisp_source --out crisp_input
 ```
