@@ -37,7 +37,7 @@ pip install crisp-t[ml]
 
 ## Command Line Scripts
 
-CRISP-T now provides three main command-line scripts:
+CRISP-T now provides four main command-line scripts:
 
 - `crisp` — Main CLI for qualitative triangulation and analysis (see below)
 - `crispviz` — Visualization CLI for corpus data (word frequencies, topic charts, wordclouds, etc.)
@@ -54,6 +54,8 @@ crisp [OPTIONS]
 
 #### Input/Output Options
 
+- `--source, -s PATH|URL`: Read source data from a directory (reads .txt, .pdf and a single .csv) or from a URL
+- `--sources PATH|URL`: Provide multiple sources; can be used multiple times
 - `--inp, -i PATH`: Load an existing corpus from a folder containing `corpus.json` (and optional `corpus_df.csv`)
 - `--out, -o PATH`: When saving the corpus, provide a folder path; the CLI writes `corpus.json` (and `corpus_df.csv` if available) into that folder. When saving analysis results (topics, sentiment, etc.), this acts as a base path: files are written with suffixes, e.g., `results_topics.json`.
 - `--unstructured, -t TEXT`: Text CSV column(s) to analyze/compare (can be used multiple times). This is useful when you have free-form text data in a DataFrame. If this is provided, those columns are used as documents.
