@@ -1,9 +1,179 @@
-[build-system]
-# AVOID CHANGING REQUIRES: IT WILL BE UPDATED BY PYSCAFFOLD!
-requires = ["setuptools>=46.1.0", "setuptools_scm[toml]>=5"]
-build-backend = "setuptools.build_meta"
+[project]
+name = "crisp-t"
+dynamic = ["version"]
+description = "Qualitative Research support tools in Python!"
+authors = [{ name = "Bell Eapen", email = "github_public@gulfdoctor.net" }]
+readme = "README.md"
+keywords = ['python']
+requires-python = ">=3.10,<4.0"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+    "Topic :: Scientific/Engineering :: Medical Science Apps.",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "pydantic",
+    "pandas",
+    "mlxtend",
+    "matplotlib",
+    "click",
+    "vaderSentiment",
+    "spacy",
+    "textacy",
+    "pypdf",
+    "requests",
+    "gensim",
+    "seaborn",
+    "wordcloud",
+    "tabulate",
+    "mcp",
+    "pip",
+]
 
-[tool.setuptools_scm]
-# For smarter version schemes and other configuration options,
-# check out https://github.com/pypa/setuptools_scm
-version_scheme = "no-guess-dev"
+
+[project.urls]
+Homepage = "https://dermatologist.github.io/crisp-t/"
+Repository = "https://github.com/dermatologist/crisp-t"
+Documentation = "https://dermatologist.github.io/crisp-t/"
+
+[dependency-groups]
+dev = [
+    "pytest>=7.2.0",
+    "pre-commit>=2.20.0",
+    "tox-uv>=1.11.3",
+    "deptry>=0.23.0",
+    "mypy>=0.991",
+    "pytest-cov>=4.0.0",
+    "ruff>=0.11.5",
+    "mkdocs>=1.4.2",
+    "mkdocs-material>=8.5.10",
+    "mkdocstrings[python]>=0.26.1",
+    "pytest-asyncio>=1.2.0",
+]
+
+[build-system]
+requires = ["hatchling", "uv-dynamic-versioning"]
+build-backend = "hatchling.build"
+
+[tool.hatch.version]
+source = "uv-dynamic-versioning"
+
+[[tool.uv.index]]
+name = "testpypi"
+url = "https://test.pypi.org/simple/"
+publish-url = "https://test.pypi.org/legacy/"
+explicit = true
+
+[tool.uv-dynamic-versioning]
+fallback-version = "0.1.0"
+
+[tool.uv.build-backend]
+source-exclude = [
+  "tests/*",
+  "examples/*",
+  "docs/*",
+  "notes/*",
+  "notebooks/*"
+]
+
+[project.scripts]
+crisp = "crisp_t.cli:main"
+crispviz = "crisp_t.vizcli:main"
+crispt = "crisp_t.corpuscli:main"
+crisp-mcp = "crisp_t.mcp.__main__:run_server"
+
+[project.optional-dependencies]
+ml = [
+    "scikit-learn",
+    "imbalanced-learn",
+    "xgboost",
+    "torch",
+]
+
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/crisp_t"]
+
+[tool.mypy]
+files = ["src"]
+disallow_untyped_defs = true
+disallow_any_unimported = true
+no_implicit_optional = true
+check_untyped_defs = true
+warn_return_any = true
+warn_unused_ignores = true
+show_error_codes = true
+
+[tool.pytest.ini_options]
+addopts = """
+--cov src.crisp_t --cov-report term-missing
+--verbose
+"""
+norecursedirs = ["dist", "build", ".tox"]
+testpaths = ["tests"]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 120
+fix = true
+
+[tool.ruff.lint]
+select = [
+    # flake8-2020
+    "YTT",
+    # flake8-bandit
+    "S",
+    # flake8-bugbear
+    "B",
+    # flake8-builtins
+    "A",
+    # flake8-comprehensions
+    "C4",
+    # flake8-debugger
+    "T10",
+    # flake8-simplify
+    "SIM",
+    # isort
+    "I",
+    # mccabe
+    "C90",
+    # pycodestyle
+    "E", "W",
+    # pyflakes
+    "F",
+    # pygrep-hooks
+    "PGH",
+    # pyupgrade
+    "UP",
+    # ruff
+    "RUF",
+    # tryceratops
+    "TRY",
+]
+ignore = [
+    # LineTooLong
+    "E501",
+    # DoNotAssignLambda
+    "E731",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S101"]
+
+[tool.ruff.format]
+preview = true
+
+[tool.coverage.report]
+skip_empty = true
+
+[tool.coverage.run]
+branch = true
+source = ["src"]
+

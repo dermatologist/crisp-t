@@ -1,0 +1,27 @@
+name: Tox Test
+
+on:
+  push:
+    branches:
+      - master
+      - main
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      max-parallel: 4
+      matrix:
+        python-version: ['3.11']
+
+    steps:
+    - uses: actions/checkout@v5
+
+    - name: Set up the environment
+      uses: ./.github/actions/setup-python-env
+
+    - name: Test with tox
+      run: |
+        uv run tox

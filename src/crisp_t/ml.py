@@ -1,0 +1,693 @@
+import logging
+
+from matplotlib.pyplot import clf
+import numpy as np
+from sklearn.cluster import KMeans
+from sklearn.metrics import confusion_matrix, mean_squared_error, r2_score
+from sklearn.model_selection import train_test_split
+from sklearn.neighbors import KDTree
+from sklearn.preprocessing import StandardScaler
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.svm import SVC
+from sklearn.metrics import accuracy_score
+from sklearn.inspection import permutation_importance
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.linear_model import LinearRegression, LogisticRegression
+from tabulate import tabulate
+from crisp_t import model
+
+from .csv import Csv
+
+logger = logging.getLogger(__name__)
+
+import warnings
+
+warnings.filterwarnings("ignore", category=DeprecationWarning)
+
+ML_INSTALLED = False
+torch = None
+
+try:
+    import torch
+    import torch.nn as nn
+    import torch.optim as optim
+    from imblearn.over_sampling import RandomOverSampler
+    from mlxtend.frequent_patterns import apriori, association_rules
+    from torch.utils.data import DataLoader, TensorDataset
+    from xgboost import XGBClassifier
+
+    ML_INSTALLED = True
+
+    class NeuralNet(nn.Module):
+        def __init__(self, input_dim):
+            super(NeuralNet, self).__init__()
+            self.fc1 = nn.Linear(input_dim, 12)
+            self.fc2 = nn.Linear(12, 8)
+            self.fc3 = nn.Linear(8, 1)
+            self.relu = nn.ReLU()
+            self.sigmoid = nn.Sigmoid()
+
+        def forward(self, x):
+            x = self.relu(self.fc1(x))
+            x = self.relu(self.fc2(x))
+            x = self.sigmoid(self.fc3(x))
+            return x
+
+    class MultiClassNet(nn.Module):
+        def __init__(self, input_dim, num_classes):
+            super().__init__()
+            self.fc1 = nn.Linear(input_dim, 64)
+            self.fc2 = nn.Linear(64, 32)
+            self.fc3 = nn.Linear(32, num_classes)
+            self.relu = nn.ReLU()
+
+        def forward(self, x):
+            x = self.relu(self.fc1(x))
+            x = self.relu(self.fc2(x))
+            x = self.fc3(x)  # raw logits for CrossEntropyLoss
+            return x
+
+except ImportError:
+    logger.info(
+        "ML dependencies are not installed. Please install them by ```pip install crisp-t[ml] to use ML features."
+    )
+
+
+class ML:
+    def __init__(
+        self,
+        csv: Csv,
+    ):
+        if not ML_INSTALLED:
+            raise ImportError("ML dependencies are not installed.")
+        self._csv = csv
+        self._epochs = 3
+        self._samplesize = 0
+
+    @property
+    def csv(self):
+        return self._csv
+
+    @property
+    def corpus(self):
+        return self._csv.corpus
+
+    @csv.setter
+    def csv(self, value):
+        if isinstance(value, Csv):
+            self._csv = value
+        else:
+            raise ValueError(f"The input belongs to {type(value)} instead of Csv.")
+
+    def get_kmeans(self, number_of_clusters=3, seed=42, verbose=True, mcp=False):
+        if self._csv is None:
+            raise ValueError(
+                "CSV data is not set. Please set self.csv before calling get_kmeans."
+            )
+        X, _ = self._csv.read_xy("") # No output variable for clustering
+        if X is None:
+            raise ValueError(
+                "Input features X are None. Cannot perform KMeans clustering."
+            )
+        kmeans = KMeans(
+            n_clusters=number_of_clusters, init="k-means++", random_state=seed
+        )
+        self._clusters = kmeans.fit_predict(X)
+        members = self._get_members(self._clusters, number_of_clusters)
+        # Add cluster info to csv to metadata_cluster column
+        if self._csv is not None and getattr(self._csv, "df", None) is not None:
+            self._csv.df["metadata_cluster"] = self._clusters
+        if verbose:
+            print("KMeans Cluster Centers:\n", kmeans.cluster_centers_)
+            print("KMeans Inertia (Sum of squared distances to closest cluster center):\n", kmeans.inertia_)
+            if self._csv.corpus is not None:
+                self._csv.corpus.metadata["kmeans"] = f"KMeans clustering with {number_of_clusters} clusters. Inertia: {kmeans.inertia_}"
+        # Add members info to corpus metadata
+        members_info = "\n".join(
+                [f"Cluster {i}: {len(members[i])} members" for i in range(number_of_clusters)]
+            )
+        if self._csv.corpus is not None:
+            self._csv.corpus.metadata["kmeans_members"] = f"KMeans clustering members:\n{members_info}"
+        if mcp:
+            return members_info
+        return self._clusters, members
+
+    def _get_members(self, clusters, number_of_clusters=3):
+        _df = self._csv.df
+        self._csv.df = _df
+        members = []
+        for i in range(number_of_clusters):
+            members.append([])
+        for i, cluster in enumerate(clusters):
+            members[cluster].append(i)
+        return members
+
+    def profile(self, members, number_of_clusters=3):
+        if self._csv is None:
+            raise ValueError(
+                "CSV data is not set. Please set self.csv before calling profile."
+            )
+        _corpus = self._csv.corpus
+        _numeric_clusters = ""
+        for i in range(number_of_clusters):
+            print("Cluster: ", i)
+            print("Cluster Length: ", len(members[i]))
+            print("Cluster Members")
+            if self._csv is not None and getattr(self._csv, "df", None) is not None:
+                print(self._csv.df.iloc[members[i], :])
+                print("Centroids")
+                print(self._csv.df.iloc[members[i], :].mean(axis=0))
+                _numeric_clusters += f"Cluster {i} with {len(members[i])} members\n has the following centroids (mean values):\n"
+                _numeric_clusters += (
+                    f"{self._csv.df.iloc[members[i], :].mean(axis=0)}\n"
+                )
+            else:
+                print("DataFrame (self._csv.df) is not set.")
+        if _corpus is not None:
+            _corpus.metadata["numeric_clusters"] = _numeric_clusters
+            self._csv.corpus = _corpus
+        return members
+
+    def get_nnet_predictions(self, y: str, mcp=False):
+        """
+        Extended: Handles binary (BCELoss) and multi-class (CrossEntropyLoss).
+        Returns list of predicted original class labels.
+        """
+        if ML_INSTALLED is False:
+            logger.info(
+                "ML dependencies are not installed. Please install them by ```pip install crisp-t[ml] to use ML features."
+            )
+            return None
+
+        if self._csv is None:
+            raise ValueError(
+                "CSV data is not set. Please set self.csv before calling profile."
+            )
+        _corpus = self._csv.corpus
+
+        X_np, Y_raw, X, Y = self._process_xy(y=y)
+
+        unique_classes = np.unique(Y_raw)
+        num_classes = unique_classes.size
+        if num_classes < 2:
+            raise ValueError(f"Need at least 2 classes; found {num_classes}.")
+
+        vnum = X_np.shape[1]
+
+        # Binary path
+        if num_classes == 2:
+            # Map to {0.0,1.0} for BCELoss if needed
+            mapping_applied = False
+            class_mapping = {}
+            inverse_mapping = {}
+            # Ensure deterministic order
+            sorted_classes = sorted(unique_classes.tolist())
+            if not (sorted_classes == [0, 1] or sorted_classes == [0.0, 1.0]):
+                class_mapping = {sorted_classes[0]: 0.0, sorted_classes[1]: 1.0}
+                inverse_mapping = {v: k for k, v in class_mapping.items()}
+                Y_mapped = np.vectorize(class_mapping.get)(Y_raw).astype(
+                    np.float32
+                )
+                mapping_applied = True
+            else:
+                Y_mapped = Y_raw.astype(np.float32)
+
+            model = NeuralNet(vnum)
+            try:
+                criterion = nn.BCELoss() # type: ignore
+                optimizer = optim.Adam(model.parameters(), lr=0.001) # type: ignore
+
+                X_tensor = torch.from_numpy(X_np)  # type: ignore
+                y_tensor = torch.from_numpy(Y_mapped.astype(np.float32)).view(-1, 1)  # type: ignore
+
+                dataset = TensorDataset(X_tensor, y_tensor)  # type: ignore
+                dataloader = DataLoader(dataset, batch_size=32, shuffle=True)  # type: ignore
+            except Exception as e:
+                logger.error(f"Error occurred while creating DataLoader: {e}")
+                return None
+
+            for _ in range(self._epochs):
+                for batch_X, batch_y in dataloader:
+                    optimizer.zero_grad()
+                    outputs = model(batch_X)
+                    loss = criterion(outputs, batch_y)
+                    if torch.isnan(loss):  # type: ignore
+                        raise RuntimeError("NaN loss encountered.")
+                    loss.backward()
+                    optimizer.step()
+
+            # Predictions
+            bin_preds_internal = None
+            if torch:
+                with torch.no_grad():
+                    probs = model(torch.from_numpy(X_np)).view(-1).cpu().numpy()
+                bin_preds_internal = (probs >= 0.5).astype(int)
+
+            if mapping_applied:
+                preds = [inverse_mapping[float(p)] for p in bin_preds_internal] # type: ignore
+                y_eval = np.vectorize(class_mapping.get)(Y_raw).astype(int)
+                preds_eval = bin_preds_internal
+            else:
+                preds = bin_preds_internal.tolist() # type: ignore
+                y_eval = Y_mapped.astype(int)
+                preds_eval = bin_preds_internal
+
+            accuracy = (preds_eval == y_eval).sum() / len(y_eval)
+            print(
+                f"\nPredicting {y} with {X.shape[1]} features for {self._epochs} epochs gave an accuracy (convergence): {accuracy*100:.2f}%\n"
+            )
+            if _corpus is not None:
+                _corpus.metadata["nnet_predictions"] = f"Predicting {y} with {X.shape[1]} features for {self._epochs} epochs gave an accuracy (convergence): {accuracy*100:.2f}%"
+            if mcp:
+                return f"Predicting {y} with {X.shape[1]} features for {self._epochs} epochs gave an accuracy (convergence): {accuracy*100:.2f}%"
+            return preds
+
+        # Multi-class path
+        # Map original classes to indices
+        sorted_classes = sorted(unique_classes.tolist())
+        class_to_idx = {c: i for i, c in enumerate(sorted_classes)}
+        idx_to_class = {i: c for c, i in class_to_idx.items()}
+        Y_idx = np.vectorize(class_to_idx.get)(Y_raw).astype(np.int64)
+
+        model = MultiClassNet(vnum, num_classes)
+        criterion = nn.CrossEntropyLoss()  # type: ignore
+        optimizer = optim.Adam(model.parameters(), lr=0.001)  # type: ignore
+
+        X_tensor = torch.from_numpy(X_np)  # type: ignore
+        y_tensor = torch.from_numpy(Y_idx)  # type: ignore
+
+        dataset = TensorDataset(X_tensor, y_tensor)  # type: ignore
+        dataloader = DataLoader(dataset, batch_size=32, shuffle=True)  # type: ignore
+
+        for _ in range(self._epochs):
+            for batch_X, batch_y in dataloader:
+                optimizer.zero_grad()
+                logits = model(batch_X)
+                loss = criterion(logits, batch_y)
+                if torch.isnan(loss):  # type: ignore
+                    raise RuntimeError("NaN loss encountered.")
+                loss.backward()
+                optimizer.step()
+
+        with torch.no_grad():  # type: ignore
+            logits_full = model(torch.from_numpy(X_np))  # type: ignore
+            pred_indices = torch.argmax(logits_full, dim=1).cpu().numpy()  # type: ignore
+
+        preds = [idx_to_class[i] for i in pred_indices]
+        accuracy = (pred_indices == Y_idx).sum() / len(Y_idx)
+        print(
+            f"\nPredicting {y} with {X.shape[1]} features for {self._epochs} gave an accuracy (convergence): {accuracy*100:.2f}%\n"
+        )
+        if _corpus is not None:
+            _corpus.metadata["nnet_predictions"] = f"Predicting {y} with {X.shape[1]} features for {self._epochs} gave an accuracy (convergence): {accuracy*100:.2f}%"
+        if mcp:
+            return f"Predicting {y} with {X.shape[1]} features for {self._epochs} gave an accuracy (convergence): {accuracy*100:.2f}%"
+        return preds
+
+    def svm_confusion_matrix(self, y: str, test_size=0.25, random_state=0, mcp=False):
+        """Generate confusion matrix for SVM
+
+        Returns:
+            [list] -- [description]
+        """
+        X_np, Y_raw, X, Y = self._process_xy(y=y)
+        X_train, X_test, y_train, y_test = train_test_split(
+            X, Y, test_size=test_size, random_state=random_state
+        )
+        sc = StandardScaler()
+        # Issue #22
+        y_test = y_test.astype("int")
+        y_train = y_train.astype("int")
+        X_train = sc.fit_transform(X_train)
+        X_test = sc.transform(X_test)
+        classifier = SVC(kernel="linear", random_state=0)
+        classifier.fit(X_train, y_train)
+        y_pred = classifier.predict(X_test)
+        # Issue #22
+        y_pred = y_pred.astype("int")
+        _confusion_matrix = confusion_matrix(y_test, y_pred)
+        print(f"Confusion Matrix for SVM predicting {y}:\n{_confusion_matrix}")
+        # Output
+        # [[2 0]
+        #  [2 0]]
+        if self._csv.corpus is not None:
+            self._csv.corpus.metadata["svm_confusion_matrix"] = f"Confusion Matrix for SVM predicting {y}:\n{self.format_confusion_matrix_to_human_readable(_confusion_matrix)}"
+
+        if mcp:
+            return f"Confusion Matrix for SVM predicting {y}:\n{self.format_confusion_matrix_to_human_readable(_confusion_matrix)}"
+
+        return _confusion_matrix
+
+    def format_confusion_matrix_to_human_readable(self, confusion_matrix: np.ndarray) -> str:
+        """Format the confusion matrix to a human-readable string.
+
+        Args:
+            confusion_matrix (np.ndarray): The confusion matrix to format.
+
+        Returns:
+            str: The formatted confusion matrix with true positive, false positive, true negative, and false negative counts.
+        """
+        tn, fp, fn, tp = confusion_matrix.ravel()
+        return (
+            f"True Positive: {tp}\n"
+            f"False Positive: {fp}\n"
+            f"True Negative: {tn}\n"
+            f"False Negative: {fn}\n"
+        )
+
+    # https://stackoverflow.com/questions/45419203/python-numpy-extracting-a-row-from-an-array
+    def knn_search(self, y: str, n=3, r=3, mcp=False):
+        X_np, Y_raw, X, Y = self._process_xy(y=y)
+        kdt = KDTree(X_np, leaf_size=2, metric="euclidean")
+        dist, ind = kdt.query(X_np[r - 1 : r, :], k=n)
+        # Display results as human readable (1-based)
+        ind = (ind + 1).tolist()  # Convert to 1-based index
+        dist = dist.tolist()
+        print(f"\nKNN search for {y} (n={n}, record no: {r}): {ind} with distances {dist}\n")
+        if self._csv.corpus is not None:
+            self._csv.corpus.metadata["knn_search"] = f"KNN search for {y} (n={n}, record no: {r}): {ind} with distances {dist}"
+        if mcp:
+            return f"KNN search for {y} (n={n}, record no: {r}): {ind} with distances {dist}"
+        return dist, ind
+
+    def _process_xy(self, y: str, oversample=False, one_hot_encode_all=False):
+        X, Y = self._csv.prepare_data(y=y, oversample=oversample, one_hot_encode_all=one_hot_encode_all)
+        if X is None or Y is None:
+            raise ValueError("prepare_data returned None for X or Y.")
+
+        # To numpy float32
+        X_np = (
+            X.to_numpy(dtype=np.float32)
+            if hasattr(X, "to_numpy")
+            else np.asarray(X, dtype=np.float32)
+        )
+        Y_raw = Y.to_numpy() if hasattr(Y, "to_numpy") else np.asarray(Y)
+
+        # Handle NaNs
+        if np.isnan(X_np).any():
+            raise ValueError("NaN detected in feature matrix.")
+        if np.isnan(Y_raw.astype(float, copy=False)).any():
+            raise ValueError("NaN detected in target vector.")
+
+        return X_np, Y_raw, X, Y
+
+    def get_decision_tree_classes(self, y: str, top_n=5, test_size=0.5, random_state=1, mcp=False):
+        X_np, Y_raw, X, Y = self._process_xy(y=y)
+        X_train, X_test, y_train, y_test = train_test_split(
+            X_np, Y_raw, test_size=test_size, random_state=random_state
+        )
+
+        # print(f"X_train shape: {X_train.shape}, y_train shape: {y_train.shape}")
+        # print(f"X_test shape: {X_test.shape}, y_test shape: {y_test.shape}")
+
+        # Train a RandomForestClassifier
+        clf = RandomForestClassifier(n_estimators=100, random_state=42)
+        clf.fit(X_train, y_train)
+
+        # Compute permutation importance
+        results = permutation_importance(clf, X_test, y_test, n_repeats=10, random_state=42)
+
+        # classifier = DecisionTreeClassifier(random_state=random_state) # type: ignore
+        # classifier.fit(X_train, y_train)
+        y_pred = clf.predict(X_test)
+        _confusion_matrix = confusion_matrix(y_test, y_pred)
+        print(f"Confusion Matrix for Decision Tree predicting {y}:\n{_confusion_matrix}")
+        # Output
+        # [[2 0]
+        #  [2 0]]
+
+        accuracy = accuracy_score(y_test, y_pred)
+        print(f'\nAccuracy: {accuracy}\n')
+
+        # Retrieve feature importance scores
+        importance = results.importances_mean
+
+        # Get indices of top N important features
+        top_n_indices = np.argsort(importance)[-top_n:][::-1]
+
+        # Display feature importance
+        print(f'==== Top {top_n} important features ====\n')
+        _importance =""
+        for i, v in enumerate(top_n_indices):
+            print(f'Feature: {X.columns[v]}, Score: {importance[v]:.5f}')
+            _importance += f'Feature: {X.columns[v]}, Score: {importance[v]:.5f}\n'
+
+        if self._csv.corpus is not None:
+            self._csv.corpus.metadata["decision_tree_accuracy"] = f"Decision Tree accuracy for predicting {y}: {accuracy*100:.2f}%"
+            self._csv.corpus.metadata["decision_tree_confusion_matrix"] = f"Confusion Matrix for Decision Tree predicting {y}:\n{self.format_confusion_matrix_to_human_readable(_confusion_matrix)}"
+            self._csv.corpus.metadata["decision_tree_feature_importance"] = _importance
+        if mcp:
+            return f"""
+            Confusion Matrix for Decision Tree predicting {y}:\n{self.format_confusion_matrix_to_human_readable(_confusion_matrix)}\nTop {top_n} important features:\n{_importance}
+            Accuracy: {accuracy*100:.2f}%
+            """
+        return _confusion_matrix, importance
+
+    def get_xgb_classes(self, y: str, oversample=False, test_size=0.25, random_state=0, mcp=False):
+        X_np, Y_raw, X, Y = self._process_xy(y=y)
+        if ML_INSTALLED:
+            # ValueError: Invalid classes inferred from unique values of `y`.  Expected: [0 1], got [1 2]
+            # convert y to binary
+            Y_binary = (Y_raw == 1).astype(int)
+            X_train, X_test, y_train, y_test = train_test_split(
+                X_np, Y_binary, test_size=test_size, random_state=random_state
+            )
+            classifier = XGBClassifier(use_label_encoder=False, eval_metric="logloss") # type: ignore
+            classifier.fit(X_train, y_train)
+            y_pred = classifier.predict(X_test)
+            _confusion_matrix = confusion_matrix(y_test, y_pred)
+            print(f"Confusion Matrix for XGBoost predicting {y}:\n{_confusion_matrix}")
+            # Output
+            # [[2 0]
+            #  [2 0]]
+            if self._csv.corpus is not None:
+                self._csv.corpus.metadata["xgb_confusion_matrix"] = f"Confusion Matrix for XGBoost predicting {y}:\n{_confusion_matrix}"
+            if mcp:
+                return f"""
+                Confusion Matrix for XGBoost predicting {y}:\n{self.format_confusion_matrix_to_human_readable(_confusion_matrix)}
+                """
+            return _confusion_matrix
+        else:
+            raise ImportError("ML dependencies are not installed.")
+
+    def get_apriori(self, y: str, min_support=0.9, use_colnames=True, min_threshold=0.5, mcp=False):
+        if ML_INSTALLED:
+            X_np, Y_raw, X, Y = self._process_xy(y=y, one_hot_encode_all=True)
+            frequent_itemsets = apriori(X, min_support=min_support, use_colnames=use_colnames) # type: ignore
+            # rules = association_rules(frequent_itemsets, metric="lift", min_threshold=min_threshold) # type: ignore
+            human_readable = tabulate(
+                    frequent_itemsets.head(10), headers="keys", tablefmt="pretty" # type: ignore
+                )
+            if self._csv.corpus is not None:
+                self._csv.corpus.metadata["apriori_frequent_itemsets"] = human_readable
+            if mcp:
+                return f"Frequent itemsets (top 10):\n{human_readable}"
+            return frequent_itemsets #, rules
+        else:
+            raise ImportError("ML dependencies are not installed.")
+
+    def get_pca(self, y: str, n: int = 3, mcp=False):
+        """
+        Perform a manual PCA (no sklearn PCA) on the feature matrix for target y.
+
+        Args:
+            y (str): Target column name (used only for data preparation).
+            n (int): Number of principal components to keep.
+
+        Returns:
+            dict: {
+                'covariance_matrix': cov_mat,
+                'eigenvalues': eig_vals_sorted,
+                'eigenvectors': eig_vecs_sorted,
+                'explained_variance_ratio': var_exp,
+                'cumulative_explained_variance_ratio': cum_var_exp,
+                'projection_matrix': matrix_w,
+                'transformed': X_pca
+            }
+        """
+        X_np, Y_raw, X, Y = self._process_xy(y=y)
+        X_std = StandardScaler().fit_transform(X_np)
+
+        cov_mat = np.cov(X_std.T)
+        eig_vals, eig_vecs = np.linalg.eigh(cov_mat)  # symmetric matrix -> eigh
+
+        # Sort eigenvalues (and vectors) descending
+        idx = np.argsort(eig_vals)[::-1]
+        eig_vals_sorted = eig_vals[idx]
+        eig_vecs_sorted = eig_vecs[:, idx]
+
+        factors = X_std.shape[1]
+        n = max(1, min(n, factors))
+
+        # Explained variance ratios
+        tot = eig_vals_sorted.sum()
+        var_exp = (eig_vals_sorted / tot) * 100.0
+        cum_var_exp = np.cumsum(var_exp)
+
+        # Projection matrix (first n eigenvectors)
+        matrix_w = eig_vecs_sorted[:, :n]
+
+        # Project data
+        X_pca = X_std @ matrix_w
+
+        # Optional prints (retain original behavior)
+        print("Covariance matrix:\n", cov_mat)
+        print("Eigenvalues (desc):\n", eig_vals_sorted)
+        print("Explained variance (%):\n", var_exp[:n])
+        print("Cumulative explained variance (%):\n", cum_var_exp[:n])
+        print("Projection matrix (W):\n", matrix_w)
+        print("Transformed (first 5 rows):\n", X_pca[:5])
+
+        result = {
+            "covariance_matrix": cov_mat,
+            "eigenvalues": eig_vals_sorted,
+            "eigenvectors": eig_vecs_sorted,
+            "explained_variance_ratio": var_exp,
+            "cumulative_explained_variance_ratio": cum_var_exp,
+            "projection_matrix": matrix_w,
+            "transformed": X_pca,
+        }
+
+        if self._csv.corpus is not None:
+            self._csv.corpus.metadata["pca"] = (
+                f"PCA kept {n} components explaining "
+                f"{cum_var_exp[n-1]:.2f}% variance."
+            )
+        if mcp:
+            return f"PCA kept {n} components explaining {cum_var_exp[n-1]:.2f}% variance."
+        return result
+
+    def get_regression(self, y: str, mcp=False):
+        """
+        Perform linear or logistic regression based on the outcome variable type.
+
+        If the outcome is binary, fit a logistic regression model.
+        Otherwise, fit a linear regression model.
+
+        Args:
+            y (str): Target column name for the regression.
+
+        Returns:
+            dict: Regression results including coefficients, intercept, and metrics.
+        """
+        if ML_INSTALLED is False:
+            logger.info(
+                "ML dependencies are not installed. Please install them by ```pip install crisp-t[ml] to use ML features."
+            )
+            return None
+
+        if self._csv is None:
+            raise ValueError(
+                "CSV data is not set. Please set self.csv before calling get_regression."
+            )
+
+        X_np, Y_raw, X, Y = self._process_xy(y=y)
+
+        # Check if outcome is binary (logistic) or continuous (linear)
+        unique_values = np.unique(Y_raw)
+        num_unique = len(unique_values)
+
+        # Determine if binary classification or regression
+        is_binary = num_unique == 2
+
+        if is_binary:
+            # Logistic Regression
+            print(f"\n=== Logistic Regression for {y} ===")
+            print(f"Binary outcome detected with values: {unique_values}")
+
+            model = LogisticRegression(max_iter=1000, random_state=42)
+            model.fit(X_np, Y_raw)
+
+            # Predictions
+            y_pred = model.predict(X_np)
+
+            # Accuracy
+            accuracy = accuracy_score(Y_raw, y_pred)
+            print(f"\nAccuracy: {accuracy*100:.2f}%")
+
+            # Coefficients and Intercept
+            print(f"\nCoefficients:")
+            for i, coef in enumerate(model.coef_[0]):
+                feature_name = X.columns[i] if hasattr(X, 'columns') else f"Feature_{i}"
+                print(f"  {feature_name}: {coef:.5f}")
+
+            print(f"\nIntercept: {model.intercept_[0]:.5f}")
+
+            coef_str = "\n".join([
+                    f"  {X.columns[i] if hasattr(X, 'columns') else f'Feature_{i}'}: {coef:.5f}"
+                    for i, coef in enumerate(model.coef_[0])
+             ])
+
+            # Store in metadata
+            if self._csv.corpus is not None:
+                self._csv.corpus.metadata["logistic_regression_accuracy"] = f"Logistic Regression accuracy for predicting {y}: {accuracy*100:.2f}%"
+                self._csv.corpus.metadata["logistic_regression_coefficients"] = f"Coefficients:\n{coef_str}"
+                self._csv.corpus.metadata["logistic_regression_intercept"] = f"Intercept: {model.intercept_[0]:.5f}"
+
+            if mcp:
+                return f"""
+                Logistic Regression accuracy for predicting {y}: {accuracy*100:.2f}%
+                Coefficients:
+                {coef_str}
+                Intercept: {model.intercept_[0]:.5f}
+                """
+            return {
+                "model_type": "logistic",
+                "accuracy": accuracy,
+                "coefficients": model.coef_[0],
+                "intercept": model.intercept_[0],
+                "feature_names": X.columns.tolist() if hasattr(X, 'columns') else None
+            }
+        else:
+            # Linear Regression
+            print(f"\n=== Linear Regression for {y} ===")
+            print(f"Continuous outcome detected with {num_unique} unique values")
+
+            model = LinearRegression()
+            model.fit(X_np, Y_raw)
+
+            # Predictions
+            y_pred = model.predict(X_np)
+
+            # Metrics
+            mse = mean_squared_error(Y_raw, y_pred)
+            r2 = r2_score(Y_raw, y_pred)
+            print(f"\nMean Squared Error (MSE): {mse:.5f}")
+            print(f"R² Score: {r2:.5f}")
+
+            # Coefficients and Intercept
+            print(f"\nCoefficients:")
+            for i, coef in enumerate(model.coef_):
+                feature_name = X.columns[i] if hasattr(X, 'columns') else f"Feature_{i}"
+                print(f"  {feature_name}: {coef:.5f}")
+
+            print(f"\nIntercept: {model.intercept_:.5f}")
+
+            coef_str = "\n".join([
+                    f"  {X.columns[i] if hasattr(X, 'columns') else f'Feature_{i}'}: {coef:.5f}"
+                    for i, coef in enumerate(model.coef_)
+            ])
+
+            # Store in metadata
+            if self._csv.corpus is not None:
+                self._csv.corpus.metadata["linear_regression_mse"] = f"Linear Regression MSE for predicting {y}: {mse:.5f}"
+                self._csv.corpus.metadata["linear_regression_r2"] = f"Linear Regression R² for predicting {y}: {r2:.5f}"
+                self._csv.corpus.metadata["linear_regression_coefficients"] = f"Coefficients:\n{coef_str}"
+                self._csv.corpus.metadata["linear_regression_intercept"] = f"Intercept: {model.intercept_:.5f}"
+
+            if mcp:
+                return f"""
+                Linear Regression MSE for predicting {y}: {mse:.5f}
+                R²: {r2:.5f}
+                Feature Names and Coefficients:
+                {coef_str}
+                Intercept: {model.intercept_:.5f}
+                """
+            return {
+                "model_type": "linear",
+                "mse": mse,
+                "r2": r2,
+                "coefficients": model.coef_,
+                "intercept": model.intercept_,
+                "feature_names": X.columns.tolist() if hasattr(X, 'columns') else None
+            }
