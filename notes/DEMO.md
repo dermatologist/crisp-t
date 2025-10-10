@@ -2,7 +2,7 @@
 
 ## Setup
 
-* Install [Crisp-T](https://github.com/dermatologist/crisp-t) with `pip install crisp-t` or `uv pip install crisp-t`
+* Install [Crisp-T](https://github.com/dermatologist/crisp-t) with `pip install crisp-t[ml]` or `uv pip install crisp-t[ml]`
 * Download covid narratives data to  `crisp_source` folder in home directory or current directory using `crisp --covid covidstories.omeka.net --source crisp_source`
 * Create a `crisp_input` folder in home directory or current directory for keeping imported data.
 * Download [Psycological Effects of COVID](https://www.kaggle.com/datasets/hemanthhari/psycological-effects-of-covid) dataset to `crisp_source` folder.
