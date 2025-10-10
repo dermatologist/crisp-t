@@ -35,6 +35,12 @@ Include machine learning features for numeric data analysis:
 pip install crisp-t[ml]
 ```
 
+Include XGBoost for gradient boosting features:
+```bash
+pip install crisp-t[xg]
+```
+* Mac users need to install libomp: `brew install libomp` for XGBoost to work.
+
 ## Command Line Scripts
 
 CRISP-T now provides four main command-line scripts:

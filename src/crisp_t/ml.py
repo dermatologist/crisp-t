@@ -34,7 +34,6 @@ try:
     from imblearn.over_sampling import RandomOverSampler
     from mlxtend.frequent_patterns import apriori, association_rules
     from torch.utils.data import DataLoader, TensorDataset
-    from xgboost import XGBClassifier
 
     ML_INSTALLED = True
 
@@ -444,6 +443,10 @@ class ML:
         return _confusion_matrix, importance
 
     def get_xgb_classes(self, y: str, oversample=False, test_size=0.25, random_state=0, mcp=False):
+        try:
+            from xgboost import XGBClassifier  # type: ignore
+        except ImportError:
+            raise ImportError("XGBoost is not installed. Please install it via `pip install crisp-t[xg]`.")
         X_np, Y_raw, X, Y = self._process_xy(y=y)
         if ML_INSTALLED:
             # ValueError: Invalid classes inferred from unique values of `y`.  Expected: [0 1], got [1 2]
