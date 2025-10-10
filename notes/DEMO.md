@@ -105,3 +105,16 @@ crisp --include relaxed,self_time,sleep_bal,time_dp,travel_time,home_env --cls -
 <p align="center">
   <img src="https://github.com/dermatologist/crisp-t/blob/develop/notes/crisp.gif" />
 </p>
+
+## Visualization
+
+* Let's generate a word cloud of keywords in the corpus.
+
+```bash
+crispviz --inp crisp_input/ --out crisp_output/ --wordcloud
+```
+* The word cloud will be saved in `crisp_output` folder.
+
+<p align="center">
+  <img src="https://github.com/dermatologist/crisp-t/blob/develop/notes/wordcloud.jpg" />
+</p>
