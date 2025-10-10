@@ -93,10 +93,11 @@ crisp-mcp = "crisp_t.mcp.__main__:run_server"
 ml = [
     "scikit-learn",
     "imbalanced-learn",
-    "xgboost",
     "torch",
 ]
-
+xg = [
+    "xgboost",
+]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/crisp_t"]
