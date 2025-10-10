@@ -16,11 +16,11 @@
   <img src="https://github.com/dermatologist/crisp-t/blob/develop/notes/crisp-logo.jpg" />
 </p>
 
-Qualitative research involves the collection and analysis of textual data, such as interview transcripts, open-ended survey responses, and field notes. It is often used in social sciences, humanities, and health research to explore complex phenomena and understand human experiences. In addition to textual data, qualitative researchers may also collect quantitative data, such as survey responses or demographic information, to complement their qualitative findings. Additionally, qualitative researchers use external data sources, such as census data or social media data, to provide context and triangulate their findings. Qualitative research is often characterized by its inductive approach, where researchers aim to generate theories or concepts from the data rather than testing pre-existing hypotheses. It emphasizes the importance of data-driven analysis and theory development.
+Qualitative research involves the collection and analysis of textual data, such as **interview transcripts, open-ended survey responses, and field notes.** It is often used in social sciences, humanities, and health research to explore complex phenomena and understand human experiences. In addition to textual data, **qualitative researchers may also collect quantitative data**, such as survey responses or demographic information, to complement their qualitative findings. Additionally, qualitative researchers use external data sources, such as census data or social media data, to provide context and triangulate their findings. Qualitative research is often characterized by its inductive approach, where researchers aim to **generate theories or concepts from the data** rather than testing pre-existing hypotheses. It emphasizes the importance of data-driven analysis and theory development.
 
-CRISP-T is a method and corresponding open-source tool set to integrate **textual data** (as a list of documents) and **numeric data** (as Pandas DataFrame) into structured classes that retain **metadata** from various analytical processes, such as **topic modeling** and **decision trees**. Researchers, with or without GenAI assistance, can define relationships between textual and numerical datasets based on their chosen **theoretical lens**.  A final analytical phase ensures that proposed relationships actually hold true. [See Demo](/notes/DEMO.md).
+CRISP-T is a method and corresponding open-source tool set to integrate **textual data** (as a list of documents) and **numeric data** (as Pandas DataFrame) into structured classes that retain **metadata** from various analytical processes, such as **topic modeling** and **decision trees**. Researchers, with or without GenAI assistance, can define relationships between textual and numerical datasets based on their chosen **theoretical lens**.  A final analytical phase ensures that proposed relationships actually hold true. 👉 [See Demo](/notes/DEMO.md).
 
-An MCP server exposes all functionality as tools, resources, and prompts, enabling integration with AI agent platforms such as Claude desktop, VSCODE and other MCP-compatible clients.
+An **MCP server** exposes all functionality as tools, resources, and prompts, enabling integration with AI agent platforms such as Claude desktop, VSCODE and other MCP-compatible clients.
 
 [![crisp-t](https://github.com/dermatologist/crisp-t/blob/develop/notes/arch.drawio.svg)](https://github.com/dermatologist/crisp-t/blob/develop/notes/arch.drawio.svg)
 
@@ -35,9 +35,15 @@ Include machine learning features for numeric data analysis:
 pip install crisp-t[ml]
 ```
 
+Include XGBoost for gradient boosting features:
+```bash
+pip install crisp-t[xg]
+```
+* Mac users need to install libomp: `brew install libomp` for XGBoost to work.
+
 ## Command Line Scripts
 
-CRISP-T now provides three main command-line scripts:
+CRISP-T now provides four main command-line scripts:
 
 - `crisp` — Main CLI for qualitative triangulation and analysis (see below)
 - `crispviz` — Visualization CLI for corpus data (word frequencies, topic charts, wordclouds, etc.)
@@ -54,6 +60,8 @@ crisp [OPTIONS]
 
 #### Input/Output Options
 
+- `--source, -s PATH|URL`: Read source data from a directory (reads .txt, .pdf and a single .csv) or from a URL
+- `--sources PATH|URL`: Provide multiple sources; can be used multiple times
 - `--inp, -i PATH`: Load an existing corpus from a folder containing `corpus.json` (and optional `corpus_df.csv`)
 - `--out, -o PATH`: When saving the corpus, provide a folder path; the CLI writes `corpus.json` (and `corpus_df.csv` if available) into that folder. When saving analysis results (topics, sentiment, etc.), this acts as a base path: files are written with suffixes, e.g., `results_topics.json`.
 - `--unstructured, -t TEXT`: Text CSV column(s) to analyze/compare (can be used multiple times). This is useful when you have free-form text data in a DataFrame. If this is provided, those columns are used as documents.

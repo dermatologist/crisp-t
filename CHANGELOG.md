@@ -2,13 +2,7 @@
 
 ## [Unreleased](https://github.com/dermatologist/crisp-t/tree/HEAD)
 
-[Full Changelog](https://github.com/dermatologist/crisp-t/compare/b44ec69181fd0c0204a1692c494a2a36e7c4177e...HEAD)
-
-**Implemented enhancements:**
-
-- Feature Request: Create an MCP server [\#20](https://github.com/dermatologist/crisp-t/issues/20)
-- Feature request: Add Linear and Logistic regression [\#18](https://github.com/dermatologist/crisp-t/issues/18)
-- Feature: Command line interface and Documentation. [\#12](https://github.com/dermatologist/crisp-t/issues/12)
+[Full Changelog](https://github.com/dermatologist/crisp-t/compare/v0.1.0...HEAD)
 
 **Merged pull requests:**
 
@@ -28,6 +22,16 @@
 - Feature/uv 1 [\#8](https://github.com/dermatologist/crisp-t/pull/8) ([dermatologist](https://github.com/dermatologist))
 - Feature/readme 1 [\#4](https://github.com/dermatologist/crisp-t/pull/4) ([dermatologist](https://github.com/dermatologist))
 - Bump astral-sh/setup-uv from 5 to 6 [\#2](https://github.com/dermatologist/crisp-t/pull/2) ([dependabot[bot]](https://github.com/apps/dependabot))
+
+## [v0.1.0](https://github.com/dermatologist/crisp-t/tree/v0.1.0) (2025-10-10)
+
+[Full Changelog](https://github.com/dermatologist/crisp-t/compare/b44ec69181fd0c0204a1692c494a2a36e7c4177e...v0.1.0)
+
+**Implemented enhancements:**
+
+- Feature Request: Create an MCP server [\#20](https://github.com/dermatologist/crisp-t/issues/20)
+- Feature request: Add Linear and Logistic regression [\#18](https://github.com/dermatologist/crisp-t/issues/18)
+- Feature: Command line interface and Documentation. [\#12](https://github.com/dermatologist/crisp-t/issues/12)
 
 
 

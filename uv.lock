@@ -538,6 +538,8 @@ ml = [
     { name = "imbalanced-learn" },
     { name = "scikit-learn" },
     { name = "torch" },
+]
+xg = [
     { name = "xgboost" },
 ]
 
@@ -577,9 +579,9 @@ requires-dist = [
     { name = "torch", marker = "extra == 'ml'" },
     { name = "vadersentiment" },
     { name = "wordcloud" },
-    { name = "xgboost", marker = "extra == 'ml'" },
+    { name = "xgboost", marker = "extra == 'xg'" },
 ]
-provides-extras = ["ml"]
+provides-extras = ["ml", "xg"]
 
 [package.metadata.requires-dev]
 dev = [
