@@ -30,10 +30,59 @@ warnings.filterwarnings("ignore", category=DeprecationWarning)
 try:
     import chromadb
     from chromadb.config import Settings
+    from chromadb.api.types import EmbeddingFunction
 
     CHROMADB_AVAILABLE = True
 except ImportError:
     CHROMADB_AVAILABLE = False
+    EmbeddingFunction = object  # type: ignore
+
+
+class SimpleEmbeddingFunction(EmbeddingFunction):
+    """
+    A simple embedding function for testing that doesn't require downloads.
+    Uses TF-IDF based embeddings with a fixed vocabulary.
+    """
+
+    def __init__(self):
+        """Initialize with an empty vocabulary that will be built from data."""
+        self._vocabulary = set()
+        self._word_to_idx = {}
+
+    def _build_vocabulary(self, texts: list[str]):
+        """Build vocabulary from texts."""
+        for text in texts:
+            words = text.lower().split()
+            self._vocabulary.update(words)
+        # Sort words for consistent ordering
+        word_list = sorted(self._vocabulary)
+        self._word_to_idx = {word: idx for idx, word in enumerate(word_list)}
+
+    def __call__(self, input: list[str]) -> list[list[float]]:
+        """Generate simple embeddings based on word presence."""
+        # Build vocabulary if not already built
+        if not self._word_to_idx:
+            self._build_vocabulary(input)
+
+        # Create embeddings
+        embeddings = []
+        for text in input:
+            words = text.lower().split()
+            # Create a vector of size len(vocabulary)
+            embedding = [0.0] * len(self._word_to_idx)
+            for word in words:
+                if word in self._word_to_idx:
+                    embedding[self._word_to_idx[word]] += 1.0
+            # Normalize
+            total = sum(embedding)
+            if total > 0:
+                embedding = [x / total for x in embedding]
+            # Ensure we have at least some value
+            if total == 0:
+                embedding = [1.0 / len(embedding)] * len(embedding)
+            embeddings.append(embedding)
+
+        return embeddings
 
 
 class Semantic:
@@ -41,12 +90,13 @@ class Semantic:
     Semantic search class using ChromaDB for similarity-based document retrieval.
     """
 
-    def __init__(self, corpus: Corpus):
+    def __init__(self, corpus: Corpus, use_simple_embeddings: bool = False):
         """
         Initialize the Semantic class with a corpus.
 
         Args:
             corpus: The Corpus object containing documents to index.
+            use_simple_embeddings: If True, use simple embeddings instead of default (useful for testing).
 
         Raises:
             ImportError: If chromadb is not installed.
@@ -67,11 +117,32 @@ class Semantic:
         self._corpus = corpus
         self._client = chromadb.Client(Settings(anonymized_telemetry=False))
         self._collection_name = "crisp-t"
+        self._embedding_function = None
 
-        # Create or get collection
+        # Pre-build vocabulary for simple embeddings
+        if use_simple_embeddings:
+            self._embedding_function = SimpleEmbeddingFunction()
+            # Build vocabulary from all document texts
+            all_texts = [doc.text for doc in corpus.documents]
+            self._embedding_function._build_vocabulary(all_texts)
+
+        # Create or get collection - delete existing if using different embedding
         try:
-            self._collection = self._client.get_collection(name=self._collection_name)
+            existing_collection = self._client.get_collection(name=self._collection_name)
+            # Delete and recreate to ensure clean state
+            self._client.delete_collection(name=self._collection_name)
         except Exception:
+            pass  # Collection doesn't exist yet
+
+        # Create new collection
+        if use_simple_embeddings and self._embedding_function:
+            # Use simple embeddings for testing
+            self._collection = self._client.create_collection(
+                name=self._collection_name,
+                embedding_function=self._embedding_function,
+            )
+        else:
+            # Use default embeddings (may require download)
             self._collection = self._client.create_collection(name=self._collection_name)
 
         # Add documents to collection

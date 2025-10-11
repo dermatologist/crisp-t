@@ -51,7 +51,7 @@ class TestSemantic:
 
     def test_init_with_valid_corpus(self, sample_corpus):
         """Test initialization with a valid corpus."""
-        semantic = Semantic(sample_corpus)
+        semantic = Semantic(sample_corpus, use_simple_embeddings=True)
         assert semantic._corpus == sample_corpus
         assert semantic._collection_name == "crisp-t"
         assert semantic._client is not None
@@ -60,7 +60,7 @@ class TestSemantic:
     def test_init_with_none_corpus(self):
         """Test initialization with None corpus raises ValueError."""
         with pytest.raises(ValueError, match="Corpus cannot be None"):
-            Semantic(None)
+            Semantic(None, use_simple_embeddings=True)
 
     def test_init_with_empty_corpus(self):
         """Test initialization with empty corpus raises ValueError."""
@@ -68,11 +68,11 @@ class TestSemantic:
             id="empty_corpus", name="Empty", description="No documents", documents=[]
         )
         with pytest.raises(ValueError, match="Corpus must contain at least one document"):
-            Semantic(empty_corpus)
+            Semantic(empty_corpus, use_simple_embeddings=True)
 
     def test_get_similar(self, sample_corpus):
         """Test semantic search with get_similar."""
-        semantic = Semantic(sample_corpus)
+        semantic = Semantic(sample_corpus, use_simple_embeddings=True)
         query = "artificial intelligence and machine learning"
         result_corpus = semantic.get_similar(query, n_results=2)
 
@@ -85,7 +85,7 @@ class TestSemantic:
 
     def test_get_similar_returns_relevant_docs(self, sample_corpus):
         """Test that get_similar returns relevant documents."""
-        semantic = Semantic(sample_corpus)
+        semantic = Semantic(sample_corpus, use_simple_embeddings=True)
         query = "natural language processing"
         result_corpus = semantic.get_similar(query, n_results=1)
 
@@ -96,7 +96,7 @@ class TestSemantic:
 
     def test_get_df_with_all_metadata(self, sample_corpus):
         """Test get_df exports all metadata."""
-        semantic = Semantic(sample_corpus)
+        semantic = Semantic(sample_corpus, use_simple_embeddings=True)
         result_corpus = semantic.get_df()
 
         assert result_corpus.df is not None
@@ -106,7 +106,7 @@ class TestSemantic:
 
     def test_get_df_with_specific_keys(self, sample_corpus):
         """Test get_df with specific metadata keys."""
-        semantic = Semantic(sample_corpus)
+        semantic = Semantic(sample_corpus, use_simple_embeddings=True)
         result_corpus = semantic.get_df(metadata_keys=["topic"])
 
         assert result_corpus.df is not None
@@ -143,7 +143,7 @@ class TestSemantic:
             df=existing_df,
         )
 
-        semantic = Semantic(corpus)
+        semantic = Semantic(corpus, use_simple_embeddings=True)
         result_corpus = semantic.get_df()
 
         # Should have merged data
@@ -153,7 +153,7 @@ class TestSemantic:
 
     def test_save_and_restore_collection(self, sample_corpus, tmp_path):
         """Test saving and restoring collection."""
-        semantic = Semantic(sample_corpus)
+        semantic = Semantic(sample_corpus, use_simple_embeddings=True)
 
         # Save collection
         save_path = str(tmp_path / "test_chroma")
@@ -171,7 +171,7 @@ class TestSemantic:
                 Document(id="temp", name="Temp", text="Temp text", metadata={})
             ],
         )
-        new_semantic = Semantic(new_corpus)
+        new_semantic = Semantic(new_corpus, use_simple_embeddings=True)
         new_semantic.restore_collection(save_path)
 
         # Query should work on restored collection
@@ -184,7 +184,7 @@ class TestSemantic:
 
     def test_restore_nonexistent_path(self, sample_corpus):
         """Test restoring from non-existent path raises error."""
-        semantic = Semantic(sample_corpus)
+        semantic = Semantic(sample_corpus, use_simple_embeddings=True)
         with pytest.raises(ValueError, match="does not exist"):
             semantic.restore_collection("/nonexistent/path")
 

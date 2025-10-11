@@ -276,7 +276,16 @@ def main(
             from .semantic import Semantic
 
             click.echo(f"\nPerforming semantic search for: '{semantic}'")
-            semantic_analyzer = Semantic(corpus)
+            # Try with default embeddings first, fall back to simple embeddings
+            try:
+                semantic_analyzer = Semantic(corpus)
+            except Exception as network_error:
+                # If network error or download fails, try simple embeddings
+                if "address" in str(network_error).lower() or "download" in str(network_error).lower():
+                    click.echo("Note: Using simple embeddings (network unavailable)")
+                    semantic_analyzer = Semantic(corpus, use_simple_embeddings=True)
+                else:
+                    raise
             corpus = semantic_analyzer.get_similar(semantic, n_results=semantic_n)
             click.echo(f"✓ Found {len(corpus.documents)} similar documents")
             click.echo(
@@ -294,7 +303,16 @@ def main(
             from .semantic import Semantic
 
             click.echo("\nExporting metadata as DataFrame...")
-            semantic_analyzer = Semantic(corpus)
+            # Try with default embeddings first, fall back to simple embeddings
+            try:
+                semantic_analyzer = Semantic(corpus)
+            except Exception as network_error:
+                # If network error or download fails, try simple embeddings
+                if "address" in str(network_error).lower() or "download" in str(network_error).lower():
+                    click.echo("Note: Using simple embeddings (network unavailable)")
+                    semantic_analyzer = Semantic(corpus, use_simple_embeddings=True)
+                else:
+                    raise
             # Parse metadata_keys if provided
             keys_list = None
             if metadata_keys:
