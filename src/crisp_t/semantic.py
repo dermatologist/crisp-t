@@ -158,7 +158,7 @@ class Semantic:
 
         for doc in self._corpus.documents:
             documents_texts.append(doc.text)
-            # Prepare metadata - ChromaDB requires string values
+            # Prepare metadata - ChromaDB requires string values and non-empty dicts
             metadata = {}
             for key, value in doc.metadata.items():
                 # Convert non-string values to strings
@@ -171,6 +171,9 @@ class Semantic:
             # Add document name if available
             if doc.name:
                 metadata["name"] = doc.name
+            # ChromaDB requires non-empty metadata, add document id if empty
+            if not metadata:
+                metadata["_doc_id"] = str(doc.id)
             metadatas.append(metadata)
             ids.append(str(doc.id))
 
@@ -303,17 +306,23 @@ class Semantic:
         # Get all data from in-memory collection
         all_data = self._collection.get()
 
-        # Create or get collection in persistent storage
+        # Create or get collection in persistent storage with same embedding function
         try:
             persistent_collection = persistent_client.get_collection(
                 name=self._collection_name
             )
             # Delete and recreate to ensure fresh data
             persistent_client.delete_collection(name=self._collection_name)
-            persistent_collection = persistent_client.create_collection(
-                name=self._collection_name
-            )
         except Exception:
+            pass
+
+        # Create collection with the same embedding function if available
+        if self._embedding_function:
+            persistent_collection = persistent_client.create_collection(
+                name=self._collection_name,
+                embedding_function=self._embedding_function
+            )
+        else:
             persistent_collection = persistent_client.create_collection(
                 name=self._collection_name
             )
@@ -356,8 +365,14 @@ class Semantic:
         except Exception:
             pass
 
-        # Create new in-memory collection
-        self._collection = self._client.create_collection(name=self._collection_name)
+        # Create new in-memory collection with same embedding function
+        if self._embedding_function:
+            self._collection = self._client.create_collection(
+                name=self._collection_name,
+                embedding_function=self._embedding_function
+            )
+        else:
+            self._collection = self._client.create_collection(name=self._collection_name)
 
         # Add data to in-memory collection
         if all_data["ids"]:
