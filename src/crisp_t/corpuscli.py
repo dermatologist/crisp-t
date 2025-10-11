@@ -221,14 +221,6 @@ def main(
         corpus.clear_relationships()
         click.echo("✓ Cleared relationships")
 
-    # Save corpus to --out if provided
-    if out:
-        from .read_data import ReadData
-
-        rd = ReadData(corpus=corpus)
-        rd.write_corpus_to_json(out, corpus=corpus)
-        click.echo(f"✓ Corpus saved to {out}")
-
     # Print DataFrame column names
     if df_cols:
         cols = corpus.get_all_df_column_names()
@@ -328,6 +320,14 @@ def main(
             click.echo("Install chromadb with: pip install chromadb")
         except Exception as e:
             click.echo(f"Error exporting metadata: {e}")
+
+    # Save corpus to --out if provided
+    if out:
+        from .read_data import ReadData
+
+        rd = ReadData(corpus=corpus)
+        rd.write_corpus_to_json(out, corpus=corpus)
+        click.echo(f"✓ Corpus saved to {out}")
 
     if print_corpus:
         click.echo("\n=== Corpus Details ===")
