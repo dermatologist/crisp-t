@@ -1299,7 +1299,11 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
 
         elif name == "semantic_search":
             if not _corpus:
-                return [TextContent(type="text", text="No corpus loaded. Use load_corpus first.")]
+                return [
+                    TextContent(
+                        type="text", text="No corpus loaded. Use load_corpus first."
+                    )
+                ]
 
             try:
                 from ..semantic import Semantic
@@ -1311,20 +1315,26 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                 n_results = arguments.get("n_results", 5)
 
                 semantic_analyzer = Semantic(_corpus)
-                result_corpus = semantic_analyzer.get_similar(query, n_results=n_results)
+                result_corpus = semantic_analyzer.get_similar(
+                    query, n_results=n_results
+                )
 
                 # Update global corpus
-                global _corpus
+                # global _corpus
                 _corpus = result_corpus
 
                 # Prepare response
                 response_text = f"Semantic search completed for query: '{query}'\n"
-                response_text += f"Found {len(result_corpus.documents)} similar documents\n\n"
+                response_text += (
+                    f"Found {len(result_corpus.documents)} similar documents\n\n"
+                )
                 response_text += "Document IDs:\n"
                 for doc in result_corpus.documents[:10]:  # Show first 10
                     response_text += f"- {doc.id}: {doc.name or 'No name'}\n"
                 if len(result_corpus.documents) > 10:
-                    response_text += f"... and {len(result_corpus.documents) - 10} more\n"
+                    response_text += (
+                        f"... and {len(result_corpus.documents) - 10} more\n"
+                    )
 
                 return [TextContent(type="text", text=response_text)]
 
@@ -1336,11 +1346,17 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                     )
                 ]
             except Exception as e:
-                return [TextContent(type="text", text=f"Error during semantic search: {e}")]
+                return [
+                    TextContent(type="text", text=f"Error during semantic search: {e}")
+                ]
 
         elif name == "export_metadata_df":
             if not _corpus:
-                return [TextContent(type="text", text="No corpus loaded. Use load_corpus first.")]
+                return [
+                    TextContent(
+                        type="text", text="No corpus loaded. Use load_corpus first."
+                    )
+                ]
 
             try:
                 from ..semantic import Semantic
@@ -1354,7 +1370,7 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                 result_corpus = semantic_analyzer.get_df(metadata_keys=metadata_keys)
 
                 # Update global corpus
-                global _corpus
+                # global _corpus
                 _corpus = result_corpus
 
                 # Prepare response
