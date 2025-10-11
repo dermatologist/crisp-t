@@ -107,6 +107,27 @@ def _parse_relationship(value: str) -> tuple[str, str, str]:
     default=None,
     help="Print all relationships involving a specific keyword.",
 )
+@click.option(
+    "--semantic",
+    default=None,
+    help="Perform semantic search with the given query string. Returns similar documents.",
+)
+@click.option(
+    "--semantic-n",
+    default=5,
+    type=int,
+    help="Number of results to return from semantic search (default: 5).",
+)
+@click.option(
+    "--metadata-df",
+    is_flag=True,
+    help="Export collection metadata as DataFrame. Requires semantic search to be initialized first.",
+)
+@click.option(
+    "--metadata-keys",
+    default=None,
+    help="Comma-separated list of metadata keys to include in DataFrame export.",
+)
 def main(
     verbose: bool,
     id: Optional[str],
@@ -127,6 +148,10 @@ def main(
     doc_id: Optional[str],
     print_relationships: bool,
     relationships_for_keyword: Optional[str],
+    semantic: Optional[str],
+    semantic_n: int,
+    metadata_df: bool,
+    metadata_keys: Optional[str],
 ):
     """
     CRISP-T Corpus CLI: create and manipulate a corpus quickly from the command line.
@@ -244,6 +269,47 @@ def main(
     if relationships_for_keyword:
         rels = corpus.get_all_relationships_for_keyword(relationships_for_keyword)
         click.echo(f"Relationships for keyword '{relationships_for_keyword}': {rels}")
+
+    # Semantic search
+    if semantic:
+        try:
+            from .semantic import Semantic
+
+            click.echo(f"\nPerforming semantic search for: '{semantic}'")
+            semantic_analyzer = Semantic(corpus)
+            corpus = semantic_analyzer.get_similar(semantic, n_results=semantic_n)
+            click.echo(f"✓ Found {len(corpus.documents)} similar documents")
+            click.echo(
+                f"Hint: Use --out to save the filtered corpus, or --print to view results"
+            )
+        except ImportError as e:
+            click.echo(f"Error: {e}")
+            click.echo("Install chromadb with: pip install chromadb")
+        except Exception as e:
+            click.echo(f"Error during semantic search: {e}")
+
+    # Export metadata as DataFrame
+    if metadata_df:
+        try:
+            from .semantic import Semantic
+
+            click.echo("\nExporting metadata as DataFrame...")
+            semantic_analyzer = Semantic(corpus)
+            # Parse metadata_keys if provided
+            keys_list = None
+            if metadata_keys:
+                keys_list = [k.strip() for k in metadata_keys.split(",")]
+            corpus = semantic_analyzer.get_df(metadata_keys=keys_list)
+            click.echo("✓ Metadata exported to DataFrame")
+            if corpus.df is not None:
+                click.echo(f"DataFrame shape: {corpus.df.shape}")
+                click.echo(f"Columns: {list(corpus.df.columns)}")
+            click.echo("Hint: Use --out to save the corpus with the updated DataFrame")
+        except ImportError as e:
+            click.echo(f"Error: {e}")
+            click.echo("Install chromadb with: pip install chromadb")
+        except Exception as e:
+            click.echo(f"Error exporting metadata: {e}")
 
     if print_corpus:
         click.echo("\n=== Corpus Details ===")

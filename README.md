@@ -123,6 +123,11 @@ crispt [OPTIONS]
 	- `--doc-id ID`: Print document by ID
 	- `--relationships`: Print all relationships
 	- `--relationships-for-keyword KEYWORD`: Print relationships involving a keyword
+- Semantic search (requires `chromadb`):
+	- `--semantic QUERY`: Perform semantic search with query string
+	- `--semantic-n N`: Number of results to return (default: 5)
+	- `--metadata-df`: Export collection metadata as DataFrame
+	- `--metadata-keys KEYS`: Comma-separated metadata keys to include
 
 ### [Example Usage](/notes/DEMO.md)
 
@@ -180,6 +185,10 @@ The MCP server provides tools for:
 - `extract_categories` - Extract common concepts
 - `generate_summary` - Generate extractive summary
 - `sentiment_analysis` - VADER sentiment analysis
+
+**Semantic Search** (requires `chromadb`)
+- `semantic_search` - Find documents similar to a query using semantic similarity
+- `export_metadata_df` - Export ChromaDB metadata as DataFrame
 
 **DataFrame/CSV Operations**
 - `get_df_columns` - Get DataFrame column names
