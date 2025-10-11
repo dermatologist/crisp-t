@@ -1,27 +1,16 @@
 # Agent Instructions for CRISP-T Repository
 
-## Repository Overview
 
-**CRISP-T** (Cross Industry Standard Process for Triangulation) is a qualitative research method and toolkit for analyzing mixed datasets containing both textual and numerical data. It enables computational triangulation and sense-making through:
+## Agent development and contribution guidelines for CRISP-T.
 
-- Text analytics (topic modeling, sentiment analysis, NLP)
-- Numerical analysis (regression, clustering, decision trees)
-- Integration of qualitative and quantitative findings
-- MCP (Model Context Protocol) server for AI agent integration
-
-## Key Capabilities
-
-### Core Functionality
-- **Textual Analysis**: Document management, topic modeling, sentiment analysis, coding dictionaries, categorization
-- **Numerical Analysis**: Regression, clustering, classification, PCA, association rules
-- **Triangulation**: Link textual findings with numerical variables through relationships
-- **MCP Server**: Full functionality exposed as tools, resources, and prompts for AI agents
-
-### Command Line Tools
-1. `crisp` - Main analytical CLI for triangulation and analysis
-2. `crispviz` - Visualization CLI for corpus data
-3. `crispt` - Corpus manipulation CLI
-4. `crisp-mcp` - MCP server for AI agent integration
+- Follow the repository structure and coding conventions
+- All new classes should accept the corpus as their input unless otherwise justified
+- When a corpus is modified set the self.corpus to the modified corpus
+- When a dataframe is modified set self.corpus.df to the modified dataframe
+- Add appropriate command-line interface (CLI) commands for new features
+- Add appropriate MCP tools for new analysis functions
+- Update README and documentation for user-facing changes and CLI commands
+- Write tests for new functionality and maintain existing test coverage
 
 ## Repository Structure
 
@@ -159,91 +148,6 @@ pytest tests/test_specific.py::test_function_name
 - Mock external dependencies (files, networks, etc.)
 - Test both success and error cases
 
-## MCP Server Usage
-
-### Starting the Server
-
-```bash
-crisp-mcp
-```
-
-### Available MCP Tools
-
-**Corpus Management**: load_corpus, save_corpus, add_document, remove_document, get_document, list_documents, add_relationship, get_relationships
-
-**Text Analysis**: generate_coding_dictionary, topic_modeling, assign_topics, extract_categories, generate_summary, sentiment_analysis
-
-**Numeric Analysis**: get_df_columns, get_df_row_count, get_df_row
-
-**Machine Learning** (requires crisp-t[ml]): kmeans_clustering, decision_tree_classification, svm_classification, neural_network_classification, regression_analysis, pca_analysis, association_rules, knn_search
-
-### MCP Prompts
-
-- `analysis_workflow` - Step-by-step analysis guide
-- `triangulation_guide` - Guide for triangulating qualitative and quantitative findings
-
-## Common Patterns
-
-### Loading and Saving Corpus
-
-```python
-# Load from existing corpus
-from crisp_t.helpers.initializer import initialize_corpus
-corpus = initialize_corpus(inp="/path/to/corpus_folder")
-
-# Load from source directory
-corpus = initialize_corpus(source="/path/to/source_data")
-
-# Save corpus
-from crisp_t.helpers.io import write_data
-write_data.write_corpus_to_json(corpus, "/path/to/output")
-```
-
-### Text Analysis
-
-```python
-from crisp_t.text import Text
-text = Text(corpus=corpus)
-text.document_count()
-text.common_words(index=20)
-```
-
-### Numeric Analysis with ML
-
-```python
-from crisp_t.csv import Csv
-from crisp_t.ml import ML
-
-csv = Csv(corpus=corpus)
-csv.read_csv("data.csv")
-
-ml = ML(csv=csv)
-ml.get_regression(y="outcome_column")
-ml.get_kmeans(number_of_clusters=5)
-```
-
-## Troubleshooting
-
-### Common Issues
-
-1. **Import Errors**: Ensure all dependencies are installed; ML features require `crisp-t[ml]`
-2. **File Path Issues**: Use absolute paths; relative paths may not work as expected
-3. **MCP Server Not Found**: Ensure `crisp-mcp` command is in PATH after installation
-4. **Test Failures**: Some tests may depend on external data or ML libraries; install all dev dependencies
-
-### Environment Variables
-
-- `HOME` - Used for default data paths in some examples (not hardcoded in main code)
-
-## Best Practices for AI Agents
-
-1. **Understand Before Changing**: Review existing code patterns before making changes
-2. **Minimal Changes**: Make the smallest possible changes to achieve the goal
-3. **Test Early and Often**: Run tests after each significant change
-4. **Document User-Facing Changes**: Update README.md, INSTRUCTION.md, or MCP_SERVER.md for features users will interact with
-5. **Follow Existing Patterns**: Match the style and structure of existing code
-6. **Preserve Metadata**: The corpus structure includes metadata; don't discard it
-7. **Handle Errors Gracefully**: Follow existing error handling patterns
 
 ## Example Workflows
 
@@ -286,13 +190,4 @@ Process of validating findings across multiple data sources and analytical metho
 3. Relationships document connections
 4. Validation confirms findings hold true
 
-## Resources
 
-- **Main Documentation**: https://dermatologist.github.io/crisp-t/
-- **GitHub Repository**: https://github.com/dermatologist/crisp-t
-- **Issue Tracker**: https://github.com/dermatologist/crisp-t/issues
-- **MCP Protocol**: https://modelcontextprotocol.io/
-
-## Contact
-
-For questions or contributions, see CONTRIBUTING.md or contact the maintainer through GitHub issues.
