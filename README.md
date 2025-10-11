@@ -228,7 +228,7 @@ Using this framework, business analysts can investigate how recurring concerns i
 
 ## Framework Documentation
 
-For detailed information about available functions, metadata handling, and theoretical frameworks, see the [comprehensive user instructions](/notes/INSTRUCTION.md). Documentation (WIP) is also available [here](https://dermatologist.github.io/crisp-t/).
+For detailed information about available functions, metadata handling, and theoretical frameworks, see the [comprehensive user instructions](/notes/INSTRUCTION.md). For semantic search examples and best practices, see the [Semantic Search Guide](/notes/SEMANTIC_SEARCH.md). Documentation (WIP) is also available [here](https://dermatologist.github.io/crisp-t/).
 
 ## Citation
 
