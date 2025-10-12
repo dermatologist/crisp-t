@@ -788,6 +788,44 @@ async def list_tools() -> list[Tool]:
             ]
         )
 
+    # Semantic search tools
+    tools.extend(
+        [
+            Tool(
+                name="semantic_search",
+                description="Perform semantic search to find documents similar to a query using ChromaDB. Returns documents based on semantic similarity.",
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "query": {
+                            "type": "string",
+                            "description": "Search query text",
+                        },
+                        "n_results": {
+                            "type": "integer",
+                            "description": "Number of similar documents to return (default: 5)",
+                            "default": 5,
+                        },
+                    },
+                    "required": ["query"],
+                },
+            ),
+            Tool(
+                name="export_metadata_df",
+                description="Export ChromaDB collection metadata as a pandas DataFrame. Useful for further analysis of document metadata.",
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "metadata_keys": {
+                            "type": "string",
+                            "description": "Comma-separated list of metadata keys to include (optional, includes all if not specified)",
+                        },
+                    },
+                },
+            ),
+        ]
+    )
+
     return tools
 
 
@@ -1258,6 +1296,103 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
             return [
                 TextContent(type="text", text="Global corpus state has been reset.")
             ]
+
+        elif name == "semantic_search":
+            if not _corpus:
+                return [
+                    TextContent(
+                        type="text", text="No corpus loaded. Use load_corpus first."
+                    )
+                ]
+
+            try:
+                from ..semantic import Semantic
+
+                query = arguments.get("query")
+                if not query:
+                    return [TextContent(type="text", text="query is required")]
+
+                n_results = arguments.get("n_results", 5)
+
+                semantic_analyzer = Semantic(_corpus)
+                result_corpus = semantic_analyzer.get_similar(
+                    query, n_results=n_results
+                )
+
+                # Update global corpus
+                # global _corpus
+                _corpus = result_corpus
+
+                # Prepare response
+                response_text = f"Semantic search completed for query: '{query}'\n"
+                response_text += (
+                    f"Found {len(result_corpus.documents)} similar documents\n\n"
+                )
+                response_text += "Document IDs:\n"
+                for doc in result_corpus.documents[:10]:  # Show first 10
+                    response_text += f"- {doc.id}: {doc.name or 'No name'}\n"
+                if len(result_corpus.documents) > 10:
+                    response_text += (
+                        f"... and {len(result_corpus.documents) - 10} more\n"
+                    )
+
+                return [TextContent(type="text", text=response_text)]
+
+            except ImportError:
+                return [
+                    TextContent(
+                        type="text",
+                        text="chromadb is not installed. Install with: pip install chromadb",
+                    )
+                ]
+            except Exception as e:
+                return [
+                    TextContent(type="text", text=f"Error during semantic search: {e}")
+                ]
+
+        elif name == "export_metadata_df":
+            if not _corpus:
+                return [
+                    TextContent(
+                        type="text", text="No corpus loaded. Use load_corpus first."
+                    )
+                ]
+
+            try:
+                from ..semantic import Semantic
+
+                metadata_keys_str = arguments.get("metadata_keys")
+                metadata_keys = None
+                if metadata_keys_str:
+                    metadata_keys = [k.strip() for k in metadata_keys_str.split(",")]
+
+                semantic_analyzer = Semantic(_corpus)
+                result_corpus = semantic_analyzer.get_df(metadata_keys=metadata_keys)
+
+                # Update global corpus
+                # global _corpus
+                _corpus = result_corpus
+
+                # Prepare response
+                if result_corpus.df is not None:
+                    response_text = "Metadata exported to DataFrame\n"
+                    response_text += f"Shape: {result_corpus.df.shape}\n"
+                    response_text += f"Columns: {list(result_corpus.df.columns)}\n\n"
+                    response_text += "First 5 rows:\n"
+                    response_text += result_corpus.df.head().to_string()
+                    return [TextContent(type="text", text=response_text)]
+                else:
+                    return [TextContent(type="text", text="No DataFrame created")]
+
+            except ImportError:
+                return [
+                    TextContent(
+                        type="text",
+                        text="chromadb is not installed. Install with: pip install chromadb",
+                    )
+                ]
+            except Exception as e:
+                return [TextContent(type="text", text=f"Error exporting metadata: {e}")]
 
         else:
             return [TextContent(type="text", text=f"Unknown tool: {name}")]

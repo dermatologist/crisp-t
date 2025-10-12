@@ -35,6 +35,7 @@ dependencies = [
     "tabulate",
     "mcp",
     "pip",
+    "chromadb",
 ]
 
 

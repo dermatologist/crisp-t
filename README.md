@@ -123,6 +123,13 @@ crispt [OPTIONS]
 	- `--doc-id ID`: Print document by ID
 	- `--relationships`: Print all relationships
 	- `--relationships-for-keyword KEYWORD`: Print relationships involving a keyword
+- Semantic search (requires `chromadb`):
+	- `--semantic QUERY`: Perform semantic search with query string
+	- `--semantic-n N`: Number of results to return (default: 5)
+	- `--metadata-df`: Export collection metadata as DataFrame+
+	- `--metadata-keys KEYS`: Comma-separated metadata keys to include+
+
+	- + *The above two options can be used  to export or add metadata from NLP to the DataFrame. For example, you can extract sentiment scores or topic assignments as additional columns for numerical analysis. This is useful if dataframe and documents are aligned as in a survey response.*
 
 ### [Example Usage](/notes/DEMO.md)
 
@@ -181,6 +188,10 @@ The MCP server provides tools for:
 - `generate_summary` - Generate extractive summary
 - `sentiment_analysis` - VADER sentiment analysis
 
+**Semantic Search** (requires `chromadb`)
+- `semantic_search` - Find documents similar to a query using semantic similarity
+- `export_metadata_df` - Export ChromaDB metadata as DataFrame
+
 **DataFrame/CSV Operations**
 - `get_df_columns` - Get DataFrame column names
 - `get_df_row_count` - Get number of rows
@@ -219,7 +230,7 @@ Using this framework, business analysts can investigate how recurring concerns i
 
 ## Framework Documentation
 
-For detailed information about available functions, metadata handling, and theoretical frameworks, see the [comprehensive user instructions](/notes/INSTRUCTION.md). Documentation (WIP) is also available [here](https://dermatologist.github.io/crisp-t/).
+For detailed information about available functions, metadata handling, and theoretical frameworks, see the [comprehensive user instructions](/notes/INSTRUCTION.md). For semantic search examples and best practices, see the [Semantic Search Guide](/notes/SEMANTIC_SEARCH.md). Documentation (WIP) is also available [here](https://dermatologist.github.io/crisp-t/).
 
 ## Citation
 

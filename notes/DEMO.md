@@ -2,10 +2,11 @@
 
 ## Setup
 
+* CRISP-T is a python package that can be installed using pip and used from the command line. Your system should have python 3.11 or higher and pip installed. You can download and install Python for your operating system [here](https://www.python.org/downloads/). Optionally, CRISP-T can be imported in python scripts or jupyter notebooks, but this is not covered in this demo. See [documentation](https://dermatologist.github.io/crisp-t/) for more details.
 * Install [Crisp-T](https://github.com/dermatologist/crisp-t) with `pip install crisp-t[ml]` or `uv pip install crisp-t[ml]`
-* Download covid narratives data to  `crisp_source` folder in home directory or current directory using `crisp --covid covidstories.omeka.net --source crisp_source`
-* Create a `crisp_input` folder in home directory or current directory for keeping imported data.
-* Download [Psycological Effects of COVID](https://www.kaggle.com/datasets/hemanthhari/psycological-effects-of-covid) dataset to `crisp_source` folder.
+* (Optional) Download covid narratives data to  `crisp_source` folder in home directory or current directory using `crisp --covid covidstories.omeka.net --source crisp_source`. You may use any other source of textual data (e.g. journal articles, interview transcripts) in .txt or .pdf format in the `crisp_source` folder or the folder you specify with --source option.
+* (Optional) Download [Psycological Effects of COVID](https://www.kaggle.com/datasets/hemanthhari/psycological-effects-of-covid) dataset to `crisp_source` folder. You may use any other numeric dataset in .csv format in the `crisp_source` folder or the folder you specify with --source option.
+* Create a `crisp_input` folder in home directory or current directory for keeping imported data for analysis.
 
 ## Import data
 
