@@ -2,10 +2,16 @@
 
 ## [Unreleased](https://github.com/dermatologist/crisp-t/tree/HEAD)
 
-[Full Changelog](https://github.com/dermatologist/crisp-t/compare/v0.1.0...HEAD)
+[Full Changelog](https://github.com/dermatologist/crisp-t/compare/v0.2.0...HEAD)
+
+**Implemented enhancements:**
+
+- Feature request: Semantic Search with chromadb and metadata export as dataframe [\#27](https://github.com/dermatologist/crisp-t/issues/27)
 
 **Merged pull requests:**
 
+- Add semantic search with ChromaDB and metadata export functionality [\#28](https://github.com/dermatologist/crisp-t/pull/28) ([Copilot](https://github.com/apps/copilot-swe-agent))
+- Add AGENTS.md file with comprehensive instructions for LLM agents [\#26](https://github.com/dermatologist/crisp-t/pull/26) ([Copilot](https://github.com/apps/copilot-swe-agent))
 - Update pytest.yml to support multiple OS and extend timeout; revise D… [\#25](https://github.com/dermatologist/crisp-t/pull/25) ([dermatologist](https://github.com/dermatologist))
 - Feature/fix ml output 1 [\#24](https://github.com/dermatologist/crisp-t/pull/24) ([dermatologist](https://github.com/dermatologist))
 - Feature/demo 1 [\#23](https://github.com/dermatologist/crisp-t/pull/23) ([dermatologist](https://github.com/dermatologist))
@@ -22,6 +28,10 @@
 - Feature/uv 1 [\#8](https://github.com/dermatologist/crisp-t/pull/8) ([dermatologist](https://github.com/dermatologist))
 - Feature/readme 1 [\#4](https://github.com/dermatologist/crisp-t/pull/4) ([dermatologist](https://github.com/dermatologist))
 - Bump astral-sh/setup-uv from 5 to 6 [\#2](https://github.com/dermatologist/crisp-t/pull/2) ([dependabot[bot]](https://github.com/apps/dependabot))
+
+## [v0.2.0](https://github.com/dermatologist/crisp-t/tree/v0.2.0) (2025-10-10)
+
+[Full Changelog](https://github.com/dermatologist/crisp-t/compare/v0.1.0...v0.2.0)
 
 ## [v0.1.0](https://github.com/dermatologist/crisp-t/tree/v0.1.0) (2025-10-10)
 
