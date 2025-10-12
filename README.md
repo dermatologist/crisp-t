@@ -126,8 +126,10 @@ crispt [OPTIONS]
 - Semantic search (requires `chromadb`):
 	- `--semantic QUERY`: Perform semantic search with query string
 	- `--semantic-n N`: Number of results to return (default: 5)
-	- `--metadata-df`: Export collection metadata as DataFrame
-	- `--metadata-keys KEYS`: Comma-separated metadata keys to include
+	- `--metadata-df`: Export collection metadata as DataFrame+
+	- `--metadata-keys KEYS`: Comma-separated metadata keys to include+
+
+	- + *The above two options can be used  to export or add metadata from NLP to the DataFrame. For example, you can extract sentiment scores or topic assignments as additional columns for numerical analysis. This is useful if dataframe and documents are aligned as in a survey response.*
 
 ### [Example Usage](/notes/DEMO.md)
 
