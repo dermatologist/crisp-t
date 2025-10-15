@@ -811,6 +811,34 @@ async def list_tools() -> list[Tool]:
                 },
             ),
             Tool(
+                name="semantic_chunk_search",
+                description="Perform semantic search on chunks of a specific document to find relevant sections. This tool is useful for coding/annotating documents by identifying chunks that match specific concepts or themes. Returns matching text chunks that can be used for qualitative analysis or document annotation.",
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "query": {
+                            "type": "string",
+                            "description": "Search query text (concept or set of concepts to search for)",
+                        },
+                        "doc_id": {
+                            "type": "string",
+                            "description": "Document ID to search within",
+                        },
+                        "threshold": {
+                            "type": "number",
+                            "description": "Minimum similarity threshold (0-1). Only chunks with similarity above this value are returned (default: 0.5)",
+                            "default": 0.5,
+                        },
+                        "n_results": {
+                            "type": "integer",
+                            "description": "Maximum number of chunks to retrieve before filtering (default: 10)",
+                            "default": 10,
+                        },
+                    },
+                    "required": ["query", "doc_id"],
+                },
+            ),
+            Tool(
                 name="export_metadata_df",
                 description="Export ChromaDB collection metadata as a pandas DataFrame. Useful for further analysis of document metadata.",
                 inputSchema={
@@ -1348,6 +1376,70 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
             except Exception as e:
                 return [
                     TextContent(type="text", text=f"Error during semantic search: {e}")
+                ]
+
+        elif name == "semantic_chunk_search":
+            if not _corpus:
+                return [
+                    TextContent(
+                        type="text", text="No corpus loaded. Use load_corpus first."
+                    )
+                ]
+
+            try:
+                from ..semantic import Semantic
+
+                query = arguments.get("query")
+                doc_id = arguments.get("doc_id")
+                
+                if not query:
+                    return [TextContent(type="text", text="query is required")]
+                if not doc_id:
+                    return [TextContent(type="text", text="doc_id is required")]
+
+                threshold = arguments.get("threshold", 0.5)
+                n_results = arguments.get("n_results", 10)
+
+                semantic_analyzer = Semantic(_corpus)
+                chunks = semantic_analyzer.get_similar_chunks(
+                    query=query,
+                    doc_id=doc_id,
+                    threshold=threshold,
+                    n_results=n_results
+                )
+
+                # Prepare response
+                response_text = f"Semantic chunk search completed for query: '{query}'\n"
+                response_text += f"Document ID: {doc_id}\n"
+                response_text += f"Threshold: {threshold}\n"
+                response_text += f"Found {len(chunks)} matching chunks\n\n"
+                
+                if chunks:
+                    response_text += "Matching chunks:\n"
+                    response_text += "=" * 60 + "\n\n"
+                    for i, chunk in enumerate(chunks, 1):
+                        response_text += f"Chunk {i}:\n"
+                        response_text += chunk + "\n"
+                        response_text += "-" * 60 + "\n\n"
+                    
+                    response_text += f"\nThese {len(chunks)} chunks can be used for coding/annotating the document.\n"
+                    response_text += "You can adjust the threshold to get more or fewer results.\n"
+                else:
+                    response_text += "No chunks matched the query above the threshold.\n"
+                    response_text += "Try lowering the threshold or use a different query.\n"
+
+                return [TextContent(type="text", text=response_text)]
+
+            except ImportError:
+                return [
+                    TextContent(
+                        type="text",
+                        text="chromadb is not installed. Install with: pip install chromadb",
+                    )
+                ]
+            except Exception as e:
+                return [
+                    TextContent(type="text", text=f"Error during semantic chunk search: {e}")
                 ]
 
         elif name == "export_metadata_df":

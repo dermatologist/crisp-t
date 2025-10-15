@@ -198,6 +198,81 @@ class TestSemantic:
         with pytest.raises(ValueError, match="does not exist"):
             semantic.restore_collection("/nonexistent/path")
 
+    def test_chunk_initialization(self, sample_corpus):
+        """Test that chunks are created during initialization."""
+        semantic = Semantic(sample_corpus, use_simple_embeddings=True, chunk_size=100, chunk_overlap=20)
+        
+        # Verify chunks collection exists
+        assert semantic._chunks_collection is not None
+        
+        # Verify chunks were added to the collection
+        all_chunks = semantic._chunks_collection.get()
+        assert len(all_chunks["ids"]) > 0
+        
+        # Verify chunk metadata contains doc_id
+        for metadata in all_chunks["metadatas"]:
+            assert "doc_id" in metadata
+            assert "chunk_index" in metadata
+
+    def test_get_similar_chunks(self, sample_corpus):
+        """Test get_similar_chunks returns relevant chunks."""
+        semantic = Semantic(sample_corpus, use_simple_embeddings=True, chunk_size=50, chunk_overlap=10)
+        
+        # Search for chunks in doc1 related to "machine learning"
+        query = "machine learning"
+        chunks = semantic.get_similar_chunks(query, doc_id="doc1", threshold=0.0, n_results=5)
+        
+        # Should return at least one chunk
+        assert isinstance(chunks, list)
+        assert len(chunks) > 0
+        
+        # Chunks should be strings
+        for chunk in chunks:
+            assert isinstance(chunk, str)
+            assert len(chunk) > 0
+
+    def test_get_similar_chunks_with_threshold(self, sample_corpus):
+        """Test that threshold filtering works in get_similar_chunks."""
+        semantic = Semantic(sample_corpus, use_simple_embeddings=True, chunk_size=50, chunk_overlap=10)
+        
+        # Search with low threshold should return more chunks
+        query = "document"
+        chunks_low = semantic.get_similar_chunks(query, doc_id="doc1", threshold=0.0, n_results=10)
+        
+        # Search with high threshold should return fewer or no chunks
+        chunks_high = semantic.get_similar_chunks(query, doc_id="doc1", threshold=0.9, n_results=10)
+        
+        # Low threshold should return at least as many as high threshold
+        assert len(chunks_low) >= len(chunks_high)
+
+    def test_get_similar_chunks_nonexistent_doc(self, sample_corpus):
+        """Test get_similar_chunks with non-existent document ID."""
+        semantic = Semantic(sample_corpus, use_simple_embeddings=True, chunk_size=50, chunk_overlap=10)
+        
+        # Search in non-existent document should return empty list
+        chunks = semantic.get_similar_chunks(
+            query="test", doc_id="nonexistent_doc", threshold=0.0, n_results=5
+        )
+        
+        assert isinstance(chunks, list)
+        assert len(chunks) == 0
+
+    def test_chunk_text(self, sample_corpus):
+        """Test the _chunk_text method."""
+        semantic = Semantic(sample_corpus, use_simple_embeddings=True, chunk_size=20, chunk_overlap=5)
+        
+        # Test chunking a simple text
+        text = "This is a test. This is another sentence. And one more."
+        chunks = semantic._chunk_text(text)
+        
+        # Should create multiple chunks
+        assert len(chunks) > 1
+        
+        # Each chunk should be a string
+        for chunk in chunks:
+            assert isinstance(chunk, str)
+            assert len(chunk) > 0
+
 
 @pytest.mark.skipif(CHROMADB_AVAILABLE, reason="Testing import error handling")
 def test_semantic_without_chromadb():
