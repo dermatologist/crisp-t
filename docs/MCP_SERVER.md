@@ -188,6 +188,63 @@ Perform VADER sentiment analysis.
 **Returns:**
 Sentiment scores (negative, neutral, positive, compound).
 
+### Semantic Search (requires chromadb)
+
+#### `semantic_search`
+Find documents similar to a query using semantic similarity.
+
+**Arguments:**
+- `query` (required): Search query text
+- `n_results` (optional): Number of similar documents to return (default: 5)
+
+**Returns:**
+List of similar documents with their IDs and names, ranked by semantic similarity.
+
+**Example:**
+```json
+{
+  "query": "machine learning and AI",
+  "n_results": 5
+}
+```
+
+#### `semantic_chunk_search`
+Perform semantic search on chunks of a specific document. This tool is useful for **coding and annotating documents** by identifying relevant sections that match specific concepts or themes.
+
+**Arguments:**
+- `query` (required): Search query text (concept or set of concepts)
+- `doc_id` (required): Document ID to search within
+- `threshold` (optional): Minimum similarity threshold 0-1 (default: 0.5). Only chunks above this threshold are returned
+- `n_results` (optional): Maximum number of chunks to retrieve before filtering (default: 10)
+
+**Returns:**
+List of matching text chunks from the specified document that can be used for qualitative analysis or document annotation.
+
+**Example:**
+```json
+{
+  "query": "patient satisfaction",
+  "doc_id": "interview_01",
+  "threshold": 0.6,
+  "n_results": 10
+}
+```
+
+**Use Cases:**
+- Coding qualitative interview transcripts for specific themes
+- Identifying sections of documents relevant to research questions
+- Annotating documents with concept labels
+- Finding evidence for theoretical constructs within texts
+
+#### `export_metadata_df`
+Export ChromaDB collection metadata as a pandas DataFrame.
+
+**Arguments:**
+- `metadata_keys` (optional): Comma-separated list of metadata keys to include
+
+**Returns:**
+DataFrame with document metadata that can be merged with numeric data for mixed-methods analysis.
+
 ### DataFrame/CSV Operations
 
 #### `get_df_columns`
