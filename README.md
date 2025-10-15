@@ -16,13 +16,11 @@
   <img src="https://github.com/dermatologist/crisp-t/blob/develop/notes/crisp-logo.jpg" />
 </p>
 
-Qualitative research involves the collection and analysis of textual data, such as **interview transcripts, open-ended survey responses, and field notes.** It is often used in social sciences, humanities, and health research to explore complex phenomena and understand human experiences. In addition to textual data, **qualitative researchers may also collect quantitative data**, such as survey responses or demographic information, to complement their qualitative findings. Additionally, qualitative researchers use external data sources, such as census data or social media data, to provide context and triangulate their findings. Qualitative research is often characterized by its inductive approach, where researchers aim to **generate theories or concepts from the data** rather than testing pre-existing hypotheses. It emphasizes the importance of data-driven analysis and theory development.
+**Qualitative research** focuses on collecting and analyzing textual data—such as interview transcripts, open-ended survey responses, and field notes—to explore complex phenomena and human experiences. Researchers may also incorporate quantitative or external sources (e.g., demographics, census data, social media) to provide context and triangulate findings. Characterized by an inductive approach, qualitative research emphasizes generating theories from data rather than testing hypotheses. While qualitative and quantitative data are often used together, there is **no standard method for combining them.**
 
-CRISP-T is a method and corresponding open-source tool set to integrate **textual data** (as a list of documents) and **numeric data** (as Pandas DataFrame) into structured classes that retain **metadata** from various analytical processes, such as **topic modeling** and **decision trees**. Researchers, with or without GenAI assistance, can define relationships between textual and numerical datasets based on their chosen **theoretical lens**.  A final analytical phase ensures that proposed relationships actually hold true. 👉 [See Demo](/notes/DEMO.md).
+**CRISP-T is a method and toolset** to integrate **textual data** (as a list of documents) and **numeric data** (as Pandas DataFrame) into structured classes that retain **metadata** from various analytical processes, such as **topic modeling** and **decision trees**. Researchers, with or without **GenAI assistance**, can define relationships between textual and numerical datasets based on their chosen **theoretical lens**.  A final analytical phase ensures that proposed relationships actually hold true. 👉 [See Demo](/notes/DEMO.md).
 
 An **MCP server** exposes all functionality as tools, resources, and prompts, enabling integration with AI agent platforms such as Claude desktop, VSCODE and other MCP-compatible clients. CRISP-T cannot directly code the documents, but it provides semantic chunk search that **may be used in association with other tools to acheive automated coding**. For example, VSCODE provides built in tools for editing text and markdown files, which can be used to code documents based on semantic search.
-
-[![crisp-t](https://github.com/dermatologist/crisp-t/blob/develop/notes/arch.drawio.svg)](https://github.com/dermatologist/crisp-t/blob/develop/notes/arch.drawio.svg)
 
 ## Installation
 
@@ -234,6 +232,10 @@ Using this framework, business analysts can investigate how recurring concerns i
 ## Framework Documentation
 
 For detailed information about available functions, metadata handling, and theoretical frameworks, see the [comprehensive user instructions](/notes/INSTRUCTION.md). For semantic search examples and best practices, see the [Semantic Search Guide](/notes/SEMANTIC_SEARCH.md). Documentation (WIP) is also available [here](https://dermatologist.github.io/crisp-t/).
+
+### Data model
+
+[![crisp-t](https://github.com/dermatologist/crisp-t/blob/develop/notes/arch.drawio.svg)](https://github.com/dermatologist/crisp-t/blob/develop/notes/arch.drawio.svg)
 
 ## Citation
 
