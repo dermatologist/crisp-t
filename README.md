@@ -20,7 +20,7 @@ Qualitative research involves the collection and analysis of textual data, such 
 
 CRISP-T is a method and corresponding open-source tool set to integrate **textual data** (as a list of documents) and **numeric data** (as Pandas DataFrame) into structured classes that retain **metadata** from various analytical processes, such as **topic modeling** and **decision trees**. Researchers, with or without GenAI assistance, can define relationships between textual and numerical datasets based on their chosen **theoretical lens**.  A final analytical phase ensures that proposed relationships actually hold true. 👉 [See Demo](/notes/DEMO.md).
 
-An **MCP server** exposes all functionality as tools, resources, and prompts, enabling integration with AI agent platforms such as Claude desktop, VSCODE and other MCP-compatible clients.
+An **MCP server** exposes all functionality as tools, resources, and prompts, enabling integration with AI agent platforms such as Claude desktop, VSCODE and other MCP-compatible clients. CRISP-T cannot directly code the documents, but it provides semantic chunk search that **may be used in association with other tools to acheive automated coding**. For example, VSCODE provides built in tools for editing text and markdown files, which can be used to code documents retrieved via semantic chunk search.
 
 [![crisp-t](https://github.com/dermatologist/crisp-t/blob/develop/notes/arch.drawio.svg)](https://github.com/dermatologist/crisp-t/blob/develop/notes/arch.drawio.svg)
 

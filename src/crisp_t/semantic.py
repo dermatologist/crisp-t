@@ -27,6 +27,11 @@ from .model import Corpus, Document
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
+import logging
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
 try:
     import chromadb
     from chromadb.config import Settings
@@ -352,10 +357,10 @@ class Semantic:
             # Convert distance to similarity (lower distance = higher similarity)
             # ChromaDB uses distance metrics, so we need to convert to similarity
             for chunk, distance in zip(chunks, distances):
-                # Convert distance to similarity score (0-1 range)
-                # For cosine distance: similarity = 1 - distance
-                similarity = 1 - distance
-
+                # Convert distance to similarity score (0-10 range)
+                # For cosine distance: similarity = 10 - distance
+                similarity = 10 - distance
+                logger.info(f"Chunk: {chunk[:30]}... | Similarity: {similarity:.4f}")
                 # Only include chunks above threshold
                 if similarity >= threshold:
                     matching_chunks.append(chunk)

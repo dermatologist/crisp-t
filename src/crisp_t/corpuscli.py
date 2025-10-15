@@ -125,9 +125,9 @@ def _parse_relationship(value: str) -> tuple[str, str, str]:
 )
 @click.option(
     "--rec",
-    default=0.5,
+    default=8.5,
     type=float,
-    help="Threshold for semantic chunk search (0-1, default: 0.5). Only chunks with similarity above this value are returned.",
+    help="Threshold for semantic chunk search (0-10, default: 8). Only chunks with similarity above this value are returned.",
 )
 @click.option(
     "--metadata-df",
@@ -264,6 +264,7 @@ def main(
             click.echo(f"Document {doc_id}: {doc.model_dump()}")
         else:
             click.echo(f"No document found with ID {doc_id}")
+            exit(1)
 
     # Print relationships
     if print_relationships:
@@ -313,7 +314,7 @@ def main(
                 click.echo(f"\nPerforming semantic chunk search for: '{semantic_chunks}'")
                 click.echo(f"Document ID: {doc_id}")
                 click.echo(f"Threshold: {rec}")
-                
+
                 # Try with default embeddings first, fall back to simple embeddings
                 try:
                     semantic_analyzer = Semantic(corpus)
@@ -324,7 +325,7 @@ def main(
                         semantic_analyzer = Semantic(corpus, use_simple_embeddings=True)
                     else:
                         raise
-                
+
                 # Get similar chunks
                 chunks = semantic_analyzer.get_similar_chunks(
                     query=semantic_chunks,
@@ -332,7 +333,7 @@ def main(
                     threshold=rec,
                     n_results=20  # Get more chunks to filter by threshold
                 )
-                
+
                 click.echo(f"✓ Found {len(chunks)} matching chunks")
                 click.echo("\nMatching chunks:")
                 click.echo("=" * 60)
@@ -340,14 +341,14 @@ def main(
                     click.echo(f"\nChunk {i}:")
                     click.echo(chunk)
                     click.echo("-" * 60)
-                
+
                 if len(chunks) == 0:
                     click.echo("No chunks matched the query above the threshold.")
                     click.echo("Hint: Try lowering the threshold with --rec or use a different query.")
                 else:
                     click.echo(f"\nHint: These {len(chunks)} chunks can be used for coding/annotating the document.")
                     click.echo("Hint: Adjust --rec threshold to get more or fewer results.")
-                
+
             except ImportError as e:
                 click.echo(f"Error: {e}")
                 click.echo("Install chromadb with: pip install chromadb")
