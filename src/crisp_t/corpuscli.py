@@ -264,7 +264,7 @@ def main(
             click.echo(f"Document {doc_id}: {doc.model_dump()}")
         else:
             click.echo(f"No document found with ID {doc_id}")
-            exit(1)
+            exit(0)
 
     # Print relationships
     if print_relationships:
