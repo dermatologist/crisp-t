@@ -90,13 +90,15 @@ class Semantic:
     Semantic search class using ChromaDB for similarity-based document retrieval.
     """
 
-    def __init__(self, corpus: Corpus, use_simple_embeddings: bool = False):
+    def __init__(self, corpus: Corpus, use_simple_embeddings: bool = False, chunk_size: int = 500, chunk_overlap: int = 50):
         """
         Initialize the Semantic class with a corpus.
 
         Args:
             corpus: The Corpus object containing documents to index.
             use_simple_embeddings: If True, use simple embeddings instead of default (useful for testing).
+            chunk_size: Size of text chunks in characters for chunk-based search (default: 500).
+            chunk_overlap: Overlap between chunks in characters (default: 50).
 
         Raises:
             ImportError: If chromadb is not installed.
@@ -117,7 +119,10 @@ class Semantic:
         self._corpus = corpus
         self._client = chromadb.Client(Settings(anonymized_telemetry=False))
         self._collection_name = "crisp-t"
+        self._chunks_collection_name = "crisp-t-chunks"
         self._embedding_function = None
+        self._chunk_size = chunk_size
+        self._chunk_overlap = chunk_overlap
 
         # Pre-build vocabulary for simple embeddings
         if use_simple_embeddings:
@@ -147,6 +152,25 @@ class Semantic:
 
         # Add documents to collection
         self._add_documents_to_collection()
+
+        # Create chunks collection - delete existing if present
+        try:
+            existing_chunks_collection = self._client.get_collection(name=self._chunks_collection_name)
+            self._client.delete_collection(name=self._chunks_collection_name)
+        except Exception:
+            pass  # Collection doesn't exist yet
+
+        # Create chunks collection
+        if use_simple_embeddings and self._embedding_function:
+            self._chunks_collection = self._client.create_collection(
+                name=self._chunks_collection_name,
+                embedding_function=self._embedding_function,
+            )
+        else:
+            self._chunks_collection = self._client.create_collection(name=self._chunks_collection_name)
+
+        # Add document chunks to collection
+        self._add_chunks_to_collection()
 
     def _add_documents_to_collection(self):
         """
@@ -179,6 +203,75 @@ class Semantic:
 
         # Add to collection
         self._collection.add(documents=documents_texts, metadatas=metadatas, ids=ids)
+
+    def _chunk_text(self, text: str) -> list[str]:
+        """
+        Split text into overlapping chunks.
+
+        Args:
+            text: The text to chunk.
+
+        Returns:
+            List of text chunks.
+        """
+        chunks = []
+        start = 0
+        text_length = len(text)
+
+        while start < text_length:
+            # Get chunk from start to start + chunk_size
+            end = min(start + self._chunk_size, text_length)
+            chunk = text[start:end]
+
+            # Only add non-empty chunks
+            if chunk.strip():
+                chunks.append(chunk)
+
+            # Move start position by chunk_size - overlap
+            start += self._chunk_size - self._chunk_overlap
+
+            # Break if we've reached the end
+            if end >= text_length:
+                break
+
+        return chunks
+
+    def _add_chunks_to_collection(self):
+        """
+        Chunk documents and add to the chunks collection.
+        """
+        chunk_texts = []
+        chunk_metadatas = []
+        chunk_ids = []
+        chunk_counter = 0
+
+        for doc in self._corpus.documents:
+            # Chunk the document text
+            chunks = self._chunk_text(doc.text)
+
+            for idx, chunk in enumerate(chunks):
+                chunk_texts.append(chunk)
+
+                # Create metadata for the chunk
+                metadata = {
+                    "doc_id": str(doc.id),
+                    "chunk_index": str(idx),
+                    "total_chunks": str(len(chunks)),
+                }
+
+                # Add document name if available
+                if doc.name:
+                    metadata["doc_name"] = doc.name
+
+                chunk_metadatas.append(metadata)
+                chunk_ids.append(f"{doc.id}_chunk_{chunk_counter}")
+                chunk_counter += 1
+
+        # Add chunks to collection
+        if chunk_texts:
+            self._chunks_collection.add(
+                documents=chunk_texts, metadatas=chunk_metadatas, ids=chunk_ids
+            )
 
     def get_similar(self, query: str, n_results: int = 5) -> Corpus:
         """
@@ -223,6 +316,51 @@ class Semantic:
         self._corpus = new_corpus
 
         return new_corpus
+
+    def get_similar_chunks(
+        self, query: str, doc_id: str, threshold: float = 0.5, n_results: int = 10
+    ) -> list[str]:
+        """
+        Perform semantic search on chunks of a specific document and return matching chunks.
+
+        This method is useful for coding/annotating documents by finding relevant sections
+        that match specific concepts or themes.
+
+        Args:
+            query: The search query string (concept or set of concepts).
+            doc_id: The document ID to search within.
+            threshold: Minimum similarity threshold (0-1). Only chunks with similarity
+                      above this value will be returned (default: 0.5).
+            n_results: Maximum number of chunks to retrieve before filtering (default: 10).
+
+        Returns:
+            List of chunk texts that match the query above the threshold.
+        """
+        # Query the chunks collection
+        results = self._chunks_collection.query(
+            query_texts=[query],
+            n_results=n_results,
+            where={"doc_id": str(doc_id)},  # Filter by document ID
+        )
+
+        # Extract matching chunks with their distances
+        matching_chunks = []
+        if results["documents"] and results["distances"]:
+            chunks = results["documents"][0]
+            distances = results["distances"][0]
+
+            # Convert distance to similarity (lower distance = higher similarity)
+            # ChromaDB uses distance metrics, so we need to convert to similarity
+            for chunk, distance in zip(chunks, distances):
+                # Convert distance to similarity score (0-1 range)
+                # For cosine distance: similarity = 1 - distance
+                similarity = 1 - distance
+
+                # Only include chunks above threshold
+                if similarity >= threshold:
+                    matching_chunks.append(chunk)
+
+        return matching_chunks
 
     def get_df(self, metadata_keys: Optional[list[str]] = None) -> Corpus:
         """

@@ -119,6 +119,17 @@ def _parse_relationship(value: str) -> tuple[str, str, str]:
     help="Number of results to return from semantic search (default: 5).",
 )
 @click.option(
+    "--semantic-chunks",
+    default=None,
+    help="Perform semantic search on document chunks. Returns matching chunks for a specific document. Use with --doc-id and --rec (threshold).",
+)
+@click.option(
+    "--rec",
+    default=0.5,
+    type=float,
+    help="Threshold for semantic chunk search (0-1, default: 0.5). Only chunks with similarity above this value are returned.",
+)
+@click.option(
     "--metadata-df",
     is_flag=True,
     help="Export collection metadata as DataFrame. Requires semantic search to be initialized first.",
@@ -150,6 +161,8 @@ def main(
     relationships_for_keyword: Optional[str],
     semantic: Optional[str],
     semantic_n: int,
+    semantic_chunks: Optional[str],
+    rec: float,
     metadata_df: bool,
     metadata_keys: Optional[str],
 ):
@@ -288,6 +301,58 @@ def main(
             click.echo("Install chromadb with: pip install chromadb")
         except Exception as e:
             click.echo(f"Error during semantic search: {e}")
+
+    # Semantic chunk search
+    if semantic_chunks:
+        if not doc_id:
+            click.echo("Error: --doc-id is required when using --semantic-chunks")
+        else:
+            try:
+                from .semantic import Semantic
+
+                click.echo(f"\nPerforming semantic chunk search for: '{semantic_chunks}'")
+                click.echo(f"Document ID: {doc_id}")
+                click.echo(f"Threshold: {rec}")
+                
+                # Try with default embeddings first, fall back to simple embeddings
+                try:
+                    semantic_analyzer = Semantic(corpus)
+                except Exception as network_error:
+                    # If network error or download fails, try simple embeddings
+                    if "address" in str(network_error).lower() or "download" in str(network_error).lower():
+                        click.echo("Note: Using simple embeddings (network unavailable)")
+                        semantic_analyzer = Semantic(corpus, use_simple_embeddings=True)
+                    else:
+                        raise
+                
+                # Get similar chunks
+                chunks = semantic_analyzer.get_similar_chunks(
+                    query=semantic_chunks,
+                    doc_id=doc_id,
+                    threshold=rec,
+                    n_results=20  # Get more chunks to filter by threshold
+                )
+                
+                click.echo(f"✓ Found {len(chunks)} matching chunks")
+                click.echo("\nMatching chunks:")
+                click.echo("=" * 60)
+                for i, chunk in enumerate(chunks, 1):
+                    click.echo(f"\nChunk {i}:")
+                    click.echo(chunk)
+                    click.echo("-" * 60)
+                
+                if len(chunks) == 0:
+                    click.echo("No chunks matched the query above the threshold.")
+                    click.echo("Hint: Try lowering the threshold with --rec or use a different query.")
+                else:
+                    click.echo(f"\nHint: These {len(chunks)} chunks can be used for coding/annotating the document.")
+                    click.echo("Hint: Adjust --rec threshold to get more or fewer results.")
+                
+            except ImportError as e:
+                click.echo(f"Error: {e}")
+                click.echo("Install chromadb with: pip install chromadb")
+            except Exception as e:
+                click.echo(f"Error during semantic chunk search: {e}")
 
     # Export metadata as DataFrame
     if metadata_df:
