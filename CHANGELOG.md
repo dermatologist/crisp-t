@@ -2,14 +2,15 @@
 
 ## [Unreleased](https://github.com/dermatologist/crisp-t/tree/HEAD)
 
-[Full Changelog](https://github.com/dermatologist/crisp-t/compare/v0.2.0...HEAD)
+[Full Changelog](https://github.com/dermatologist/crisp-t/compare/v0.3.0...HEAD)
 
-**Implemented enhancements:**
+**Closed issues:**
 
-- Feature request: Semantic Search with chromadb and metadata export as dataframe [\#27](https://github.com/dermatologist/crisp-t/issues/27)
+- Feature request: Semantic Search for a concept within a document [\#30](https://github.com/dermatologist/crisp-t/issues/30)
 
 **Merged pull requests:**
 
+- Add semantic chunk search for document coding and annotation [\#31](https://github.com/dermatologist/crisp-t/pull/31) ([Copilot](https://github.com/apps/copilot-swe-agent))
 - Add semantic search with ChromaDB and metadata export functionality [\#28](https://github.com/dermatologist/crisp-t/pull/28) ([Copilot](https://github.com/apps/copilot-swe-agent))
 - Add AGENTS.md file with comprehensive instructions for LLM agents [\#26](https://github.com/dermatologist/crisp-t/pull/26) ([Copilot](https://github.com/apps/copilot-swe-agent))
 - Update pytest.yml to support multiple OS and extend timeout; revise D… [\#25](https://github.com/dermatologist/crisp-t/pull/25) ([dermatologist](https://github.com/dermatologist))
@@ -28,6 +29,14 @@
 - Feature/uv 1 [\#8](https://github.com/dermatologist/crisp-t/pull/8) ([dermatologist](https://github.com/dermatologist))
 - Feature/readme 1 [\#4](https://github.com/dermatologist/crisp-t/pull/4) ([dermatologist](https://github.com/dermatologist))
 - Bump astral-sh/setup-uv from 5 to 6 [\#2](https://github.com/dermatologist/crisp-t/pull/2) ([dependabot[bot]](https://github.com/apps/dependabot))
+
+## [v0.3.0](https://github.com/dermatologist/crisp-t/tree/v0.3.0) (2025-10-12)
+
+[Full Changelog](https://github.com/dermatologist/crisp-t/compare/v0.2.0...v0.3.0)
+
+**Implemented enhancements:**
+
+- Feature request: Semantic Search with chromadb and metadata export as dataframe [\#27](https://github.com/dermatologist/crisp-t/issues/27)
 
 ## [v0.2.0](https://github.com/dermatologist/crisp-t/tree/v0.2.0) (2025-10-10)
 
