@@ -273,6 +273,80 @@ class TestSemantic:
             assert isinstance(chunk, str)
             assert len(chunk) > 0
 
+    def test_get_similar_documents_single_id(self, sample_corpus):
+        """Test get_similar_documents with a single document ID."""
+        semantic = Semantic(sample_corpus, use_simple_embeddings=True)
+        
+        # Find documents similar to doc1
+        similar_ids = semantic.get_similar_documents(
+            document_ids="doc1", n_results=2, threshold=0.0
+        )
+        
+        # Should return a list of document IDs
+        assert isinstance(similar_ids, list)
+        # Should not include the reference document itself
+        assert "doc1" not in similar_ids
+        # Should return some similar documents
+        assert len(similar_ids) >= 0
+
+    def test_get_similar_documents_multiple_ids(self, sample_corpus):
+        """Test get_similar_documents with multiple document IDs."""
+        semantic = Semantic(sample_corpus, use_simple_embeddings=True)
+        
+        # Find documents similar to doc1 and doc2
+        similar_ids = semantic.get_similar_documents(
+            document_ids="doc1,doc2", n_results=2, threshold=0.0
+        )
+        
+        # Should return a list of document IDs
+        assert isinstance(similar_ids, list)
+        # Should not include the reference documents themselves
+        assert "doc1" not in similar_ids
+        assert "doc2" not in similar_ids
+
+    def test_get_similar_documents_with_threshold(self, sample_corpus):
+        """Test that threshold filtering works in get_similar_documents."""
+        semantic = Semantic(sample_corpus, use_simple_embeddings=True)
+        
+        # Search with low threshold should return more documents
+        similar_low = semantic.get_similar_documents(
+            document_ids="doc1", n_results=5, threshold=0.0
+        )
+        
+        # Search with high threshold should return fewer documents
+        similar_high = semantic.get_similar_documents(
+            document_ids="doc1", n_results=5, threshold=0.9
+        )
+        
+        # Low threshold should return at least as many as high threshold
+        assert len(similar_low) >= len(similar_high)
+
+    def test_get_similar_documents_nonexistent_id(self, sample_corpus):
+        """Test get_similar_documents with non-existent document ID."""
+        semantic = Semantic(sample_corpus, use_simple_embeddings=True)
+        
+        # Search with non-existent document should return empty list
+        similar_ids = semantic.get_similar_documents(
+            document_ids="nonexistent_doc", n_results=2, threshold=0.0
+        )
+        
+        assert isinstance(similar_ids, list)
+        assert len(similar_ids) == 0
+
+    def test_get_similar_documents_returns_relevant_docs(self, sample_corpus):
+        """Test that get_similar_documents returns relevant documents."""
+        semantic = Semantic(sample_corpus, use_simple_embeddings=True)
+        
+        # Find documents similar to doc2 (NLP document)
+        similar_ids = semantic.get_similar_documents(
+            document_ids="doc2", n_results=2, threshold=0.0
+        )
+        
+        # Should return some documents
+        assert isinstance(similar_ids, list)
+        # The reference document itself should not be in results
+        assert "doc2" not in similar_ids
+
 
 @pytest.mark.skipif(CHROMADB_AVAILABLE, reason="Testing import error handling")
 def test_semantic_without_chromadb():

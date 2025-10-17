@@ -123,9 +123,10 @@ crispt [OPTIONS]
 	- `--relationships-for-keyword KEYWORD`: Print relationships involving a keyword
 - Semantic search (requires `chromadb`):
 	- `--semantic QUERY`: Perform semantic search with query string
-	- `--semantic-n N`: Number of results to return (default: 5)
+	- `--similar-docs DOC_IDS`: Find documents similar to comma-separated list of document IDs (useful for literature reviews)
+	- `--num N`: Number of results to return (default: 5). Used for `--semantic` and `--similar-docs`
 	- `--semantic-chunks QUERY`: Perform semantic search on document chunks. Returns matching chunks for a specific document (use with `--doc-id` and `--rec` for similarity threshold between 0 and 10 with a default of 8.5)
-	- `--rec THRESHOLD`: Threshold for semantic chunk search (0-10, default: 8.5). Only chunks with similarity above this value are returned
+	- `--rec THRESHOLD`: Threshold for semantic operations. For `--semantic-chunks`, use 0-10 (default: 8.5). For `--similar-docs`, use 0-1 (default: 0.7). Only results with similarity above this value are returned
 	- `--metadata-df`: Export collection metadata as DataFrame+
 	- `--metadata-keys KEYS`: Comma-separated metadata keys to include+
 
@@ -190,6 +191,7 @@ The MCP server provides tools for:
 
 **Semantic Search** (requires `chromadb`)
 - `semantic_search` - Find documents similar to a query using semantic similarity
+- `find_similar_documents` - Find documents similar to a set of reference documents (useful for literature reviews and qualitative research)
 - `semantic_chunk_search` - Find relevant chunks within a specific document (useful for coding/annotating documents)
 - `export_metadata_df` - Export ChromaDB metadata as DataFrame
 
