@@ -19,13 +19,13 @@ along with crisp-t.  If not, see <https://www.gnu.org/licenses/>.
 
 import operator
 from typing import Optional
+
+import pandas as pd
 import spacy
 import textacy
-from textacy import preprocessing
-import pandas as pd
+from mlxtend.frequent_patterns import apriori, association_rules
 from mlxtend.preprocessing import TransactionEncoder
-from mlxtend.frequent_patterns import apriori
-from mlxtend.frequent_patterns import association_rules
+from textacy import preprocessing
 
 from .model import Corpus, SpacyManager
 from .utils import QRUtils
@@ -35,6 +35,8 @@ textacy.set_doc_extensions("extract.bags")  # type: ignore
 import warnings
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)
+
+
 class Text:
 
     def __init__(
@@ -214,7 +216,7 @@ class Text:
         return sorted(_words.items(), key=operator.itemgetter(1), reverse=True)[:index]
 
     def print_coding_dictionary(self, num=10, top_n=5):
-        """ Prints a coding dictionary based on common verbs, attributes, and dimensions.
+        """Prints a coding dictionary based on common verbs, attributes, and dimensions.
         "CATEGORY" is the common verb
         "PROPERTY" is the common nouns associated with the verb
         "DIMENSION" is the common adjectives/adverbs/verbs associated with the property
@@ -235,9 +237,7 @@ class Text:
                 for dimension, f3 in self.dimensions(attribute, top_n):
                     if dimension not in _verbs:
                         output.append((verb, attribute, dimension))
-                        coding_dict.append(
-                            f"{verb} > {attribute} > {dimension}"
-                        )
+                        coding_dict.append(f"{verb} > {attribute} > {dimension}")
         # Add coding_dict to corpus metadata
         if self._corpus is not None:
             self._corpus.metadata["coding_dict"] = coding_dict
@@ -310,10 +310,14 @@ class Text:
         return sorted(_ad.items(), key=operator.itemgetter(1), reverse=True)[:index]
 
     # filter documents in the corpus based on metadata
-    def filter_documents(self, metadata_key, metadata_value, mcp=False):
+    def filter_documents(self, metadata_key, metadata_value, mcp=False, id_column="id"):
         """
         Filter documents in the corpus based on metadata.
+        If id_column exists in self._corpus.df, filter the DataFrame to match filtered documents' ids.
         """
+        import logging
+
+        logger = logging.getLogger(__name__)
         if self._corpus is None:
             raise ValueError("Corpus is not set")
         filtered_documents = []
@@ -329,6 +333,24 @@ class Text:
             if isinstance(document.name, str) and metadata_value in document.name:
                 filtered_documents.append(document)
         self._corpus.documents = filtered_documents
+
+        # Check for id_column in self._corpus.df and filter df if present
+        if (
+            hasattr(self._corpus, "df")
+            and self._corpus.df is not None
+            and id_column in self._corpus.df.columns
+        ):
+            logger.info(f"id_column '{id_column}' exists in DataFrame.")
+            filtered_ids = [doc.id for doc in filtered_documents]
+            # Convert id_column to string before comparison
+            self._corpus.df = self._corpus.df[
+                self._corpus.df[id_column]
+                .astype(str)
+                .isin([str(i) for i in filtered_ids])
+            ]
+        else:
+            logger.warning(f"id_column '{id_column}' does not exist in DataFrame.")
+
         if mcp:
             return f"Filtered {len(filtered_documents)} documents with {metadata_key} containing {metadata_value}"
         return filtered_documents
@@ -361,7 +383,9 @@ class Text:
             for span in self.spans_with_common_nouns(key):
                 spans.append(span.text)
         if self._corpus is not None:
-            self._corpus.metadata["summary"] = list(dict.fromkeys(spans))  # remove duplicates
+            self._corpus.metadata["summary"] = list(
+                dict.fromkeys(spans)
+            )  # remove duplicates
         return list(dict.fromkeys(spans))  # remove duplicates
 
     def print_categories(self, spacy_doc=None, num=10):
