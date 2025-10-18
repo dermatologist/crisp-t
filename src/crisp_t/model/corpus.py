@@ -50,33 +50,50 @@ class Corpus(BaseModel):
         default_factory=dict, description="Metadata associated with the corpus."
     )
 
-    def pretty_print(self):
+    def pretty_print(self, show="all"):
         """
         Print the corpus information in a human-readable format.
         """
+        if show not in ["all", "documents", "dataframe", "metadata", "stats"]:
+            return
         print(f"Corpus ID: {self.id}")
         print(f"Name: {self.name}")
         print(f"Description: {self.description}")
         # print(f"Score: {self.score}")
-        print("Documents:")
-        for doc in self.documents[:5]:  # Print only first 5 documents for brevity
-            print(f"Printing first 5 documents out of {len(self.documents)}")
-            print(f"   Name: {doc.name}")
-            print(f"   ID: {doc.id}")
-            # Print metadata as key-value pairs
-            for key, value in doc.metadata.items():
-                print(f"      - {key}: {value}")
-            print()
-        if self.df is not None:
-            print("DataFrame:")
-            print(self.df.head())
-        if self.visualization is not None:
-            print("Visualization:")
+        if show in ["all", "documents"]:
+            print("Documents:")
+            for doc in self.documents[:5]:  # Print only first 5 documents for brevity
+                print(f"Printing first 5 documents out of {len(self.documents)}")
+                print(f"   Name: {doc.name}")
+                print(f"   ID: {doc.id}")
+                # Print metadata as key-value pairs
+                for key, value in doc.metadata.items():
+                    print(f"      - {key}: {value}")
+                print()
+        if show in ["all", "dataframe"]:
+            if self.df is not None:
+                print("DataFrame:")
+                print(self.df.head())
+        if show in ["all", "visualization"]:
+            if self.visualization is not None:
+                print("Visualization:")
             print(self.visualization.keys())
-        print("Metadata:")
-        for key, value in self.metadata.items():
-            print(f" - {key}\n: {value}")
-
+        if show in ["all", "metadata"]:
+            print("Metadata:")
+            for key, value in self.metadata.items():
+                print(f" - {key}\n: {value}")
+        if show in ["all", "stats"]:
+            if self.df is not None:
+                print("DataFrame Statistics:")
+                print(self.df.describe())
+                ## Print number of distinct values for each column
+                print("Distinct values per column:")
+                for col in self.df.columns:
+                    print(f" - {col}: {self.df[col].nunique()} distinct values")
+                    # if distinct values < 10 print the values with counts
+                    if self.df[col].nunique() <= 10:
+                        print(self.df[col].value_counts())
+        print(f"Showing completed for '{show}'")
     def get_all_df_column_names(self):
         """
         Get a list of all column names in the DataFrame.
@@ -87,6 +104,17 @@ class Corpus(BaseModel):
         if self.df is not None:
             return self.df.columns.tolist()
         return []
+
+    def get_descriptive_statistics(self):
+        """
+        Get descriptive statistics of the DataFrame.
+
+        Returns:
+            DataFrame containing descriptive statistics, or None if DataFrame is None.
+        """
+        if self.df is not None:
+            return self.df.describe()
+        return None
 
     def get_row_count(self):
         """
