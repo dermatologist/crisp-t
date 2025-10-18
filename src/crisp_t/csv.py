@@ -13,6 +13,7 @@ import warnings
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
+
 class Csv:
 
     def __init__(
@@ -42,6 +43,7 @@ class Csv:
         self._y = None
         self._X_original = None
         self._y_original = None
+        self._id_column = id_column
 
     @property
     def corpus(self) -> Optional[Corpus]:
@@ -185,7 +187,7 @@ class Csv:
             logger.error("DataFrame is None. Cannot write to CSV.")
 
     def mark_missing(self):
-        """ Mark missing values in the DataFrame.
+        """Mark missing values in the DataFrame.
         Missing values are considered as empty strings and are replaced with NaN.
         Rows with NaN values are then dropped from the DataFrame.
         """
@@ -196,7 +198,7 @@ class Csv:
             logger.error("DataFrame is None. Cannot mark missing values.")
 
     def mark_duplicates(self):
-        """ Mark duplicate rows in the DataFrame.
+        """Mark duplicate rows in the DataFrame.
         Duplicate rows are identified and dropped from the DataFrame.
         """
         if self._df is not None:
@@ -215,8 +217,7 @@ class Csv:
             return None
 
     def get_columns(self):
-        """ Get the list of columns in the DataFrame.
-        """
+        """Get the list of columns in the DataFrame."""
         if self._df is not None:
             return self._df.columns.tolist()
         else:
@@ -224,8 +225,7 @@ class Csv:
             return []
 
     def get_column_types(self):
-        """ Get the data types of columns in the DataFrame.
-        """
+        """Get the data types of columns in the DataFrame."""
         if self._df is not None:
             return self._df.dtypes.to_dict()
         else:
@@ -233,8 +233,7 @@ class Csv:
             return {}
 
     def get_column_values(self, column_name: str):
-        """ Get the unique values in a column of the DataFrame.
-        """
+        """Get the unique values in a column of the DataFrame."""
         if self._df is not None and column_name in self._df.columns:
             return self._df[column_name].tolist()
         else:
@@ -244,8 +243,7 @@ class Csv:
             return None
 
     def retain_numeric_columns_only(self):
-        """ Retain only numeric columns in the DataFrame.
-        """
+        """Retain only numeric columns in the DataFrame."""
         if self._df is not None:
             self._df = self._df.select_dtypes(include=[np.number])
             logger.info("DataFrame filtered to numeric columns only.")
@@ -253,8 +251,7 @@ class Csv:
             logger.error("DataFrame is None. Cannot filter to numeric columns.")
 
     def comma_separated_include_columns(self, include_cols: str = ""):
-        """ Retain only specified columns in the DataFrame.
-        """
+        """Retain only specified columns in the DataFrame."""
         if include_cols == "":
             return
         if self._df is not None:
@@ -288,8 +285,7 @@ class Csv:
         return self._X, self._y
 
     def drop_na(self):
-        """ Drop rows with any NA values from the DataFrame.
-        """
+        """Drop rows with any NA values from the DataFrame."""
         if self._df is not None:
             self._df.dropna(inplace=True)
             logger.info("Missing values dropped from DataFrame.")
@@ -327,7 +323,7 @@ class Csv:
         self._X = self._X_original
         self._y = self._y_original
         if mcp:
-            return f"Oversampling restored. X shape: {self._X.shape}, y shape: {self._y.shape}" # type: ignore
+            return f"Oversampling restored. X shape: {self._X.shape}, y shape: {self._y.shape}"  # type: ignore
 
     def prepare_data(self, y: str, oversample=False, one_hot_encode_all=False):
         self.mark_missing()
@@ -339,8 +335,7 @@ class Csv:
         return self.read_xy(y)
 
     def bin_a_column(self, column_name: str, bins: int = 2):
-        """ Bin a numeric column into specified number of bins.
-        """
+        """Bin a numeric column into specified number of bins."""
         if self._df is not None and column_name in self._df.columns:
             if pd.api.types.is_numeric_dtype(self._df[column_name]):
                 self._df[column_name] = pd.cut(
@@ -383,14 +378,18 @@ class Csv:
         Used when # ValueError: could not convert string to float.
         """
         if self._df is not None:
-            categorical_cols = self._df.select_dtypes(include=["object"]).columns.tolist()
+            categorical_cols = self._df.select_dtypes(
+                include=["object"]
+            ).columns.tolist()
             # Remove categorical columns with more than n unique values
             if filter_high_cardinality:
                 categorical_cols = [
                     col for col in categorical_cols if self._df[col].nunique() <= n
                 ]
             if categorical_cols:
-                self._df = pd.get_dummies(self._df, columns=categorical_cols, drop_first=True)
+                self._df = pd.get_dummies(
+                    self._df, columns=categorical_cols, drop_first=True
+                )
                 logger.info("One-hot encoding applied to string columns.")
             else:
                 logger.info("No string (object) columns found for one-hot encoding.")
@@ -398,7 +397,7 @@ class Csv:
             logger.error("DataFrame is None. Cannot apply one-hot encoding.")
 
     def one_hot_encode_all_columns(self):
-        """ One-hot encode all columns in the DataFrame.
+        """One-hot encode all columns in the DataFrame.
         This method converts all values in the DataFrame to boolean values.
         Used for apriori algorithm which requires boolean values.
         """
@@ -415,10 +414,13 @@ class Csv:
                     # )
                     return True
 
-            self._df = self._df.applymap(to_one_hot) # type: ignore
+            self._df = self._df.applymap(to_one_hot)  # type: ignore
 
-    def filter_rows_by_column_value(self, column_name: str, value, mcp: bool = False):
-        """ Select rows from the DataFrame where the specified column matches the given value.
+    def filter_rows_by_column_value(
+        self, column_name: str, value, mcp: bool = False
+    ):
+        """Select rows from the DataFrame where the specified column matches the given value.
+        Additionally, filter self._corpus.documents by id_column if present in DataFrame.
         """
         if self._df is not None and column_name in self._df.columns:
             selected_df = self._df[self._df[column_name] == value]
@@ -427,11 +429,35 @@ class Csv:
                 try:
                     selected_df = self._df[self._df[column_name] == int(value)]
                 except (ValueError, TypeError):
-                    logger.warning(f"Could not convert value '{value}' to int for column '{column_name}'.")
+                    logger.warning(
+                        f"Could not convert value '{value}' to int for column '{column_name}'."
+                    )
             logger.info(
                 f"Selected {selected_df.shape[0]} rows where {column_name} == {value}."
             )
             self._df = selected_df
+
+            # Check for id_column in DataFrame
+            if (
+                self._corpus is not None
+                and hasattr(self._corpus, "df")
+                and self._id_column in self._corpus.df.columns
+            ):
+                logger.info(f"id_column '{self._id_column}' exists in DataFrame.")
+                valid_ids = set(self._corpus.df[self._id_column].tolist())
+                if (
+                    hasattr(self._corpus, "documents")
+                    and self._corpus.documents is not None
+                ):
+                    filtered_docs = [
+                        doc
+                        for doc in self._corpus.documents
+                        if getattr(doc, self._id_column, None) in valid_ids
+                    ]
+                    self._corpus.documents = filtered_docs
+            else:
+                logger.warning(f"id_column '{self._id_column}' does not exist in DataFrame.")
+
             if mcp:
                 return f"Selected {selected_df.shape[0]} rows where {column_name} == {value}."
         else:
@@ -439,5 +465,7 @@ class Csv:
                 f"Column {column_name} not found in DataFrame or DataFrame is None."
             )
             if mcp:
-                return f"Column {column_name} not found in DataFrame or DataFrame is None."
+                return (
+                    f"Column {column_name} not found in DataFrame or DataFrame is None."
+                )
             return pd.DataFrame()

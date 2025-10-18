@@ -90,7 +90,9 @@ except ImportError:
 @click.option("--kmeans", is_flag=True, help="Display KMeans clusters")
 @click.option("--cart", is_flag=True, help="Display Association Rules")
 @click.option("--pca", is_flag=True, help="Display PCA")
-@click.option("--regression", is_flag=True, help="Display linear or logistic regression results")
+@click.option(
+    "--regression", is_flag=True, help="Display linear or logistic regression results"
+)
 @click.option("--visualize", is_flag=True, help="Visualize words, topics or wordcloud")
 @click.option(
     "--ignore",
@@ -102,7 +104,7 @@ except ImportError:
 )
 @click.option("--outcome", default="", help="Outcome variable for ML tasks")
 @click.option("--source", "-s", help="Source URL or directory path to read data from")
-@click.option("--print", "-p", is_flag=True, help="Pretty print the corpus to console")
+@click.option("--print", "-p", default=None, help="Pretty print the corpus to console [all|documents|dataframe|metadata|stats]")
 @click.option(
     "--sources",
     multiple=True,
@@ -618,7 +620,7 @@ def main(
 
         if print and corpus:
             click.echo("\n=== Corpus Details ===")
-            click.echo(corpus.pretty_print())
+            click.echo(corpus.pretty_print(show=print))
 
         click.echo("\n=== Analysis Complete ===")
 

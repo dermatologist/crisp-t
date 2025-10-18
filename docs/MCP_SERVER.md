@@ -208,6 +208,32 @@ List of similar documents with their IDs and names, ranked by semantic similarit
 }
 ```
 
+#### `find_similar_documents`
+Find documents similar to a given set of reference documents based on semantic similarity. This tool is particularly useful for **literature reviews** and **qualitative research** where you want to find additional documents that are similar to a set of known relevant documents. It can also be used to identify documents with similar themes, topics, or content for grouping and analysis purposes.
+
+**Arguments:**
+- `document_ids` (required): A single document ID or comma-separated list of document IDs to use as reference
+- `n_results` (optional): Number of similar documents to return (default: 5)
+- `threshold` (optional): Minimum similarity threshold 0-1 (default: 0.7). Only documents above this threshold are returned
+
+**Returns:**
+List of document IDs similar to the reference documents, excluding the reference documents themselves.
+
+**Example:**
+```json
+{
+  "document_ids": "doc1,doc5,doc12",
+  "n_results": 10,
+  "threshold": 0.7
+}
+```
+
+**Use Cases:**
+- Literature reviews: Find papers similar to known relevant papers
+- Qualitative research: Identify documents with similar themes
+- Content grouping: Group similar documents for analysis
+- Document recommendation: Suggest related documents to researchers
+
 #### `semantic_chunk_search`
 Perform semantic search on chunks of a specific document. This tool is useful for **coding and annotating documents** by identifying relevant sections that match specific concepts or themes.
 

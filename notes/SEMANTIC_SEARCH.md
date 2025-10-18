@@ -17,13 +17,45 @@ crispt \
   --doc "3|Patient Care|Improving patient outcomes through evidence-based medicine" \
   --doc "4|Drug Discovery|Using computational methods for pharmaceutical research" \
   --semantic "artificial intelligence medical" \
-  --semantic-n 2 \
+  --num 2 \
   --print
 ```
 
 This will find the 2 most similar documents to the query "artificial intelligence medical".
 
-### Example 2: Export Metadata to DataFrame
+### Example 2: Find Similar Documents (Literature Review)
+
+Find documents similar to a reference document (useful for literature reviews):
+
+```bash
+crispt \
+  --id research_corpus \
+  --name "Research Papers" \
+  --doc "1|Paper A|Deep learning for medical image analysis" \
+  --doc "2|Paper B|Transfer learning in computer vision" \
+  --doc "3|Paper C|Natural language understanding models" \
+  --doc "4|Paper D|Convolutional neural networks for diagnosis" \
+  --similar-docs "1" \
+  --num 2 \
+  --rec 0.7 \
+  --print
+```
+
+This finds 2 documents most similar to document "1", with a similarity threshold of 0.7.
+
+You can also search based on multiple reference documents:
+
+```bash
+crispt \
+  --inp ./corpus_folder \
+  --similar-docs "1,2,5" \
+  --num 5 \
+  --rec 0.6
+```
+
+This finds documents similar to documents 1, 2, and 5 combined, returning up to 5 results with similarity above 0.6.
+
+### Example 3: Export Metadata to DataFrame
 
 Create a corpus and export document metadata as a DataFrame:
 
@@ -49,7 +81,7 @@ Combine semantic search with DataFrame export:
 crispt \
   --inp ./corpus_folder \
   --semantic "machine learning healthcare" \
-  --semantic-n 10 \
+  --num 10 \
   --metadata-df \
   --metadata-keys "topic,year,author" \
   --out ./filtered_corpus
@@ -89,7 +121,42 @@ for doc in result.documents:
     print(f"- {doc.name}: {doc.text[:50]}...")
 ```
 
-### Example 2: Export Metadata
+### Example 2: Find Similar Documents
+
+```python
+from crisp_t.model import Corpus, Document
+from crisp_t.semantic import Semantic
+
+# Create corpus
+docs = [
+    Document(id='1', text='Machine learning and AI'),
+    Document(id='2', text='Natural language processing'),
+    Document(id='3', text='Healthcare data analysis'),
+    Document(id='4', text='Deep learning neural networks'),
+]
+corpus = Corpus(id='research', documents=docs)
+
+# Find documents similar to document 1
+semantic = Semantic(corpus)
+similar_ids = semantic.get_similar_documents(
+    document_ids='1',
+    n_results=2,
+    threshold=0.7
+)
+
+print(f"Similar documents: {similar_ids}")
+# Output: Similar documents: ['4', '2']
+
+# Find documents similar to multiple reference docs
+similar_ids = semantic.get_similar_documents(
+    document_ids='1,2',
+    n_results=2,
+    threshold=0.6
+)
+print(f"Similar to 1 and 2: {similar_ids}")
+```
+
+### Example 3: Export Metadata
 
 ```python
 from crisp_t.model import Corpus, Document
@@ -148,6 +215,19 @@ Use the semantic_search tool with:
 - n_results: 5
 
 This will find the 5 most similar documents and update the current corpus.
+```
+
+### Find Similar Documents (Literature Review)
+
+```
+Use the find_similar_documents tool with:
+- document_ids: "doc1,doc2"
+- n_results: 5
+- threshold: 0.7
+
+This will find documents similar to doc1 and doc2, returning up to 5 results 
+with similarity above 0.7. This is particularly useful for literature reviews 
+where you want to find additional relevant papers similar to known good examples.
 ```
 
 ### Export Metadata

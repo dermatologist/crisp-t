@@ -113,10 +113,15 @@ def _parse_relationship(value: str) -> tuple[str, str, str]:
     help="Perform semantic search with the given query string. Returns similar documents.",
 )
 @click.option(
-    "--semantic-n",
+    "--similar-docs",
+    default=None,
+    help="Find documents similar to a comma-separated list of document IDs. Use with --num and --rec. Useful for literature reviews.",
+)
+@click.option(
+    "--num",
     default=5,
     type=int,
-    help="Number of results to return from semantic search (default: 5).",
+    help="Number of results to return (default: 5). Used for semantic search and similar documents search.",
 )
 @click.option(
     "--semantic-chunks",
@@ -125,9 +130,9 @@ def _parse_relationship(value: str) -> tuple[str, str, str]:
 )
 @click.option(
     "--rec",
-    default=8.5,
+    default=0.4,
     type=float,
-    help="Threshold for semantic chunk search (0-10, default: 8). Only chunks with similarity above this value are returned.",
+    help="Threshold for semantic search (0-1, default: 0.4). Only chunks with similarity above this value are returned.",
 )
 @click.option(
     "--metadata-df",
@@ -160,7 +165,8 @@ def main(
     print_relationships: bool,
     relationships_for_keyword: Optional[str],
     semantic: Optional[str],
-    semantic_n: int,
+    similar_docs: Optional[str],
+    num: int,
     semantic_chunks: Optional[str],
     rec: float,
     metadata_df: bool,
@@ -292,7 +298,7 @@ def main(
                     semantic_analyzer = Semantic(corpus, use_simple_embeddings=True)
                 else:
                     raise
-            corpus = semantic_analyzer.get_similar(semantic, n_results=semantic_n)
+            corpus = semantic_analyzer.get_similar(semantic, n_results=num)
             click.echo(f"✓ Found {len(corpus.documents)} similar documents")
             click.echo(
                 f"Hint: Use --out to save the filtered corpus, or --print to view results"
@@ -302,6 +308,55 @@ def main(
             click.echo("Install chromadb with: pip install chromadb")
         except Exception as e:
             click.echo(f"Error during semantic search: {e}")
+
+    # Find similar documents
+    if similar_docs:
+        try:
+            from .semantic import Semantic
+
+            click.echo(f"\nFinding documents similar to: '{similar_docs}'")
+            click.echo(f"Number of results: {num}")
+            # Convert rec to 0-1 range if needed (for similar_docs, threshold is 0-1)
+            threshold = rec / 10.0 if rec > 1.0 else rec
+            click.echo(f"Similarity threshold: {threshold}")
+
+            # Try with default embeddings first, fall back to simple embeddings
+            try:
+                semantic_analyzer = Semantic(corpus)
+            except Exception as network_error:
+                # If network error or download fails, try simple embeddings
+                if "address" in str(network_error).lower() or "download" in str(network_error).lower():
+                    click.echo("Note: Using simple embeddings (network unavailable)")
+                    semantic_analyzer = Semantic(corpus, use_simple_embeddings=True)
+                else:
+                    raise
+
+            # Get similar document IDs
+            similar_doc_ids = semantic_analyzer.get_similar_documents(
+                document_ids=similar_docs,
+                n_results=num,
+                threshold=threshold
+            )
+
+            click.echo(f"✓ Found {len(similar_doc_ids)} similar documents")
+            if similar_doc_ids:
+                click.echo("\nSimilar Document IDs:")
+                for doc_id in similar_doc_ids:
+                    doc = corpus.get_document_by_id(doc_id)
+                    doc_name = f" ({doc.name})" if doc and doc.name else ""
+                    click.echo(f"  - {doc_id}{doc_name}")
+                click.echo("\nHint: Use --doc-id to view individual documents")
+                click.echo("Hint: This feature is useful for literature reviews to find similar documents")
+            else:
+                click.echo("No similar documents found above the threshold.")
+                click.echo("Hint: Try lowering the threshold with --rec")
+
+        except ImportError as e:
+            click.echo(f"Error: {e}")
+            click.echo("Install chromadb with: pip install chromadb")
+        except Exception as e:
+            click.echo(f"Error finding similar documents: {e}")
+
 
     # Semantic chunk search
     if semantic_chunks:
