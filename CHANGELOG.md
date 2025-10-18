@@ -2,15 +2,17 @@
 
 ## [Unreleased](https://github.com/dermatologist/crisp-t/tree/HEAD)
 
-[Full Changelog](https://github.com/dermatologist/crisp-t/compare/v0.3.0...HEAD)
+[Full Changelog](https://github.com/dermatologist/crisp-t/compare/v0.4.0...HEAD)
 
 **Closed issues:**
 
-- Feature request: Semantic Search for a concept within a document [\#30](https://github.com/dermatologist/crisp-t/issues/30)
+- Feature request: Semantic Search based on a list of documents [\#32](https://github.com/dermatologist/crisp-t/issues/32)
 
 **Merged pull requests:**
 
+- Add semantic search based on document list for literature reviews [\#33](https://github.com/dermatologist/crisp-t/pull/33) ([Copilot](https://github.com/apps/copilot-swe-agent))
 - Add semantic chunk search for document coding and annotation [\#31](https://github.com/dermatologist/crisp-t/pull/31) ([Copilot](https://github.com/apps/copilot-swe-agent))
+- Bump astral-sh/setup-uv from 6 to 7 [\#29](https://github.com/dermatologist/crisp-t/pull/29) ([dependabot[bot]](https://github.com/apps/dependabot))
 - Add semantic search with ChromaDB and metadata export functionality [\#28](https://github.com/dermatologist/crisp-t/pull/28) ([Copilot](https://github.com/apps/copilot-swe-agent))
 - Add AGENTS.md file with comprehensive instructions for LLM agents [\#26](https://github.com/dermatologist/crisp-t/pull/26) ([Copilot](https://github.com/apps/copilot-swe-agent))
 - Update pytest.yml to support multiple OS and extend timeout; revise D… [\#25](https://github.com/dermatologist/crisp-t/pull/25) ([dermatologist](https://github.com/dermatologist))
@@ -29,6 +31,14 @@
 - Feature/uv 1 [\#8](https://github.com/dermatologist/crisp-t/pull/8) ([dermatologist](https://github.com/dermatologist))
 - Feature/readme 1 [\#4](https://github.com/dermatologist/crisp-t/pull/4) ([dermatologist](https://github.com/dermatologist))
 - Bump astral-sh/setup-uv from 5 to 6 [\#2](https://github.com/dermatologist/crisp-t/pull/2) ([dependabot[bot]](https://github.com/apps/dependabot))
+
+## [v0.4.0](https://github.com/dermatologist/crisp-t/tree/v0.4.0) (2025-10-15)
+
+[Full Changelog](https://github.com/dermatologist/crisp-t/compare/v0.3.0...v0.4.0)
+
+**Closed issues:**
+
+- Feature request: Semantic Search for a concept within a document [\#30](https://github.com/dermatologist/crisp-t/issues/30)
 
 ## [v0.3.0](https://github.com/dermatologist/crisp-t/tree/v0.3.0) (2025-10-12)
 
