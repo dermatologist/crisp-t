@@ -2,7 +2,7 @@
 
 ## Overview
 
-CRISP-T (**CRoss** **I**ndustry **S**tandard **P**rocess for **T**riangulation) is a framework that integrates textual data (as a list of documents) and numeric data (as Pandas DataFrames) into structured classes that retain metadata from various analytical processes. This framework enables researchers to analyze qualitative and quantitative data using advanced NLP, machine learning, and statistical techniques. This is under active development; please [report any issues or feature requests on GitHub](https://github.com/dermatologist/crisp-t/issues).
+CRISP-T (**CRoss** **I**ndustry **S**tandard **P**rocess for **T**riangulation) is a framework that integrates textual data (as a list of documents) and numeric data (as Pandas DataFrames) into structured classes that retain metadata from various analytical processes. Further, if the numeric and textual datasets share same id, or if the textual metadata contains keywords that match numeric column names; both datasets are filtered simultaneously, ensuring alignment and facilitating triangulation. 👉 [See Demo](/DEMO.md). This framework enables researchers to analyze qualitative and quantitative data using advanced NLP, machine learning, and statistical techniques. This is under active development; please [report any issues or feature requests on GitHub](https://github.com/dermatologist/crisp-t/issues).
 
 ## Recommended Sequence of Analysis
 
