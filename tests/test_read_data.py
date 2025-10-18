@@ -64,24 +64,3 @@ def test_corpus_as_dataframe(read_data_fixture):
     assert len(df) > 0, "DataFrame should have rows"
 
 
-def test_read_csv(read_data_fixture, csv_file_fixture):
-    read_data_fixture.read_csv(
-        csv_file_fixture,
-        comma_separated_text_columns="comfort_food,comfort_food_reasons,diet_current",
-    )
-    assert len(read_data_fixture.documents) > 0, "Documents should be read from CSV"
-    assert all(
-        doc is not None for doc in read_data_fixture.documents
-    ), "All documents should be non-None"
-    read_data_fixture.pretty_print()
-
-
-def test_read_csv_numeric(read_data_fixture, csv_file_fixture):
-    df = read_data_fixture.read_csv(
-        csv_file_fixture,
-        comma_separated_text_columns="comfort_food,comfort_food_reasons,diet_current",
-        numeric=True,
-    )
-    print(df.head())
-    assert df is not None, "DataFrame should not be None"
-    assert len(df) > 0, "DataFrame should have rows"

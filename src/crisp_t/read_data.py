@@ -229,17 +229,12 @@ class ReadData:
         self._corpus.documents = documents
         return self._corpus
 
-    # TODO IMPROVE
-    # Currently this can be used to read a CSV file and create a corpus.
-    #! Numeric True returns numeric columns only.
-    # Use csv read_csv instead.
-    def read_csv(
+    def read_csv_to_corpus(
         self,
         file_name,
         comma_separated_ignore_words=None,
         comma_separated_text_columns="",
         id_column="",
-        numeric=False,
     ):
         """
         Read the corpus from a csv file.
@@ -259,6 +254,7 @@ class ReadData:
         for column in text_columns:
             if column in df.columns:
                 df.drop(column, axis=1, inplace=True)
+        # Set self._df to the numeric part after dropping text columns
         self._df = df.copy()
         for index, row in original_df.iterrows():
             read_from_file = ""
@@ -277,8 +273,8 @@ class ReadData:
             _document = Document(
                 text=read_from_file,
                 metadata={
-                    "source": file_name,
-                    "file_name": file_name,
+                    "source": str(file_name),
+                    "file_name": str(file_name),
                     "row": index,
                     "id": (
                         row[id_column]
@@ -293,11 +289,8 @@ class ReadData:
             )
             self._documents.append(_document)
         logger.info(f"Corpus read from {file_name}")
-        if numeric:
-            return self._df
-        else:
-            self.create_corpus()
-            return self._corpus
+        self.create_corpus()
+        return self._corpus
 
     def read_source(
         self, source, comma_separated_ignore_words=None, comma_separated_text_columns=""
@@ -387,10 +380,20 @@ class ReadData:
                             description="",
                         )
                         self._documents.append(_document)
-                if file_name.endswith(".csv"):
+                if file_name.endswith(".csv") and comma_separated_text_columns == "":
                     logger.info(f"Reading CSV file: {file_path}")
                     self._df = Csv().read_csv(file_path)
                     logger.info(f"CSV file read with shape: {self._df.shape}")
+                if file_name.endswith(".csv") and comma_separated_text_columns != "":
+                    logger.info(f"Reading CSV file to corpus: {file_path}")
+                    self.read_csv_to_corpus(
+                        file_path,
+                        comma_separated_ignore_words,
+                        comma_separated_text_columns,
+                    )
+                    logger.info(
+                        f"CSV file read to corpus with documents: {len(self._documents)}"
+                    )
 
         else:
             raise ValueError(f"Source not found: {source}")
