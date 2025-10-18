@@ -100,7 +100,7 @@ crisp --include relaxed,self_time,sleep_bal,time_dp,travel_time,home_env --cls -
 crisp --source crisp_source/ --out crisp_input --unstructured SMS
 ```
 * Notice that the text column SMS is specified with --unstructured option.
-* Now assign topics to the messages.
+* Now assign topics to the messages. Note that this also assigns clusters.
 ```bash
 crisp --inp crisp_input/ --out crisp_input/ --assign
 ```
@@ -108,6 +108,11 @@ crisp --inp crisp_input/ --out crisp_input/ --assign
 * Now print the results.
 ```bash
 crisp --print
+```
+
+* Let us choose the cluster 1 and see the topics in this cluster.
+```bash
+crisp --filters cluster=1 --topics
 ```
 
 ## MCP Server for agentic AI. (Optional, but LLMs may be better at sense-making!)
