@@ -828,7 +828,7 @@ async def list_tools() -> list[Tool]:
                         "threshold": {
                             "type": "number",
                             "description": "Minimum similarity threshold (0-1). Only documents with similarity above this value are returned (default: 0.7)",
-                            "default": 0.4,
+                            "default": 0.7,
                         },
                     },
                     "required": ["document_ids"],
@@ -851,7 +851,7 @@ async def list_tools() -> list[Tool]:
                         "threshold": {
                             "type": "number",
                             "description": "Minimum similarity threshold (0-1). Only chunks with similarity above this value are returned (default: 0.5)",
-                            "default": 0.4,
+                            "default": 0.5,
                         },
                         "n_results": {
                             "type": "integer",
