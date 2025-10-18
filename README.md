@@ -88,6 +88,14 @@ crisp [OPTIONS]
 - `--source, -s PATH|URL`: Read source data from a directory (reads .txt and .pdf) or from a URL
 - `--sources PATH|URL`: Provide multiple sources; can be used multiple times
 
+#### Display Options
+
+- `--print, -p TEXT`: Print corpus information; options: [all|documents|dataframe|metadata|stats]
+	documents: Lists the first 5 documents with IDs and text snippets
+	dataframe: Displays the DataFrame head (if available)
+	metadata: Shows corpus metadata
+	stats: Provides descriptive statistics from the DataFrame (if available)
+
 ### crispviz (Visualization CLI)
 
 ```bash

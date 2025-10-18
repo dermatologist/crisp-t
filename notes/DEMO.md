@@ -33,7 +33,7 @@ crisp --inp crisp_input --out crisp_input --assign
 ## Explore results
 
 ```bash
-crisp -- print
+crisp --print documents
 ```
 
 * Notice that we have omitted --inp as it defaults to `crisp_input` folder. If you have a different folder, use --inp to specify it.
@@ -43,7 +43,7 @@ crisp -- print
 
 ```bash
 crisp --out crisp_input --assign --ignore interviewee,interviewer
-crisp -- print
+crisp --print documents
 ```
 
 * Now you will see that these keywords are removed from the results.
@@ -94,25 +94,28 @@ crisp --include relaxed,self_time,sleep_bal,time_dp,travel_time,home_env --cls -
 ## Now let us try out a csv dataset with text and numeric data.
 
 * Download SMS Smishing Collection Data Set from [Kaggle](https://www.kaggle.com/datasets/galactus007/sms-smishing-collection-data-set) and convert the text file to csv adding the headers id, CLASS and SMS. Convert CLASS to numeric 0 and 1 for ham and smish respectively and add id as serial numbers.
-* Place the csv file in `crisp_source` folder.
+* Place the csv file in a **new** `crisp_source` folder.
 * Import the csv file to `crisp_input` folder using the following command.
+
 ```bash
 crisp --source crisp_source/ --out crisp_input --unstructured SMS
 ```
-* Notice that the text column SMS is specified with --unstructured option.
-* Now assign topics to the messages. Note that this also assigns clusters.
+
+* Notice that the text column SMS is specified with --unstructured option. This creates CRISP documents from the text column.
+* Now assign topics to the documents. Note that this also assigns clusters.
+
 ```bash
 crisp --inp crisp_input/ --out crisp_input/ --assign
 ```
 
-* Now print the results.
+* Now print the results to examine.
 ```bash
-crisp --print
+crisp --print documents
 ```
 
-* Let us choose the cluster 1 and see the topics in this cluster.
+* Let us choose the cluster 1 and see the SMS classes in this cluster. (0=ham, 1=smish)
 ```bash
-crisp --filters cluster=1 --topics
+crisp --filters cluster=1 --print stats
 ```
 
 ## MCP Server for agentic AI. (Optional, but LLMs may be better at sense-making!)
