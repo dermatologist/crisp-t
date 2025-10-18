@@ -828,7 +828,7 @@ async def list_tools() -> list[Tool]:
                         "threshold": {
                             "type": "number",
                             "description": "Minimum similarity threshold (0-1). Only documents with similarity above this value are returned (default: 0.7)",
-                            "default": 0.7,
+                            "default": 0.4,
                         },
                     },
                     "required": ["document_ids"],
@@ -851,7 +851,7 @@ async def list_tools() -> list[Tool]:
                         "threshold": {
                             "type": "number",
                             "description": "Minimum similarity threshold (0-1). Only chunks with similarity above this value are returned (default: 0.5)",
-                            "default": 0.5,
+                            "default": 0.4,
                         },
                         "n_results": {
                             "type": "integer",
@@ -1439,7 +1439,7 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                         doc = _corpus.get_document_by_id(doc_id)
                         doc_name = f" - {doc.name}" if doc and doc.name else ""
                         response_text += f"  • {doc_id}{doc_name}\n"
-                    
+
                     response_text += "\nThis feature is useful for:\n"
                     response_text += "- Literature reviews: Find additional relevant papers\n"
                     response_text += "- Qualitative research: Identify documents with similar themes\n"
@@ -1475,7 +1475,7 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
 
                 query = arguments.get("query")
                 doc_id = arguments.get("doc_id")
-                
+
                 if not query:
                     return [TextContent(type="text", text="query is required")]
                 if not doc_id:
@@ -1497,7 +1497,7 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                 response_text += f"Document ID: {doc_id}\n"
                 response_text += f"Threshold: {threshold}\n"
                 response_text += f"Found {len(chunks)} matching chunks\n\n"
-                
+
                 if chunks:
                     response_text += "Matching chunks:\n"
                     response_text += "=" * 60 + "\n\n"
@@ -1505,7 +1505,7 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                         response_text += f"Chunk {i}:\n"
                         response_text += chunk + "\n"
                         response_text += "-" * 60 + "\n\n"
-                    
+
                     response_text += f"\nThese {len(chunks)} chunks can be used for coding/annotating the document.\n"
                     response_text += "You can adjust the threshold to get more or fewer results.\n"
                 else:

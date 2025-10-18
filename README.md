@@ -20,6 +20,8 @@
 
 **CRISP-T is a method and toolset** to integrate **textual data** (as a list of documents) and **numeric data** (as Pandas DataFrame) into structured classes that retain **metadata** from various analytical processes, such as **topic modeling** and **decision trees**. Researchers, with or without **GenAI assistance**, can define relationships between textual and numerical datasets based on their chosen **theoretical lens**.  An optional final analytical phase ensures that proposed relationships actually hold true. Further, if the numeric and textual datasets share same id, or if the textual metadata contains keywords that match numeric column names; both datasets are filtered simultaneously, ensuring alignment and facilitating triangulation. 👉 [See Demo](/notes/DEMO.md).
 
+CRISP-T implements **semantic search** using **ChromaDB** to find relevant documents or document chunks based on similarity to a query or reference documents. This is useful for literature reviews to find documents likely to fit inclusion criteria within your corpus/search results. It can also be used for coding/annotating documents by finding relevant chunks within a specific document.
+
 An **MCP server** exposes all functionality as tools, resources, and prompts, enabling integration with AI agent platforms such as Claude desktop, VSCODE and other MCP-compatible clients. CRISP-T cannot directly code the documents, but it provides semantic chunk search that **may be used in association with other tools to acheive automated coding**. For example, VSCODE provides built in tools for editing text and markdown files, which can be used to code documents based on semantic search.
 
 ## Installation

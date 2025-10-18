@@ -130,9 +130,9 @@ def _parse_relationship(value: str) -> tuple[str, str, str]:
 )
 @click.option(
     "--rec",
-    default=8.5,
+    default=0.4,
     type=float,
-    help="Threshold for semantic chunk search (0-10, default: 8). Only chunks with similarity above this value are returned. For similar documents search, threshold is 0-1 (default: 0.7).",
+    help="Threshold for semantic chunk search (0-1, default: 0.4). Only chunks with similarity above this value are returned. For similar documents search, threshold is 0-1 (default: 0.7).",
 )
 @click.option(
     "--metadata-df",
