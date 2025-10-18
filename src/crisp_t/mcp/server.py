@@ -811,6 +811,30 @@ async def list_tools() -> list[Tool]:
                 },
             ),
             Tool(
+                name="find_similar_documents",
+                description="Find documents similar to a given set of reference documents based on semantic similarity. This tool is particularly useful for literature reviews and qualitative research where you want to find additional documents that are similar to a set of known relevant documents. It can also be used to identify documents with similar themes, topics, or content for grouping and analysis purposes.",
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "document_ids": {
+                            "type": "string",
+                            "description": "A single document ID or comma-separated list of document IDs to use as reference",
+                        },
+                        "n_results": {
+                            "type": "integer",
+                            "description": "Number of similar documents to return (default: 5)",
+                            "default": 5,
+                        },
+                        "threshold": {
+                            "type": "number",
+                            "description": "Minimum similarity threshold (0-1). Only documents with similarity above this value are returned (default: 0.7)",
+                            "default": 0.7,
+                        },
+                    },
+                    "required": ["document_ids"],
+                },
+            ),
+            Tool(
                 name="semantic_chunk_search",
                 description="Perform semantic search on chunks of a specific document to find relevant sections. This tool is useful for coding/annotating documents by identifying chunks that match specific concepts or themes. Returns matching text chunks that can be used for qualitative analysis or document annotation.",
                 inputSchema={
@@ -1378,6 +1402,66 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                     TextContent(type="text", text=f"Error during semantic search: {e}")
                 ]
 
+        elif name == "find_similar_documents":
+            if not _corpus:
+                return [
+                    TextContent(
+                        type="text", text="No corpus loaded. Use load_corpus first."
+                    )
+                ]
+
+            try:
+                from ..semantic import Semantic
+
+                document_ids = arguments.get("document_ids")
+                if not document_ids:
+                    return [TextContent(type="text", text="document_ids is required")]
+
+                n_results = arguments.get("n_results", 5)
+                threshold = arguments.get("threshold", 0.7)
+
+                semantic_analyzer = Semantic(_corpus)
+                similar_doc_ids = semantic_analyzer.get_similar_documents(
+                    document_ids=document_ids,
+                    n_results=n_results,
+                    threshold=threshold
+                )
+
+                # Prepare response
+                response_text = f"Finding documents similar to: '{document_ids}'\n"
+                response_text += f"Number of results requested: {n_results}\n"
+                response_text += f"Similarity threshold: {threshold}\n"
+                response_text += f"Found {len(similar_doc_ids)} similar documents\n\n"
+
+                if similar_doc_ids:
+                    response_text += "Similar Document IDs:\n"
+                    for doc_id in similar_doc_ids:
+                        doc = _corpus.get_document_by_id(doc_id)
+                        doc_name = f" - {doc.name}" if doc and doc.name else ""
+                        response_text += f"  • {doc_id}{doc_name}\n"
+
+                    response_text += "\nThis feature is useful for:\n"
+                    response_text += "- Literature reviews: Find additional relevant papers\n"
+                    response_text += "- Qualitative research: Identify documents with similar themes\n"
+                    response_text += "- Content grouping: Group similar documents for analysis\n"
+                else:
+                    response_text += "No similar documents found above the threshold.\n"
+                    response_text += "Try lowering the threshold or using different reference documents.\n"
+
+                return [TextContent(type="text", text=response_text)]
+
+            except ImportError:
+                return [
+                    TextContent(
+                        type="text",
+                        text="chromadb is not installed. Install with: pip install chromadb",
+                    )
+                ]
+            except Exception as e:
+                return [
+                    TextContent(type="text", text=f"Error finding similar documents: {e}")
+                ]
+
         elif name == "semantic_chunk_search":
             if not _corpus:
                 return [
@@ -1391,7 +1475,7 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
 
                 query = arguments.get("query")
                 doc_id = arguments.get("doc_id")
-                
+
                 if not query:
                     return [TextContent(type="text", text="query is required")]
                 if not doc_id:
@@ -1413,7 +1497,7 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                 response_text += f"Document ID: {doc_id}\n"
                 response_text += f"Threshold: {threshold}\n"
                 response_text += f"Found {len(chunks)} matching chunks\n\n"
-                
+
                 if chunks:
                     response_text += "Matching chunks:\n"
                     response_text += "=" * 60 + "\n\n"
@@ -1421,7 +1505,7 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                         response_text += f"Chunk {i}:\n"
                         response_text += chunk + "\n"
                         response_text += "-" * 60 + "\n\n"
-                    
+
                     response_text += f"\nThese {len(chunks)} chunks can be used for coding/annotating the document.\n"
                     response_text += "You can adjust the threshold to get more or fewer results.\n"
                 else:

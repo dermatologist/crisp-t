@@ -322,6 +322,79 @@ class Semantic:
 
         return new_corpus
 
+    def get_similar_documents(
+        self, document_ids: str, n_results: int = 5, threshold: float = 0.7
+    ) -> list[str]:
+        """
+        Find documents similar to a given set of documents based on semantic similarity.
+
+        This method is useful for literature reviews to find documents that are similar
+        to a set of reference documents.
+
+        Args:
+            document_ids: A single document ID or comma-separated list of document IDs.
+            n_results: Number of similar documents to return (default: 5).
+            threshold: Minimum similarity threshold (0-1). Only documents with similarity
+                      above this value will be returned (default: 0.7).
+
+        Returns:
+            List of document IDs that are similar to the input documents.
+        """
+        # Parse document IDs (handle single or comma-separated list)
+        if isinstance(document_ids, str):
+            doc_id_list = [doc_id.strip() for doc_id in document_ids.split(",")]
+        else:
+            doc_id_list = [document_ids]
+
+        # Get the text content of the reference documents
+        reference_texts = []
+        for doc_id in doc_id_list:
+            doc = self._corpus.get_document_by_id(doc_id)
+            if doc:
+                reference_texts.append(doc.text)
+            else:
+                logger.warning(f"Document ID '{doc_id}' not found in corpus")
+
+        if not reference_texts:
+            logger.warning("No valid reference documents found")
+            return []
+
+        # Combine reference texts into a single query
+        # We use all reference texts to find similar documents
+        combined_query = " ".join(reference_texts)
+
+        # Query the collection for similar documents
+        results = self._collection.query(
+            query_texts=[combined_query], n_results=n_results + len(doc_id_list)
+        )
+
+        # Extract matching document IDs with their distances
+        matching_doc_ids = []
+        if results["ids"] and results["distances"]:
+            result_ids = results["ids"][0]
+            distances = results["distances"][0]
+
+            # Convert distance to similarity (lower distance = higher similarity)
+            for doc_id, distance in zip(result_ids, distances):
+                # Skip reference documents themselves
+                if doc_id in doc_id_list:
+                    continue
+
+                # Convert distance to similarity score (0-1 range)
+                # For cosine distance: similarity = 1 - (distance / 2)
+                similarity = 1 - (distance / 2)
+                logger.info(f"Document: {doc_id} | Similarity: {similarity:.4f}")
+
+                # Only include documents above threshold
+                if similarity >= threshold:
+                    matching_doc_ids.append(doc_id)
+
+                # Stop if we have enough results
+                if len(matching_doc_ids) >= n_results:
+                    break
+
+        return matching_doc_ids
+
     def get_similar_chunks(
         self, query: str, doc_id: str, threshold: float = 0.5, n_results: int = 10
     ) -> list[str]:
@@ -357,10 +430,10 @@ class Semantic:
             # Convert distance to similarity (lower distance = higher similarity)
             # ChromaDB uses distance metrics, so we need to convert to similarity
             for chunk, distance in zip(chunks, distances):
-                # Convert distance to similarity score (0-10 range)
-                # For cosine distance: similarity = 10 - distance
-                similarity = 10 - distance
-                logger.info(f"Chunk: {chunk[:30]}... | Similarity: {similarity:.4f}")
+                # Convert distance to similarity score (0-1 range)
+                # For cosine distance: similarity = 1 - (distance / 2)
+                similarity = 1 - (distance / 2)
+                logger.info(f"Document: {doc_id} | Similarity: {similarity:.4f}")
                 # Only include chunks above threshold
                 if similarity >= threshold:
                     matching_chunks.append(chunk)

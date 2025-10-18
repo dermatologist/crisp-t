@@ -18,7 +18,9 @@
 
 **Qualitative research** focuses on collecting and analyzing textual data—such as interview transcripts, open-ended survey responses, and field notes—to explore complex phenomena and human experiences. Researchers may also incorporate quantitative or external sources (e.g., demographics, census data, social media) to provide context and triangulate findings. Characterized by an inductive approach, qualitative research emphasizes generating theories from data rather than testing hypotheses. While qualitative and quantitative data are often used together, there is **no standard method for combining them.**
 
-**CRISP-T is a method and toolset** to integrate **textual data** (as a list of documents) and **numeric data** (as Pandas DataFrame) into structured classes that retain **metadata** from various analytical processes, such as **topic modeling** and **decision trees**. Researchers, with or without **GenAI assistance**, can define relationships between textual and numerical datasets based on their chosen **theoretical lens**.  A final analytical phase ensures that proposed relationships actually hold true. 👉 [See Demo](/notes/DEMO.md).
+**CRISP-T is a method and toolset** to integrate **textual data** (as a list of documents) and **numeric data** (as Pandas DataFrame) into structured classes that retain **metadata** from various analytical processes, such as **topic modeling** and **decision trees**. Researchers, with or without **GenAI assistance**, can define relationships between textual and numerical datasets based on their chosen **theoretical lens**.  An optional final analytical phase ensures that proposed relationships actually hold true. Further, if the numeric and textual datasets share same id, or if the textual metadata contains keywords that match numeric column names; both datasets are filtered simultaneously, ensuring alignment and facilitating triangulation. 👉 [See Demo](/notes/DEMO.md).
+
+CRISP-T implements **semantic search** using **ChromaDB** to find relevant documents or document chunks based on similarity to a query or reference documents. This is useful for literature reviews to find documents likely to fit inclusion criteria within your corpus/search results. It can also be used for coding/annotating documents by finding relevant chunks within a specific document.
 
 An **MCP server** exposes all functionality as tools, resources, and prompts, enabling integration with AI agent platforms such as Claude desktop, VSCODE and other MCP-compatible clients. CRISP-T cannot directly code the documents, but it provides semantic chunk search that **may be used in association with other tools to acheive automated coding**. For example, VSCODE provides built in tools for editing text and markdown files, which can be used to code documents based on semantic search.
 
@@ -88,6 +90,14 @@ crisp [OPTIONS]
 - `--source, -s PATH|URL`: Read source data from a directory (reads .txt and .pdf) or from a URL
 - `--sources PATH|URL`: Provide multiple sources; can be used multiple times
 
+#### Display Options
+
+- `--print, -p TEXT`: Print corpus information; options: [all|documents|dataframe|metadata|stats]
+	documents: Lists the first 5 documents with IDs and text snippets
+	dataframe: Displays the DataFrame head (if available)
+	metadata: Shows corpus metadata
+	stats: Provides descriptive statistics from the DataFrame (if available)
+
 ### crispviz (Visualization CLI)
 
 ```bash
@@ -123,9 +133,10 @@ crispt [OPTIONS]
 	- `--relationships-for-keyword KEYWORD`: Print relationships involving a keyword
 - Semantic search (requires `chromadb`):
 	- `--semantic QUERY`: Perform semantic search with query string
-	- `--semantic-n N`: Number of results to return (default: 5)
+	- `--similar-docs DOC_IDS`: Find documents similar to comma-separated list of document IDs (useful for literature reviews)
+	- `--num N`: Number of results to return (default: 5). Used for `--semantic` and `--similar-docs`
 	- `--semantic-chunks QUERY`: Perform semantic search on document chunks. Returns matching chunks for a specific document (use with `--doc-id` and `--rec` for similarity threshold between 0 and 10 with a default of 8.5)
-	- `--rec THRESHOLD`: Threshold for semantic chunk search (0-10, default: 8.5). Only chunks with similarity above this value are returned
+	- `--rec THRESHOLD`: Threshold for semantic operations. For `--semantic-chunks`, use 0-10 (default: 8.5). For `--similar-docs`, use 0-1 (default: 0.7). Only results with similarity above this value are returned
 	- `--metadata-df`: Export collection metadata as DataFrame+
 	- `--metadata-keys KEYS`: Comma-separated metadata keys to include+
 
@@ -190,6 +201,7 @@ The MCP server provides tools for:
 
 **Semantic Search** (requires `chromadb`)
 - `semantic_search` - Find documents similar to a query using semantic similarity
+- `find_similar_documents` - Find documents similar to a set of reference documents (useful for literature reviews and qualitative research)
 - `semantic_chunk_search` - Find relevant chunks within a specific document (useful for coding/annotating documents)
 - `export_metadata_df` - Export ChromaDB metadata as DataFrame
 
