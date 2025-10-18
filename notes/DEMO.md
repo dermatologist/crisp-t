@@ -91,6 +91,25 @@ crisp --include relaxed,self_time,sleep_bal,time_dp,travel_time,home_env --cls -
 
 ## [Sense-making by triangulation](INSTRUCTION.md)
 
+## Now let us try out a csv dataset with text and numeric data.
+
+* Download SMS Smishing Collection Data Set from [Kaggle](https://www.kaggle.com/datasets/galactus007/sms-smishing-collection-data-set) and convert the text file to csv adding the headers id, CLASS and SMS. Convert CLASS to numeric 0 and 1 for ham and smish respectively and add id as serial numbers.
+* Place the csv file in `crisp_source` folder.
+* Import the csv file to `crisp_input` folder using the following command.
+```bash
+crisp --source crisp_source/ --out crisp_input --unstructured SMS
+```
+* Notice that the text column SMS is specified with --unstructured option.
+* Now assign topics to the messages.
+```bash
+crisp --inp crisp_input/ --out crisp_input/ --assign
+```
+
+* Now print the results.
+```bash
+crisp --print
+```
+
 ## MCP Server for agentic AI. (Optional, but LLMs may be better at sense-making!)
 
 ### Try out the MCP server with the following command. (LLMs will offer course corrections and suggestions)

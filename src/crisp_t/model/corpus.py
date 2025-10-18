@@ -59,22 +59,27 @@ class Corpus(BaseModel):
         print(f"Description: {self.description}")
         # print(f"Score: {self.score}")
         print("Documents:")
-        for doc in self.documents:
+        for doc in self.documents[:5]:  # Print only first 5 documents for brevity
+            print(f"Printing first 5 documents out of {len(self.documents)}")
             print(f"   Name: {doc.name}")
             print(f"   ID: {doc.id}")
             # Print metadata as key-value pairs
             for key, value in doc.metadata.items():
                 print(f"      - {key}: {value}")
             print()
+        input("Press Enter to continue...")
         if self.df is not None:
             print("DataFrame:")
             print(self.df.head())
+            input("Press Enter to continue...")
         if self.visualization is not None:
             print("Visualization:")
             print(self.visualization.keys())
+            input("Press Enter to continue...")
         print("Metadata:")
         for key, value in self.metadata.items():
             print(f" - {key}\n: {value}")
+            input("Press Enter to continue...")
 
     def get_all_df_column_names(self):
         """
