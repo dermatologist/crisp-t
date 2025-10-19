@@ -93,6 +93,7 @@ except ImportError:
 @click.option(
     "--regression", is_flag=True, help="Display linear or logistic regression results"
 )
+@click.option("--lstm", is_flag=True, help="Train LSTM model on text data to predict outcome variable")
 @click.option("--visualize", is_flag=True, help="Visualize words, topics or wordcloud")
 @click.option(
     "--ignore",
@@ -135,6 +136,7 @@ def main(
     cart,
     pca,
     regression,
+    lstm,
     ml,
     visualize,
     ignore,
@@ -251,17 +253,17 @@ def main(
         # Initialize ML analyzer if available and ML functions are requested
         if (
             ML_AVAILABLE
-            and (nnet or cls or knn or kmeans or cart or pca or regression or ml)
+            and (nnet or cls or knn or kmeans or cart or pca or regression or lstm or ml)
             and csv_analyzer
         ):
             if include:
                 csv_analyzer.comma_separated_include_columns(include)
             ml_analyzer = ML(csv=csv_analyzer)  # type: ignore
         else:
-            if (nnet or cls or knn or kmeans or cart or pca or regression or ml) and not ML_AVAILABLE:
+            if (nnet or cls or knn or kmeans or cart or pca or regression or lstm or ml) and not ML_AVAILABLE:
                 click.echo("Machine learning features require additional dependencies.")
                 click.echo("Install with: pip install crisp-t[ml]")
-            if (nnet or cls or knn or kmeans or cart or pca or regression or ml) and not csv_analyzer:
+            if (nnet or cls or knn or kmeans or cart or pca or regression or lstm or ml) and not csv_analyzer:
                 click.echo(
                     "ML analysis requires CSV data. Use --csv to provide a data file."
                 )
@@ -600,7 +602,30 @@ def main(
                 except Exception as e:
                     click.echo(f"Error performing regression analysis: {e}")
 
-        elif (nnet or cls or knn or kmeans or cart or pca or regression or ml) and not ML_AVAILABLE:
+            if (lstm or ml) and target_col:
+                click.echo("\n=== LSTM Text Classification ===")
+                click.echo(
+                    """
+                           LSTM (Long Short-Term Memory) model for text-based prediction.
+                           Tests if text documents converge towards predicting the outcome variable.
+                           Requires both text documents and an 'id' column to align texts with outcome.
+                Hint:   Use --outcome to specify the target variable for LSTM prediction.
+                        The outcome should be binary (two classes).
+                        Ensure documents have IDs matching the 'id' column in your data.
+                """
+                )
+                if not target_col:
+                    raise click.ClickException(
+                        "--outcome is required for LSTM prediction tasks"
+                    )
+                try:
+                    lstm_results = ml_analyzer.get_lstm_predictions(y=target_col)
+                    if out:
+                        _save_output(lstm_results, out, "lstm_results")
+                except Exception as e:
+                    click.echo(f"Error performing LSTM prediction: {e}")
+
+        elif (nnet or cls or knn or kmeans or cart or pca or regression or lstm or ml) and not ML_AVAILABLE:
             click.echo("Machine learning features require additional dependencies.")
             click.echo("Install with: pip install crisp-t[ml]")
 

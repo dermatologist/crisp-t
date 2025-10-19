@@ -16,6 +16,22 @@
   <img src="https://github.com/dermatologist/crisp-t/blob/develop/notes/crisp-logo.jpg" />
 </p>
 
+
+  ✅ CRISP is written in Python, but **you don’t need to know Python** to use it!
+
+  ✅ CRISP is not a data science tool; it’s a **sense-making** tool!
+
+  ✅ CRISP does not replace your analysis; it just **augments** it!
+
+  ✅ CRISP employs an **interpretivist approach**, and the same lens is required to comprehend its results!
+
+  ✅ CRISP does not need LLMs but can augment them with **tools**!
+
+  ✅ CRISP is designed to **simplify your life as a qualitative researcher!**
+
+  💯 CRISP is open-source! licensed under the GPL-3.0 License.
+
+
 **Qualitative research** focuses on collecting and analyzing textual data—such as interview transcripts, open-ended survey responses, and field notes—to explore complex phenomena and human experiences. Researchers may also incorporate quantitative or external sources (e.g., demographics, census data, social media) to provide context and triangulate findings. Characterized by an inductive approach, qualitative research emphasizes generating theories from data rather than testing hypotheses. While qualitative and quantitative data are often used together, there is **no standard method for combining them.**
 
 **CRISP-T is a method and toolset** to integrate **textual data** (as a list of documents) and **numeric data** (as Pandas DataFrame) into structured classes that retain **metadata** from various analytical processes, such as **topic modeling** and **decision trees**. Researchers, with or without **GenAI assistance**, can define relationships between textual and numerical datasets based on their chosen **theoretical lens**.  An optional final analytical phase ensures that proposed relationships actually hold true. Further, if the numeric and textual datasets share same id, or if the textual metadata contains keywords that match numeric column names; both datasets are filtered simultaneously, ensuring alignment and facilitating triangulation. 👉 [See Demo](/notes/DEMO.md).
@@ -77,8 +93,9 @@ crisp [OPTIONS]
 - `--sentiment`: Generate sentiment scores using VADER
 - `--sentence`: Generate sentence-level scores when applicable
 - `--nlp`: Generate all NLP reports (combines above text analyses)
-- `--nnet`, `--cls`, `--knn`, `--kmeans`, `--cart`, `--pca`, `--regression`, `--ml`: Machine learning and clustering options (requires `crisp-t[ml]`)
+- `--nnet`, `--cls`, `--knn`, `--kmeans`, `--cart`, `--pca`, `--regression`, `--lstm`, `--ml`: Machine learning and clustering options (requires `crisp-t[ml]`)
   - `--regression`: Perform linear or logistic regression (automatically detects binary outcomes for logistic regression)
+  - `--lstm`: Train LSTM model on text data to predict outcome variable (requires binary outcome and 'id' column for alignment)
 - `--visualize`: Generate visualizations (word clouds, topic charts, etc.)
 - `--num, -n INTEGER`: Number parameter (clusters, topics, epochs, etc.) - default: 3
 - `--rec, -r INTEGER`: Record parameter (top N results, recommendations) - default: 3
@@ -219,6 +236,7 @@ The MCP server provides tools for:
 - `pca_analysis` - Principal Component Analysis
 - `association_rules` - Apriori association rules
 - `knn_search` - K-nearest neighbors search
+- `lstm_text_classification` - LSTM model for text-based outcome prediction
 
 ### Resources
 

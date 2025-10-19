@@ -785,6 +785,33 @@ async def list_tools() -> list[Tool]:
                         "required": ["outcome", "include"],
                     },
                 ),
+                Tool(
+                    name="lstm_text_classification",
+                    description="""
+                Train an LSTM (Long Short-Term Memory) model on text documents to predict an outcome variable.
+                This tool can be used to see if the texts converge towards predicting the outcome.
+                
+                Requirements:
+                    - Text documents must be loaded in the corpus
+                    - An 'id' column must exist in the DataFrame to align documents with outcomes
+                    - The outcome variable must be binary (two classes)
+                
+                Args:
+                    outcome (str): The target variable to predict (must be binary).
+                
+                Note: This tool tests convergence between textual content and numeric outcomes.
+                """,
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "outcome": {
+                                "type": "string",
+                                "description": "Binary target variable to predict",
+                            },
+                        },
+                        "required": ["outcome"],
+                    },
+                ),
             ]
         )
 
@@ -1338,6 +1365,19 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                 r=arguments.get("record", 1),
                 mcp=True,
             )
+            return [TextContent(type="text", text=str(result))]
+
+        elif name == "lstm_text_classification":
+            if not _csv_analyzer:
+                return [TextContent(type="text", text="No CSV data available")]
+
+            if not ML_AVAILABLE:
+                return [TextContent(type="text", text="ML dependencies not available")]
+
+            if not _ml_analyzer:
+                _ml_analyzer = ML(csv=_csv_analyzer)
+
+            result = _ml_analyzer.get_lstm_predictions(y=arguments["outcome"], mcp=True)
             return [TextContent(type="text", text=str(result))]
 
         elif name == "reset_corpus_state":
