@@ -1023,6 +1023,7 @@ class ML:
                 f"  Epochs: {epochs}\n"
                 f"  Train accuracy: {train_accuracy*100:.2f}%\n"
                 f"  Test accuracy (convergence): {test_accuracy*100:.2f}%\n"
+                f"  True Positive: {tp}, False Positive: {fp}, True Negative: {tn}, False Negative: {fn}\n"
                 f"  Precision: {precision:.3f}\n"
                 f"  Recall: {recall:.3f}\n"
                 f"  F1-Score: {f1:.3f}\n"
@@ -1044,6 +1045,10 @@ class ML:
                 "epochs": epochs,
                 "train_accuracy": train_accuracy,
                 "test_accuracy": test_accuracy,
+                "true_positive": tp,
+                "false_positive": fp,
+                "true_negative": tn,
+                "false_negative": fn,
                 "precision": precision,
                 "recall": recall,
                 "f1_score": f1,
