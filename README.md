@@ -14,22 +14,22 @@
 
 <p align="center">
   <img src="https://github.com/dermatologist/crisp-t/blob/develop/notes/crisp-logo.jpg" />
-
-  <i>
-  CRISP is written in Python, but you don’t need to know Python to use it!
-
-  CRISP is not a data science tool; it’s a sense-making tool!
-
-  CRISP does not replace your analysis; it just augments it!
-
-  CRISP employs an interpretivist approach, and the same lens is required to comprehend its results!
-
-  CRISP does not need LLMs but can augment them with tools!
-
-  CRISP is designed to simplify your life as a qualitative researcher!
-  </i>
 </p>
 
+
+  ✅ CRISP is written in Python, but **you don’t need to know Python** to use it!
+
+  ✅ CRISP is not a data science tool; it’s a **sense-making** tool!
+
+  ✅ CRISP does not replace your analysis; it just **augments** it!
+
+  ✅ CRISP employs an **interpretivist approach**, and the same lens is required to comprehend its results!
+
+  ✅ CRISP does not need LLMs but can augment them with **tools**!
+
+  ✅ CRISP is designed to **simplify your life as a qualitative researcher!**
+
+  💯 CRISP is open-source! licensed under the GPL-3.0 License.
 
 
 **Qualitative research** focuses on collecting and analyzing textual data—such as interview transcripts, open-ended survey responses, and field notes—to explore complex phenomena and human experiences. Researchers may also incorporate quantitative or external sources (e.g., demographics, census data, social media) to provide context and triangulate findings. Characterized by an inductive approach, qualitative research emphasizes generating theories from data rather than testing hypotheses. While qualitative and quantitative data are often used together, there is **no standard method for combining them.**
