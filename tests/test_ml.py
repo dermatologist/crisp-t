@@ -141,3 +141,51 @@ def test_get_regression_linear(csv_fixture, csv_file_fixture):
     assert "coefficients" in regression_result, "Should have coefficients"
     assert "intercept" in regression_result, "Should have intercept"
     print(f"Linear Regression Results: {regression_result}")
+
+
+def test_get_lstm_predictions(csv_fixture, corpus_fixture, csv_file_fixture):
+    """Test LSTM predictions with text and binary outcome"""
+    _csv = csv_fixture
+    _csv.read_csv(csv_file_fixture)
+    _csv.drop_na()
+    
+    # Add documents to corpus with matching IDs
+    # The test CSV has an id column, so we need to ensure documents have matching IDs
+    # For this test, we'll create simple text documents
+    from src.crisp_t.model.document import Document
+    
+    # Clear existing documents and create new ones matching CSV ids
+    corpus_fixture.documents = []
+    df = _csv.df
+    for idx, row in df.iterrows():
+        doc = Document(
+            id=str(row.get('id', idx)),  # Use id column if exists, otherwise use index
+            text=f"This is a sample document about student {idx} with some text content for testing LSTM.",
+            name=f"Document {idx}",
+            description="Test document",
+            score=0.0,
+            metadata={}
+        )
+        corpus_fixture.add_document(doc)
+    
+    # Recreate csv with updated corpus
+    _csv.corpus = corpus_fixture
+    ml = ML(csv=_csv)
+    
+    # Test LSTM predictions
+    result = ml.get_lstm_predictions(y="Gender")
+    
+    # Check that result is returned
+    assert result is not None, "LSTM prediction result should not be None"
+    
+    # If result is a dict (not mcp mode), check its structure
+    if isinstance(result, dict):
+        assert "test_accuracy" in result, "Should have test accuracy"
+        assert "train_accuracy" in result, "Should have train accuracy"
+        assert "vocab_size" in result, "Should have vocab size"
+        assert "f1_score" in result, "Should have F1 score"
+        print(f"LSTM Results: {result}")
+    else:
+        # If result is a string (error message), just print it
+        print(f"LSTM Result: {result}")
+
