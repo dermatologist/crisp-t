@@ -93,7 +93,7 @@ crisp --include relaxed,self_time,sleep_bal,time_dp,travel_time,home_env --cls -
 
 ## Now let us try out a csv dataset with text and numeric data.
 
-* Download SMS Smishing Collection Data Set from [Kaggle](https://www.kaggle.com/datasets/galactus007/sms-smishing-collection-data-set) and convert the text file to csv adding the headers id, CLASS and SMS. Convert CLASS to numeric 0 and 1 for ham and smish respectively and add id as serial numbers.
+* Download SMS Smishing Collection Data Set from [Kaggle](https://www.kaggle.com/datasets/galactus007/sms-smishing-collection-data-set) and convert the text file to csv adding the headers id, **CLASS** and **SMS**. Convert CLASS to numeric 0 and 1 for ham and smish respectively and add id as serial numbers.
 * Place the csv file in a **new** `crisp_source` folder.
 * Import the csv file to `crisp_input` folder using the following command.
 
@@ -116,6 +116,12 @@ crisp --print documents
 * Let us choose the cluster 1 and see the SMS classes in this cluster. (0=ham, 1=smish)
 ```bash
 crisp --filters cluster=1 --print stats
+```
+
+* Next, let us check if the SMS texts converge towards predicting the CLASS (ham/ smish) variable with LSTM model.
+
+```bash
+crisp --lstm --outcome CLASS
 ```
 
 ## MCP Server for agentic AI. (Optional, but LLMs may be better at sense-making!)
