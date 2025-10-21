@@ -2,14 +2,15 @@
 
 ## [Unreleased](https://github.com/dermatologist/crisp-t/tree/HEAD)
 
-[Full Changelog](https://github.com/dermatologist/crisp-t/compare/v0.5.0...HEAD)
+[Full Changelog](https://github.com/dermatologist/crisp-t/compare/v0.6.0...HEAD)
 
 **Implemented enhancements:**
 
-- Feature request: Add LSTM method to ml.py. [\#34](https://github.com/dermatologist/crisp-t/issues/34)
+- Feature request: Add a progress bar for long running functions. [\#36](https://github.com/dermatologist/crisp-t/issues/36)
 
 **Merged pull requests:**
 
+- Add tqdm progress bars for long-running functions [\#37](https://github.com/dermatologist/crisp-t/pull/37) ([Copilot](https://github.com/apps/copilot-swe-agent))
 - Add LSTM text classification method to test convergence between text and outcome variables [\#35](https://github.com/dermatologist/crisp-t/pull/35) ([Copilot](https://github.com/apps/copilot-swe-agent))
 - Add semantic search based on document list for literature reviews [\#33](https://github.com/dermatologist/crisp-t/pull/33) ([Copilot](https://github.com/apps/copilot-swe-agent))
 - Add semantic chunk search for document coding and annotation [\#31](https://github.com/dermatologist/crisp-t/pull/31) ([Copilot](https://github.com/apps/copilot-swe-agent))
@@ -32,6 +33,14 @@
 - Feature/uv 1 [\#8](https://github.com/dermatologist/crisp-t/pull/8) ([dermatologist](https://github.com/dermatologist))
 - Feature/readme 1 [\#4](https://github.com/dermatologist/crisp-t/pull/4) ([dermatologist](https://github.com/dermatologist))
 - Bump astral-sh/setup-uv from 5 to 6 [\#2](https://github.com/dermatologist/crisp-t/pull/2) ([dependabot[bot]](https://github.com/apps/dependabot))
+
+## [v0.6.0](https://github.com/dermatologist/crisp-t/tree/v0.6.0) (2025-10-19)
+
+[Full Changelog](https://github.com/dermatologist/crisp-t/compare/v0.5.0...v0.6.0)
+
+**Implemented enhancements:**
+
+- Feature request: Add LSTM method to ml.py. [\#34](https://github.com/dermatologist/crisp-t/issues/34)
 
 ## [v0.5.0](https://github.com/dermatologist/crisp-t/tree/v0.5.0) (2025-10-18)
 
