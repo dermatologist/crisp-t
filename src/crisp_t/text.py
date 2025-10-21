@@ -26,6 +26,7 @@ import textacy
 from mlxtend.frequent_patterns import apriori, association_rules
 from mlxtend.preprocessing import TransactionEncoder
 from textacy import preprocessing
+from tqdm import tqdm
 
 from .model import Corpus, SpacyManager
 from .utils import QRUtils
@@ -134,7 +135,7 @@ class Text:
         if self._corpus is None:
             raise ValueError("Corpus is not set")
         text = ""
-        for document in self._corpus.documents:
+        for document in tqdm(self._corpus.documents, desc="Processing documents", disable=len(self._corpus.documents) < 10):
             text += self.process_text(document.text) + " \n"
             metadata = document.metadata
         nlp = self._spacy_manager.get_model()
@@ -147,7 +148,7 @@ class Text:
             raise ValueError("Corpus is not set")
         spacy_docs = []
         ids = []
-        for document in self._corpus.documents:
+        for document in tqdm(self._corpus.documents, desc="Creating spacy docs", disable=len(self._corpus.documents) < 10):
             text = self.process_text(document.text)
             metadata = document.metadata
             nlp = self._spacy_manager.get_model()
@@ -321,7 +322,7 @@ class Text:
         if self._corpus is None:
             raise ValueError("Corpus is not set")
         filtered_documents = []
-        for document in self._corpus.documents:
+        for document in tqdm(self._corpus.documents, desc="Filtering documents", disable=len(self._corpus.documents) < 10):
             meta_val = document.metadata.get(metadata_key)
             # Check meta_val is not None and is iterable (str, list, tuple, set)
             if meta_val is not None and isinstance(meta_val, (str, list, tuple, set)):

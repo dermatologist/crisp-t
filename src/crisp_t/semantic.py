@@ -22,6 +22,7 @@ import warnings
 from typing import Optional
 
 import pandas as pd
+from tqdm import tqdm
 
 from .model import Corpus, Document
 
@@ -185,7 +186,7 @@ class Semantic:
         metadatas = []
         ids = []
 
-        for doc in self._corpus.documents:
+        for doc in tqdm(self._corpus.documents, desc="Adding documents to collection", disable=len(self._corpus.documents) < 10):
             documents_texts.append(doc.text)
             # Prepare metadata - ChromaDB requires string values and non-empty dicts
             metadata = {}
@@ -250,7 +251,7 @@ class Semantic:
         chunk_ids = []
         chunk_counter = 0
 
-        for doc in self._corpus.documents:
+        for doc in tqdm(self._corpus.documents, desc="Adding chunks to collection", disable=len(self._corpus.documents) < 10):
             # Chunk the document text
             chunks = self._chunk_text(doc.text)
 
