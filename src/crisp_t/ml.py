@@ -18,6 +18,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
 from sklearn.tree import DecisionTreeClassifier
 from tabulate import tabulate
+from tqdm import tqdm
 
 from crisp_t import model
 
@@ -862,7 +863,7 @@ class ML:
             word_counts = Counter()
             tokenized_docs = []
 
-            for doc in _corpus.documents:
+            for doc in tqdm(_corpus.documents, desc="Tokenizing documents", disable=len(_corpus.documents) < 10):
                 # Simple tokenization - split on whitespace and lowercase
                 tokens = doc.text.lower().split()
                 tokenized_docs.append(tokens)
@@ -880,7 +881,7 @@ class ML:
             sequences = []
             doc_ids = []
 
-            for doc, tokens in zip(_corpus.documents, tokenized_docs):
+            for doc, tokens in tqdm(zip(_corpus.documents, tokenized_docs), total=len(_corpus.documents), desc="Converting to sequences", disable=len(_corpus.documents) < 10):
                 # Convert tokens to indices
                 seq = [word_to_idx.get(token, 0) for token in tokens]
                 # Pad or truncate to max_length

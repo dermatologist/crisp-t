@@ -25,6 +25,7 @@ import re
 import pandas as pd
 import requests
 from pypdf import PdfReader
+from tqdm import tqdm
 
 from .csv import Csv
 from .model import Corpus, Document
@@ -159,7 +160,7 @@ class ReadData:
         """
         if not self._corpus:
             raise ValueError("No corpus found. Please create a corpus first.")
-        for document in self._corpus.documents:
+        for document in tqdm(self._corpus.documents, desc="Searching documents", disable=len(self._corpus.documents) < 10):
             if document.id == doc_id:
                 return document
         raise ValueError("Document not found: %s" % doc_id)
@@ -216,7 +217,7 @@ class ReadData:
             self._corpus.df = None
         # Remove ignore words from self._corpus.documents text
         documents = []
-        for document in self._corpus.documents:
+        for document in tqdm(self._corpus.documents, desc="Processing documents", disable=len(self._corpus.documents) < 10):
             if comma_separated_ignore_words:
                 for word in comma_separated_ignore_words.split(","):
                     document.text = re.sub(
@@ -256,7 +257,7 @@ class ReadData:
                 df.drop(column, axis=1, inplace=True)
         # Set self._df to the numeric part after dropping text columns
         self._df = df.copy()
-        for index, row in original_df.iterrows():
+        for index, row in tqdm(original_df.iterrows(), total=len(original_df), desc="Reading CSV rows", disable=len(original_df) < 10):
             read_from_file = ""
             for column in text_columns:
                 read_from_file += f"{row[column]} "
@@ -325,7 +326,8 @@ class ReadData:
             source_path = Path(source)
             self._source = source
             logger.info(f"Reading data from folder: {source}")
-            for file_name in os.listdir(source):
+            file_list = os.listdir(source)
+            for file_name in tqdm(file_list, desc="Reading files", disable=len(file_list) < 10):
                 file_path = source_path / file_name
                 if file_name.endswith(".txt"):
                     with open(file_path, "r") as f:
@@ -356,7 +358,7 @@ class ReadData:
                     with open(file_path, "rb") as f:
                         reader = PdfReader(f)
                         read_from_file = ""
-                        for page in reader.pages:
+                        for page in tqdm(reader.pages, desc=f"Reading PDF {file_name}", leave=False, disable=len(reader.pages) < 10):
                             read_from_file += page.extract_text()
                         # remove comma separated ignore words
                         if comma_separated_ignore_words:
@@ -405,7 +407,7 @@ class ReadData:
         if not self._corpus:
             raise ValueError("No corpus found. Please create a corpus first.")
         data = []
-        for document in self._corpus.documents:
+        for document in tqdm(self._corpus.documents, desc="Converting to dataframe", disable=len(self._corpus.documents) < 10):
             data.append(document.model_dump())
         df = pd.DataFrame(data)
         return df

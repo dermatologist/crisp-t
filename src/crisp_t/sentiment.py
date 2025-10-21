@@ -1,6 +1,7 @@
 import textacy.similarity
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 import operator
+from tqdm import tqdm
 
 
 from .model import Corpus
@@ -38,7 +39,7 @@ class Sentiment:
                 )
             documents_copy = []
             # add sentiment metadata to each document
-            for doc in self._corpus.documents:
+            for doc in tqdm(self._corpus.documents, desc="Adding sentiment metadata", disable=len(self._corpus.documents) < 10):
                 for idx, doc_id in enumerate(self._ids):
                     if doc.id == doc_id:
                         documents_copy.append(doc)
