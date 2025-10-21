@@ -36,6 +36,7 @@ dependencies = [
     "mcp",
     "pip",
     "chromadb",
+    "tqdm",
 ]
 
 

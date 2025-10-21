@@ -28,6 +28,7 @@ from gensim.models.ldamodel import LdaModel
 from sklearn.cluster import KMeans
 from sklearn.manifold import TSNE
 from tabulate import tabulate
+from tqdm import tqdm
 
 from .model import Corpus
 from .text import Text
@@ -207,7 +208,7 @@ class Cluster:
                 )
 
         # Add cluster information to documents metadata
-        for doc in documents:
+        for doc in tqdm(documents, desc="Adding cluster metadata", disable=len(documents) < 10):
             doc_id = doc.id
             if doc_id in clusters:
                 cluster = clusters[doc_id][0][0]
@@ -305,7 +306,7 @@ class Cluster:
         documents_copy = []
         documents = self._corpus.documents if self._corpus is not None else []
         # Add topic information to the documents metadata
-        for doc in documents:
+        for doc in tqdm(documents, desc="Adding topic metadata", disable=len(documents) < 10):
             doc_id_str = str(doc.id)
             if doc_id_str in sent_topics_df["Title"].values:
                 topic = int(
