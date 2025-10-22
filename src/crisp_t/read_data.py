@@ -21,7 +21,7 @@ import json
 import logging
 import os
 import re
-
+import tempfile
 import pandas as pd
 import requests
 from pypdf import PdfReader
@@ -400,17 +400,26 @@ class ReadData:
                     )
                     _CSV_EXISTS = True
             if not _CSV_EXISTS:
-                # read sample.csv from src/crisp_t/resources to source folder
-                sample_csv_path = os.path.join(
-                    os.path.dirname(__file__), "resources", "sample.csv"
-                )
-                logger.info(f"No existing CSV found. Reading sample CSV file to corpus: {sample_csv_path}")
-                self.read_csv_to_corpus(
-                    sample_csv_path,
-                    comma_separated_ignore_words,
-                    comma_separated_text_columns,
-                )
-
+                # create a simple csv with columns: id, number, text
+                # and fill it with random data
+                _csv = """
+id,number,response
+1,100,Sample text one
+2,200,Sample text two
+3,300,Sample text three
+4,400,Sample text four
+"""
+                # write the csv to a temp file
+                with tempfile.NamedTemporaryFile(
+                    mode="w+", delete=False, suffix=".csv"
+                ) as temp_csv:
+                    temp_csv.write(_csv)
+                    temp_csv_path = temp_csv.name
+                logger.info(f"No CSV found. Created temp CSV file: {temp_csv_path}")
+                self._df = Csv().read_csv(temp_csv_path)
+                logger.info(f"CSV file read with shape: {self._df.shape}")
+                # remove the temp file
+                os.remove(temp_csv_path)
 
 
         else:
