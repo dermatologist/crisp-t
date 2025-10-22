@@ -2,14 +2,16 @@
 
 ## [Unreleased](https://github.com/dermatologist/crisp-t/tree/HEAD)
 
-[Full Changelog](https://github.com/dermatologist/crisp-t/compare/v0.6.0...HEAD)
+[Full Changelog](https://github.com/dermatologist/crisp-t/compare/v0.7.0...HEAD)
 
 **Implemented enhancements:**
 
-- Feature request: Add a progress bar for long running functions. [\#36](https://github.com/dermatologist/crisp-t/issues/36)
+- Feature request: LDA output Visualization for text mining [\#38](https://github.com/dermatologist/crisp-t/issues/38)
 
 **Merged pull requests:**
 
+- Replace sample CSV with dynamically created temporary CSV for data pr… [\#40](https://github.com/dermatologist/crisp-t/pull/40) ([dermatologist](https://github.com/dermatologist))
+- Add LDA Visualization with pyLDAvis, Coherence and Perplexity Metrics [\#39](https://github.com/dermatologist/crisp-t/pull/39) ([Copilot](https://github.com/apps/copilot-swe-agent))
 - Add tqdm progress bars for long-running functions [\#37](https://github.com/dermatologist/crisp-t/pull/37) ([Copilot](https://github.com/apps/copilot-swe-agent))
 - Add LSTM text classification method to test convergence between text and outcome variables [\#35](https://github.com/dermatologist/crisp-t/pull/35) ([Copilot](https://github.com/apps/copilot-swe-agent))
 - Add semantic search based on document list for literature reviews [\#33](https://github.com/dermatologist/crisp-t/pull/33) ([Copilot](https://github.com/apps/copilot-swe-agent))
@@ -33,6 +35,14 @@
 - Feature/uv 1 [\#8](https://github.com/dermatologist/crisp-t/pull/8) ([dermatologist](https://github.com/dermatologist))
 - Feature/readme 1 [\#4](https://github.com/dermatologist/crisp-t/pull/4) ([dermatologist](https://github.com/dermatologist))
 - Bump astral-sh/setup-uv from 5 to 6 [\#2](https://github.com/dermatologist/crisp-t/pull/2) ([dependabot[bot]](https://github.com/apps/dependabot))
+
+## [v0.7.0](https://github.com/dermatologist/crisp-t/tree/v0.7.0) (2025-10-21)
+
+[Full Changelog](https://github.com/dermatologist/crisp-t/compare/v0.6.0...v0.7.0)
+
+**Implemented enhancements:**
+
+- Feature request: Add a progress bar for long running functions. [\#36](https://github.com/dermatologist/crisp-t/issues/36)
 
 ## [v0.6.0](https://github.com/dermatologist/crisp-t/tree/v0.6.0) (2025-10-19)
 
