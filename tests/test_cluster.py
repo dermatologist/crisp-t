@@ -53,9 +53,11 @@ def test_print_clusters(corpus_fixture):
     cluster = Cluster(corpus=corpus_fixture)
     cluster.build_lda_model()
     clusters = cluster.print_clusters(verbose=True)
+    # clusters is a dictionary mapping document IDs to their topic assignments
+    # so the length is the number of documents, not topics
     assert (
-        len(clusters) == cluster._num_topics
-    ), "Number of clusters should match the specified number"
+        len(clusters) == len(corpus_fixture.documents)
+    ), "Number of cluster assignments should match the number of documents"
 
 
 def test_coherence_and_perplexity_in_metadata(corpus_fixture):

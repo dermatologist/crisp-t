@@ -788,7 +788,7 @@ class QRVisualize:
                 logger.info(f"LDA visualization saved to {output_path}")
 
             # Return HTML string for embedding or further use
-            html_string = pyLDAvis.prepared_data_to_html(vis_data, lambda_val=lambda_val)
+            html_string = pyLDAvis.prepared_data_to_html(vis_data)
             return html_string
 
         except Exception as e:
