@@ -25,6 +25,7 @@ import pandas as pd
 from gensim import corpora
 from gensim.models import Word2Vec
 from gensim.models.ldamodel import LdaModel
+from gensim.models.coherencemodel import CoherenceModel
 from sklearn.cluster import KMeans
 from sklearn.manifold import TSNE
 from tabulate import tabulate
@@ -51,7 +52,11 @@ class Cluster:
         self._processed_docs = None
         self._dictionary = None
         self._bag_of_words = None
-        self._num_topics = 5
+        # Mettler et al. (2025) find 8 as the optimal value for num_topics.
+        # Their research recommends LDA over HDP and LSI for topic modeling.
+        # The sensitivity analysis of coherence and perplexity indicates that organizing
+        # the subsequent detailed analysis around 8 topics may be a good approach.
+        self._num_topics = 8
         self._passes = 15
         self.process()
 
@@ -108,7 +113,7 @@ class Cluster:
             self._corpus.visualization["word_cloud"] = safe_word_cloud
         return _word_cloud
 
-    def print_topics(self, num_words=5):
+    def print_topics(self, num_words=8):
         if self._lda_model is None:
             self.build_lda_model()
         if self._lda_model is None:
@@ -133,6 +138,8 @@ class Cluster:
             print(f"Topic {topic_num}: {', '.join(words)}")
             topics += f"Topic {topic_num}: {', '.join(words)}\n"
         self._corpus.metadata["topics"] = topics
+        # Store raw LDA output for visualization
+        self._corpus.metadata["lda_raw_output"] = [(int(topic[0]), topic[1]) for topic in output]
         return output
 
     def tokenize(self, spacy_doc):
@@ -198,6 +205,32 @@ class Cluster:
             bow = self._dictionary.doc2bow(doc)
             topic = self._lda_model.get_document_topics(bow)
             clusters[self._ids[i]] = topic
+
+        # Calculate coherence score
+        # Higher coherence is believed to facilitate human understanding by reducing
+        # cognitive effort and improving pattern recognition (Lee et al., 2024).
+        coherence_model = CoherenceModel(
+            model=self._lda_model,
+            texts=self._processed_docs,
+            dictionary=self._dictionary,
+            coherence='c_v'
+        )
+        coherence_score = coherence_model.get_coherence()
+
+        # Calculate perplexity
+        # Perplexity is a positive value. Lower perplexity scores generally indicate
+        # a better model fit and improved predictive accuracy for unseen documents
+        # (Mettler et al., 2025).
+        perplexity = self._lda_model.log_perplexity(self._bag_of_words)
+
+        if verbose:
+            print(f"\nCoherence Score (c_v): {coherence_score:.4f}")
+            print(f"Perplexity: {perplexity:.4f}\n")
+
+        # Add scores to corpus metadata
+        if self._corpus is not None:
+            self._corpus.metadata["coherence_score"] = float(coherence_score)
+            self._corpus.metadata["perplexity"] = float(perplexity)
 
         documents_copy = []
         documents = self._corpus.documents if self._corpus is not None else []
