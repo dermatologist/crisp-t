@@ -10,7 +10,7 @@ import pandas as pd
 import pytest
 from matplotlib.patches import Rectangle
 
-from src.crisp_t.visualize import QRVisualize
+from src.crisp_t.visualize import QRVisualize, PYLDAVIS_AVAILABLE
 
 
 @pytest.fixture
@@ -94,3 +94,35 @@ def test_plot_correlation_heatmap_raises_for_insufficient_numeric_columns(
 
     with pytest.raises(ValueError):
         visualize.plot_correlation_heatmap(df, columns=["b"], show=False)
+
+
+def test_get_lda_viz_raises_without_pyldavis(visualize: QRVisualize):
+    """Test that get_lda_viz raises ImportError when pyLDAvis is not available"""
+    if not PYLDAVIS_AVAILABLE:
+        with pytest.raises(ImportError, match="pyLDAvis is not installed"):
+            visualize.get_lda_viz(None, None, None)
+
+
+def test_get_lda_viz_raises_without_lda_model(visualize: QRVisualize):
+    """Test that get_lda_viz raises ValueError when LDA model is None"""
+    if PYLDAVIS_AVAILABLE:
+        with pytest.raises(ValueError, match="LDA model is required"):
+            visualize.get_lda_viz(None, [], {})
+
+
+def test_get_lda_viz_raises_without_corpus_bow(visualize: QRVisualize):
+    """Test that get_lda_viz raises ValueError when corpus_bow is None"""
+    if PYLDAVIS_AVAILABLE:
+        # Create a mock LDA model
+        mock_lda = type('MockLDA', (), {})()
+        with pytest.raises(ValueError, match="Corpus bag of words is required"):
+            visualize.get_lda_viz(mock_lda, None, {})
+
+
+def test_get_lda_viz_raises_without_dictionary(visualize: QRVisualize):
+    """Test that get_lda_viz raises ValueError when dictionary is None"""
+    if PYLDAVIS_AVAILABLE:
+        # Create a mock LDA model
+        mock_lda = type('MockLDA', (), {})()
+        with pytest.raises(ValueError, match="Dictionary is required"):
+            visualize.get_lda_viz(mock_lda, [], None)
