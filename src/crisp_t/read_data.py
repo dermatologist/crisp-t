@@ -296,6 +296,7 @@ class ReadData:
     def read_source(
         self, source, comma_separated_ignore_words=None, comma_separated_text_columns=""
     ):
+        _CSV_EXISTS = False
         # if source is a url
         if source.startswith("http://") or source.startswith("https://"):
             response = requests.get(source)
@@ -386,6 +387,7 @@ class ReadData:
                     logger.info(f"Reading CSV file: {file_path}")
                     self._df = Csv().read_csv(file_path)
                     logger.info(f"CSV file read with shape: {self._df.shape}")
+                    _CSV_EXISTS = True
                 if file_name.endswith(".csv") and comma_separated_text_columns != "":
                     logger.info(f"Reading CSV file to corpus: {file_path}")
                     self.read_csv_to_corpus(
@@ -396,6 +398,20 @@ class ReadData:
                     logger.info(
                         f"CSV file read to corpus with documents: {len(self._documents)}"
                     )
+                    _CSV_EXISTS = True
+            if not _CSV_EXISTS:
+                # read sample.csv from src/crisp_t/resources to source folder
+                sample_csv_path = os.path.join(
+                    os.path.dirname(__file__), "resources", "sample.csv"
+                )
+                logger.info(f"No existing CSV found. Reading sample CSV file to corpus: {sample_csv_path}")
+                self.read_csv_to_corpus(
+                    sample_csv_path,
+                    comma_separated_ignore_words,
+                    comma_separated_text_columns,
+                )
+
+
 
         else:
             raise ValueError(f"Source not found: {source}")

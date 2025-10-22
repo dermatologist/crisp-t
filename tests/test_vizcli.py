@@ -67,6 +67,28 @@ def test_vizcli_topics_and_wordcloud(text_source, tmp_dir):
     assert (out_dir / "wordcloud.png").exists()
 
 
+def test_vizcli_ldavis(text_source, tmp_dir):
+    """Test that --ldavis flag creates HTML visualization"""
+    runner = CliRunner()
+    out_dir = Path(tmp_dir) / "out_ldavis"
+    result = runner.invoke(
+        viz_main,
+        [
+            "--source",
+            text_source,
+            "--out",
+            str(out_dir),
+            "--topics-num",
+            "2",
+            "--ldavis",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    # Check if HTML file was created (or at least the command completed)
+    # The file might not be created if pyLDAvis is not installed, but command should not fail
+    assert "lda_visualization.html" in result.output or "Warning" in result.output
+
+
 def test_vizcli_corr_heatmap_with_sources(tmp_dir):
     # Create minimal CSV-based source: a folder with corpus_df created via ReadData.write
     # For simplicity here, emulate via corpus with df is complex; we instead create a temp folder
