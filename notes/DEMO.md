@@ -144,7 +144,16 @@ crisp --lstm --outcome CLASS
 
 ## Visualization
 
-* Let's generate a word cloud of keywords in the corpus.
+
+### Let's [visualize the clusters in 2D space using PCA.](/notes/lda_visualization.html)
+
+```bash
+crispviz --inp crisp_input/ --out crisp_output/ --ldavis
+```
+
+* The visualization will be saved in `crisp_output` folder. Open the html file in a browser to explore.
+
+### Let's generate a word cloud of keywords in the corpus.
 
 ```bash
 crispviz --inp crisp_input/ --out crisp_output/ --wordcloud

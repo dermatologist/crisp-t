@@ -40,9 +40,9 @@ logger = logging.getLogger(__name__)
 )
 @click.option(
     "--topics-num",
-    default=3,
+    default=8,
     show_default=True,
-    help="Number of topics for LDA when required",
+    help="Number of topics for LDA when required (default 8 as per Mettler et al. 2025)",
 )
 @click.option(
     "--top-n",
