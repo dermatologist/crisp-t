@@ -145,7 +145,7 @@ crisp --lstm --outcome CLASS
 ## Visualization
 
 
-### Let's [visualize the clusters in 2D space using PCA.](/notes/lda_visualization.html)
+### Let's [visualize the clusters in 2D space using PCA.](https://htmlpreview.github.io/?https://github.com/dermatologist/crisp-t/blob/develop/notes/lda_visualization.html)
 
 ```bash
 crispviz --inp crisp_input/ --out crisp_output/ --ldavis
