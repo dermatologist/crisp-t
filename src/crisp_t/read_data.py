@@ -21,7 +21,7 @@ import json
 import logging
 import os
 import re
-
+import tempfile
 import pandas as pd
 import requests
 from pypdf import PdfReader
@@ -296,6 +296,7 @@ class ReadData:
     def read_source(
         self, source, comma_separated_ignore_words=None, comma_separated_text_columns=""
     ):
+        _CSV_EXISTS = False
         # if source is a url
         if source.startswith("http://") or source.startswith("https://"):
             response = requests.get(source)
@@ -386,6 +387,7 @@ class ReadData:
                     logger.info(f"Reading CSV file: {file_path}")
                     self._df = Csv().read_csv(file_path)
                     logger.info(f"CSV file read with shape: {self._df.shape}")
+                    _CSV_EXISTS = True
                 if file_name.endswith(".csv") and comma_separated_text_columns != "":
                     logger.info(f"Reading CSV file to corpus: {file_path}")
                     self.read_csv_to_corpus(
@@ -396,6 +398,29 @@ class ReadData:
                     logger.info(
                         f"CSV file read to corpus with documents: {len(self._documents)}"
                     )
+                    _CSV_EXISTS = True
+            if not _CSV_EXISTS:
+                # create a simple csv with columns: id, number, text
+                # and fill it with random data
+                _csv = """
+id,number,response
+1,100,Sample text one
+2,200,Sample text two
+3,300,Sample text three
+4,400,Sample text four
+"""
+                # write the csv to a temp file
+                with tempfile.NamedTemporaryFile(
+                    mode="w+", delete=False, suffix=".csv"
+                ) as temp_csv:
+                    temp_csv.write(_csv)
+                    temp_csv_path = temp_csv.name
+                logger.info(f"No CSV found. Created temp CSV file: {temp_csv_path}")
+                self._df = Csv().read_csv(temp_csv_path)
+                logger.info(f"CSV file read with shape: {self._df.shape}")
+                # remove the temp file
+                os.remove(temp_csv_path)
+
 
         else:
             raise ValueError(f"Source not found: {source}")

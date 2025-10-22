@@ -18,6 +18,13 @@ from matplotlib.ticker import FuncFormatter
 from sklearn.manifold import TSNE
 from wordcloud import STOPWORDS, WordCloud
 
+try:
+    import pyLDAvis
+    import pyLDAvis.gensim_models as gensimvis
+    PYLDAVIS_AVAILABLE = True
+except ImportError:
+    PYLDAVIS_AVAILABLE = False
+
 from .model.corpus import Corpus
 
 logger = logging.getLogger(__name__)
@@ -716,3 +723,74 @@ class QRVisualize:
                 )
             plt.savefig(folder_path)
             plt.close()
+
+    def get_lda_viz(
+        self,
+        lda_model,
+        corpus_bow,
+        dictionary,
+        folder_path: str | None = None,
+        mds: str = "tsne",
+        lambda_val: float = 0.6,
+        show: bool = True,
+    ) -> str | None:
+        """
+        Generate an interactive LDA visualization using pyLDAvis.
+
+        Args:
+            lda_model: The trained LDA model
+            corpus_bow: Bag of words corpus
+            dictionary: Gensim dictionary
+            folder_path: Path to save the HTML visualization
+            mds: Dimension reduction method ('tsne', 'mmds', or 'pcoa')
+            lambda_val: Lambda parameter for relevance metric (default: 0.6).
+                       Mettler et al. (2025) performed several experiments to identify
+                       the optimal value of λ, which turned out to be 0.6.
+            show: Whether to display the visualization
+
+        Returns:
+            HTML string of the visualization if successful, None otherwise
+
+        Raises:
+            ImportError: If pyLDAvis is not installed
+            ValueError: If required inputs are missing
+        """
+        if not PYLDAVIS_AVAILABLE:
+            raise ImportError(
+                "pyLDAvis is not installed. Install it with: pip install pyLDAvis"
+            )
+
+        if lda_model is None:
+            raise ValueError("LDA model is required")
+        if corpus_bow is None:
+            raise ValueError("Corpus bag of words is required")
+        if dictionary is None:
+            raise ValueError("Dictionary is required")
+
+        try:
+            # Prepare the visualization data
+            vis_data = gensimvis.prepare(
+                lda_model,
+                corpus_bow,
+                dictionary,
+                mds=mds,
+                R=30,
+                lambda_step=0.01,
+                plot_opts={'xlab': 'PC1', 'ylab': 'PC2'}
+            )
+
+            # Save to HTML file if path provided
+            if folder_path:
+                output_path = Path(folder_path)
+                if output_path.parent:
+                    output_path.parent.mkdir(parents=True, exist_ok=True)
+                pyLDAvis.save_html(vis_data, str(output_path))
+                logger.info(f"LDA visualization saved to {output_path}")
+
+            # Return HTML string for embedding or further use
+            html_string = pyLDAvis.prepared_data_to_html(vis_data)
+            return html_string
+
+        except Exception as e:
+            logger.error(f"Error generating LDA visualization: {e}")
+            raise

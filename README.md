@@ -123,8 +123,17 @@ crispviz [OPTIONS]
 
 - `--inp, --source, --sources`: Input corpus or sources
 - `--out`: Output directory for PNG images
-- Visualization flags: `--freq`, `--by-topic`, `--wordcloud`, `--top-terms`, `--corr-heatmap`
-- Optional params: `--bins`, `--top-n`, `--columns`
+- Visualization flags: `--freq`, `--by-topic`, `--wordcloud`, `--ldavis`, `--top-terms`, `--corr-heatmap`
+- Optional params: `--bins`, `--top-n`, `--columns`, `--topics-num`
+
+**Visualization Options:**
+- `--freq`: Export word frequency distribution
+- `--by-topic`: Export distribution by dominant topic (requires LDA)
+- `--wordcloud`: Export topic wordcloud (requires LDA)
+- `--ldavis`: Export interactive LDA visualization as HTML (requires LDA and pyLDAvis)
+- `--top-terms`: Export top terms bar chart
+- `--corr-heatmap`: Export correlation heatmap from CSV numeric columns
+- `--topics-num N`: Number of topics for LDA (default: 8, based on Mettler et al., 2025)
 
 ### crispt (Corpus Manipulation CLI)
 

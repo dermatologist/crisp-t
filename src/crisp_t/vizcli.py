@@ -40,9 +40,9 @@ logger = logging.getLogger(__name__)
 )
 @click.option(
     "--topics-num",
-    default=3,
+    default=8,
     show_default=True,
-    help="Number of topics for LDA when required",
+    help="Number of topics for LDA when required (default 8 as per Mettler et al. 2025)",
 )
 @click.option(
     "--top-n",
@@ -65,6 +65,9 @@ logger = logging.getLogger(__name__)
     "--wordcloud", is_flag=True, help="Export: topic wordcloud (requires LDA)"
 )
 @click.option(
+    "--ldavis", is_flag=True, help="Export: interactive LDA visualization HTML (requires LDA)"
+)
+@click.option(
     "--top-terms", is_flag=True, help="Export: top terms bar chart (computed from text)"
 )
 @click.option(
@@ -85,6 +88,7 @@ def main(
     freq: bool,
     by_topic: bool,
     wordcloud: bool,
+    ldavis: bool,
     top_terms: bool,
     corr_heatmap: bool,
 ):
@@ -176,6 +180,24 @@ def main(
         out_path = out_dir / "wordcloud.png"
         viz.plot_wordcloud(topics=None, folder_path=str(out_path), show=False)
         click.echo(f"Saved: {out_path}")
+
+    # 3.5) LDA visualization (requires topics)
+    if ldavis:
+        cluster = ensure_topics()
+        out_path = out_dir / "lda_visualization.html"
+        try:
+            viz.get_lda_viz(
+                lda_model=cluster._lda_model,
+                corpus_bow=cluster._bag_of_words,
+                dictionary=cluster._dictionary,
+                folder_path=str(out_path),
+                show=False
+            )
+            click.echo(f"Saved: {out_path}")
+        except ImportError as e:
+            click.echo(f"Warning: {e}")
+        except Exception as e:
+            click.echo(f"Error generating LDA visualization: {e}")
 
     # 4) Top terms (compute from text directly)
     if top_terms:
