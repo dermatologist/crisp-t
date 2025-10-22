@@ -21,7 +21,7 @@ import json
 import logging
 import os
 import re
-
+import tempfile
 import pandas as pd
 import requests
 from pypdf import PdfReader
@@ -410,7 +410,6 @@ id,number,response
 4,400,Sample text four
 """
                 # write the csv to a temp file
-                import tempfile
                 with tempfile.NamedTemporaryFile(
                     mode="w+", delete=False, suffix=".csv"
                 ) as temp_csv:
@@ -419,6 +418,8 @@ id,number,response
                 logger.info(f"No CSV found. Created temp CSV file: {temp_csv_path}")
                 self._df = Csv().read_csv(temp_csv_path)
                 logger.info(f"CSV file read with shape: {self._df.shape}")
+                # remove the temp file
+                os.remove(temp_csv_path)
 
 
         else:
