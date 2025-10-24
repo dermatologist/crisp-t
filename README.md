@@ -313,7 +313,7 @@ crispviz --inp corpus_dir --tdabm --out visualizations
 
 ### Reference
 
-Rudkin, S., & Dlotko, P. (2024). Topological Data Analysis Ball Mapper for multidimensional data visualization. *[Add full citation when available]*
+Rudkin, S., & Dlotko, P. (2024). Topological Data Analysis Ball Mapper for multidimensional data visualization. *Paper reference to be added - algorithm implementation based on the TDABM methodology described by the authors.*
 
 ## Citation
 

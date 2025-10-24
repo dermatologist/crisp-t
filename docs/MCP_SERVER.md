@@ -305,7 +305,7 @@ Analysis results in JSON format including landmark points, their locations, conn
 **Note:** After running TDABM analysis, use `save_corpus` to persist results, then visualize with `crispviz --tdabm`.
 
 **Reference:**
-Rudkin, S., & Dlotko, P. (2024). Topological Data Analysis Ball Mapper for multidimensional data visualization.
+Rudkin, S., & Dlotko, P. (2024). Topological Data Analysis Ball Mapper for multidimensional data visualization. *Paper reference to be added - algorithm implementation based on the TDABM methodology described by the authors.*
 
 ### DataFrame/CSV Operations
 
