@@ -271,6 +271,42 @@ Export ChromaDB collection metadata as a pandas DataFrame.
 **Returns:**
 DataFrame with document metadata that can be merged with numeric data for mixed-methods analysis.
 
+### TDABM (Topological Data Analysis Ball Mapper)
+
+#### `tdabm_analysis`
+Perform Topological Data Analysis Ball Mapper (TDABM) analysis to uncover hidden, global patterns in complex, noisy, or high-dimensional data.
+
+Based on the algorithm by Rudkin and Dlotko (2024), TDABM creates a point cloud from multidimensional data and covers it with overlapping balls, revealing topological structure and relationships between variables.
+
+**Arguments:**
+- `y_variable` (required): Name of the continuous Y variable to analyze
+- `x_variables` (required): Comma-separated list of ordinal/numeric X variable names
+- `radius` (optional): Radius for ball coverage (default: 0.3). Smaller values create more detailed mappings.
+
+**Example:**
+```json
+{
+  "y_variable": "satisfaction",
+  "x_variables": "age,income,education",
+  "radius": 0.3
+}
+```
+
+**Returns:**
+Analysis results in JSON format including landmark points, their locations, connections, and mean Y values. Results are stored in corpus metadata['tdabm'].
+
+**Use Cases:**
+- Discovering hidden patterns in multidimensional data
+- Visualizing relationships between multiple variables
+- Identifying clusters and connections in complex datasets
+- Performing model-free exploratory data analysis
+- Understanding global structure in high-dimensional data
+
+**Note:** After running TDABM analysis, use `save_corpus` to persist results, then visualize with `crispviz --tdabm`.
+
+**Reference:**
+Rudkin, S., & Dlotko, P. (2024). Topological Data Analysis Ball Mapper for multidimensional data visualization.
+
 ### DataFrame/CSV Operations
 
 #### `get_df_columns`
