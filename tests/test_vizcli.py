@@ -116,3 +116,109 @@ def test_vizcli_corr_heatmap_with_sources(tmp_dir):
     )
     assert result.exit_code == 0, result.output
     assert (out_dir / "corr_heatmap.png").exists()
+
+
+def test_vizcli_tdabm_without_metadata(tmp_dir):
+    """Test TDABM visualization fails gracefully without metadata"""
+    from src.crisp_t.model.corpus import Corpus
+    from src.crisp_t.read_data import ReadData
+    
+    # Create a corpus without TDABM metadata
+    corpus_dir = Path(tmp_dir) / "corpus"
+    corpus_dir.mkdir()
+    
+    corpus = Corpus(
+        id="test",
+        name="Test Corpus",
+        df=pd.DataFrame({
+            'x1': [1, 2, 3],
+            'x2': [4, 5, 6],
+            'y': [7, 8, 9]
+        })
+    )
+    
+    rd = ReadData(corpus=corpus)
+    rd.write_corpus_to_json(str(corpus_dir), corpus=corpus)
+    
+    runner = CliRunner()
+    out_dir = Path(tmp_dir) / "out_tdabm"
+    result = runner.invoke(
+        viz_main,
+        [
+            "--inp",
+            str(corpus_dir),
+            "--out",
+            str(out_dir),
+            "--tdabm",
+        ],
+    )
+    
+    # Should not crash but should show warning
+    assert result.exit_code == 0
+    assert "No TDABM data found" in result.output or "Warning" in result.output
+
+
+def test_vizcli_tdabm_with_metadata(tmp_dir):
+    """Test TDABM visualization with proper metadata"""
+    from src.crisp_t.model.corpus import Corpus
+    from src.crisp_t.read_data import ReadData
+    
+    # Create a corpus with TDABM metadata
+    corpus_dir = Path(tmp_dir) / "corpus_tdabm"
+    corpus_dir.mkdir()
+    
+    corpus = Corpus(
+        id="test",
+        name="Test Corpus",
+        df=pd.DataFrame({
+            'x1': [1, 2, 3],
+            'x2': [4, 5, 6],
+            'y': [7, 8, 9]
+        }),
+        metadata={
+            'tdabm': {
+                'y_variable': 'y',
+                'x_variables': ['x1', 'x2'],
+                'radius': 0.3,
+                'num_landmarks': 2,
+                'num_points': 3,
+                'landmarks': [
+                    {
+                        'id': 'B0',
+                        'location': [0.2, 0.3],
+                        'point_indices': [0, 1],
+                        'count': 2,
+                        'mean_y': 0.5,
+                        'connections': ['B1']
+                    },
+                    {
+                        'id': 'B1',
+                        'location': [0.8, 0.7],
+                        'point_indices': [1, 2],
+                        'count': 2,
+                        'mean_y': 0.8,
+                        'connections': ['B0']
+                    }
+                ]
+            }
+        }
+    )
+    
+    rd = ReadData(corpus=corpus)
+    rd.write_corpus_to_json(str(corpus_dir), corpus=corpus)
+    
+    runner = CliRunner()
+    out_dir = Path(tmp_dir) / "out_tdabm_viz"
+    result = runner.invoke(
+        viz_main,
+        [
+            "--inp",
+            str(corpus_dir),
+            "--out",
+            str(out_dir),
+            "--tdabm",
+        ],
+    )
+    
+    assert result.exit_code == 0, result.output
+    assert (out_dir / "tdabm.png").exists()

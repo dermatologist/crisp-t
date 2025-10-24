@@ -75,6 +75,11 @@ logger = logging.getLogger(__name__)
     is_flag=True,
     help="Export: correlation heatmap (from CSV numeric columns)",
 )
+@click.option(
+    "--tdabm",
+    is_flag=True,
+    help="Export: TDABM visualization (requires TDABM analysis in corpus metadata)",
+)
 def main(
     verbose: bool,
     source: Optional[str],
@@ -91,6 +96,7 @@ def main(
     ldavis: bool,
     top_terms: bool,
     corr_heatmap: bool,
+    tdabm: bool,
 ):
     """CRISP-T: Visualization CLI
 
@@ -248,6 +254,20 @@ def main(
                     df=df0, columns=None, folder_path=str(out_path), show=False
                 )
             click.echo(f"Saved: {out_path}")
+
+    # TDABM visualization
+    if tdabm:
+        if 'tdabm' not in corpus.metadata:
+            click.echo("Warning: No TDABM data found in corpus metadata.")
+            click.echo("Hint: Run TDABM analysis first with: crispt --tdabm y_var:x_vars:radius --inp <corpus_dir>")
+        else:
+            out_path = out_dir / "tdabm.png"
+            try:
+                viz.draw_tdabm(corpus=corpus, folder_path=str(out_path), show=False)
+                click.echo(f"Saved: {out_path}")
+            except Exception as e:
+                click.echo(f"Error generating TDABM visualization: {e}")
+                logger.error(f"TDABM visualization error: {e}", exc_info=True)
 
     click.echo("\n=== Visualization Complete ===")
 
