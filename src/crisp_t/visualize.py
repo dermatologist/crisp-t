@@ -21,6 +21,7 @@ from wordcloud import STOPWORDS, WordCloud
 try:
     import pyLDAvis
     import pyLDAvis.gensim_models as gensimvis
+
     PYLDAVIS_AVAILABLE = True
 except ImportError:
     PYLDAVIS_AVAILABLE = False
@@ -46,7 +47,9 @@ class QRVisualize:
         self.names: list[str] = []
         self.c: np.ndarray | None = None
 
-    def _ensure_columns(self, df: pd.DataFrame, required: Iterable[str]) -> pd.DataFrame:
+    def _ensure_columns(
+        self, df: pd.DataFrame, required: Iterable[str]
+    ) -> pd.DataFrame:
         """Ensure that the DataFrame has the required columns.
 
         Behavior:
@@ -776,7 +779,7 @@ class QRVisualize:
                 mds=mds,
                 R=30,
                 lambda_step=0.01,
-                plot_opts={'xlab': 'PC1', 'ylab': 'PC2'}
+                plot_opts={"xlab": "PC1", "ylab": "PC2"},
             )
 
             # Save to HTML file if path provided
@@ -803,84 +806,81 @@ class QRVisualize:
     ) -> Figure:
         """
         Draw TDABM (Topological Data Analysis Ball Mapper) visualization.
-        
+
         Creates a 2D graph showing landmark points as circles:
         - Circle size is proportional to the count of points in the ball
         - Circle color represents mean y value (red for low, purple for high)
         - Lines connect landmark points with non-empty intersections
-        
+
         Based on the algorithm by Rudkin and Dlotko (2024).
-        
+
         Args:
             corpus: Corpus with 'tdabm' metadata. If None, uses self.corpus
             folder_path: Path to save the figure. If None, uses self.folder_path
             show: Whether to display the plot
-            
+
         Returns:
             Matplotlib Figure object
         """
         if corpus is None:
             corpus = self.corpus
-        
+
         if corpus is None:
             raise ValueError("No corpus provided")
-        
-        if 'tdabm' not in corpus.metadata:
-            raise ValueError("Corpus metadata does not contain 'tdabm' data. Run TDABM analysis first.")
-        
-        tdabm_data = corpus.metadata['tdabm']
-        landmarks = tdabm_data['landmarks']
-        
+
+        if "tdabm" not in corpus.metadata:
+            raise ValueError(
+                "Corpus metadata does not contain 'tdabm' data. Run TDABM analysis first."
+            )
+
+        tdabm_data = corpus.metadata["tdabm"]
+        landmarks = tdabm_data["landmarks"]
+
         if not landmarks:
             raise ValueError("No landmarks found in TDABM data")
-        
+
         # Create figure
         fig, ax = plt.subplots(figsize=(12, 10))
-        
-        # Extract landmark positions (use first 2 dimensions for 2D plot)
-        positions = []
-        counts = []
-        mean_ys = []
-        landmark_ids = []
-        
-        for landmark in landmarks:
-            location = landmark['location']
-            # Use first 2 coordinates for 2D visualization
-            if len(location) >= 2:
-                positions.append(location[:2])
-            else:
-                # If only 1D, use x=location[0], y=0
-                positions.append([location[0], 0.0])
-            
-            counts.append(landmark['count'])
-            mean_ys.append(landmark['mean_y'])
-            landmark_ids.append(landmark['id'])
-        
-        positions = np.array(positions)
-        
+
+        # Collect all landmark locations
+        locations = [landmark["location"] for landmark in landmarks]
+        counts = [landmark["count"] for landmark in landmarks]
+        mean_ys = [landmark["mean_y"] for landmark in landmarks]
+        landmark_ids = [landmark["id"] for landmark in landmarks]
+
+        # Perform PCA to reduce to 2 components (PC1, PC2)
+        from sklearn.decomposition import PCA
+
+        locations_array = np.array(locations)
+        if locations_array.shape[1] < 2:
+            # If only 1D, pad with zeros
+            locations_array = np.pad(locations_array, ((0, 0), (0, 1)), mode="constant")
+        pca = PCA(n_components=2)
+        positions = pca.fit_transform(locations_array)
+
         # Normalize mean_y for color mapping (red=0, purple=max)
         min_y = min(mean_ys)
         max_y = max(mean_ys)
-        
+
         if max_y - min_y > 0:
             normalized_ys = [(y - min_y) / (max_y - min_y) for y in mean_ys]
         else:
             normalized_ys = [0.5] * len(mean_ys)
-        
-        # Create color map: red (0) to purple (1)
+
+        # Create color map: red (0) to green (1)
         colors = []
         for norm_y in normalized_ys:
-            # Interpolate from red (1,0,0) to purple (0.5,0,0.5)
-            r = 1.0 - norm_y * 0.5
-            g = 0.0
-            b = norm_y * 0.5
+            # Interpolate from red (1,0,0) to green (0,1,0)
+            r = 1.0 - norm_y
+            g = norm_y
+            b = 0.0
             colors.append((r, g, b))
-        
+
         # Draw connections first (so they appear behind circles)
-        landmark_dict = {lm['id']: idx for idx, lm in enumerate(landmarks)}
-        
+        landmark_dict = {lm["id"]: idx for idx, lm in enumerate(landmarks)}
+
         for i, landmark in enumerate(landmarks):
-            for connected_id in landmark['connections']:
+            for connected_id in landmark["connections"]:
                 if connected_id in landmark_dict:
                     j = landmark_dict[connected_id]
                     # Only draw each connection once (avoid duplicates)
@@ -888,19 +888,24 @@ class QRVisualize:
                         ax.plot(
                             [positions[i, 0], positions[j, 0]],
                             [positions[i, 1], positions[j, 1]],
-                            'k-', alpha=0.3, linewidth=1, zorder=1
+                            "k-",
+                            alpha=0.3,
+                            linewidth=1,
+                            zorder=1,
                         )
-        
+
         # Normalize counts for circle sizes (scale for visibility)
         max_count = max(counts)
         min_count = min(counts)
-        
+
         if max_count > min_count:
             # Scale sizes between 100 and 2000
-            sizes = [100 + 1900 * (c - min_count) / (max_count - min_count) for c in counts]
+            sizes = [
+                100 + 1900 * (c - min_count) / (max_count - min_count) for c in counts
+            ]
         else:
             sizes = [500] * len(counts)
-        
+
         # Draw circles for landmarks
         scatter = ax.scatter(
             positions[:, 0],
@@ -908,53 +913,52 @@ class QRVisualize:
             s=sizes,
             c=colors,
             alpha=0.6,
-            edgecolors='black',
+            edgecolors="black",
             linewidths=1.5,
-            zorder=2
+            zorder=2,
         )
-        
-        # Add landmark IDs as labels
-        for i, (pos, label) in enumerate(zip(positions, landmark_ids)):
+
+        # Add count and mean_y as label inside each circle
+        for i, (pos, count, mean_y) in enumerate(zip(positions, counts, mean_ys)):
             ax.annotate(
-                label,
+                f"{count}\n{mean_y:.2f}",
                 xy=pos,
                 xytext=(0, 0),
-                textcoords='offset points',
-                ha='center',
-                va='center',
+                textcoords="offset points",
+                ha="center",
+                va="center",
                 fontsize=8,
-                fontweight='bold',
-                zorder=3
+                fontweight="bold",
+                zorder=3,
             )
-        
+
         # Set labels and title
-        x_vars = tdabm_data.get('x_variables', [])
-        y_var = tdabm_data.get('y_variable', 'y')
-        
-        if len(x_vars) >= 2:
-            ax.set_xlabel(f'{x_vars[0]} (normalized)', fontsize=12)
-            ax.set_ylabel(f'{x_vars[1]} (normalized)', fontsize=12)
-        else:
-            ax.set_xlabel('X (normalized)', fontsize=12)
-            ax.set_ylabel('Y (normalized)', fontsize=12)
-        
+        x_vars = tdabm_data.get("x_variables", [])
+        y_var = tdabm_data.get("y_variable", "y")
+
+        # Axis labels reflect PCA components
+        ax.set_xlabel("PC1", fontsize=12)
+        ax.set_ylabel("PC2", fontsize=12)
+
         ax.set_title(
-            f'TDABM Visualization\n'
+            f"TDABM Visualization\n"
             f'Y variable: {y_var}, Radius: {tdabm_data.get("radius", 0.3)}\n'
-            f'Landmarks: {len(landmarks)}',
+            f"Landmarks: {len(landmarks)}",
             fontsize=14,
-            fontweight='bold'
+            fontweight="bold",
         )
-        
-        # Add colorbar for mean_y
+
+        # Add colorbar for mean_y (red to green)
         sm = plt.cm.ScalarMappable(
-            cmap=mcolors.LinearSegmentedColormap.from_list('red_purple', ['red', 'purple']),
-            norm=plt.Normalize(vmin=min_y, vmax=max_y)
+            cmap=mcolors.LinearSegmentedColormap.from_list(
+                "red_green", ["red", "green"]
+            ),
+            norm=plt.Normalize(vmin=min_y, vmax=max_y),
         )
         sm.set_array([])
         cbar = plt.colorbar(sm, ax=ax)
-        cbar.set_label(f'Mean {y_var}', fontsize=12)
-        
+        cbar.set_label(f"Mean {y_var}", fontsize=12)
+
         # Add legend for circle sizes
         # Create dummy scatter plots for legend
         legend_counts = [min_count, (min_count + max_count) / 2, max_count]
@@ -965,25 +969,32 @@ class QRVisualize:
             else:
                 size = 500
             legend_sizes.append(size)
-        
+
         legend_elements = []
         for size, count in zip(legend_sizes, legend_counts):
             legend_elements.append(
-                plt.scatter([], [], s=size, c='gray', alpha=0.6, 
-                          edgecolors='black', linewidths=1.5,
-                          label=f'{int(count)} points')
+                plt.scatter(
+                    [],
+                    [],
+                    s=size,
+                    c="gray",
+                    alpha=0.6,
+                    edgecolors="black",
+                    linewidths=1.5,
+                    label=f"{int(count)} points",
+                )
             )
-        
+
         ax.legend(
             handles=legend_elements,
-            title='Ball Size',
-            loc='upper right',
-            framealpha=0.9
+            title="Ball Size",
+            loc="upper right",
+            framealpha=0.9,
         )
-        
+
         ax.grid(True, alpha=0.3)
-        ax.set_aspect('equal', adjustable='box')
-        
+        ax.set_aspect("equal", adjustable="box")
+
         plt.tight_layout()
-        
+
         return self._finalize_plot(fig, folder_path, show)

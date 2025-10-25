@@ -89,6 +89,25 @@ crisp --include relaxed,self_time,sleep_bal,time_dp,travel_time,home_env --cls -
 
 * Notice that self_time is the most important variable in predicting relaxed.
 
+### [Topological Data Analysis](https://www.arxiv.org/abs/2504.14081) Rudkin, S., & Dlotko, P. (2024)
+* Let us do a TDA analysis to see the shape of the data.
+* parameters to --tdabm are specified as follows: *outcome:varables:radius*
+
+```bash
+
+crispt --tdabm relaxed:self_time,sleep_bal,time_dp,travel_time:0.6 --out crisp_input/
+
+```
+* Let us visualize the TDA network.
+
+```bash
+crispviz --inp crisp_input/ --tdabm --out crisp_output/
+```
+
+<p align="center">
+  <img src="https://github.com/dermatologist/crisp-t/blob/develop/notes/tdabm.jpg" />
+</p>
+
 ## [Sense-making by triangulation](INSTRUCTION.md)
 
 ## Now let us try out a csv dataset with text and numeric data.
