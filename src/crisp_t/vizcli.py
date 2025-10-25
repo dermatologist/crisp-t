@@ -22,17 +22,10 @@ logger = logging.getLogger(__name__)
 
 @click.command()
 @click.option("--verbose", "-v", is_flag=True, help="Print verbose messages.")
-@click.option("--source", "-s", help="Source URL or directory path to read data from")
-@click.option(
-    "--sources",
-    multiple=True,
-    help="Multiple sources (URLs or directories) to read data from; can be used multiple times",
-)
 @click.option("--inp", "-i", help="Load corpus from a folder containing corpus.json")
 @click.option(
     "--out",
     "-o",
-    default="viz_out",
     help="Output directory where PNG images will be written",
 )
 @click.option(
@@ -82,8 +75,6 @@ logger = logging.getLogger(__name__)
 )
 def main(
     verbose: bool,
-    source: Optional[str],
-    sources: tuple[str, ...],
     inp: Optional[str],
     out: str,
     bins: int,
@@ -120,29 +111,12 @@ def main(
     read_data = ReadData()
     corpus = None
 
-    # Build corpus using helpers (source preferred over inp)
-    if source or inp:
-        corpus = initialize_corpus(source=source, inp=inp)
+    corpus = initialize_corpus(inp=inp)
 
-    # Handle multiple sources if corpus wasn't built yet
-    if not corpus and sources:
-        loaded_any = False
-        for src in sources:
-            click.echo(f"Reading data from source: {src}")
-            try:
-                read_data.read_source(src)
-                loaded_any = True
-            except Exception as e:
-                logger.error(f"Failed to read source {src}: {e}")
-                raise click.ClickException(str(e))
-        if loaded_any:
-            corpus = read_data.create_corpus(
-                name="Corpus from multiple sources",
-                description=f"Data loaded from {len(sources)} sources",
-            )
-            click.echo(
-                f"✓ Successfully loaded {len(corpus.documents)} document(s) from {len(sources)} sources"
-            )
+    # if --inp provided, and not --out, set out to inp
+    if inp and not out:
+        out = inp
+        click.echo(f"Output path not provided. Using input path as output: {out}")
 
     if not corpus:
         raise click.ClickException("No input provided. Use --source/--sources or --inp")

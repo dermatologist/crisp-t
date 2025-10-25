@@ -192,6 +192,10 @@ def main(
     click.echo("CRISP-T: Corpus CLI")
     click.echo("_________________________________________")
 
+    # if --inp provided, and not --out, set out to inp
+    if inp and not out:
+        out = inp
+        click.echo(f"Output path not provided. Using input path as output: {out}")
     # Load corpus from --inp if provided
     corpus = initialize_corpus(inp=inp)
     if not corpus:
@@ -459,30 +463,30 @@ def main(
                     "Invalid --tdabm format. Use 'y_variable:x_variables:radius' "
                     "(e.g., 'satisfaction:age,income:0.3'). Radius defaults to 0.3 if omitted."
                 )
-            
+
             y_var = parts[0].strip()
             x_vars = parts[1].strip()
             radius = 0.3  # default
-            
+
             if len(parts) >= 3:
                 try:
                     radius = float(parts[2].strip())
                 except ValueError:
                     raise click.ClickException(f"Invalid radius value: '{parts[2]}'. Must be a number.")
-            
+
             click.echo(f"\nPerforming TDABM analysis...")
             click.echo(f"  Y variable: {y_var}")
             click.echo(f"  X variables: {x_vars}")
             click.echo(f"  Radius: {radius}")
-            
+
             tdabm_analyzer = Tdabm(corpus)
             result = tdabm_analyzer.generate_tdabm(y=y_var, x_variables=x_vars, radius=radius)
-            
+
             click.echo("\n" + result)
             click.echo("\nHint: TDABM results stored in corpus metadata['tdabm']")
             click.echo("Hint: Use --out to save the corpus with TDABM metadata")
             click.echo("Hint: Use 'crispviz --tdabm' to visualize the results")
-            
+
         except ValueError as e:
             click.echo(f"Error: {e}")
             click.echo("Hint: Ensure your corpus has a DataFrame with the specified variables")

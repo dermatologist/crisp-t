@@ -168,6 +168,11 @@ def main(
     csv_analyzer = None
     ml_analyzer = None
 
+    # Assign inp to out if out not provided
+    if inp and not out:
+        out = inp
+        click.echo(f"Output path not provided. Using input path as output: {out}")
+
     try:
         # Handle COVID data download
         if covid:
