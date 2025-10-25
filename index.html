@@ -1,0 +1,1473 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="OMOP CDM utils in Python">
+      
+      
+        <meta name="author" content="Bell Eapen">
+      
+      
+        <link rel="canonical" href="https://dermatologist.github.io/crisp-t/">
+      
+      
+      
+        <link rel="next" href="modules/">
+      
+      
+      <link rel="icon" href="assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.16">
+    
+    
+      
+        <title>crisp-t</title>
+      
+    
+    
+      <link rel="stylesheet" href="assets/stylesheets/main.7e37652d.min.css">
+      
+        
+        <link rel="stylesheet" href="assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL(".",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="deep-orange">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#crisp-t-sense-making-from-text-and-numbers" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="." title="crisp-t" class="md-header__button md-logo" aria-label="crisp-t" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            crisp-t
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Home
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="deep-orange"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="black" data-md-color-accent="deep-orange"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/dermatologist/crisp-t" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.0.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path fill="currentColor" d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    dermatologist/crisp-t
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="." title="crisp-t" class="md-nav__button md-logo" aria-label="crisp-t" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    crisp-t
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/dermatologist/crisp-t" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.0.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path fill="currentColor" d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    dermatologist/crisp-t
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    Home
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="." class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    Home
+    
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#installation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Installation
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#command-line-scripts" class="md-nav__link">
+    <span class="md-ellipsis">
+      Command Line Scripts
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Command Line Scripts">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#crisp-analytical-cli" class="md-nav__link">
+    <span class="md-ellipsis">
+      crisp (Analytical CLI)
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="crisp (Analytical CLI)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#first-step-is-to-create-a-corpus-from-sources-data-import" class="md-nav__link">
+    <span class="md-ellipsis">
+      ⚠️ First step is to create a corpus from sources (Data Import).
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#inputoutput-options" class="md-nav__link">
+    <span class="md-ellipsis">
+      Input/Output Options
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#analysis-options" class="md-nav__link">
+    <span class="md-ellipsis">
+      Analysis Options
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#data-sources" class="md-nav__link">
+    <span class="md-ellipsis">
+      Data Sources
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#display-options" class="md-nav__link">
+    <span class="md-ellipsis">
+      Display Options
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#crispviz-visualization-cli" class="md-nav__link">
+    <span class="md-ellipsis">
+      crispviz (Visualization CLI)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#crispt-corpus-manipulation-cli" class="md-nav__link">
+    <span class="md-ellipsis">
+      crispt (Corpus Manipulation CLI)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example-usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      Example Usage
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mcp-server" class="md-nav__link">
+    <span class="md-ellipsis">
+      MCP Server
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="MCP Server">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#using-the-mcp-server" class="md-nav__link">
+    <span class="md-ellipsis">
+      Using the MCP Server
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#configuring-mcp-clients" class="md-nav__link">
+    <span class="md-ellipsis">
+      Configuring MCP Clients
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Configuring MCP Clients">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#claude-desktop" class="md-nav__link">
+    <span class="md-ellipsis">
+      Claude Desktop
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#using-with-other-mcp-clients" class="md-nav__link">
+    <span class="md-ellipsis">
+      Using with Other MCP Clients
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#available-tools" class="md-nav__link">
+    <span class="md-ellipsis">
+      Available Tools
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#resources" class="md-nav__link">
+    <span class="md-ellipsis">
+      Resources
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#prompts" class="md-nav__link">
+    <span class="md-ellipsis">
+      Prompts
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example-mcp-commands" class="md-nav__link">
+    <span class="md-ellipsis">
+      Example MCP commands
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#role-of-crisp-t-in-research-and-practice" class="md-nav__link">
+    <span class="md-ellipsis">
+      Role of CRISP-T in research and practice
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#framework-documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Framework Documentation
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Framework Documentation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#data-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      Data model
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tdabm-topological-data-analysis-ball-mapper" class="md-nav__link">
+    <span class="md-ellipsis">
+      TDABM (Topological Data Analysis Ball Mapper)
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="TDABM (Topological Data Analysis Ball Mapper)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#how-tdabm-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      How TDABM Works
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#using-tdabm" class="md-nav__link">
+    <span class="md-ellipsis">
+      Using TDABM
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#when-to-use-tdabm" class="md-nav__link">
+    <span class="md-ellipsis">
+      When to Use TDABM
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      Reference
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#citation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Citation
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#give-us-a-star" class="md-nav__link">
+    <span class="md-ellipsis">
+      Give us a star ⭐️
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#contact" class="md-nav__link">
+    <span class="md-ellipsis">
+      Contact
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="modules/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Modules
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="contributing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Contributing
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Changelog
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="MCP_SERVER/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    MCP
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#installation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Installation
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#command-line-scripts" class="md-nav__link">
+    <span class="md-ellipsis">
+      Command Line Scripts
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Command Line Scripts">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#crisp-analytical-cli" class="md-nav__link">
+    <span class="md-ellipsis">
+      crisp (Analytical CLI)
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="crisp (Analytical CLI)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#first-step-is-to-create-a-corpus-from-sources-data-import" class="md-nav__link">
+    <span class="md-ellipsis">
+      ⚠️ First step is to create a corpus from sources (Data Import).
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#inputoutput-options" class="md-nav__link">
+    <span class="md-ellipsis">
+      Input/Output Options
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#analysis-options" class="md-nav__link">
+    <span class="md-ellipsis">
+      Analysis Options
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#data-sources" class="md-nav__link">
+    <span class="md-ellipsis">
+      Data Sources
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#display-options" class="md-nav__link">
+    <span class="md-ellipsis">
+      Display Options
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#crispviz-visualization-cli" class="md-nav__link">
+    <span class="md-ellipsis">
+      crispviz (Visualization CLI)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#crispt-corpus-manipulation-cli" class="md-nav__link">
+    <span class="md-ellipsis">
+      crispt (Corpus Manipulation CLI)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example-usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      Example Usage
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mcp-server" class="md-nav__link">
+    <span class="md-ellipsis">
+      MCP Server
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="MCP Server">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#using-the-mcp-server" class="md-nav__link">
+    <span class="md-ellipsis">
+      Using the MCP Server
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#configuring-mcp-clients" class="md-nav__link">
+    <span class="md-ellipsis">
+      Configuring MCP Clients
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Configuring MCP Clients">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#claude-desktop" class="md-nav__link">
+    <span class="md-ellipsis">
+      Claude Desktop
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#using-with-other-mcp-clients" class="md-nav__link">
+    <span class="md-ellipsis">
+      Using with Other MCP Clients
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#available-tools" class="md-nav__link">
+    <span class="md-ellipsis">
+      Available Tools
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#resources" class="md-nav__link">
+    <span class="md-ellipsis">
+      Resources
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#prompts" class="md-nav__link">
+    <span class="md-ellipsis">
+      Prompts
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example-mcp-commands" class="md-nav__link">
+    <span class="md-ellipsis">
+      Example MCP commands
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#role-of-crisp-t-in-research-and-practice" class="md-nav__link">
+    <span class="md-ellipsis">
+      Role of CRISP-T in research and practice
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#framework-documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Framework Documentation
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Framework Documentation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#data-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      Data model
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tdabm-topological-data-analysis-ball-mapper" class="md-nav__link">
+    <span class="md-ellipsis">
+      TDABM (Topological Data Analysis Ball Mapper)
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="TDABM (Topological Data Analysis Ball Mapper)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#how-tdabm-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      How TDABM Works
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#using-tdabm" class="md-nav__link">
+    <span class="md-ellipsis">
+      Using TDABM
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#when-to-use-tdabm" class="md-nav__link">
+    <span class="md-ellipsis">
+      When to Use TDABM
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      Reference
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#citation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Citation
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#give-us-a-star" class="md-nav__link">
+    <span class="md-ellipsis">
+      Give us a star ⭐️
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#contact" class="md-nav__link">
+    <span class="md-ellipsis">
+      Contact
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="crisp-t-sense-making-from-text-and-numbers">🔍 CRISP-T (Sense-making from Text and Numbers!)<a class="headerlink" href="#crisp-t-sense-making-from-text-and-numbers" title="Permanent link">&para;</a></h1>
+<p><a href="https://img.shields.io/github/v/release/dermatologist/crisp-t"><img alt="Release" src="https://img.shields.io/github/v/release/dermatologist/crisp-t" /></a>
+<a href="https://github.com/dermatologist/crisp-t/actions/workflows/pytest.yml?query=branch%3Adevelop"><img alt="Build status" src="https://img.shields.io/github/actions/workflow/status/dermatologist/crisp-t/pytest.yml?branch=develop" /></a>
+<a href="https://codecov.io/gh/dermatologist/crisp-t"><img alt="codecov" src="https://codecov.io/gh/dermatologist/crisp-t/branch/develop/graph/badge.svg" /></a>
+<a href="https://img.shields.io/github/commit-activity/m/dermatologist/crisp-t"><img alt="Commit activity" src="https://img.shields.io/github/commit-activity/m/dermatologist/crisp-t" /></a>
+<a href="https://img.shields.io/github/license/dermatologist/crisp-t"><img alt="License" src="https://img.shields.io/github/license/dermatologist/crisp-t" /></a>
+<a href="https://pypi.org/project/crisp-t"><img alt="Downloads" src="https://img.shields.io/pypi/dm/crisp-t" /></a>
+<a href="https://dermatologist.github.io/crisp-t/"><img alt="Documentation" src="https://badgen.net/badge/icon/documentation?icon=libraries&amp;label" /></a></p>
+<!-- gh-dependents-info-used-by-start -->
+<p><a href="https://github.com/dermatologist/crisp-t/blob/develop/docs/github-dependents-info.md"><img alt="Generated by github-dependents-info" src="https://img.shields.io/static/v1?label=Used%20by&amp;message=2&amp;color=informational&amp;logo=slickpic" /></a><!-- gh-dependents-info-used-by-end --></p>
+<p><strong>TL;DR</strong> 🚀 <em>CRISP-T is a qualitative research method and a toolkit to perform textual (e.g. topic modelling) and numeric (e.g. decision trees) analysis of mixed datasets for computational triangulation and sense-making using large language models.</em> 👉 <a href="/notes/DEMO.md">See Demo</a>.</p>
+<p align="center">
+  <img src="https://github.com/dermatologist/crisp-t/blob/develop/notes/crisp-logo.jpg" />
+</p>
+
+<p>✅ CRISP is written in Python, but <strong>you don’t need to know Python</strong> to use it!</p>
+<p>✅ CRISP is not a data science tool; it’s a <strong>sense-making</strong> tool!</p>
+<p>✅ CRISP does not replace your analysis; it just <strong>augments</strong> it!</p>
+<p>✅ CRISP employs an <strong>interpretivist approach</strong>, and the same lens is required to comprehend its results!</p>
+<p>✅ CRISP does not need LLMs but can augment them with <strong>tools</strong>!</p>
+<p>✅ CRISP is designed to <strong>simplify your life as a qualitative researcher!</strong></p>
+<p>💯 CRISP is open-source! licensed under the GPL-3.0 License.</p>
+<p><strong>Qualitative research</strong> focuses on collecting and analyzing textual data—such as interview transcripts, open-ended survey responses, and field notes—to explore complex phenomena and human experiences. Researchers may also incorporate quantitative or external sources (e.g., demographics, census data, social media) to provide context and triangulate findings. Characterized by an inductive approach, qualitative research emphasizes generating theories from data rather than testing hypotheses. While qualitative and quantitative data are often used together, there is <strong>no standard method for combining them.</strong></p>
+<p><strong>CRISP-T is a method and toolset</strong> to integrate <strong>textual data</strong> (as a list of documents) and <strong>numeric data</strong> (as Pandas DataFrame) into structured classes that retain <strong>metadata</strong> from various analytical processes, such as <strong>topic modeling</strong> and <strong>decision trees</strong>. Researchers, with or without <strong>GenAI assistance</strong>, can define relationships between textual and numerical datasets based on their chosen <strong>theoretical lens</strong>.  An optional final analytical phase ensures that proposed relationships actually hold true. Further, if the numeric and textual datasets share same id, or if the textual metadata contains keywords that match numeric column names; both datasets are filtered simultaneously, ensuring alignment and facilitating triangulation. 👉 <a href="/notes/DEMO.md">See Demo</a>.</p>
+<p>CRISP-T implements <strong>semantic search</strong> using <strong>ChromaDB</strong> to find relevant documents or document chunks based on similarity to a query or reference documents. This is useful for literature reviews to find documents likely to fit inclusion criteria within your corpus/search results. It can also be used for coding/annotating documents by finding relevant chunks within a specific document.</p>
+<p>An <strong>MCP server</strong> exposes all functionality as tools, resources, and prompts, enabling integration with AI agent platforms such as Claude desktop, VSCODE and other MCP-compatible clients. CRISP-T cannot directly code the documents, but it provides semantic chunk search that <strong>may be used in association with other tools to acheive automated coding</strong>. For example, VSCODE provides built in tools for editing text and markdown files, which can be used to code documents based on semantic search.</p>
+<h2 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link">&para;</a></h2>
+<pre><code class="language-bash">pip install crisp-t
+</code></pre>
+<p>Include machine learning features for numeric data analysis (Recommended):</p>
+<pre><code class="language-bash">pip install crisp-t[ml]
+</code></pre>
+<p>Include XGBoost for gradient boosting features (Optional):</p>
+<pre><code class="language-bash">pip install crisp-t[xg]
+</code></pre>
+<ul>
+<li>Mac users need to install libomp: <code>brew install libomp</code> for XGBoost to work. (Needed only if you want to use XGBoost)</li>
+</ul>
+<h2 id="command-line-scripts">Command Line Scripts<a class="headerlink" href="#command-line-scripts" title="Permanent link">&para;</a></h2>
+<p>CRISP-T now provides four main command-line scripts:</p>
+<ul>
+<li><code>crisp</code> — Main CLI for qualitative triangulation and analysis (see below)</li>
+<li><code>crispviz</code> — Visualization CLI for corpus data (word frequencies, topic charts, wordclouds, etc.)</li>
+<li><code>crispt</code> — Corpus manipulation CLI (create, edit, query, and manage corpus objects)</li>
+<li><code>crisp-mcp</code> — Starts the MCP server for AI integration (see MCP section below)</li>
+</ul>
+<p>All scripts are installed as entry points and can be run directly from the command line after installation.</p>
+<h3 id="crisp-analytical-cli">crisp (Analytical CLI)<a class="headerlink" href="#crisp-analytical-cli" title="Permanent link">&para;</a></h3>
+<pre><code class="language-bash">crisp [OPTIONS]
+</code></pre>
+<h4 id="first-step-is-to-create-a-corpus-from-sources-data-import">⚠️ <strong>First step is to create a corpus from sources (Data Import).</strong><a class="headerlink" href="#first-step-is-to-create-a-corpus-from-sources-data-import" title="Permanent link">&para;</a></h4>
+<p>Source data is read from a directory containing text files (.txt, .pdf) and a single .csv file (for numeric data). The corpus is saved to <code>--out</code> folder and this folder can be used as input for all subsequent analyses.</p>
+<p>⚠️ This import step only needs to be done once.</p>
+<pre><code class="language-bash">crisp --source PATH --out PATH
+</code></pre>
+<p><em>e.g., <code>crisp --source crisp_source --out crisp_input</code></em></p>
+<p>ℹ️ <code>crisp_input</code> is recommended for <code>--out</code> option above. The folder is created in the current directory. 👉 <a href="/notes/DEMO.md">See Demo</a>.</p>
+<p>ℹ️ From here onwards, you can load the corpus from that folder using <code>--inp</code> option for all subsequent analyses. You can omit <code>--inp</code> if you are using the <code>crisp_input</code> folder, as it is the default for <code>--inp</code>. 👉 <a href="/notes/DEMO.md">See Demo</a>.</p>
+<p>⚡️ Advanced users may also load corpus from URL <code>--source</code> or multiple URLs using <code>--sources</code> option. ⚡️</p>
+<h4 id="inputoutput-options">Input/Output Options<a class="headerlink" href="#inputoutput-options" title="Permanent link">&para;</a></h4>
+<ul>
+<li><code>--source, -s PATH|URL</code>: Read source data from a directory (reads .txt, .pdf and a single .csv) or from a URL</li>
+<li><code>--sources PATH|URL</code>: Provide multiple sources; can be used multiple times</li>
+<li><code>--inp, -i PATH</code>: Load an existing corpus from a folder containing <code>corpus.json</code> (and optional <code>corpus_df.csv</code>)</li>
+<li><code>--out, -o PATH</code>: When saving the corpus, provide a folder path; the CLI writes <code>corpus.json</code> (and <code>corpus_df.csv</code> if available) into that folder. When saving analysis results (topics, sentiment, etc.), this acts as a base path: files are written with suffixes, e.g., <code>results_topics.json</code>.</li>
+<li><code>--unstructured, -t TEXT</code>: Text CSV column(s) to analyze/compare (can be used multiple times). This is useful when you have free-form text data in a DataFrame. If this is provided, those columns are used as documents.</li>
+<li><code>--ignore TEXT</code>: Comma-separated words to ignore during ingestion (applies to <code>--source/--sources</code>)</li>
+</ul>
+<h4 id="analysis-options">Analysis Options<a class="headerlink" href="#analysis-options" title="Permanent link">&para;</a></h4>
+<ul>
+<li><code>--codedict</code>: Generate qualitative coding dictionary</li>
+<li><code>--topics</code>: Generate topic model using LDA</li>
+<li><code>--assign</code>: Assign documents to topics</li>
+<li><code>--cat</code>: List categories of entire corpus or individual documents</li>
+<li><code>--summary</code>: Generate extractive text summary</li>
+<li><code>--sentiment</code>: Generate sentiment scores using VADER</li>
+<li><code>--sentence</code>: Generate sentence-level scores when applicable</li>
+<li><code>--nlp</code>: Generate all NLP reports (combines above text analyses)</li>
+<li><code>--nnet</code>, <code>--cls</code>, <code>--knn</code>, <code>--kmeans</code>, <code>--cart</code>, <code>--pca</code>, <code>--regression</code>, <code>--lstm</code>, <code>--ml</code>: Machine learning and clustering options (requires <code>crisp-t[ml]</code>)</li>
+<li><code>--regression</code>: Perform linear or logistic regression (automatically detects binary outcomes for logistic regression)</li>
+<li><code>--lstm</code>: Train LSTM model on text data to predict outcome variable (requires binary outcome and 'id' column for alignment)</li>
+<li><code>--visualize</code>: Generate visualizations (word clouds, topic charts, etc.)</li>
+<li><code>--num, -n INTEGER</code>: Number parameter (clusters, topics, epochs, etc.) - default: 3</li>
+<li><code>--rec, -r INTEGER</code>: Record parameter (top N results, recommendations) - default: 3</li>
+<li><code>--filters, -f TEXT</code>: Filters to apply as <code>key=value</code> (can be used multiple times); keeps only documents where <code>document.metadata[key] == value</code>. Invalid formats raise an error.</li>
+<li><code>--verbose, -v</code>: Print verbose messages for debugging</li>
+</ul>
+<h4 id="data-sources">Data Sources<a class="headerlink" href="#data-sources" title="Permanent link">&para;</a></h4>
+<ul>
+<li><code>--source, -s PATH|URL</code>: Read source data from a directory (reads .txt and .pdf) or from a URL</li>
+<li><code>--sources PATH|URL</code>: Provide multiple sources; can be used multiple times</li>
+</ul>
+<h4 id="display-options">Display Options<a class="headerlink" href="#display-options" title="Permanent link">&para;</a></h4>
+<ul>
+<li><code>--print, -p TEXT</code>: Print corpus information; options: [all|documents|dataframe|metadata|stats]
+    documents: Lists the first 5 documents with IDs and text snippets
+    dataframe: Displays the DataFrame head (if available)
+    metadata: Shows corpus metadata
+    stats: Provides descriptive statistics from the DataFrame (if available)</li>
+</ul>
+<h3 id="crispviz-visualization-cli">crispviz (Visualization CLI)<a class="headerlink" href="#crispviz-visualization-cli" title="Permanent link">&para;</a></h3>
+<pre><code class="language-bash">crispviz [OPTIONS]
+</code></pre>
+<ul>
+<li><code>--inp, --source, --sources</code>: Input corpus or sources</li>
+<li><code>--out</code>: Output directory for PNG images</li>
+<li>Visualization flags: <code>--freq</code>, <code>--by-topic</code>, <code>--wordcloud</code>, <code>--ldavis</code>, <code>--top-terms</code>, <code>--corr-heatmap</code>, <code>--tdabm</code></li>
+<li>Optional params: <code>--bins</code>, <code>--top-n</code>, <code>--columns</code>, <code>--topics-num</code></li>
+</ul>
+<p><strong>Visualization Options:</strong>
+- <code>--freq</code>: Export word frequency distribution
+- <code>--by-topic</code>: Export distribution by dominant topic (requires LDA)
+- <code>--wordcloud</code>: Export topic wordcloud (requires LDA)
+- <code>--ldavis</code>: Export interactive LDA visualization as HTML (requires LDA and pyLDAvis)
+- <code>--top-terms</code>: Export top terms bar chart
+- <code>--corr-heatmap</code>: Export correlation heatmap from CSV numeric columns
+- <code>--tdabm</code>: Export TDABM visualization (requires TDABM analysis in corpus metadata). Use <code>crispt --tdabm</code> to perform the analysis first.
+- <code>--topics-num N</code>: Number of topics for LDA (default: 8, based on Mettler et al., 2025)</p>
+<h3 id="crispt-corpus-manipulation-cli">crispt (Corpus Manipulation CLI)<a class="headerlink" href="#crispt-corpus-manipulation-cli" title="Permanent link">&para;</a></h3>
+<pre><code class="language-bash">crispt [OPTIONS]
+</code></pre>
+<ul>
+<li><code>--id</code>, <code>--name</code>, <code>--description</code>: Corpus metadata</li>
+<li><code>--doc</code>: Add document as <code>id|name|text</code> or <code>id|text</code> (repeatable)</li>
+<li><code>--remove-doc</code>: Remove document by ID (repeatable)</li>
+<li><code>--meta</code>: Add/update corpus metadata as <code>key=value</code> (repeatable)</li>
+<li><code>--add-rel</code>: Add relationship as <code>first|second|relation</code> (repeatable)</li>
+<li><code>--clear-rel</code>: Clear all relationships</li>
+<li><code>--out</code>: Save corpus to folder/file as <code>corpus.json</code></li>
+<li><code>--inp</code>: Load corpus from folder/file containing <code>corpus.json</code></li>
+<li>Query options:<ul>
+<li><code>--df-cols</code>: Print DataFrame column names</li>
+<li><code>--df-row-count</code>: Print DataFrame row count</li>
+<li><code>--df-row INDEX</code>: Print DataFrame row by index</li>
+<li><code>--doc-ids</code>: Print all document IDs</li>
+<li><code>--doc-id ID</code>: Print document by ID</li>
+<li><code>--relationships</code>: Print all relationships</li>
+<li><code>--relationships-for-keyword KEYWORD</code>: Print relationships involving a keyword</li>
+</ul>
+</li>
+<li>Semantic search (requires <code>chromadb</code>):<ul>
+<li><code>--semantic QUERY</code>: Perform semantic search with query string</li>
+<li><code>--similar-docs DOC_IDS</code>: Find documents similar to comma-separated list of document IDs (useful for literature reviews)</li>
+<li><code>--num N</code>: Number of results to return (default: 5). Used for <code>--semantic</code> and <code>--similar-docs</code></li>
+<li><code>--semantic-chunks QUERY</code>: Perform semantic search on document chunks. Returns matching chunks for a specific document (use with <code>--doc-id</code> and <code>--rec</code> for similarity threshold between 0 and 10 with a default of 8.5)</li>
+<li><code>--rec THRESHOLD</code>: Threshold for semantic operations. For <code>--semantic-chunks</code>, use 0-10 (default: 8.5). For <code>--similar-docs</code>, use 0-1 (default: 0.7). Only results with similarity above this value are returned</li>
+<li><code>--metadata-df</code>: Export collection metadata as DataFrame+</li>
+<li><code>--metadata-keys KEYS</code>: Comma-separated metadata keys to include+</li>
+</ul>
+</li>
+<li>
+<p>TDABM analysis:</p>
+<ul>
+<li>
+<p><code>--tdabm Y_VAR:X_VARS:RADIUS</code>: Perform Topological Data Analysis Ball Mapper (TDABM) analysis. Format: <code>y_variable:x_variables:radius</code> (e.g., <code>satisfaction:age,income:0.3</code>). Radius defaults to 0.3 if omitted. Based on Rudkin and Dlotko (2024), TDABM provides a model-free method to visualize multidimensional data and uncover hidden patterns.</p>
+</li>
+<li>
+<ul>
+<li><em>The above two options can be used  to export or add metadata from NLP to the DataFrame. For example, you can extract sentiment scores or topic assignments as additional columns for numerical analysis. This is useful if dataframe and documents are aligned as in a survey response.</em></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="example-usage"><a href="/notes/DEMO.md">Example Usage</a><a class="headerlink" href="#example-usage" title="Permanent link">&para;</a></h3>
+<p>When saving the corpus via <code>--out</code>, the CLI writes <code>corpus.json</code> (and <code>corpus_df.csv</code> if present) into the specified folder. If you pass a file path, only its parent directory is used for writing <code>corpus.json</code>.</p>
+<h2 id="mcp-server">MCP Server<a class="headerlink" href="#mcp-server" title="Permanent link">&para;</a></h2>
+<p>CRISP-T provides a Model Context Protocol (MCP) server that exposes all functionality as tools, resources, and prompts. This enables integration with AI assistants and other MCP-compatible clients.</p>
+<h3 id="using-the-mcp-server">Using the MCP Server<a class="headerlink" href="#using-the-mcp-server" title="Permanent link">&para;</a></h3>
+<p align="center">
+  <img src="https://github.com/dermatologist/crisp-t/blob/develop/notes/crisp.gif" />
+</p>
+
+<h3 id="configuring-mcp-clients">Configuring MCP Clients<a class="headerlink" href="#configuring-mcp-clients" title="Permanent link">&para;</a></h3>
+<h4 id="claude-desktop">Claude Desktop<a class="headerlink" href="#claude-desktop" title="Permanent link">&para;</a></h4>
+<p>Add to your Claude Desktop configuration file:</p>
+<p><strong>MacOS</strong>: <code>~/Library/Application Support/Claude/claude_desktop_config.json</code>
+<strong>Windows</strong>: <code>%APPDATA%\Claude\claude_desktop_config.json</code></p>
+<pre><code class="language-json">{
+  &quot;mcpServers&quot;: {
+    &quot;crisp-t&quot;: {
+      &quot;command&quot;: &quot;&lt;python-path&gt;crisp-mcp&quot;
+    }
+  }
+}
+</code></pre>
+<h4 id="using-with-other-mcp-clients">Using with Other MCP Clients<a class="headerlink" href="#using-with-other-mcp-clients" title="Permanent link">&para;</a></h4>
+<p>The server can be used with any MCP-compatible client. Configure your client to run the <code>crisp-mcp</code> command via stdio.</p>
+<h3 id="available-tools">Available Tools<a class="headerlink" href="#available-tools" title="Permanent link">&para;</a></h3>
+<p>The MCP server provides tools for:</p>
+<p><strong>Corpus Management</strong>
+- <code>load_corpus</code> - Load corpus from folder or source
+- <code>save_corpus</code> - Save corpus to folder
+- <code>add_document</code> - Add new document
+- <code>remove_document</code> - Remove document by ID
+- <code>get_document</code> - Get document details
+- <code>list_documents</code> - List all document IDs
+- <code>add_relationship</code> - Link text keywords with numeric columns
+- <code>get_relationships</code> - Get all relationships
+- <code>get_relationships_for_keyword</code> - Query relationships by keyword</p>
+<p><strong>NLP/Text Analysis</strong>
+- <code>assign_topics</code> - Assign documents to topics (creates keyword labels)
+- <code>extract_categories</code> - Extract common concepts
+- <code>generate_summary</code> - Generate extractive summary
+- <code>sentiment_analysis</code> - VADER sentiment analysis</p>
+<p><strong>Semantic Search</strong> (requires <code>chromadb</code>)
+- <code>semantic_search</code> - Find documents similar to a query using semantic similarity
+- <code>find_similar_documents</code> - Find documents similar to a set of reference documents (useful for literature reviews and qualitative research)
+- <code>semantic_chunk_search</code> - Find relevant chunks within a specific document (useful for coding/annotating documents)
+- <code>export_metadata_df</code> - Export ChromaDB metadata as DataFrame</p>
+<p><strong>DataFrame/CSV Operations</strong>
+- <code>get_df_columns</code> - Get DataFrame column names
+- <code>get_df_row_count</code> - Get number of rows
+- <code>get_df_row</code> - Get specific row by index</p>
+<p><strong>Machine Learning</strong> (requires <code>crisp-t[ml]</code>)
+- <code>kmeans_clustering</code> - K-Means clustering
+- <code>decision_tree_classification</code> - Decision tree with feature importance
+- <code>svm_classification</code> - SVM classification
+- <code>neural_network_classification</code> - Neural network classification
+- <code>regression_analysis</code> - Linear/logistic regression with coefficients
+- <code>pca_analysis</code> - Principal Component Analysis
+- <code>association_rules</code> - Apriori association rules
+- <code>knn_search</code> - K-nearest neighbors search
+- <code>lstm_text_classification</code> - LSTM model for text-based outcome prediction</p>
+<h3 id="resources">Resources<a class="headerlink" href="#resources" title="Permanent link">&para;</a></h3>
+<p>The server exposes corpus documents as resources:
+- <code>corpus://document/{id}</code> - Access document text by ID</p>
+<h3 id="prompts">Prompts<a class="headerlink" href="#prompts" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>analysis_workflow</code> - Complete step-by-step analysis guide based on INSTRUCTIONS.md</li>
+<li><code>triangulation_guide</code> - Guide for triangulating qualitative and quantitative findings</li>
+</ul>
+<h3 id="example-mcp-commands"><a href="/notes/DEMO.md">Example MCP commands</a><a class="headerlink" href="#example-mcp-commands" title="Permanent link">&para;</a></h3>
+<h2 id="role-of-crisp-t-in-research-and-practice">Role of CRISP-T in research and practice<a class="headerlink" href="#role-of-crisp-t-in-research-and-practice" title="Permanent link">&para;</a></h2>
+<p>The workflow enables AI assistants to help conduct comprehensive analyses by combining text analytics, machine learning, and triangulation of qualitative-quantitative findings.</p>
+<p>For example, in market research, a company collects:
+- <strong>Textual</strong> feedback from customer support interactions.
+- <strong>Numerical</strong> data on customer retention and sales performance.
+Using this framework, business analysts can investigate how recurring concerns in feedback correspond to measurable business outcomes.</p>
+<h2 id="framework-documentation">Framework Documentation<a class="headerlink" href="#framework-documentation" title="Permanent link">&para;</a></h2>
+<p>For detailed information about available functions, metadata handling, and theoretical frameworks, see the <a href="/notes/INSTRUCTION.md">comprehensive user instructions</a>. For semantic search examples and best practices, see the <a href="/notes/SEMANTIC_SEARCH.md">Semantic Search Guide</a>. Documentation (WIP) is also available <a href="https://dermatologist.github.io/crisp-t/">here</a>.</p>
+<h3 id="data-model">Data model<a class="headerlink" href="#data-model" title="Permanent link">&para;</a></h3>
+<p><a href="https://github.com/dermatologist/crisp-t/blob/develop/notes/arch.drawio.svg"><img alt="crisp-t" src="https://github.com/dermatologist/crisp-t/blob/develop/notes/arch.drawio.svg" /></a></p>
+<h2 id="tdabm-topological-data-analysis-ball-mapper">TDABM (Topological Data Analysis Ball Mapper)<a class="headerlink" href="#tdabm-topological-data-analysis-ball-mapper" title="Permanent link">&para;</a></h2>
+<p>CRISP-T implements the Topological Data Analysis Ball Mapper (TDABM) algorithm based on <strong>Rudkin and Dlotko (2024)</strong>. TDABM provides a model-free method to visualize multidimensional data and uncover hidden, global patterns in complex, noisy, or high-dimensional datasets.</p>
+<h3 id="how-tdabm-works">How TDABM Works<a class="headerlink" href="#how-tdabm-works" title="Permanent link">&para;</a></h3>
+<ol>
+<li><strong>Point Cloud Creation</strong>: Data is transformed into a point cloud where each axis represents one of the selected variables (X variables).</li>
+<li><strong>Ball Covering</strong>: The algorithm randomly selects landmark points and creates balls of a specified radius around them, covering all data points.</li>
+<li><strong>Connection Mapping</strong>: Landmark points with non-empty intersections are connected, revealing the topological structure of the data.</li>
+<li><strong>Visualization</strong>: The result is visualized as a 2D graph where:</li>
+<li>Circle size represents the number of points in each ball</li>
+<li>Circle color represents the mean value of the outcome variable (Y), ranging from red (low) to purple (high)</li>
+<li>Lines connect overlapping balls, showing the data's topological structure</li>
+</ol>
+<h3 id="using-tdabm">Using TDABM<a class="headerlink" href="#using-tdabm" title="Permanent link">&para;</a></h3>
+<pre><code class="language-bash"># Perform TDABM analysis
+crispt --inp corpus_dir --tdabm satisfaction:age,income,education:0.3 --out corpus_dir
+
+# Visualize TDABM results
+crispviz --inp corpus_dir --tdabm --out visualizations
+</code></pre>
+<h3 id="when-to-use-tdabm">When to Use TDABM<a class="headerlink" href="#when-to-use-tdabm" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Discovering hidden patterns in multidimensional data</li>
+<li>Visualizing relationships between multiple variables</li>
+<li>Identifying clusters and connections in complex datasets</li>
+<li>Performing model-free exploratory data analysis</li>
+<li>Understanding global structure in high-dimensional data</li>
+</ul>
+<h3 id="reference">Reference<a class="headerlink" href="#reference" title="Permanent link">&para;</a></h3>
+<p>Rudkin, S., &amp; Dlotko, P. (2024). Topological Data Analysis Ball Mapper for multidimensional data visualization. <em>Paper reference to be added - algorithm implementation based on the TDABM methodology described by the authors.</em></p>
+<h2 id="citation">Citation<a class="headerlink" href="#citation" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Released on 10/11/2025 for presentation at <a href="https://icis2025.aisconferences.org/">ICIS 2025</a> conference.</li>
+<li>Paper coming soon. Cite this repository in the meantime:</li>
+</ul>
+<h2 id="give-us-a-star">Give us a star ⭐️<a class="headerlink" href="#give-us-a-star" title="Permanent link">&para;</a></h2>
+<p>If you find this project useful, give us a star. It helps others discover the project.</p>
+<h2 id="contact">Contact<a class="headerlink" href="#contact" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="https://nuchange.ca">Bell Eapen</a> (<a href="https://www.uis.edu/directory/bell-punneliparambil-eapen">UIS</a>) |  <a href="https://nuchange.ca/contact">Contact</a> | <a href="https://twitter.com/beapen"><img alt="Twitter Follow" src="https://img.shields.io/twitter/follow/beapen?style=social" /></a></li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Maintained by <a href="https://github.com/dermatologist">dermatologist</a>.
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        <div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/dermatologist/crisp-t" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.0.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path fill="currentColor" d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://pypi.org/project/crisp-t" target="_blank" rel="noopener" title="pypi.org" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.0.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path fill="currentColor" d="M439.8 200.5c-7.7-30.9-22.3-54.2-53.4-54.2h-40.1v47.4c0 36.8-31.2 67.8-66.8 67.8H172.7c-29.2 0-53.4 25-53.4 54.3v101.8c0 29 25.2 46 53.4 54.3 33.8 9.9 66.3 11.7 106.8 0 26.9-7.8 53.4-23.5 53.4-54.3v-40.7H226.2v-13.6h160.2c31.1 0 42.6-21.7 53.4-54.2 11.2-33.5 10.7-65.7 0-108.6M286.2 444.7a20.4 20.4 0 1 1 0-40.7 20.4 20.4 0 1 1 0 40.7M167.8 248.1h106.8c29.7 0 53.4-24.5 53.4-54.3V91.9c0-29-24.4-50.7-53.4-55.6-35.8-5.9-74.7-5.6-106.8.1-45.2 8-53.4 24.7-53.4 55.6v40.7h106.9v13.6h-147c-31.1 0-58.3 18.7-66.8 54.2-9.8 40.7-10.2 66.1 0 108.6 7.6 31.6 25.7 54.2 56.8 54.2H101v-48.8c0-35.3 30.5-66.4 66.8-66.4m-6.6-183.4a20.4 20.4 0 1 1 0 40.8 20.4 20.4 0 1 1 0-40.8"/></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://www.linkedin.com/in/beapen" target="_blank" rel="noopener" title="www.linkedin.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.0.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path fill="currentColor" d="M416 32H31.9C14.3 32 0 46.5 0 64.3v383.4C0 465.5 14.3 480 31.9 480H416c17.6 0 32-14.5 32-32.3V64.3c0-17.8-14.4-32.3-32-32.3M135.4 416H69V202.2h66.5V416zM102.2 96a38.5 38.5 0 1 1 0 77 38.5 38.5 0 1 1 0-77m282.1 320h-66.4V312c0-24.8-.5-56.7-34.5-56.7-34.6 0-39.9 27-39.9 54.9V416h-66.4V202.2h63.7v29.2h.9c8.9-16.8 30.6-34.5 62.9-34.5 67.2 0 79.7 44.3 79.7 101.9z"/></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://nuchange.ca" target="_blank" rel="noopener" title="nuchange.ca" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.0.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path fill="currentColor" d="M277.8 8.6c-12.3-11.4-31.3-11.4-43.5 0l-224 208c-9.6 9-12.8 22.9-8 35.1S18.8 272 32 272h16v176c0 35.3 28.7 64 64 64h288c35.3 0 64-28.7 64-64V272h16c13.2 0 25-8.1 29.8-20.3s1.6-26.2-8-35.1zM240 320h32c26.5 0 48 21.5 48 48v96H192v-96c0-26.5 21.5-48 48-48"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      <script id="__config" type="application/json">{"base": ".", "features": [], "search": "assets/javascripts/workers/search.d50fe291.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="assets/javascripts/bundle.50899def.min.js"></script>
+      
+    
+  </body>
+</html>
