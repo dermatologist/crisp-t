@@ -126,3 +126,114 @@ def test_get_lda_viz_raises_without_dictionary(visualize: QRVisualize):
         mock_lda = type('MockLDA', (), {})()
         with pytest.raises(ValueError, match="Dictionary is required"):
             visualize.get_lda_viz(mock_lda, [], None)
+
+
+def test_draw_tdabm_basic(visualize: QRVisualize):
+    """Test basic TDABM visualization"""
+    from src.crisp_t.model.corpus import Corpus
+    
+    # Create test corpus with TDABM metadata
+    corpus = Corpus(
+        id="test",
+        name="Test",
+        metadata={
+            'tdabm': {
+                'y_variable': 'y',
+                'x_variables': ['x1', 'x2'],
+                'radius': 0.3,
+                'num_landmarks': 3,
+                'num_points': 10,
+                'landmarks': [
+                    {
+                        'id': 'B0',
+                        'location': [0.2, 0.3],
+                        'point_indices': [0, 1, 2],
+                        'count': 3,
+                        'mean_y': 0.5,
+                        'connections': ['B1']
+                    },
+                    {
+                        'id': 'B1',
+                        'location': [0.5, 0.6],
+                        'point_indices': [3, 4, 5],
+                        'count': 3,
+                        'mean_y': 0.7,
+                        'connections': ['B0', 'B2']
+                    },
+                    {
+                        'id': 'B2',
+                        'location': [0.8, 0.4],
+                        'point_indices': [6, 7, 8, 9],
+                        'count': 4,
+                        'mean_y': 0.3,
+                        'connections': ['B1']
+                    }
+                ]
+            }
+        }
+    )
+    
+    fig = visualize.draw_tdabm(corpus=corpus, show=False)
+    
+    assert fig is not None
+    plt.close(fig)
+
+
+def test_draw_tdabm_without_metadata(visualize: QRVisualize):
+    """Test TDABM visualization fails without metadata"""
+    from src.crisp_t.model.corpus import Corpus
+    
+    corpus = Corpus(id="test", name="Test")
+    
+    with pytest.raises(ValueError, match="does not contain 'tdabm' data"):
+        visualize.draw_tdabm(corpus=corpus, show=False)
+
+
+def test_draw_tdabm_without_corpus(visualize: QRVisualize):
+    """Test TDABM visualization fails without corpus"""
+    
+    with pytest.raises(ValueError, match="No corpus provided"):
+        visualize.draw_tdabm(corpus=None, show=False)
+
+
+def test_draw_tdabm_1d_coordinates(visualize: QRVisualize):
+    """Test TDABM visualization with 1D coordinates"""
+    from src.crisp_t.model.corpus import Corpus
+    
+    # Create test corpus with 1D landmarks
+    corpus = Corpus(
+        id="test",
+        name="Test",
+        metadata={
+            'tdabm': {
+                'y_variable': 'y',
+                'x_variables': ['x1'],
+                'radius': 0.3,
+                'num_landmarks': 2,
+                'num_points': 5,
+                'landmarks': [
+                    {
+                        'id': 'B0',
+                        'location': [0.2],
+                        'point_indices': [0, 1],
+                        'count': 2,
+                        'mean_y': 0.4,
+                        'connections': []
+                    },
+                    {
+                        'id': 'B1',
+                        'location': [0.8],
+                        'point_indices': [2, 3, 4],
+                        'count': 3,
+                        'mean_y': 0.6,
+                        'connections': []
+                    }
+                ]
+            }
+        }
+    )
+    
+    fig = visualize.draw_tdabm(corpus=corpus, show=False)
+    
+    assert fig is not None
+    plt.close(fig)

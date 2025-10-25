@@ -38,7 +38,7 @@ except ImportError:
     "--covid", "-cf", default="", help="Download COVID narratives from the website"
 )
 @click.option("--inp", "-i", help="Load corpus from a folder containing corpus.json")
-@click.option("--out", "-o", default="", help="Write corpus to a folder as corpus.json")
+@click.option("--out", "-o", help="Write corpus to a folder as corpus.json")
 @click.option("--csv", default="", help="CSV file name")
 @click.option(
     "--num", "-n", default=3, help="N (clusters/epochs, etc, depending on context)"
@@ -167,6 +167,11 @@ def main(
     text_analyzer = None
     csv_analyzer = None
     ml_analyzer = None
+
+    # Assign inp to out if out not provided
+    if inp and not out:
+        out = inp
+        click.echo(f"Output path not provided. Using input path as output: {out}")
 
     try:
         # Handle COVID data download

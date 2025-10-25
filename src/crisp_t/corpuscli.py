@@ -10,6 +10,7 @@ import click
 from .model.corpus import Corpus
 from .model.document import Document
 from .helpers.initializer import initialize_corpus
+from .tdabm import Tdabm
 
 
 def _parse_kv(value: str) -> tuple[str, str]:
@@ -144,6 +145,11 @@ def _parse_relationship(value: str) -> tuple[str, str, str]:
     default=None,
     help="Comma-separated list of metadata keys to include in DataFrame export.",
 )
+@click.option(
+    "--tdabm",
+    default=None,
+    help="Perform TDABM analysis. Format: 'y_variable:x_variables:radius' (e.g., 'satisfaction:age,income:0.3'). Radius defaults to 0.3 if omitted.",
+)
 def main(
     verbose: bool,
     id: Optional[str],
@@ -171,6 +177,7 @@ def main(
     rec: float,
     metadata_df: bool,
     metadata_keys: Optional[str],
+    tdabm: Optional[str],
 ):
     """
     CRISP-T Corpus CLI: create and manipulate a corpus quickly from the command line.
@@ -185,6 +192,10 @@ def main(
     click.echo("CRISP-T: Corpus CLI")
     click.echo("_________________________________________")
 
+    # if --inp provided, and not --out, set out to inp
+    if inp and not out:
+        out = inp
+        click.echo(f"Output path not provided. Using input path as output: {out}")
     # Load corpus from --inp if provided
     corpus = initialize_corpus(inp=inp)
     if not corpus:
@@ -441,6 +452,48 @@ def main(
             click.echo("Install chromadb with: pip install chromadb")
         except Exception as e:
             click.echo(f"Error exporting metadata: {e}")
+
+    # TDABM analysis
+    if tdabm:
+        try:
+            # Parse tdabm parameter: y_variable:x_variables:radius
+            parts = tdabm.split(":")
+            if len(parts) < 2:
+                raise click.ClickException(
+                    "Invalid --tdabm format. Use 'y_variable:x_variables:radius' "
+                    "(e.g., 'satisfaction:age,income:0.3'). Radius defaults to 0.3 if omitted."
+                )
+
+            y_var = parts[0].strip()
+            x_vars = parts[1].strip()
+            radius = 0.3  # default
+
+            if len(parts) >= 3:
+                try:
+                    radius = float(parts[2].strip())
+                except ValueError:
+                    raise click.ClickException(f"Invalid radius value: '{parts[2]}'. Must be a number.")
+
+            click.echo(f"\nPerforming TDABM analysis...")
+            click.echo(f"  Y variable: {y_var}")
+            click.echo(f"  X variables: {x_vars}")
+            click.echo(f"  Radius: {radius}")
+
+            tdabm_analyzer = Tdabm(corpus)
+            result = tdabm_analyzer.generate_tdabm(y=y_var, x_variables=x_vars, radius=radius)
+
+            click.echo("\n" + result)
+            click.echo("\nHint: TDABM results stored in corpus metadata['tdabm']")
+            click.echo("Hint: Use --out to save the corpus with TDABM metadata")
+            click.echo("Hint: Use 'crispviz --tdabm' to visualize the results")
+
+        except ValueError as e:
+            click.echo(f"Error: {e}")
+            click.echo("Hint: Ensure your corpus has a DataFrame with the specified variables")
+            click.echo("Hint: Y variable must be continuous (not binary)")
+            click.echo("Hint: X variables must be numeric/ordinal")
+        except Exception as e:
+            click.echo(f"Error during TDABM analysis: {e}")
 
     # Save corpus to --out if provided
     if out:

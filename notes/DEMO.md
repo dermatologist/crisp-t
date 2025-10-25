@@ -21,14 +21,17 @@ crisp --source crisp_source --out crisp_input
 ## Perform Exploratory tasks using NLP
 
 * Run the following command to perform a topic modelling and assign topics(keywords) to each narrative.
+* *--inp crisp_input* below is optional as it defaults to `crisp_input` folder.
 
 ```bash
-crisp --inp crisp_input --out crisp_input --assign
+crisp --inp crisp_input --assign
 ```
 
 * The results will be saved in the same `crisp_input` folder, overwriting the corpus file.
 * You may run several other analyses ([see documentation](https://dermatologist.github.io/crisp-t/) for details) and tweak parameters as needed.
 * Hints will be provided in the terminal.
+
+**From now on, we will use `crisp_input` folder as input and output folder unless specified otherwise as that is the default.**
 
 ## Explore results
 
@@ -36,13 +39,13 @@ crisp --inp crisp_input --out crisp_input --assign
 crisp --print documents
 ```
 
-* Notice that we have omitted --inp as it defaults to `crisp_input` folder. If you have a different folder, use --inp to specify it.
+* Notice that we have omitted --inp and --out as it defaults to `crisp_input` folder. If you want to use a different folder, use --inp or --out to specify it. The *--out* option helps to save intermediate results in a different folder.
 * Notice keywords assigned to each narrative.
 * You will notice *interviewee* and *interviewer* keywords. These are assigned based on the presence of these words in the narratives and may not be useful.
 * You may remove these keywords by using --ignore with assign and check the results again.
 
 ```bash
-crisp --out crisp_input --assign --ignore interviewee,interviewer
+crisp --assign --ignore interviewee,interviewer
 crisp --print documents
 ```
 
@@ -71,7 +74,7 @@ crisp --include relaxed,self_time,sleep_bal,time_dp,travel_time,home_env --kmean
 * Let us add a relationship between numb:self_time and text:work in the corpus for future confirmation with LLMs.
 
 ```bash
-crispt --add-rel "text:work|numb:self_time|correlates" --out crisp_input
+crispt --add-rel "text:work|numb:self_time|correlates"
 ```
 
 * Let us do a regression analysis to see how `relaxed` is affected by other variables.
@@ -89,6 +92,25 @@ crisp --include relaxed,self_time,sleep_bal,time_dp,travel_time,home_env --cls -
 
 * Notice that self_time is the most important variable in predicting relaxed.
 
+### [Topological Data Analysis](https://www.arxiv.org/abs/2504.14081) Rudkin, S., & Dlotko, P. (2024)
+* Let us do a TDA analysis to see the shape of the data.
+* parameters to --tdabm are specified as follows: *outcome:varables:radius*
+
+```bash
+
+crispt --tdabm relaxed:self_time,sleep_bal,time_dp,travel_time:0.6
+
+```
+* Let us visualize the TDA network.
+
+```bash
+crispviz --tdabm --out viz_out/
+```
+
+<p align="center">
+  <img src="https://github.com/dermatologist/crisp-t/blob/develop/notes/tdabm.jpg" />
+</p>
+
 ## [Sense-making by triangulation](INSTRUCTION.md)
 
 ## Now let us try out a csv dataset with text and numeric data.
@@ -98,14 +120,14 @@ crisp --include relaxed,self_time,sleep_bal,time_dp,travel_time,home_env --cls -
 * Import the csv file to `crisp_input` folder using the following command.
 
 ```bash
-crisp --source crisp_source/ --out crisp_input --unstructured SMS
+crisp --source crisp_source/ ```--unstructured SMS
 ```
 
 * Notice that the text column SMS is specified with --unstructured option. This creates CRISP documents from the text column.
 * Now assign topics to the documents. Note that this also assigns clusters.
 
 ```bash
-crisp --inp crisp_input/ --out crisp_input/ --assign
+crisp --assign
 ```
 
 * Now print the results to examine.
@@ -148,17 +170,17 @@ crisp --lstm --outcome CLASS
 ### Let's [visualize the clusters in 2D space using PCA.](https://htmlpreview.github.io/?https://github.com/dermatologist/crisp-t/blob/develop/notes/lda_visualization.html)
 
 ```bash
-crispviz --inp crisp_input/ --out crisp_output/ --ldavis
+crispviz --ldavis --out viz_out/
 ```
 
-* The visualization will be saved in `crisp_output` folder. Open the html file in a browser to explore.
+* The visualization will be saved in `viz_out` folder. Open the html file in a browser to explore.
 
 ### Let's generate a word cloud of keywords in the corpus.
 
 ```bash
-crispviz --inp crisp_input/ --out crisp_output/ --wordcloud
+crispviz --wordcloud --out viz_out/
 ```
-* The word cloud will be saved in `crisp_output` folder.
+* The word cloud will be saved in `viz_out` folder.
 
 <p align="center">
   <img src="https://github.com/dermatologist/crisp-t/blob/develop/notes/wordcloud.jpg" />

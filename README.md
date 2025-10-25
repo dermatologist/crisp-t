@@ -74,6 +74,23 @@ All scripts are installed as entry points and can be run directly from the comma
 crisp [OPTIONS]
 ```
 
+#### ⚠️ **First step is to create a corpus from sources (Data Import).**
+Source data is read from a directory containing text files (.txt, .pdf) and a single .csv file (for numeric data). The corpus is saved to `--out` folder and this folder can be used as input for all subsequent analyses.
+
+⚠️ This import step only needs to be done once.
+
+```bash
+crisp --source PATH --out PATH
+```
+*e.g., `crisp --source crisp_source --out crisp_input`*
+
+
+ℹ️ `crisp_input` is recommended for `--out` option above. The folder is created in the current directory. 👉 [See Demo](/notes/DEMO.md).
+
+ℹ️ From here onwards, you can load the corpus from that folder using `--inp` option for all subsequent analyses. You can omit `--inp` if you are using the `crisp_input` folder, as it is the default for `--inp`. 👉 [See Demo](/notes/DEMO.md).
+
+⚡️ Advanced users may also load corpus from URL `--source` or multiple URLs using `--sources` option. ⚡️
+
 #### Input/Output Options
 
 - `--source, -s PATH|URL`: Read source data from a directory (reads .txt, .pdf and a single .csv) or from a URL
@@ -123,7 +140,7 @@ crispviz [OPTIONS]
 
 - `--inp, --source, --sources`: Input corpus or sources
 - `--out`: Output directory for PNG images
-- Visualization flags: `--freq`, `--by-topic`, `--wordcloud`, `--ldavis`, `--top-terms`, `--corr-heatmap`
+- Visualization flags: `--freq`, `--by-topic`, `--wordcloud`, `--ldavis`, `--top-terms`, `--corr-heatmap`, `--tdabm`
 - Optional params: `--bins`, `--top-n`, `--columns`, `--topics-num`
 
 **Visualization Options:**
@@ -133,6 +150,7 @@ crispviz [OPTIONS]
 - `--ldavis`: Export interactive LDA visualization as HTML (requires LDA and pyLDAvis)
 - `--top-terms`: Export top terms bar chart
 - `--corr-heatmap`: Export correlation heatmap from CSV numeric columns
+- `--tdabm`: Export TDABM visualization (requires TDABM analysis in corpus metadata). Use `crispt --tdabm` to perform the analysis first.
 - `--topics-num N`: Number of topics for LDA (default: 8, based on Mettler et al., 2025)
 
 ### crispt (Corpus Manipulation CLI)
@@ -165,6 +183,8 @@ crispt [OPTIONS]
 	- `--rec THRESHOLD`: Threshold for semantic operations. For `--semantic-chunks`, use 0-10 (default: 8.5). For `--similar-docs`, use 0-1 (default: 0.7). Only results with similarity above this value are returned
 	- `--metadata-df`: Export collection metadata as DataFrame+
 	- `--metadata-keys KEYS`: Comma-separated metadata keys to include+
+- TDABM analysis:
+	- `--tdabm Y_VAR:X_VARS:RADIUS`: Perform Topological Data Analysis Ball Mapper (TDABM) analysis. Format: `y_variable:x_variables:radius` (e.g., `satisfaction:age,income:0.3`). Radius defaults to 0.3 if omitted. Based on Rudkin and Dlotko (2024), TDABM provides a model-free method to visualize multidimensional data and uncover hidden patterns.
 
 	- + *The above two options can be used  to export or add metadata from NLP to the DataFrame. For example, you can extract sentiment scores or topic assignments as additional columns for numerical analysis. This is useful if dataframe and documents are aligned as in a survey response.*
 
@@ -275,6 +295,42 @@ For detailed information about available functions, metadata handling, and theor
 ### Data model
 
 [![crisp-t](https://github.com/dermatologist/crisp-t/blob/develop/notes/arch.drawio.svg)](https://github.com/dermatologist/crisp-t/blob/develop/notes/arch.drawio.svg)
+
+## TDABM (Topological Data Analysis Ball Mapper)
+
+CRISP-T implements the Topological Data Analysis Ball Mapper (TDABM) algorithm based on **Rudkin and Dlotko (2024)**. TDABM provides a model-free method to visualize multidimensional data and uncover hidden, global patterns in complex, noisy, or high-dimensional datasets.
+
+### How TDABM Works
+
+1. **Point Cloud Creation**: Data is transformed into a point cloud where each axis represents one of the selected variables (X variables).
+2. **Ball Covering**: The algorithm randomly selects landmark points and creates balls of a specified radius around them, covering all data points.
+3. **Connection Mapping**: Landmark points with non-empty intersections are connected, revealing the topological structure of the data.
+4. **Visualization**: The result is visualized as a 2D graph where:
+   - Circle size represents the number of points in each ball
+   - Circle color represents the mean value of the outcome variable (Y), ranging from red (low) to purple (high)
+   - Lines connect overlapping balls, showing the data's topological structure
+
+### Using TDABM
+
+```bash
+# Perform TDABM analysis
+crispt --inp corpus_dir --tdabm satisfaction:age,income,education:0.3 --out corpus_dir
+
+# Visualize TDABM results
+crispviz --inp corpus_dir --tdabm --out visualizations
+```
+
+### When to Use TDABM
+
+- Discovering hidden patterns in multidimensional data
+- Visualizing relationships between multiple variables
+- Identifying clusters and connections in complex datasets
+- Performing model-free exploratory data analysis
+- Understanding global structure in high-dimensional data
+
+### Reference
+
+Rudkin, S., & Dlotko, P. (2024). Topological Data Analysis Ball Mapper for multidimensional data visualization. *Paper reference to be added - algorithm implementation based on the TDABM methodology described by the authors.*
 
 ## Citation
 
