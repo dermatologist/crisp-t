@@ -905,6 +905,47 @@ async def list_tools() -> list[Tool]:
         ]
     )
 
+    # Add TDABM tool
+    tools.append(
+        Tool(
+            name="tdabm_analysis",
+            description="""
+            Perform Topological Data Analysis Ball Mapper (TDABM) analysis to uncover hidden, global patterns 
+            in complex, noisy, or high-dimensional data. Based on the algorithm by Rudkin and Dlotko (2024).
+            
+            TDABM creates a point cloud from multidimensional data and covers it with overlapping balls,
+            revealing topological structure and relationships between variables.
+            
+            Use this when you need to:
+            - Discover hidden patterns in multidimensional data
+            - Visualize relationships between multiple variables
+            - Identify clusters and connections in complex datasets
+            - Perform model-free exploratory data analysis
+            
+            Results are stored in corpus metadata and can be visualized.
+            """,
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "y_variable": {
+                        "type": "string",
+                        "description": "Name of the continuous Y variable to analyze",
+                    },
+                    "x_variables": {
+                        "type": "string",
+                        "description": "Comma-separated list of ordinal/numeric X variable names",
+                    },
+                    "radius": {
+                        "type": "number",
+                        "description": "Radius for ball coverage (default: 0.3). Smaller values create more detailed mappings.",
+                        "default": 0.3,
+                    },
+                },
+                "required": ["y_variable", "x_variables"],
+            },
+        )
+    )
+
     return tools
 
 
@@ -1609,6 +1650,59 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                 ]
             except Exception as e:
                 return [TextContent(type="text", text=f"Error exporting metadata: {e}")]
+
+        elif name == "tdabm_analysis":
+            if not _corpus:
+                return [
+                    TextContent(
+                        type="text", text="No corpus loaded. Use load_corpus first."
+                    )
+                ]
+
+            try:
+                from ..tdabm import Tdabm
+
+                y_variable = arguments.get("y_variable")
+                x_variables = arguments.get("x_variables")
+                radius = arguments.get("radius", 0.3)
+
+                if not y_variable or not x_variables:
+                    return [
+                        TextContent(
+                            type="text",
+                            text="Error: Both y_variable and x_variables are required",
+                        )
+                    ]
+
+                tdabm_analyzer = Tdabm(_corpus)
+                result = tdabm_analyzer.generate_tdabm(
+                    y=y_variable, x_variables=x_variables, radius=radius, mcp=True
+                )
+
+                return [
+                    TextContent(
+                        type="text",
+                        text=f"TDABM Analysis Complete\n\n{result}\n\n"
+                        "Hint: Results are stored in corpus metadata['tdabm']\n"
+                        "Hint: Use save_corpus to persist the results\n"
+                        "Hint: Visualize with draw_tdabm or use vizcli --tdabm",
+                    )
+                ]
+
+            except ValueError as e:
+                return [
+                    TextContent(
+                        type="text",
+                        text=f"Validation Error: {e}\n\n"
+                        "Tips:\n"
+                        "- Ensure corpus has a DataFrame\n"
+                        "- Y variable must be continuous (not binary)\n"
+                        "- X variables must be numeric/ordinal\n"
+                        "- All variables must exist in the DataFrame",
+                    )
+                ]
+            except Exception as e:
+                return [TextContent(type="text", text=f"Error during TDABM analysis: {e}")]
 
         else:
             return [TextContent(type="text", text=f"Unknown tool: {name}")]

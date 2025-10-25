@@ -26,13 +26,28 @@ def text_source(tmp_dir):
 
 
 def test_vizcli_freq_and_top_terms(text_source, tmp_dir):
+    from src.crisp_t.model.corpus import Corpus
+    from src.crisp_t.read_data import ReadData
+
+    # Create a corpus from text files
+    corpus_dir = Path(tmp_dir) / "corpus_freq"
+    corpus_dir.mkdir()
+    docs = []
+    for fname in ["a.txt", "b.txt"]:
+        fpath = Path(text_source) / fname
+        if fpath.exists():
+            docs.append({"id": fname, "text": fpath.read_text()})
+    corpus = Corpus(id="test", name="Test Corpus", documents=docs)
+    rd = ReadData(corpus=corpus)
+    rd.write_corpus_to_json(str(corpus_dir), corpus=corpus)
+
     runner = CliRunner()
     out_dir = Path(tmp_dir) / "out"
     result = runner.invoke(
         viz_main,
         [
-            "--source",
-            text_source,
+            "--inp",
+            str(corpus_dir),
             "--out",
             str(out_dir),
             "--freq",
@@ -47,13 +62,28 @@ def test_vizcli_freq_and_top_terms(text_source, tmp_dir):
 
 
 def test_vizcli_topics_and_wordcloud(text_source, tmp_dir):
+    from src.crisp_t.model.corpus import Corpus
+    from src.crisp_t.read_data import ReadData
+
+    # Create a corpus from text files
+    corpus_dir = Path(tmp_dir) / "corpus_topics"
+    corpus_dir.mkdir()
+    docs = []
+    for fname in ["a.txt", "b.txt"]:
+        fpath = Path(text_source) / fname
+        if fpath.exists():
+            docs.append({"id": fname, "text": fpath.read_text()})
+    corpus = Corpus(id="test", name="Test Corpus", documents=docs)
+    rd = ReadData(corpus=corpus)
+    rd.write_corpus_to_json(str(corpus_dir), corpus=corpus)
+
     runner = CliRunner()
     out_dir = Path(tmp_dir) / "out2"
     result = runner.invoke(
         viz_main,
         [
-            "--source",
-            text_source,
+            "--inp",
+            str(corpus_dir),
             "--out",
             str(out_dir),
             "--topics-num",
@@ -69,13 +99,28 @@ def test_vizcli_topics_and_wordcloud(text_source, tmp_dir):
 
 def test_vizcli_ldavis(text_source, tmp_dir):
     """Test that --ldavis flag creates HTML visualization"""
+    from src.crisp_t.model.corpus import Corpus
+    from src.crisp_t.read_data import ReadData
+
+    # Create a corpus from text files
+    corpus_dir = Path(tmp_dir) / "corpus_ldavis"
+    corpus_dir.mkdir()
+    docs = []
+    for fname in ["a.txt", "b.txt"]:
+        fpath = Path(text_source) / fname
+        if fpath.exists():
+            docs.append({"id": fname, "text": fpath.read_text()})
+    corpus = Corpus(id="test", name="Test Corpus", documents=docs)
+    rd = ReadData(corpus=corpus)
+    rd.write_corpus_to_json(str(corpus_dir), corpus=corpus)
+
     runner = CliRunner()
     out_dir = Path(tmp_dir) / "out_ldavis"
     result = runner.invoke(
         viz_main,
         [
-            "--source",
-            text_source,
+            "--inp",
+            str(corpus_dir),
             "--out",
             str(out_dir),
             "--topics-num",
@@ -100,13 +145,24 @@ def test_vizcli_corr_heatmap_with_sources(tmp_dir):
     df.to_csv(src / "data.csv", index=False)
     (src / "x.txt").write_text("text")
 
+    from src.crisp_t.model.corpus import Corpus
+    from src.crisp_t.read_data import ReadData
+
+    # Create a corpus with a DataFrame
+    corpus_dir = Path(tmp_dir) / "corpus_corr"
+    corpus_dir.mkdir()
+    df = pd.DataFrame({"a": [1, 2, 3, 4], "b": [4, 3, 2, 1]})
+    corpus = Corpus(id="test", name="Test Corpus", df=df)
+    rd = ReadData(corpus=corpus)
+    rd.write_corpus_to_json(str(corpus_dir), corpus=corpus)
+
     runner = CliRunner()
     out_dir = Path(tmp_dir) / "out3"
     result = runner.invoke(
         viz_main,
         [
-            "--sources",
-            str(src),
+            "--inp",
+            str(corpus_dir),
             "--out",
             str(out_dir),
             "--corr-heatmap",
@@ -116,3 +172,101 @@ def test_vizcli_corr_heatmap_with_sources(tmp_dir):
     )
     assert result.exit_code == 0, result.output
     assert (out_dir / "corr_heatmap.png").exists()
+
+
+def test_vizcli_tdabm_without_metadata(tmp_dir):
+    """Test TDABM visualization fails gracefully without metadata"""
+    from src.crisp_t.model.corpus import Corpus
+    from src.crisp_t.read_data import ReadData
+
+    # Create a corpus without TDABM metadata
+    corpus_dir = Path(tmp_dir) / "corpus"
+    corpus_dir.mkdir()
+
+    corpus = Corpus(
+        id="test",
+        name="Test Corpus",
+        df=pd.DataFrame({"x1": [1, 2, 3], "x2": [4, 5, 6], "y": [7, 8, 9]}),
+    )
+
+    rd = ReadData(corpus=corpus)
+    rd.write_corpus_to_json(str(corpus_dir), corpus=corpus)
+
+    runner = CliRunner()
+    out_dir = Path(tmp_dir) / "out_tdabm"
+    result = runner.invoke(
+        viz_main,
+        [
+            "--inp",
+            str(corpus_dir),
+            "--out",
+            str(out_dir),
+            "--tdabm",
+        ],
+    )
+
+    # Should not crash but should show warning
+    assert result.exit_code == 0
+    assert "No TDABM data found" in result.output or "Warning" in result.output
+
+
+def test_vizcli_tdabm_with_metadata(tmp_dir):
+    """Test TDABM visualization with proper metadata"""
+    from src.crisp_t.model.corpus import Corpus
+    from src.crisp_t.read_data import ReadData
+
+    # Create a corpus with TDABM metadata
+    corpus_dir = Path(tmp_dir) / "corpus_tdabm"
+    corpus_dir.mkdir()
+
+    corpus = Corpus(
+        id="test",
+        name="Test Corpus",
+        df=pd.DataFrame({"x1": [1, 2, 3], "x2": [4, 5, 6], "y": [7, 8, 9]}),
+        metadata={
+            "tdabm": {
+                "y_variable": "y",
+                "x_variables": ["x1", "x2"],
+                "radius": 0.3,
+                "num_landmarks": 2,
+                "num_points": 3,
+                "landmarks": [
+                    {
+                        "id": "B0",
+                        "location": [0.2, 0.3],
+                        "point_indices": [0, 1],
+                        "count": 2,
+                        "mean_y": 0.5,
+                        "connections": ["B1"],
+                    },
+                    {
+                        "id": "B1",
+                        "location": [0.8, 0.7],
+                        "point_indices": [1, 2],
+                        "count": 2,
+                        "mean_y": 0.8,
+                        "connections": ["B0"],
+                    },
+                ],
+            }
+        },
+    )
+
+    rd = ReadData(corpus=corpus)
+    rd.write_corpus_to_json(str(corpus_dir), corpus=corpus)
+
+    runner = CliRunner()
+    out_dir = Path(tmp_dir) / "out_tdabm_viz"
+    result = runner.invoke(
+        viz_main,
+        [
+            "--inp",
+            str(corpus_dir),
+            "--out",
+            str(out_dir),
+            "--tdabm",
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    assert (out_dir / "tdabm.png").exists()
