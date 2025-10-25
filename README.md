@@ -104,7 +104,7 @@ crisp --source PATH --out PATH
 
 - `--codedict`: Generate qualitative coding dictionary
 - `--topics`: Generate topic model using LDA
-- `--assign`: Assign documents to topics
+- `--assign`: Assign documents to [topics](https://aisel.aisnet.org/cais/vol56/iss1/14/)
 - `--cat`: List categories of entire corpus or individual documents
 - `--summary`: Generate extractive text summary
 - `--sentiment`: Generate sentiment scores using VADER
@@ -183,10 +183,10 @@ crispt [OPTIONS]
 	- `--rec THRESHOLD`: Threshold for semantic operations. For `--semantic-chunks`, use 0-10 (default: 8.5). For `--similar-docs`, use 0-1 (default: 0.7). Only results with similarity above this value are returned
 	- `--metadata-df`: Export collection metadata as DataFrame+
 	- `--metadata-keys KEYS`: Comma-separated metadata keys to include+
-- TDABM analysis:
-	- `--tdabm Y_VAR:X_VARS:RADIUS`: Perform Topological Data Analysis Ball Mapper (TDABM) analysis. Format: `y_variable:x_variables:radius` (e.g., `satisfaction:age,income:0.3`). Radius defaults to 0.3 if omitted. Based on Rudkin and Dlotko (2024), TDABM provides a model-free method to visualize multidimensional data and uncover hidden patterns.
+- [TDABM analysis](/notes/TDABM.md):
+	- `--tdabm Y_VAR:X_VARS:RADIUS`: Perform Topological Data Analysis Ball Mapper (TDABM) analysis. Format: `y_variable:x_variables:radius` (e.g., `satisfaction:age,income:0.3`). Radius defaults to 0.3 if omitted.
 
-	- + *The above two options can be used  to export or add metadata from NLP to the DataFrame. For example, you can extract sentiment scores or topic assignments as additional columns for numerical analysis. This is useful if dataframe and documents are aligned as in a survey response.*
+ℹ️ *`--metadata-df` and `--metadata-keys` options can be used  to export or add metadata from NLP to the DataFrame. For example, you can extract sentiment scores or topic assignments as additional columns for numerical analysis. This is useful if dataframe and documents are aligned as in a survey response.*
 
 ### [Example Usage](/notes/DEMO.md)
 
