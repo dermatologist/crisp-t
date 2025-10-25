@@ -22,6 +22,7 @@ crisp --source crisp_source --out crisp_input
 
 * Run the following command to perform a topic modelling and assign topics(keywords) to each narrative.
 * *--inp crisp_input* below is optional as it defaults to `crisp_input` folder.
+
 ```bash
 crisp --inp crisp_input --assign
 ```
@@ -29,6 +30,8 @@ crisp --inp crisp_input --assign
 * The results will be saved in the same `crisp_input` folder, overwriting the corpus file.
 * You may run several other analyses ([see documentation](https://dermatologist.github.io/crisp-t/) for details) and tweak parameters as needed.
 * Hints will be provided in the terminal.
+
+**From now on, we will use `crisp_input` folder as input and output folder unless specified otherwise as that is the default.**
 
 ## Explore results
 

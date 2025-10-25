@@ -74,6 +74,23 @@ All scripts are installed as entry points and can be run directly from the comma
 crisp [OPTIONS]
 ```
 
+#### ⚠️ **First step is to create a corpus from sources (Data Import).**
+Source data is read from a directory containing text files (.txt, .pdf) and a single .csv file (for numeric data). The corpus is saved to `--out` folder and this folder can be used as input for all subsequent analyses.
+
+⚠️ This import step only needs to be done once.
+
+```bash
+crisp --source PATH --out PATH
+```
+*e.g., `crisp --source crisp_source --out crisp_input`*
+
+
+ℹ️ `crisp_input` is recommended for `--out` option above. The folder is created in the current directory. 👉 [See Demo](/notes/DEMO.md).
+
+ℹ️ From here onwards, you can load the corpus from that folder using `--inp` option for all subsequent analyses. You can omit `--inp` if you are using the `crisp_input` folder, as it is the default for `--inp`. 👉 [See Demo](/notes/DEMO.md).
+
+⚡️ Advanced users may also load corpus from URL `--source` or multiple URLs using `--sources` option. ⚡️
+
 #### Input/Output Options
 
 - `--source, -s PATH|URL`: Read source data from a directory (reads .txt, .pdf and a single .csv) or from a URL

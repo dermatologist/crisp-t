@@ -38,7 +38,7 @@ except ImportError:
     "--covid", "-cf", default="", help="Download COVID narratives from the website"
 )
 @click.option("--inp", "-i", help="Load corpus from a folder containing corpus.json")
-@click.option("--out", "-o", default="", help="Write corpus to a folder as corpus.json")
+@click.option("--out", "-o", help="Write corpus to a folder as corpus.json")
 @click.option("--csv", default="", help="CSV file name")
 @click.option(
     "--num", "-n", default=3, help="N (clusters/epochs, etc, depending on context)"
