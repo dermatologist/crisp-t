@@ -126,40 +126,50 @@ crisp --source PATH --out PATH
 
 #### Display Options
 
-The `--print, -p` option provides flexible ways to display corpus information with color-coded output:
+The `--print, -p` option provides flexible ways to display corpus information with color-coded output. You can use either quoted or unquoted syntax:
+
+**Syntax:**
+- Quoted (backward compatible): `--print "command subcommand"`
+- Unquoted (new): `--print command --print subcommand`
 
 **Basic Options:**
 - `--print all`: Display all corpus information (documents, dataframe, metadata)
 - `--print documents`: Show first 5 documents with IDs, names, and text snippets
-- `--print documents N`: Show first N documents (e.g., `--print "documents 10"` shows 10 documents)
-- `--print "documents metadata"`: Display metadata for all documents (categories, scores, etc.)
+- `--print documents --print N`: Show first N documents (e.g., `--print documents --print 10` shows 10 documents)
+- `--print documents --print metadata`: Display metadata for all documents (categories, scores, etc.)
 
 **DataFrame Options:**
 - `--print dataframe`: Show DataFrame head with shape and column information
-- `--print "dataframe metadata"`: Display DataFrame columns starting with `metadata_` prefix
-- `--print "dataframe stats"`: Show descriptive statistics and value distributions
+- `--print dataframe --print metadata`: Display DataFrame columns starting with `metadata_` prefix
+- `--print dataframe --print stats`: Show descriptive statistics and value distributions
 
 **Metadata Options:**
 - `--print metadata`: Display all corpus metadata keys and values
-- `--print "metadata KEY"`: Show specific metadata (e.g., `--print "metadata pca"`, `--print "metadata numeric_clusters"`)
+- `--print metadata --print KEY`: Show specific metadata (e.g., `--print metadata --print pca`)
   - Available keys include: pca, numeric_clusters, kmeans, nnet_predictions, svm_confusion_matrix, decision_tree_accuracy, and more
 
 **Legacy Option:**
-- `--print stats`: (Deprecated) Use `--print "dataframe stats"` instead
+- `--print stats`: (Deprecated) Use `--print dataframe --print stats` instead
 
 **Examples:**
 ```bash
-# Show first 10 documents
+# Show first 10 documents (unquoted syntax)
+crisp --inp my_corpus --print documents --print 10
+
+# Show first 10 documents (quoted syntax - backward compatible)
 crisp --inp my_corpus --print "documents 10"
 
-# View document metadata
+# View document metadata (unquoted)
+crisp --inp my_corpus --print documents --print metadata
+
+# View document metadata (quoted)
 crisp --inp my_corpus --print "documents metadata"
 
-# Check PCA results
-crisp --inp my_corpus --print "metadata pca"
+# Check PCA results (unquoted)
+crisp --inp my_corpus --print metadata --print pca
 
-# View DataFrame statistics
-crisp --inp my_corpus --print "dataframe stats"
+# View DataFrame statistics (unquoted)
+crisp --inp my_corpus --print dataframe --print stats
 ```
 
 ### crispviz (Visualization CLI)

@@ -242,3 +242,71 @@ def test_cli_print_stats_deprecated(create_test_corpus):
         assert result.exit_code == 0
         assert "deprecated" in result.output
         assert "=== DataFrame Statistics ===" in result.output
+
+
+def test_cli_print_unquoted_syntax_documents():
+    """Test --print with unquoted syntax for documents N."""
+    runner = CliRunner()
+    result = runner.invoke(main, [
+        '--inp', 'tests/resources',
+        '--print', 'documents',
+        '--print', '3'
+    ])
+    
+    assert result.exit_code == 0
+    assert "=== Documents ===" in result.output
+    assert "Showing first 3 document(s)" in result.output
+
+
+def test_cli_print_unquoted_syntax_documents_metadata():
+    """Test --print with unquoted syntax for documents metadata."""
+    runner = CliRunner()
+    result = runner.invoke(main, [
+        '--inp', 'tests/resources',
+        '--print', 'documents',
+        '--print', 'metadata'
+    ])
+    
+    assert result.exit_code == 0
+    assert "=== Document Metadata ===" in result.output
+
+
+def test_cli_print_unquoted_syntax_dataframe_stats(create_test_corpus):
+    """Test --print with unquoted syntax for dataframe stats."""
+    runner = CliRunner()
+    
+    with tempfile.TemporaryDirectory() as tmpdir:
+        corpus = create_test_corpus(with_df=True)
+        
+        read_data = ReadData(corpus=corpus)
+        read_data.write_corpus_to_json(tmpdir, corpus=corpus)
+        
+        result = runner.invoke(main, [
+            '--inp', tmpdir,
+            '--print', 'dataframe',
+            '--print', 'stats'
+        ])
+        
+        assert result.exit_code == 0
+        assert "=== DataFrame Statistics ===" in result.output
+
+
+def test_cli_print_unquoted_syntax_metadata_key(create_test_corpus):
+    """Test --print with unquoted syntax for specific metadata key."""
+    runner = CliRunner()
+    
+    with tempfile.TemporaryDirectory() as tmpdir:
+        corpus = create_test_corpus(with_metadata=True)
+        
+        read_data = ReadData(corpus=corpus)
+        read_data.write_corpus_to_json(tmpdir, corpus=corpus)
+        
+        result = runner.invoke(main, [
+            '--inp', tmpdir,
+            '--print', 'metadata',
+            '--print', 'pca'
+        ])
+        
+        assert result.exit_code == 0
+        assert "=== Metadata: pca ===" in result.output
+        assert "explained_variance" in result.output

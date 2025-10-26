@@ -105,7 +105,7 @@ except ImportError:
 )
 @click.option("--outcome", default="", help="Outcome variable for ML tasks")
 @click.option("--source", "-s", help="Source URL or directory path to read data from")
-@click.option("--print", "-p", default=None, help="Display corpus information. Options: all, documents [N], documents metadata, dataframe, dataframe metadata, dataframe stats, metadata [KEY], stats (deprecated)")
+@click.option("--print", "-p", "print_args", multiple=True, help="Display corpus information. Usage: --print documents --print 10, or quoted: --print 'documents 10'")
 @click.option(
     "--sources",
     multiple=True,
@@ -144,7 +144,7 @@ def main(
     outcome,
     source,
     sources,
-    print,
+    print_args,
 ):
     """CRISP-T: Cross Industry Standard Process for Triangulation.
 
@@ -648,9 +648,12 @@ def main(
             read_data.write_corpus_to_json(str(save_base), corpus=corpus)
             click.echo(f"✓ Corpus and csv saved to {save_base}")
 
-        if print and corpus:
+        if print_args and corpus:
             click.echo("\n=== Corpus Details ===")
-            click.echo(corpus.pretty_print(show=print))
+            # Join the print arguments into a single string
+            print_command = " ".join(print_args) if print_args else None
+            if print_command:
+                click.echo(corpus.pretty_print(show=print_command))
 
         click.echo("\n=== Analysis Complete ===")
 
