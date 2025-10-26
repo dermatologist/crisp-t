@@ -36,10 +36,11 @@ crisp --inp crisp_input --assign
 ## Explore results
 
 ```bash
-crisp --print documents
+crisp --print "documents 10"
 ```
 
 * Notice that we have omitted --inp and --out as it defaults to `crisp_input` folder. If you want to use a different folder, use --inp or --out to specify it. The *--out* option helps to save intermediate results in a different folder.
+* The above command prints first 10 documents in the corpus with their assigned keywords.
 * Notice keywords assigned to each narrative.
 * You will notice *interviewee* and *interviewer* keywords. These are assigned based on the presence of these words in the narratives and may not be useful.
 * You may remove these keywords by using --ignore with assign and check the results again.
@@ -47,9 +48,13 @@ crisp --print documents
 ```bash
 crisp --assign --ignore interviewee,interviewer
 crisp --print documents
+crisp --print "metadata clusters"
 ```
 
 * Now you will see that these keywords are removed from the results.
+* It prints the first 5 documents by default.
+* Prints the clusters assigned to each document based on keywords.
+* There are many other options to explore the results. See documentation for details.
 * Let us choose narratives that contain 'work' keyword and show the concepts/topics in these narratives.
 
 ```bash
@@ -132,12 +137,12 @@ crisp --assign
 
 * Now print the results to examine.
 ```bash
-crisp --print documents
+crisp --print "metadata clusters"
 ```
 
 * Let us choose the cluster 1 and see the SMS classes in this cluster. (0=ham, 1=smish)
 ```bash
-crisp --filters cluster=1 --print stats
+crisp --filters cluster=1 --print "dataframe stats"
 ```
 
 * Next, let us check if the SMS texts converge towards predicting the CLASS (ham/ smish) variable with LSTM model.
