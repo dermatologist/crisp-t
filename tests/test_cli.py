@@ -170,8 +170,6 @@ def test_cli_print_dataframe(create_test_corpus):
     
     with tempfile.TemporaryDirectory() as tmpdir:
         corpus = create_test_corpus(with_df=True)
-        corpus.add_document(Document(id='1', text='Test', metadata={}))
-        corpus.df = pd.DataFrame({'id': [1, 2, 3], 'value': [10, 20, 30]})
         
         read_data = ReadData(corpus=corpus)
         read_data.write_corpus_to_json(tmpdir, corpus=corpus)
