@@ -33,10 +33,10 @@ def test_pretty_print(capsys):
     corpus = make_corpus()
     corpus.pretty_print()
     out = capsys.readouterr().out
-    assert "Corpus ID: corpus1" in out
+    assert "corpus1" in out # fix color codes are added to output
     assert "Document 0" in out
-    assert "DataFrame:" in out
-    assert "A" in out
+    assert "DataFrame" in out
+    assert "Corpus Metadata" in out
 
 
 def test_get_all_df_column_names():

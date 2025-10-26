@@ -104,7 +104,7 @@ crisp --source PATH --out PATH
 
 - `--codedict`: Generate qualitative coding dictionary
 - `--topics`: Generate topic model using LDA
-- `--assign`: Assign documents to topics
+- `--assign`: Assign documents to [topics](https://aisel.aisnet.org/cais/vol56/iss1/14/)
 - `--cat`: List categories of entire corpus or individual documents
 - `--summary`: Generate extractive text summary
 - `--sentiment`: Generate sentiment scores using VADER
@@ -126,11 +126,51 @@ crisp --source PATH --out PATH
 
 #### Display Options
 
-- `--print, -p TEXT`: Print corpus information; options: [all|documents|dataframe|metadata|stats]
-	documents: Lists the first 5 documents with IDs and text snippets
-	dataframe: Displays the DataFrame head (if available)
-	metadata: Shows corpus metadata
-	stats: Provides descriptive statistics from the DataFrame (if available)
+The `--print, -p` option provides flexible ways to display corpus information with color-coded output. You can use either quoted or unquoted syntax:
+
+**Syntax:**
+- Quoted: `--print "command subcommand"`
+- Unquoted: `--print command --print subcommand`
+
+**Basic Options:**
+- `--print all`: Display all corpus information (documents, dataframe, metadata)
+- `--print documents`: Show first 5 documents with IDs, names, and text snippets
+- `--print documents --print N`: Show first N documents (e.g., `--print documents --print 10` shows 10 documents)
+- `--print documents --print metadata`: Display metadata for all documents (categories, scores, etc.)
+
+**DataFrame Options:**
+- `--print dataframe`: Show DataFrame head with shape and column information
+- `--print dataframe --print metadata`: Display DataFrame columns starting with `metadata_` prefix
+- `--print dataframe --print stats`: Show descriptive statistics and value distributions
+
+**Metadata Options:**
+- `--print metadata`: Display all corpus metadata keys and values
+- `--print metadata --print KEY`: Show specific metadata (e.g., `--print metadata --print pca`)
+  - Available keys include: pca, numeric_clusters, kmeans, nnet_predictions, svm_confusion_matrix, decision_tree_accuracy, and more
+
+**Legacy Option:**
+- `--print stats`: (Deprecated) Use `--print dataframe --print stats` instead
+
+**Examples:**
+```bash
+# Show first 10 documents (unquoted syntax)
+crisp --print documents --print 10
+
+# Show first 10 documents (quoted syntax - backward compatible)
+crisp --print "documents 10"
+
+# View document metadata (unquoted)
+crisp --print documents --print metadata
+
+# View document metadata (quoted)
+crisp --print "documents metadata"
+
+# Check PCA results (unquoted)
+crisp --print metadata --print pca
+
+# View DataFrame statistics (unquoted)
+crisp --print dataframe --print stats
+```
 
 ### crispviz (Visualization CLI)
 
@@ -183,10 +223,10 @@ crispt [OPTIONS]
 	- `--rec THRESHOLD`: Threshold for semantic operations. For `--semantic-chunks`, use 0-10 (default: 8.5). For `--similar-docs`, use 0-1 (default: 0.7). Only results with similarity above this value are returned
 	- `--metadata-df`: Export collection metadata as DataFrame+
 	- `--metadata-keys KEYS`: Comma-separated metadata keys to include+
-- TDABM analysis:
-	- `--tdabm Y_VAR:X_VARS:RADIUS`: Perform Topological Data Analysis Ball Mapper (TDABM) analysis. Format: `y_variable:x_variables:radius` (e.g., `satisfaction:age,income:0.3`). Radius defaults to 0.3 if omitted. Based on Rudkin and Dlotko (2024), TDABM provides a model-free method to visualize multidimensional data and uncover hidden patterns.
+- [TDABM analysis](/notes/TDABM.md):
+	- `--tdabm Y_VAR:X_VARS:RADIUS`: Perform Topological Data Analysis Ball Mapper (TDABM) analysis. Format: `y_variable:x_variables:radius` (e.g., `satisfaction:age,income:0.3`). Radius defaults to 0.3 if omitted.
 
-	- + *The above two options can be used  to export or add metadata from NLP to the DataFrame. For example, you can extract sentiment scores or topic assignments as additional columns for numerical analysis. This is useful if dataframe and documents are aligned as in a survey response.*
+ℹ️ *`--metadata-df` and `--metadata-keys` options can be used  to export or add metadata from NLP to the DataFrame. For example, you can extract sentiment scores or topic assignments as additional columns for numerical analysis. This is useful if dataframe and documents are aligned as in a survey response.*
 
 ### [Example Usage](/notes/DEMO.md)
 
@@ -296,41 +336,11 @@ For detailed information about available functions, metadata handling, and theor
 
 [![crisp-t](https://github.com/dermatologist/crisp-t/blob/develop/notes/arch.drawio.svg)](https://github.com/dermatologist/crisp-t/blob/develop/notes/arch.drawio.svg)
 
-## TDABM (Topological Data Analysis Ball Mapper)
+## References
 
-CRISP-T implements the Topological Data Analysis Ball Mapper (TDABM) algorithm based on **Rudkin and Dlotko (2024)**. TDABM provides a model-free method to visualize multidimensional data and uncover hidden, global patterns in complex, noisy, or high-dimensional datasets.
+* [Mettler et al. (2025) Computational Text Analysis for Qualitative IS Research: A Methodological Reflection](https://aisel.aisnet.org/cais/vol56/iss1/14/)
+* [TDABM (Topological Data Analysis Ball Mapper) Rudkin and Dlotko (2024)](/notes/TDABM.md)
 
-### How TDABM Works
-
-1. **Point Cloud Creation**: Data is transformed into a point cloud where each axis represents one of the selected variables (X variables).
-2. **Ball Covering**: The algorithm randomly selects landmark points and creates balls of a specified radius around them, covering all data points.
-3. **Connection Mapping**: Landmark points with non-empty intersections are connected, revealing the topological structure of the data.
-4. **Visualization**: The result is visualized as a 2D graph where:
-   - Circle size represents the number of points in each ball
-   - Circle color represents the mean value of the outcome variable (Y), ranging from red (low) to purple (high)
-   - Lines connect overlapping balls, showing the data's topological structure
-
-### Using TDABM
-
-```bash
-# Perform TDABM analysis
-crispt --inp corpus_dir --tdabm satisfaction:age,income,education:0.3 --out corpus_dir
-
-# Visualize TDABM results
-crispviz --inp corpus_dir --tdabm --out visualizations
-```
-
-### When to Use TDABM
-
-- Discovering hidden patterns in multidimensional data
-- Visualizing relationships between multiple variables
-- Identifying clusters and connections in complex datasets
-- Performing model-free exploratory data analysis
-- Understanding global structure in high-dimensional data
-
-### Reference
-
-Rudkin, S., & Dlotko, P. (2024). Topological Data Analysis Ball Mapper for multidimensional data visualization. *Paper reference to be added - algorithm implementation based on the TDABM methodology described by the authors.*
 
 ## Citation
 
