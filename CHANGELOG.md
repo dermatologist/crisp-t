@@ -2,14 +2,16 @@
 
 ## [Unreleased](https://github.com/dermatologist/crisp-t/tree/HEAD)
 
-[Full Changelog](https://github.com/dermatologist/crisp-t/compare/v0.8.0...HEAD)
+[Full Changelog](https://github.com/dermatologist/crisp-t/compare/v0.9.0...HEAD)
 
 **Implemented enhancements:**
 
-- Feature Request: Implement Topological Data Analysis Ball Mapper \(TDABM\) [\#42](https://github.com/dermatologist/crisp-t/issues/42)
+- Feature request: Improve the --print command with more options and better display. [\#45](https://github.com/dermatologist/crisp-t/issues/45)
 
 **Merged pull requests:**
 
+- Add subcommand support, unquoted syntax, and color formatting to --print option [\#46](https://github.com/dermatologist/crisp-t/pull/46) ([Copilot](https://github.com/apps/copilot-swe-agent))
+- Update README and add TDABM documentation for multidimensional data v… [\#44](https://github.com/dermatologist/crisp-t/pull/44) ([dermatologist](https://github.com/dermatologist))
 - Implement TDABM \(Topological Data Analysis Ball Mapper\) for multidimensional data visualization [\#43](https://github.com/dermatologist/crisp-t/pull/43) ([Copilot](https://github.com/apps/copilot-swe-agent))
 - Update deps [\#41](https://github.com/dermatologist/crisp-t/pull/41) ([dermatologist](https://github.com/dermatologist))
 - Replace sample CSV with dynamically created temporary CSV for data pr… [\#40](https://github.com/dermatologist/crisp-t/pull/40) ([dermatologist](https://github.com/dermatologist))
@@ -37,6 +39,14 @@
 - Feature/uv 1 [\#8](https://github.com/dermatologist/crisp-t/pull/8) ([dermatologist](https://github.com/dermatologist))
 - Feature/readme 1 [\#4](https://github.com/dermatologist/crisp-t/pull/4) ([dermatologist](https://github.com/dermatologist))
 - Bump astral-sh/setup-uv from 5 to 6 [\#2](https://github.com/dermatologist/crisp-t/pull/2) ([dependabot[bot]](https://github.com/apps/dependabot))
+
+## [v0.9.0](https://github.com/dermatologist/crisp-t/tree/v0.9.0) (2025-10-25)
+
+[Full Changelog](https://github.com/dermatologist/crisp-t/compare/v0.8.0...v0.9.0)
+
+**Implemented enhancements:**
+
+- Feature Request: Implement Topological Data Analysis Ball Mapper \(TDABM\) [\#42](https://github.com/dermatologist/crisp-t/issues/42)
 
 ## [v0.8.0](https://github.com/dermatologist/crisp-t/tree/v0.8.0) (2025-10-22)
 
