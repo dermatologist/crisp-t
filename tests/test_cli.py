@@ -3,6 +3,30 @@ import tempfile
 import pathlib
 from click.testing import CliRunner
 from src.crisp_t.cli import main
+from src.crisp_t.model.corpus import Corpus
+from src.crisp_t.model.document import Document
+from src.crisp_t.read_data import ReadData
+import pandas as pd
+
+
+@pytest.fixture
+def create_test_corpus():
+    """Fixture to create test corpus with optional configurations."""
+    def _create_corpus(with_df=False, with_metadata=False, with_metadata_cols=False):
+        corpus = Corpus(id='test', name='Test', description='Test corpus')
+        corpus.add_document(Document(id='1', text='Test', metadata={}))
+        
+        if with_df:
+            df_data = {'id': [1, 2, 3], 'value': [10, 20, 30]}
+            if with_metadata_cols:
+                df_data['metadata_source'] = ['s1', 's2', 's3']
+            corpus.df = pd.DataFrame(df_data)
+        
+        if with_metadata:
+            corpus.metadata['pca'] = {'explained_variance': [0.4, 0.3, 0.2]}
+        
+        return corpus
+    return _create_corpus
 
 
 def test_cli_help():
@@ -100,18 +124,12 @@ def test_cli_print_documents_metadata():
     assert "=== Document Metadata ===" in result.output
 
 
-def test_cli_print_metadata():
+def test_cli_print_metadata(create_test_corpus):
     """Test --print metadata option."""
     runner = CliRunner()
     
-    # Create a temporary corpus with metadata
     with tempfile.TemporaryDirectory() as tmpdir:
-        from src.crisp_t.model.corpus import Corpus
-        from src.crisp_t.model.document import Document
-        from src.crisp_t.read_data import ReadData
-        
-        corpus = Corpus(id='test', name='Test', description='Test corpus')
-        corpus.add_document(Document(id='1', text='Test', metadata={}))
+        corpus = create_test_corpus()
         corpus.metadata['test_key'] = 'test_value'
         
         read_data = ReadData(corpus=corpus)
@@ -126,19 +144,12 @@ def test_cli_print_metadata():
         assert "=== Corpus Metadata ===" in result.output
 
 
-def test_cli_print_specific_metadata():
+def test_cli_print_specific_metadata(create_test_corpus):
     """Test --print metadata KEY option."""
     runner = CliRunner()
     
-    # Create a temporary corpus with specific metadata
     with tempfile.TemporaryDirectory() as tmpdir:
-        from src.crisp_t.model.corpus import Corpus
-        from src.crisp_t.model.document import Document
-        from src.crisp_t.read_data import ReadData
-        
-        corpus = Corpus(id='test', name='Test', description='Test corpus')
-        corpus.add_document(Document(id='1', text='Test', metadata={}))
-        corpus.metadata['pca'] = {'explained_variance': [0.4, 0.3, 0.2]}
+        corpus = create_test_corpus(with_metadata=True)
         
         read_data = ReadData(corpus=corpus)
         read_data.write_corpus_to_json(tmpdir, corpus=corpus)
@@ -153,18 +164,12 @@ def test_cli_print_specific_metadata():
         assert "explained_variance" in result.output
 
 
-def test_cli_print_dataframe():
+def test_cli_print_dataframe(create_test_corpus):
     """Test --print dataframe option."""
     runner = CliRunner()
     
-    # Create a temporary corpus with dataframe
     with tempfile.TemporaryDirectory() as tmpdir:
-        from src.crisp_t.model.corpus import Corpus
-        from src.crisp_t.model.document import Document
-        from src.crisp_t.read_data import ReadData
-        import pandas as pd
-        
-        corpus = Corpus(id='test', name='Test', description='Test corpus')
+        corpus = create_test_corpus(with_df=True)
         corpus.add_document(Document(id='1', text='Test', metadata={}))
         corpus.df = pd.DataFrame({'id': [1, 2, 3], 'value': [10, 20, 30]})
         
@@ -181,24 +186,12 @@ def test_cli_print_dataframe():
         assert "Shape:" in result.output
 
 
-def test_cli_print_dataframe_metadata():
+def test_cli_print_dataframe_metadata(create_test_corpus):
     """Test --print dataframe metadata option."""
     runner = CliRunner()
     
-    # Create a temporary corpus with dataframe containing metadata columns
     with tempfile.TemporaryDirectory() as tmpdir:
-        from src.crisp_t.model.corpus import Corpus
-        from src.crisp_t.model.document import Document
-        from src.crisp_t.read_data import ReadData
-        import pandas as pd
-        
-        corpus = Corpus(id='test', name='Test', description='Test corpus')
-        corpus.add_document(Document(id='1', text='Test', metadata={}))
-        corpus.df = pd.DataFrame({
-            'id': [1, 2, 3],
-            'value': [10, 20, 30],
-            'metadata_source': ['s1', 's2', 's3']
-        })
+        corpus = create_test_corpus(with_df=True, with_metadata_cols=True)
         
         read_data = ReadData(corpus=corpus)
         read_data.write_corpus_to_json(tmpdir, corpus=corpus)
@@ -213,20 +206,12 @@ def test_cli_print_dataframe_metadata():
         assert "metadata_source" in result.output
 
 
-def test_cli_print_dataframe_stats():
+def test_cli_print_dataframe_stats(create_test_corpus):
     """Test --print dataframe stats option."""
     runner = CliRunner()
     
-    # Create a temporary corpus with dataframe
     with tempfile.TemporaryDirectory() as tmpdir:
-        from src.crisp_t.model.corpus import Corpus
-        from src.crisp_t.model.document import Document
-        from src.crisp_t.read_data import ReadData
-        import pandas as pd
-        
-        corpus = Corpus(id='test', name='Test', description='Test corpus')
-        corpus.add_document(Document(id='1', text='Test', metadata={}))
-        corpus.df = pd.DataFrame({'id': [1, 2, 3], 'value': [10, 20, 30]})
+        corpus = create_test_corpus(with_df=True)
         
         read_data = ReadData(corpus=corpus)
         read_data.write_corpus_to_json(tmpdir, corpus=corpus)
@@ -241,20 +226,12 @@ def test_cli_print_dataframe_stats():
         assert "Distinct values per column:" in result.output
 
 
-def test_cli_print_stats_deprecated():
+def test_cli_print_stats_deprecated(create_test_corpus):
     """Test --print stats option (deprecated)."""
     runner = CliRunner()
     
-    # Create a temporary corpus with dataframe
     with tempfile.TemporaryDirectory() as tmpdir:
-        from src.crisp_t.model.corpus import Corpus
-        from src.crisp_t.model.document import Document
-        from src.crisp_t.read_data import ReadData
-        import pandas as pd
-        
-        corpus = Corpus(id='test', name='Test', description='Test corpus')
-        corpus.add_document(Document(id='1', text='Test', metadata={}))
-        corpus.df = pd.DataFrame({'id': [1, 2, 3], 'value': [10, 20, 30]})
+        corpus = create_test_corpus(with_df=True)
         
         read_data = ReadData(corpus=corpus)
         read_data.write_corpus_to_json(tmpdir, corpus=corpus)
