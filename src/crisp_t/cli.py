@@ -105,7 +105,7 @@ except ImportError:
 )
 @click.option("--outcome", default="", help="Outcome variable for ML tasks")
 @click.option("--source", "-s", help="Source URL or directory path to read data from")
-@click.option("--print", "-p", default=None, help="Pretty print the corpus to console [all|documents|dataframe|metadata|stats]")
+@click.option("--print", "-p", default=None, help="Display corpus information. Options: all, documents [N], documents metadata, dataframe, dataframe metadata, dataframe stats, metadata [KEY], stats (deprecated)")
 @click.option(
     "--sources",
     multiple=True,
