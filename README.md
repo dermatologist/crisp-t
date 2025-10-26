@@ -129,8 +129,8 @@ crisp --source PATH --out PATH
 The `--print, -p` option provides flexible ways to display corpus information with color-coded output. You can use either quoted or unquoted syntax:
 
 **Syntax:**
-- Quoted (backward compatible): `--print "command subcommand"`
-- Unquoted (new): `--print command --print subcommand`
+- Quoted: `--print "command subcommand"`
+- Unquoted: `--print command --print subcommand`
 
 **Basic Options:**
 - `--print all`: Display all corpus information (documents, dataframe, metadata)
@@ -154,22 +154,22 @@ The `--print, -p` option provides flexible ways to display corpus information wi
 **Examples:**
 ```bash
 # Show first 10 documents (unquoted syntax)
-crisp --inp my_corpus --print documents --print 10
+crisp --print documents --print 10
 
 # Show first 10 documents (quoted syntax - backward compatible)
-crisp --inp my_corpus --print "documents 10"
+crisp --print "documents 10"
 
 # View document metadata (unquoted)
-crisp --inp my_corpus --print documents --print metadata
+crisp --print documents --print metadata
 
 # View document metadata (quoted)
-crisp --inp my_corpus --print "documents metadata"
+crisp --print "documents metadata"
 
 # Check PCA results (unquoted)
-crisp --inp my_corpus --print metadata --print pca
+crisp --print metadata --print pca
 
 # View DataFrame statistics (unquoted)
-crisp --inp my_corpus --print dataframe --print stats
+crisp --print dataframe --print stats
 ```
 
 ### crispviz (Visualization CLI)
