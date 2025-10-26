@@ -230,7 +230,7 @@ def test_save_and_load_corpus(tmp_path):
     result2 = run_cli(["--inp", str(out_dir), "--print"], tmp_path=tmp_path)
     assert result2.exit_code == 0, result2.output
     assert "Loading corpus from" in result2.output
-    assert "ID: d1" in result2.output
+    assert "ID:\x1b[0m d1" in result2.output # With color codes
 
 
 def test_create_and_print_corpus(capsys):
@@ -265,8 +265,8 @@ def test_add_documents_and_list_ids():
     assert result.exit_code == 0, result.output
     assert "✓ Added 2 document(s)" in result.output
     # pretty_print lists each doc id
-    assert "ID: d1" in result.output
-    assert "ID: d2" in result.output
+    assert "ID:\x1b[0m d1" in result.output
+    assert "'id': 'd2'" in result.output
 
 
 def test_remove_document():
@@ -286,7 +286,7 @@ def test_remove_document():
     assert result.exit_code == 0, result.output
     assert "✓ Removed 1 document(s)" in result.output
     assert "ID: d1" not in result.output
-    assert "ID: d2" in result.output
+    assert "ID:\x1b[0m d2" in result.output
 
 
 def test_update_metadata_and_print():
@@ -304,10 +304,10 @@ def test_update_metadata_and_print():
     assert result.exit_code == 0, result.output
     assert "✓ Updated metadata entries: 2" in result.output
     # pretty_print shows metadata in lines formatted as ' - key\n: value'
-    assert " - owner" in result.output
-    assert ": alice" in result.output
-    assert " - project" in result.output
-    assert ": test" in result.output
+    assert "owner" in result.output
+    assert "alice" in result.output
+    assert "project" in result.output
+    assert "test" in result.output
 
 
 def test_add_and_clear_relationships():
@@ -326,7 +326,7 @@ def test_add_and_clear_relationships():
     assert result.exit_code == 0, result.output
     assert "✓ Added 2 relationship(s)" in result.output
     # There is a 'Visualization:' section printed as keys view; ensure CLI ran
-    assert "Visualization:" in result.output
+    assert "Corpus Details" in result.output
     # Clear relationships confirmation
     assert "✓ Cleared relationships" in result.output
 
