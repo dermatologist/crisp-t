@@ -126,11 +126,41 @@ crisp --source PATH --out PATH
 
 #### Display Options
 
-- `--print, -p TEXT`: Print corpus information; options: [all|documents|dataframe|metadata|stats]
-	documents: Lists the first 5 documents with IDs and text snippets
-	dataframe: Displays the DataFrame head (if available)
-	metadata: Shows corpus metadata
-	stats: Provides descriptive statistics from the DataFrame (if available)
+The `--print, -p` option provides flexible ways to display corpus information with color-coded output:
+
+**Basic Options:**
+- `--print all`: Display all corpus information (documents, dataframe, metadata)
+- `--print documents`: Show first 5 documents with IDs, names, and text snippets
+- `--print documents N`: Show first N documents (e.g., `--print "documents 10"` shows 10 documents)
+- `--print "documents metadata"`: Display metadata for all documents (categories, scores, etc.)
+
+**DataFrame Options:**
+- `--print dataframe`: Show DataFrame head with shape and column information
+- `--print "dataframe metadata"`: Display DataFrame columns starting with `metadata_` prefix
+- `--print "dataframe stats"`: Show descriptive statistics and value distributions
+
+**Metadata Options:**
+- `--print metadata`: Display all corpus metadata keys and values
+- `--print "metadata KEY"`: Show specific metadata (e.g., `--print "metadata pca"`, `--print "metadata numeric_clusters"`)
+  - Available keys include: pca, numeric_clusters, kmeans, nnet_predictions, svm_confusion_matrix, decision_tree_accuracy, and more
+
+**Legacy Option:**
+- `--print stats`: (Deprecated) Use `--print "dataframe stats"` instead
+
+**Examples:**
+```bash
+# Show first 10 documents
+crisp --inp my_corpus --print "documents 10"
+
+# View document metadata
+crisp --inp my_corpus --print "documents metadata"
+
+# Check PCA results
+crisp --inp my_corpus --print "metadata pca"
+
+# View DataFrame statistics
+crisp --inp my_corpus --print "dataframe stats"
+```
 
 ### crispviz (Visualization CLI)
 
