@@ -126,11 +126,51 @@ crisp --source PATH --out PATH
 
 #### Display Options
 
-- `--print, -p TEXT`: Print corpus information; options: [all|documents|dataframe|metadata|stats]
-	documents: Lists the first 5 documents with IDs and text snippets
-	dataframe: Displays the DataFrame head (if available)
-	metadata: Shows corpus metadata
-	stats: Provides descriptive statistics from the DataFrame (if available)
+The `--print, -p` option provides flexible ways to display corpus information with color-coded output. You can use either quoted or unquoted syntax:
+
+**Syntax:**
+- Quoted: `--print "command subcommand"`
+- Unquoted: `--print command --print subcommand`
+
+**Basic Options:**
+- `--print all`: Display all corpus information (documents, dataframe, metadata)
+- `--print documents`: Show first 5 documents with IDs, names, and text snippets
+- `--print documents --print N`: Show first N documents (e.g., `--print documents --print 10` shows 10 documents)
+- `--print documents --print metadata`: Display metadata for all documents (categories, scores, etc.)
+
+**DataFrame Options:**
+- `--print dataframe`: Show DataFrame head with shape and column information
+- `--print dataframe --print metadata`: Display DataFrame columns starting with `metadata_` prefix
+- `--print dataframe --print stats`: Show descriptive statistics and value distributions
+
+**Metadata Options:**
+- `--print metadata`: Display all corpus metadata keys and values
+- `--print metadata --print KEY`: Show specific metadata (e.g., `--print metadata --print pca`)
+  - Available keys include: pca, numeric_clusters, kmeans, nnet_predictions, svm_confusion_matrix, decision_tree_accuracy, and more
+
+**Legacy Option:**
+- `--print stats`: (Deprecated) Use `--print dataframe --print stats` instead
+
+**Examples:**
+```bash
+# Show first 10 documents (unquoted syntax)
+crisp --print documents --print 10
+
+# Show first 10 documents (quoted syntax - backward compatible)
+crisp --print "documents 10"
+
+# View document metadata (unquoted)
+crisp --print documents --print metadata
+
+# View document metadata (quoted)
+crisp --print "documents metadata"
+
+# Check PCA results (unquoted)
+crisp --print metadata --print pca
+
+# View DataFrame statistics (unquoted)
+crisp --print dataframe --print stats
+```
 
 ### crispviz (Visualization CLI)
 
