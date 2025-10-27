@@ -31,6 +31,8 @@ from tqdm import tqdm
 import tempfile
 import os
 from spacy.tokens import DocBin
+import multiprocessing
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from .model import Corpus, SpacyManager
 from .utils import QRUtils
 
@@ -234,8 +236,6 @@ class Text:
             spacy_doc = self._spacy_doc
 
         logger.info("Spacy doc created.")
-        import multiprocessing
-        from concurrent.futures import ThreadPoolExecutor, as_completed
 
         n_cores = multiprocessing.cpu_count()
 

@@ -22,12 +22,13 @@ import logging
 import os
 import re
 import tempfile
-
+import datetime
 import pandas as pd
 import requests
 from pypdf import PdfReader
 from tqdm import tqdm
-
+import multiprocessing
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from .csv import Csv
 from .model import Corpus, Document
 
@@ -134,12 +135,14 @@ class ReadData:
             self._corpus.documents = self._documents
             self._corpus.df = self._df
         else:
+            timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+            corpus_id = f"corpus_{timestamp}"
             self._corpus = Corpus(
                 documents=self._documents,
                 df=self._df,
                 visualization={},
                 metadata={},
-                id="corpus",
+                id=corpus_id,
                 score=0.0,
                 name=name,
                 description=description,
@@ -166,9 +169,6 @@ class ReadData:
                 if document.id == doc_id:
                     return document
         else:
-            import multiprocessing
-            from concurrent.futures import ThreadPoolExecutor, as_completed
-
             n_cores = multiprocessing.cpu_count()
             with ThreadPoolExecutor() as executor:
                 futures = {
@@ -253,8 +253,6 @@ class ReadData:
                         )
                 processed_docs.append(document)
         else:
-            from concurrent.futures import ThreadPoolExecutor, as_completed
-
             def process_doc(document):
                 if comma_separated_ignore_words:
                     for word in comma_separated_ignore_words.split(","):
@@ -267,8 +265,6 @@ class ReadData:
                 return document
 
             processed_docs = []
-            import multiprocessing
-
             n_cores = multiprocessing.cpu_count()
             with ThreadPoolExecutor() as executor:
                 futures = {
