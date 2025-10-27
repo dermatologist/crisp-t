@@ -23,6 +23,7 @@ import os
 import re
 import tempfile
 import datetime
+from pathlib import Path
 import pandas as pd
 import requests
 from pypdf import PdfReader
@@ -428,8 +429,6 @@ class ReadData:
                 )
                 self._documents.append(_document)
         elif os.path.exists(source):
-            from pathlib import Path
-
             source_path = Path(source)
             self._source = source
             logger.info(f"Reading data from folder: {source}")
@@ -552,15 +551,9 @@ id,number,response
                 )
             ]
         else:
-            from concurrent.futures import ThreadPoolExecutor, as_completed
-
             data = []
-
             def dump_doc(document):
                 return document.model_dump()
-
-            import multiprocessing
-
             n_cores = multiprocessing.cpu_count()
             with ThreadPoolExecutor() as executor:
                 futures = {
