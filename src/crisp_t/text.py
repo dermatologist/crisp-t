@@ -68,7 +68,6 @@ class Text:
         self._max_length = max_length
         self._initial_document_count = len(self._corpus.documents) if corpus else 0  # type: ignore
 
-
     @property
     def corpus(self):
         """
@@ -188,6 +187,16 @@ class Text:
     def make_each_document_into_spacy_doc(self, id="corpus"):
         if self._corpus is None:
             raise ValueError("Corpus is not set")
+
+        # ! if cached file exists, load it
+        cache_dir = Path("cache")
+        cache_file = cache_dir / f"spacy_docs_{id}.pkl"
+        if cache_file.exists():
+            with open(cache_file, "rb") as f:
+                spacy_docs, ids = pickle.load(f)
+            logger.info("Loaded cached spacy docs and ids.")
+            return spacy_docs, ids
+
         spacy_docs = []
         ids = []
         for document in tqdm(
@@ -202,6 +211,13 @@ class Text:
             spacy_doc = nlp(text)
             spacy_docs.append(spacy_doc)
             ids.append(document.id)
+
+        # ! dump spacy_docs, ids to a file for caching with the corpus id
+        cache_dir = Path("cache")
+        cache_dir.mkdir(exist_ok=True)
+        cache_file = cache_dir / f"spacy_docs_{id}.pkl"
+        with open(cache_file, "wb") as f:
+            pickle.dump((spacy_docs, ids), f)
         return spacy_docs, ids
 
     def process_text(self, text: str) -> str:
@@ -227,13 +243,13 @@ class Text:
         """
 
         # ! if cached file exists, load it
-        # cache_dir = Path("cache")
-        # cache_file = cache_dir / f"spacy_doc_{id}.pkl"
-        # if cache_file.exists():
-        #     with open(cache_file, "rb") as f:
-        #         spacy_doc, results = pickle.load(f)
-        #     logger.info("Loaded cached spacy doc and results.")
-        #     return spacy_doc, results
+        cache_dir = Path("cache")
+        cache_file = cache_dir / f"spacy_doc_{id}.pkl"
+        if cache_file.exists():
+            with open(cache_file, "rb") as f:
+                spacy_doc, results = pickle.load(f)
+            logger.info("Loaded cached spacy doc and results.")
+            return spacy_doc, results
 
         spacy_doc = self.make_spacy_doc()
         logger.info("Spacy doc created.")
@@ -302,11 +318,11 @@ class Text:
             "idx": _idx,
         }
         # ! dump spacy_doc, results to a file for caching with the corpus id
-        # cache_dir = Path("cache")
-        # cache_dir.mkdir(exist_ok=True)
-        # cache_file = cache_dir / f"spacy_doc_{id}.pkl"
-        # with open(cache_file, "wb") as f:
-        #     pickle.dump((spacy_doc, results), f)
+        cache_dir = Path("cache")
+        cache_dir.mkdir(exist_ok=True)
+        cache_file = cache_dir / f"spacy_doc_{id}.pkl"
+        with open(cache_file, "wb") as f:
+            pickle.dump((spacy_doc, results), f)
 
         return spacy_doc, results
 
