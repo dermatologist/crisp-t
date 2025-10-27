@@ -48,17 +48,6 @@ logger = logging.getLogger(__name__)
 
 class Text:
 
-    _spacy_doc = None
-    _lemma = {}
-    _pos = {}
-    _pos_ = {}
-    _word = {}
-    _sentiment = {}
-    _tag = {}
-    _dep = {}
-    _prob = {}
-    _idx = {}
-
     def __init__(
         self, corpus: Optional[Corpus] = None, lang="en_core_web_sm", max_length=1100000
     ):
@@ -67,6 +56,17 @@ class Text:
         self._spacy_manager = SpacyManager(self._lang)
         self._max_length = max_length
         self._initial_document_count = len(self._corpus.documents) if corpus else 0  # type: ignore
+
+        self._spacy_doc = None
+        self._lemma = {}
+        self._pos = {}
+        self._pos_ = {}
+        self._word = {}
+        self._sentiment = {}
+        self._tag = {}
+        self._dep = {}
+        self._prob = {}
+        self._idx = {}
 
     @property
     def corpus(self):
