@@ -24,14 +24,14 @@ crisp --source crisp_source --out crisp_input
 * *--inp crisp_input* below is optional as it defaults to `crisp_input` folder.
 
 ```bash
-crisp --inp crisp_input --assign
+crisp --inp crisp_input --assign --out crisp_input
 ```
 
 * The results will be saved in the same `crisp_input` folder, overwriting the corpus file.
 * You may run several other analyses ([see documentation](https://dermatologist.github.io/crisp-t/) for details) and tweak parameters as needed.
 * Hints will be provided in the terminal.
 
-**From now on, we will use `crisp_input` folder as input and output folder unless specified otherwise as that is the default.**
+**From now on, we will use `crisp_input` folder as input folder unless specified otherwise as that is the default.**
 
 ## Explore results
 
@@ -39,30 +39,41 @@ crisp --inp crisp_input --assign
 crisp --print "documents 10"
 ```
 
-* Notice that we have omitted --inp as it defaults to `crisp_input` folder. If you want to use a different folder, use --inp or --out to specify it. The *--out* option helps to save intermediate results in a different folder.
-* The above command prints first 10 documents in the corpus with their assigned keywords.
-* Notice keywords assigned to each narrative.
+* Notice that we have omitted --inp as it defaults to `crisp_input` folder. If you want to use a different folder, use --inp to specify it. The *--out* option helps to save intermediate results in a different folder.
+* The above command prints first 10 documents in the corpus.
+
+* Next, let us see the metadata assigned to each document.
+
+```bash
+crisp --print "documents metadata"
+```
+
+* Notice keywords/topics assigned to each narrative.
 * You will notice *interviewee* and *interviewer* keywords. These are assigned based on the presence of these words in the narratives and may not be useful.
 * You may remove these keywords by using --ignore with assign and check the results again.
 
 ```bash
 crisp --clear --assign --ignore interviewee,interviewer --out crisp_input
-crisp --print documents
-crisp --print "metadata clusters"
+crisp --print "documents metadata"
 ```
 
 * *--clear* option clears the cache before running the analysis.
+⚠️ **While analysing multiple datasets, use `crisp --clear` option to clear cache before switching datasets.** ⚠️
 * Now you will see that these keywords are removed from the results.
 * It prints the first 5 documents by default.
+
+```bash
+crisp --print "metadata clusters"
+```
 * Prints the clusters assigned to each document based on keywords.
 * There are many other options to explore the results. See documentation for details.
 * Let us choose narratives that contain 'work' keyword and show the concepts/topics in these narratives.
 
 ```bash
-crisp --inp crisp_input --clear --filters keywords=work --topics --out crisp_input2
+crisp --inp crisp_input --clear --filters keywords=mask --topics
 ```
 
-* `Applied filters ['keywords=work']; remaining documents: 51`
+* The above results will not be saved as --out is not specified.
 * Notice *time*, *people* as topics in this subset of narratives.
 * If --filters is used, only the filtered documents are used for the analysis. When using filters you should explicitly specify --inp and --out options with different folders to avoid overwriting the input data.
 
@@ -74,7 +85,7 @@ crisp --inp crisp_input --clear --filters keywords=work --topics --out crisp_inp
 crisp --include relaxed,self_time,sleep_bal,time_dp,travel_time,home_env --kmeans
 ```
 
-* Notice 3 clusters with different centroids. (number of clusters can be changed with --num option). Profile of each cluster can be seen with --profile option.
+* Notice 3 clusters with different centroids. (number of clusters can be changed with --num option).
 
 ## Confirmation
 
@@ -97,6 +108,8 @@ crisp --include relaxed,self_time,sleep_bal,time_dp,travel_time,home_env --regre
 crisp --include relaxed,self_time,sleep_bal,time_dp,travel_time,home_env --cls --outcome relaxed
 ```
 
+* Relaxed is converted to binary variable internally for classification.
+* Ideally, you should do the binary conversion externally based on domain knowledge.
 * Notice that self_time is the most important variable in predicting relaxed.
 
 ### [Topological Data Analysis](https://www.arxiv.org/abs/2504.14081) Rudkin, S., & Dlotko, P. (2024)
@@ -105,7 +118,7 @@ crisp --include relaxed,self_time,sleep_bal,time_dp,travel_time,home_env --cls -
 
 ```bash
 
-crispt --tdabm relaxed:self_time,sleep_bal,time_dp,travel_time:0.6
+crispt --tdabm relaxed:self_time,sleep_bal,time_dp,travel_time:0.6 --out crisp_input
 
 ```
 * Let us visualize the TDA network.
