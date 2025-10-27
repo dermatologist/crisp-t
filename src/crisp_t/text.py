@@ -25,6 +25,7 @@ import spacy
 import textacy
 from mlxtend.frequent_patterns import apriori, association_rules
 from mlxtend.preprocessing import TransactionEncoder
+from spacy.tokens import Doc
 from textacy import preprocessing
 from tqdm import tqdm
 
@@ -139,16 +140,35 @@ class Text:
         if self._corpus is None:
             raise ValueError("Corpus is not set")
         text = ""
-        for document in tqdm(self._corpus.documents, desc="Processing documents", disable=len(self._corpus.documents) < 10):
+        for document in tqdm(
+            self._corpus.documents,
+            desc="Processing documents",
+            disable=len(self._corpus.documents) < 10,
+        ):
             text += self.process_text(document.text) + " \n"
             metadata = document.metadata
         nlp = self._spacy_manager.get_model()
-        # Throw warning if text length exceeds max_length
-        if len(text) > self._max_length:
-            logger.warning(f"Text length {len(text)} exceeds max_length {self._max_length}. Increasing max_length. (This may lead to memory issues)")
-            self._max_length = len(text) + 1000  # add buffer
         nlp.max_length = self._max_length
-        self._spacy_doc = nlp(text)
+        if len(text) > self._max_length:
+            # Process self._max_length at a time
+            logger.warning(
+                f"Text length {len(text)} exceeds max_length {self._max_length}."
+            )
+            # split text into chunks of max_length
+            text_chunks = [
+                text[i : i + self._max_length]
+                for i in range(0, len(text), self._max_length)
+            ]
+            spacy_docs = []
+            for chunk in tqdm(text_chunks, desc="Processing text as chunks of max_length"):
+                spacy_doc = nlp(chunk)
+                spacy_docs.append(spacy_doc)
+            # merge spacy_docs into one
+            self._spacy_doc = spacy_docs[0]
+            for doc in tqdm(spacy_docs[1:], desc="Merging spacy docs"):
+                self._spacy_doc = Doc.from_docs([self._spacy_doc, doc])  # type: ignore
+        else:
+            self._spacy_doc = nlp(text)
         return self._spacy_doc
 
     def make_each_document_into_spacy_doc(self):
@@ -156,7 +176,11 @@ class Text:
             raise ValueError("Corpus is not set")
         spacy_docs = []
         ids = []
-        for document in tqdm(self._corpus.documents, desc="Creating spacy docs", disable=len(self._corpus.documents) < 10):
+        for document in tqdm(
+            self._corpus.documents,
+            desc="Creating spacy docs",
+            disable=len(self._corpus.documents) < 10,
+        ):
             text = self.process_text(document.text)
             metadata = document.metadata
             nlp = self._spacy_manager.get_model()
@@ -187,22 +211,54 @@ class Text:
             spacy_doc = self.make_spacy_doc()
         else:
             spacy_doc = self._spacy_doc
-        for token in spacy_doc:
+
+        logger.info("Spacy doc created.")
+        import multiprocessing
+        from concurrent.futures import ThreadPoolExecutor, as_completed
+
+        n_cores = multiprocessing.cpu_count()
+
+        def process_token(token):
             if token.is_stop or token.is_digit or token.is_punct or token.is_space:
-                continue
+                return None
             if token.like_url or token.like_num or token.like_email:
-                continue
+                return None
             if len(token.text) < 3 or token.text.isupper():
-                continue
-            self._lemma[token.text] = token.lemma_
-            self._pos[token.text] = token.pos_
-            self._pos_[token.text] = token.pos
-            self._word[token.text] = token.lemma_
-            self._sentiment = token.sentiment
-            self._tag = token.tag_
-            self._dep = token.dep_
-            self._prob = token.prob
-            self._idx = token.idx
+                return None
+            return {
+                "text": token.text,
+                "lemma": token.lemma_,
+                "pos": token.pos_,
+                "pos_": token.pos,
+                "word": token.lemma_,
+                "sentiment": token.sentiment,
+                "tag": token.tag_,
+                "dep": token.dep_,
+                "prob": token.prob,
+                "idx": token.idx,
+            }
+
+        tokens = list(spacy_doc)
+        results = []
+        with ThreadPoolExecutor() as executor:
+            futures = {executor.submit(process_token, token): token for token in tokens}
+            with tqdm(
+                total=len(futures),
+                desc=f"Processing tokens (parallel, {n_cores} cores)",
+            ) as pbar:
+                for future in as_completed(futures):
+                    result = future.result()
+                    if result is not None:
+                        self._lemma[result["text"]] = result["lemma"]
+                        self._pos[result["text"]] = result["pos"]
+                        self._pos_[result["text"]] = result["pos_"]
+                        self._word[result["text"]] = result["word"]
+                        self._sentiment = result["sentiment"]
+                        self._tag = result["tag"]
+                        self._dep = result["dep"]
+                        self._prob = result["prob"]
+                        self._idx = result["idx"]
+                    pbar.update(1)
 
     def common_words(self, index=10):
         _words = {}
@@ -330,7 +386,11 @@ class Text:
         if self._corpus is None:
             raise ValueError("Corpus is not set")
         filtered_documents = []
-        for document in tqdm(self._corpus.documents, desc="Filtering documents", disable=len(self._corpus.documents) < 10):
+        for document in tqdm(
+            self._corpus.documents,
+            desc="Filtering documents",
+            disable=len(self._corpus.documents) < 10,
+        ):
             meta_val = document.metadata.get(metadata_key)
             # Check meta_val is not None and is iterable (str, list, tuple, set)
             if meta_val is not None and isinstance(meta_val, (str, list, tuple, set)):
