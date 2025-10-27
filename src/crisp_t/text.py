@@ -36,6 +36,10 @@ textacy.set_doc_extensions("extract.bags")  # type: ignore
 import warnings
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 class Text:
@@ -139,6 +143,10 @@ class Text:
             text += self.process_text(document.text) + " \n"
             metadata = document.metadata
         nlp = self._spacy_manager.get_model()
+        # Throw warning if text length exceeds max_length
+        if len(text) > self._max_length:
+            logger.warning(f"Text length {len(text)} exceeds max_length {self._max_length}. Increasing max_length. (This may lead to memory issues)")
+            self._max_length = len(text) + 1000  # add buffer
         nlp.max_length = self._max_length
         self._spacy_doc = nlp(text)
         return self._spacy_doc

@@ -42,7 +42,6 @@ logger = logging.getLogger(__name__)
 class ReadData:
 
     def __init__(self, corpus: Corpus | None = None, source=None):
-        self._content = ""
         self._corpus = corpus
         self._source = source
         self._documents = []
@@ -377,7 +376,6 @@ class ReadData:
             for read_from_file, _document in tqdm(
                 results, desc="Finalizing corpus", disable=True
             ):
-                self._content += read_from_file
                 self._documents.append(_document)
         else:
 
@@ -399,7 +397,6 @@ class ReadData:
                 ) as pbar:
                     for future in as_completed(futures):
                         read_from_file, _document = future.result()
-                        self._content += read_from_file
                         self._documents.append(_document)
                         pbar.update(1)
         logger.info(f"Corpus read from {file_name}")
@@ -424,7 +421,7 @@ class ReadData:
                             read_from_file,
                             flags=re.IGNORECASE,
                         )
-                self._content = read_from_file
+                # self._content removed
                 _document = Document(
                     text=read_from_file,
                     metadata={"source": source},
@@ -457,7 +454,7 @@ class ReadData:
                                     read_from_file,
                                     flags=re.IGNORECASE,
                                 )
-                        self._content += read_from_file
+                        # self._content removed
                         _document = Document(
                             text=read_from_file,
                             metadata={
@@ -490,7 +487,7 @@ class ReadData:
                                     read_from_file,
                                     flags=re.IGNORECASE,
                                 )
-                        self._content += read_from_file
+                        # self._content removed
                         _document = Document(
                             text=read_from_file,
                             metadata={
