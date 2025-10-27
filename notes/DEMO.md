@@ -125,7 +125,7 @@ crispviz --tdabm --out viz_out/
 * Import the csv file to `crisp_input` folder using the following command.
 
 ```bash
-crisp --source crisp_source/ ```--unstructured SMS
+crisp --source crisp_source/ --unstructured SMS
 ```
 
 * Notice that the text column SMS is specified with --unstructured option. This creates CRISP documents from the text column.
