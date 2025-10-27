@@ -19,7 +19,8 @@ along with crisp-t.  If not, see <https://www.gnu.org/licenses/>.
 
 import operator
 from typing import Optional
-
+from pathlib import Path
+import pickle
 import pandas as pd
 import spacy
 import textacy
@@ -28,9 +29,7 @@ from mlxtend.preprocessing import TransactionEncoder
 from spacy.tokens import Doc
 from textacy import preprocessing
 from tqdm import tqdm
-import tempfile
-import os
-from spacy.tokens import DocBin
+from functools import lru_cache
 import multiprocessing
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from .model import Corpus, SpacyManager
@@ -56,18 +55,18 @@ class Text:
         self._lang = lang
         self._spacy_manager = SpacyManager(self._lang)
         self._max_length = max_length
-        self._spacy_doc = None
-        self._lemma = {}
-        self._pos = {}
-        self._pos_ = {}
-        self._word = {}
-        self._sentiment = {}
-        self._tag = {}
-        self._dep = {}
-        self._prob = {}
-        self._idx = {}
         self._initial_document_count = len(self._corpus.documents) if corpus else 0  # type: ignore
-        self.process_tokens()
+        spacy_doc, results = self.process_tokens(self._corpus.id if self._corpus else None)
+        self._spacy_doc = spacy_doc
+        self._lemma = results["lemma"]
+        self._pos = results["pos"]
+        self._pos_ = results["pos_"]
+        self._word = results["word"]
+        self._sentiment = results["sentiment"]
+        self._tag = results["tag"]
+        self._dep = results["dep"]
+        self._prob = results["prob"]
+        self._idx = results["idx"]
 
     @property
     def corpus(self):
@@ -107,17 +106,17 @@ class Text:
         if not isinstance(corpus, Corpus):
             raise ValueError("Corpus must be of type Corpus")
         self._corpus = corpus
-        self._spacy_doc = None  # Reset spacy_doc when a new corpus is set
-        self._lemma = {}
-        self._pos = {}
-        self._pos_ = {}
-        self._word = {}
-        self._sentiment = {}
-        self._tag = {}
-        self._dep = {}
-        self._prob = {}
-        self._idx = {}
-        self.process_tokens()
+        spacy_doc, results = self.process_tokens(self._corpus.id if self._corpus else None)
+        self._spacy_doc = spacy_doc
+        self._lemma = results["lemma"]
+        self._pos = results["pos"]
+        self._pos_ = results["pos_"]
+        self._word = results["word"]
+        self._sentiment = results["sentiment"]
+        self._tag = results["tag"]
+        self._dep = results["dep"]
+        self._prob = results["prob"]
+        self._idx = results["idx"]
 
     @max_length.setter
     def max_length(self, max_length: int):
@@ -138,7 +137,17 @@ class Text:
         if not isinstance(lang, str):
             raise ValueError("lang must be a string")
         self._lang = lang
-        self.process_tokens()
+        spacy_doc, results = self.process_tokens(self._corpus.id if self._corpus else None)
+        self._spacy_doc = spacy_doc
+        self._lemma = results["lemma"]
+        self._pos = results["pos"]
+        self._pos_ = results["pos_"]
+        self._word = results["word"]
+        self._sentiment = results["sentiment"]
+        self._tag = results["tag"]
+        self._dep = results["dep"]
+        self._prob = results["prob"]
+        self._idx = results["idx"]
 
     def make_spacy_doc(self):
         if self._corpus is None:
@@ -209,12 +218,22 @@ class Text:
         text = text.lower()
         return text
 
-    def process_tokens(self):
-        if self._spacy_doc is None:
-            spacy_doc = self.make_spacy_doc()
-        else:
-            spacy_doc = self._spacy_doc
+    @lru_cache(maxsize=3)
+    def process_tokens(self, id="corpus"):
+        """
+        Process tokens in the spacy document and extract relevant information.
+        """
 
+        # if cached file exists, load it
+        cache_dir = Path("cache")
+        cache_file = cache_dir / f"spacy_doc_{id}.pkl"
+        if cache_file.exists():
+            with open(cache_file, "rb") as f:
+                spacy_doc, results = pickle.load(f)
+            logger.info("Loaded cached spacy doc and results.")
+            return spacy_doc, results
+
+        spacy_doc = self.make_spacy_doc()
         logger.info("Spacy doc created.")
 
         n_cores = multiprocessing.cpu_count()
@@ -240,7 +259,15 @@ class Text:
             }
 
         tokens = list(spacy_doc)
-        results = []
+        _lemma = {}
+        _pos = {}
+        _pos_ = {}
+        _word = {}
+        _sentiment = {}
+        _tag = {}
+        _dep = {}
+        _prob = {}
+        _idx = {}
         with ThreadPoolExecutor() as executor:
             futures = {executor.submit(process_token, token): token for token in tokens}
             with tqdm(
@@ -250,16 +277,37 @@ class Text:
                 for future in as_completed(futures):
                     result = future.result()
                     if result is not None:
-                        self._lemma[result["text"]] = result["lemma"]
-                        self._pos[result["text"]] = result["pos"]
-                        self._pos_[result["text"]] = result["pos_"]
-                        self._word[result["text"]] = result["word"]
-                        self._sentiment = result["sentiment"]
-                        self._tag = result["tag"]
-                        self._dep = result["dep"]
-                        self._prob = result["prob"]
-                        self._idx = result["idx"]
+                        _lemma[result["text"]] = result["lemma"]
+                        _pos[result["text"]] = result["pos"]
+                        _pos_[result["text"]] = result["pos_"]
+                        _word[result["text"]] = result["word"]
+                        _sentiment = result["sentiment"]
+                        _tag = result["tag"]
+                        _dep = result["dep"]
+                        _prob = result["prob"]
+                        _idx = result["idx"]
                     pbar.update(1)
+        logger.info("Token processing complete.")
+        results = {
+            "lemma": _lemma,
+            "pos": _pos,
+            "pos_": _pos_,
+            "word": _word,
+            "sentiment": _sentiment,
+            "tag": _tag,
+            "dep": _dep,
+            "prob": _prob,
+            "idx": _idx,
+        }
+        # dump spacy_doc, results to a file for caching with the corpus id
+
+        cache_dir = Path("cache")
+        cache_dir.mkdir(exist_ok=True)
+        cache_file = cache_dir / f"spacy_doc_{id}.pkl"
+        with open(cache_file, "wb") as f:
+            pickle.dump((spacy_doc, results), f)
+
+        return spacy_doc, results
 
     def common_words(self, index=10):
         _words = {}

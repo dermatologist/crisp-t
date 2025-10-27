@@ -30,6 +30,7 @@ from pypdf import PdfReader
 from tqdm import tqdm
 import multiprocessing
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from functools import lru_cache
 from .csv import Csv
 from .model import Corpus, Document
 
@@ -218,6 +219,7 @@ class ReadData:
                 corp.df.to_csv(df_name, index=False)
         logger.info("Corpus written to %s", file_name)
 
+    @lru_cache(maxsize=3)
     def read_corpus_from_json(self, file_path="", comma_separated_ignore_words=""):
         """
         Read the corpus from a json file. Parallelizes ignore word removal for large corpora.
@@ -282,6 +284,7 @@ class ReadData:
         self._corpus.documents = processed_docs
         return self._corpus
 
+    @lru_cache(maxsize=3)
     def read_csv_to_corpus(
         self,
         file_name,
