@@ -22,6 +22,7 @@ import logging
 import os
 import re
 import tempfile
+
 import pandas as pd
 import requests
 from pypdf import PdfReader
@@ -156,13 +157,26 @@ class ReadData:
 
     def get_document_by_id(self, doc_id):
         """
-        Get a document from the corpus by its ID.
+        Get a document from the corpus by its ID. Uses parallel search for large corpora.
         """
         if not self._corpus:
             raise ValueError("No corpus found. Please create a corpus first.")
-        for document in tqdm(self._corpus.documents, desc="Searching documents", disable=len(self._corpus.documents) < 10):
-            if document.id == doc_id:
-                return document
+        documents = self._corpus.documents
+        if len(documents) < 10:
+            for document in tqdm(documents, desc="Searching documents", disable=True):
+                if document.id == doc_id:
+                    return document
+        else:
+            from concurrent.futures import ThreadPoolExecutor
+
+            def match_doc(document):
+                return document.id == doc_id
+
+            with ThreadPoolExecutor() as executor:
+                results = list(executor.map(match_doc, documents))
+            for i, found in enumerate(results):
+                if found:
+                    return documents[i]
         raise ValueError("Document not found: %s" % doc_id)
 
     def write_corpus_to_json(self, file_path="", corpus=None):
@@ -190,13 +204,14 @@ class ReadData:
         file_name.parent.mkdir(parents=True, exist_ok=True)
         with open(file_name, "w") as f:
             json.dump(corp.model_dump(exclude={"df", "visualization"}), f, indent=4)
-        if getattr(corp, "df", None) is not None and not corp.df.empty:
-            corp.df.to_csv(df_name, index=False)
+        if corp.df is not None and isinstance(corp.df, pd.DataFrame):
+            if not corp.df.empty:
+                corp.df.to_csv(df_name, index=False)
         logger.info("Corpus written to %s", file_name)
 
     def read_corpus_from_json(self, file_path="", comma_separated_ignore_words=""):
         """
-        Read the corpus from a json file.
+        Read the corpus from a json file. Parallelizes ignore word removal for large corpora.
         """
         from pathlib import Path
 
@@ -216,18 +231,36 @@ class ReadData:
         else:
             self._corpus.df = None
         # Remove ignore words from self._corpus.documents text
-        documents = []
-        for document in tqdm(self._corpus.documents, desc="Processing documents", disable=len(self._corpus.documents) < 10):
-            if comma_separated_ignore_words:
-                for word in comma_separated_ignore_words.split(","):
-                    document.text = re.sub(
-                        r"\b" + word.strip() + r"\b",
-                        "",
-                        document.text,
-                        flags=re.IGNORECASE,
-                    )
-            documents.append(document)
-        self._corpus.documents = documents
+        documents = self._corpus.documents
+        if len(documents) < 10:
+            processed_docs = []
+            for document in tqdm(documents, desc="Processing documents", disable=True):
+                if comma_separated_ignore_words:
+                    for word in comma_separated_ignore_words.split(","):
+                        document.text = re.sub(
+                            r"\b" + word.strip() + r"\b",
+                            "",
+                            document.text,
+                            flags=re.IGNORECASE,
+                        )
+                processed_docs.append(document)
+        else:
+            from concurrent.futures import ThreadPoolExecutor
+
+            def process_doc(document):
+                if comma_separated_ignore_words:
+                    for word in comma_separated_ignore_words.split(","):
+                        document.text = re.sub(
+                            r"\b" + word.strip() + r"\b",
+                            "",
+                            document.text,
+                            flags=re.IGNORECASE,
+                        )
+                return document
+
+            with ThreadPoolExecutor() as executor:
+                processed_docs = list(executor.map(process_doc, documents))
+        self._corpus.documents = processed_docs
         return self._corpus
 
     def read_csv_to_corpus(
@@ -238,7 +271,7 @@ class ReadData:
         id_column="",
     ):
         """
-        Read the corpus from a csv file.
+        Read the corpus from a csv file. Parallelizes document creation for large CSVs.
         """
         from pathlib import Path
 
@@ -257,7 +290,10 @@ class ReadData:
                 df.drop(column, axis=1, inplace=True)
         # Set self._df to the numeric part after dropping text columns
         self._df = df.copy()
-        for index, row in tqdm(original_df.iterrows(), total=len(original_df), desc="Reading CSV rows", disable=len(original_df) < 10):
+        rows = list(original_df.iterrows())
+
+        def create_document(args):
+            index, row = args
             read_from_file = ""
             for column in text_columns:
                 read_from_file += f"{row[column]} "
@@ -270,7 +306,6 @@ class ReadData:
                         read_from_file,
                         flags=re.IGNORECASE,
                     )
-            self._content += read_from_file
             _document = Document(
                 text=read_from_file,
                 metadata={
@@ -288,6 +323,20 @@ class ReadData:
                 name="",
                 description="",
             )
+            return read_from_file, _document
+
+        if len(rows) < 10:
+            results = [
+                create_document(args)
+                for args in tqdm(rows, desc="Reading CSV rows", disable=True)
+            ]
+        else:
+            from concurrent.futures import ThreadPoolExecutor
+
+            with ThreadPoolExecutor() as executor:
+                results = list(executor.map(create_document, rows))
+        for read_from_file, _document in results:
+            self._content += read_from_file
             self._documents.append(_document)
         logger.info(f"Corpus read from {file_name}")
         self.create_corpus()
@@ -328,7 +377,9 @@ class ReadData:
             self._source = source
             logger.info(f"Reading data from folder: {source}")
             file_list = os.listdir(source)
-            for file_name in tqdm(file_list, desc="Reading files", disable=len(file_list) < 10):
+            for file_name in tqdm(
+                file_list, desc="Reading files", disable=len(file_list) < 10
+            ):
                 file_path = source_path / file_name
                 if file_name.endswith(".txt"):
                     with open(file_path, "r") as f:
@@ -359,7 +410,12 @@ class ReadData:
                     with open(file_path, "rb") as f:
                         reader = PdfReader(f)
                         read_from_file = ""
-                        for page in tqdm(reader.pages, desc=f"Reading PDF {file_name}", leave=False, disable=len(reader.pages) < 10):
+                        for page in tqdm(
+                            reader.pages,
+                            desc=f"Reading PDF {file_name}",
+                            leave=False,
+                            disable=len(reader.pages) < 10,
+                        ):
                             read_from_file += page.extract_text()
                         # remove comma separated ignore words
                         if comma_separated_ignore_words:
@@ -421,18 +477,27 @@ id,number,response
                 # remove the temp file
                 os.remove(temp_csv_path)
 
-
         else:
             raise ValueError(f"Source not found: {source}")
 
     def corpus_as_dataframe(self):
         """
-        Convert the corpus to a pandas dataframe.
+        Convert the corpus to a pandas dataframe. Parallelizes for large corpora.
         """
         if not self._corpus:
             raise ValueError("No corpus found. Please create a corpus first.")
-        data = []
-        for document in tqdm(self._corpus.documents, desc="Converting to dataframe", disable=len(self._corpus.documents) < 10):
-            data.append(document.model_dump())
+        documents = self._corpus.documents
+        if len(documents) < 10:
+            data = [
+                document.model_dump()
+                for document in tqdm(
+                    documents, desc="Converting to dataframe", disable=True
+                )
+            ]
+        else:
+            from concurrent.futures import ThreadPoolExecutor
+
+            with ThreadPoolExecutor() as executor:
+                data = list(executor.map(lambda d: d.model_dump(), documents))
         df = pd.DataFrame(data)
         return df
