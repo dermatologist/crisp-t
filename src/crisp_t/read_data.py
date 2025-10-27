@@ -167,16 +167,22 @@ class ReadData:
                 if document.id == doc_id:
                     return document
         else:
-            from concurrent.futures import ThreadPoolExecutor
-
-            def match_doc(document):
-                return document.id == doc_id
+            from concurrent.futures import ThreadPoolExecutor, as_completed
 
             with ThreadPoolExecutor() as executor:
-                results = list(executor.map(match_doc, documents))
-            for i, found in enumerate(results):
-                if found:
-                    return documents[i]
+                futures = {
+                    executor.submit(lambda d: d.id == doc_id, document): i
+                    for i, document in enumerate(documents)
+                }
+                with tqdm(
+                    total=len(futures), desc="Searching documents (parallel)"
+                ) as pbar:
+                    for future in as_completed(futures):
+                        i = futures[future]
+                        found = future.result()
+                        pbar.update(1)
+                        if found:
+                            return documents[i]
         raise ValueError("Document not found: %s" % doc_id)
 
     def write_corpus_to_json(self, file_path="", corpus=None):
@@ -245,7 +251,7 @@ class ReadData:
                         )
                 processed_docs.append(document)
         else:
-            from concurrent.futures import ThreadPoolExecutor
+            from concurrent.futures import ThreadPoolExecutor, as_completed
 
             def process_doc(document):
                 if comma_separated_ignore_words:
@@ -258,8 +264,18 @@ class ReadData:
                         )
                 return document
 
+            processed_docs = []
             with ThreadPoolExecutor() as executor:
-                processed_docs = list(executor.map(process_doc, documents))
+                futures = {
+                    executor.submit(process_doc, document): document
+                    for document in documents
+                }
+                with tqdm(
+                    total=len(futures), desc="Processing documents (parallel)"
+                ) as pbar:
+                    for future in as_completed(futures):
+                        processed_docs.append(future.result())
+                        pbar.update(1)
         self._corpus.documents = processed_docs
         return self._corpus
 
@@ -331,10 +347,19 @@ class ReadData:
                 for args in tqdm(rows, desc="Reading CSV rows", disable=True)
             ]
         else:
-            from concurrent.futures import ThreadPoolExecutor
+            from concurrent.futures import ThreadPoolExecutor, as_completed
 
+            results = []
             with ThreadPoolExecutor() as executor:
-                results = list(executor.map(create_document, rows))
+                futures = {
+                    executor.submit(create_document, args): args for args in rows
+                }
+                with tqdm(
+                    total=len(futures), desc="Reading CSV rows (parallel)"
+                ) as pbar:
+                    for future in as_completed(futures):
+                        results.append(future.result())
+                        pbar.update(1)
         for read_from_file, _document in results:
             self._content += read_from_file
             self._documents.append(_document)
@@ -495,9 +520,23 @@ id,number,response
                 )
             ]
         else:
-            from concurrent.futures import ThreadPoolExecutor
+            from concurrent.futures import ThreadPoolExecutor, as_completed
+
+            data = []
+
+            def dump_doc(document):
+                return document.model_dump()
 
             with ThreadPoolExecutor() as executor:
-                data = list(executor.map(lambda d: d.model_dump(), documents))
+                futures = {
+                    executor.submit(dump_doc, document): document
+                    for document in documents
+                }
+                with tqdm(
+                    total=len(futures), desc="Converting to dataframe (parallel)"
+                ) as pbar:
+                    for future in as_completed(futures):
+                        data.append(future.result())
+                        pbar.update(1)
         df = pd.DataFrame(data)
         return df
