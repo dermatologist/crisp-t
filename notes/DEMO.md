@@ -46,11 +46,12 @@ crisp --print "documents 10"
 * You may remove these keywords by using --ignore with assign and check the results again.
 
 ```bash
-crisp --assign --ignore interviewee,interviewer
+crisp --clear --assign --ignore interviewee,interviewer
 crisp --print documents
 crisp --print "metadata clusters"
 ```
 
+* *--clear* option clears the cache before running the analysis.
 * Now you will see that these keywords are removed from the results.
 * It prints the first 5 documents by default.
 * Prints the clusters assigned to each document based on keywords.
@@ -58,7 +59,7 @@ crisp --print "metadata clusters"
 * Let us choose narratives that contain 'work' keyword and show the concepts/topics in these narratives.
 
 ```bash
-crisp --filters keywords=work --topics
+crisp --clear --filters keywords=work --topics
 ```
 
 * `Applied filters ['keywords=work']; remaining documents: 51`
