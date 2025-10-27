@@ -143,20 +143,6 @@ class Text:
     def make_spacy_doc(self):
         if self._corpus is None:
             raise ValueError("Corpus is not set")
-        # Determine temp .spacy file path
-        temp_dir = tempfile.gettempdir()
-        corpus_id = getattr(self._corpus, "id", None) or id(self._corpus)
-        spacy_file = os.path.join(temp_dir, f"corpus_{corpus_id}.spacy")
-        # Check if file exists and load if present
-        if os.path.exists(spacy_file):
-            logger.info(f"Loading spacy doc from {spacy_file}")
-            doc_bin = DocBin().from_disk(spacy_file)
-            docs = list(doc_bin.get_docs(self._spacy_manager.get_model().vocab))
-            if docs:
-                self._spacy_doc = docs[0]
-                self._corpus.metadata["spacy_doc"] = spacy_file
-                return self._spacy_doc
-        # Otherwise, create spacy doc as before
         text = ""
         for document in tqdm(
             self._corpus.documents,
@@ -186,12 +172,6 @@ class Text:
                 self._spacy_doc = Doc.from_docs([self._spacy_doc, doc])  # type: ignore
         else:
             self._spacy_doc = nlp(text)
-        # Save to .spacy file using DocBin
-        doc_bin = DocBin(store_user_data=True)
-        doc_bin.add(self._spacy_doc)
-        doc_bin.to_disk(spacy_file)
-        self._corpus.metadata["spacy_doc"] = spacy_file
-        logger.info(f"Saved spacy doc to {spacy_file}")
         return self._spacy_doc
 
     def make_each_document_into_spacy_doc(self):
