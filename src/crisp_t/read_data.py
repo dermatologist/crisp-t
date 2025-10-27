@@ -360,9 +360,33 @@ class ReadData:
                     for future in as_completed(futures):
                         results.append(future.result())
                         pbar.update(1)
-        for read_from_file, _document in results:
-            self._content += read_from_file
-            self._documents.append(_document)
+        from concurrent.futures import ThreadPoolExecutor, as_completed
+
+        if len(results) < 10:
+            for read_from_file, _document in tqdm(
+                results, desc="Finalizing corpus", disable=True
+            ):
+                self._content += read_from_file
+                self._documents.append(_document)
+        else:
+
+            def process_result(result):
+                read_from_file, _document = result
+                return read_from_file, _document
+
+            with ThreadPoolExecutor() as executor:
+                futures = {
+                    executor.submit(process_result, result): result
+                    for result in results
+                }
+                with tqdm(
+                    total=len(futures), desc="Finalizing corpus (parallel)"
+                ) as pbar:
+                    for future in as_completed(futures):
+                        read_from_file, _document = future.result()
+                        self._content += read_from_file
+                        self._documents.append(_document)
+                        pbar.update(1)
         logger.info(f"Corpus read from {file_name}")
         self.create_corpus()
         return self._corpus
