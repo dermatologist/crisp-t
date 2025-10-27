@@ -48,6 +48,17 @@ logger = logging.getLogger(__name__)
 
 class Text:
 
+    _spacy_doc = None
+    _lemma = {}
+    _pos = {}
+    _pos_ = {}
+    _word = {}
+    _sentiment = {}
+    _tag = {}
+    _dep = {}
+    _prob = {}
+    _idx = {}
+
     def __init__(
         self, corpus: Optional[Corpus] = None, lang="en_core_web_sm", max_length=1100000
     ):
@@ -56,17 +67,7 @@ class Text:
         self._spacy_manager = SpacyManager(self._lang)
         self._max_length = max_length
         self._initial_document_count = len(self._corpus.documents) if corpus else 0  # type: ignore
-        spacy_doc, results = self.process_tokens(self._corpus.id if self._corpus else None)
-        self._spacy_doc = spacy_doc
-        self._lemma = results["lemma"]
-        self._pos = results["pos"]
-        self._pos_ = results["pos_"]
-        self._word = results["word"]
-        self._sentiment = results["sentiment"]
-        self._tag = results["tag"]
-        self._dep = results["dep"]
-        self._prob = results["prob"]
-        self._idx = results["idx"]
+
 
     @property
     def corpus(self):
@@ -225,14 +226,14 @@ class Text:
         Process tokens in the spacy document and extract relevant information.
         """
 
-        # if cached file exists, load it
-        cache_dir = Path("cache")
-        cache_file = cache_dir / f"spacy_doc_{id}.pkl"
-        if cache_file.exists():
-            with open(cache_file, "rb") as f:
-                spacy_doc, results = pickle.load(f)
-            logger.info("Loaded cached spacy doc and results.")
-            return spacy_doc, results
+        # ! if cached file exists, load it
+        # cache_dir = Path("cache")
+        # cache_file = cache_dir / f"spacy_doc_{id}.pkl"
+        # if cache_file.exists():
+        #     with open(cache_file, "rb") as f:
+        #         spacy_doc, results = pickle.load(f)
+        #     logger.info("Loaded cached spacy doc and results.")
+        #     return spacy_doc, results
 
         spacy_doc = self.make_spacy_doc()
         logger.info("Spacy doc created.")
@@ -300,23 +301,37 @@ class Text:
             "prob": _prob,
             "idx": _idx,
         }
-        # dump spacy_doc, results to a file for caching with the corpus id
-
-        cache_dir = Path("cache")
-        cache_dir.mkdir(exist_ok=True)
-        cache_file = cache_dir / f"spacy_doc_{id}.pkl"
-        with open(cache_file, "wb") as f:
-            pickle.dump((spacy_doc, results), f)
+        # ! dump spacy_doc, results to a file for caching with the corpus id
+        # cache_dir = Path("cache")
+        # cache_dir.mkdir(exist_ok=True)
+        # cache_file = cache_dir / f"spacy_doc_{id}.pkl"
+        # with open(cache_file, "wb") as f:
+        #     pickle.dump((spacy_doc, results), f)
 
         return spacy_doc, results
 
+    def map_spacy_doc(self):
+        spacy_doc, results = self.process_tokens(self._corpus.id if self._corpus else None)
+        self._spacy_doc = spacy_doc
+        self._lemma = results["lemma"]
+        self._pos = results["pos"]
+        self._pos_ = results["pos_"]
+        self._word = results["word"]
+        self._sentiment = results["sentiment"]
+        self._tag = results["tag"]
+        self._dep = results["dep"]
+        self._prob = results["prob"]
+        self._idx = results["idx"]
+
     def common_words(self, index=10):
+        self.map_spacy_doc()
         _words = {}
         for key, value in self._word.items():
             _words[value] = _words.get(value, 0) + 1
         return sorted(_words.items(), key=operator.itemgetter(1), reverse=True)[:index]
 
     def common_nouns(self, index=10):
+        self.map_spacy_doc()
         _words = {}
         for key, value in self._word.items():
             if self._pos.get(key, None) == "NOUN":
@@ -324,6 +339,7 @@ class Text:
         return sorted(_words.items(), key=operator.itemgetter(1), reverse=True)[:index]
 
     def common_verbs(self, index=10):
+        self.map_spacy_doc()
         _words = {}
         for key, value in self._word.items():
             if self._pos.get(key, None) == "VERB":
@@ -340,6 +356,7 @@ class Text:
             top_n (int, optional): Number of top attributes and dimensions to consider for each verb. Defaults to 5.
 
         """
+        self.map_spacy_doc()
         output = []
         coding_dict = []
         output.append(("CATEGORY", "PROPERTY", "DIMENSION"))
@@ -362,6 +379,7 @@ class Text:
         return output
 
     def sentences_with_common_nouns(self, index=10):
+        self.map_spacy_doc()
         _nouns = self.common_nouns(index)
         # Let's look at the sentences
         sents = []
@@ -383,6 +401,7 @@ class Text:
         return sents
 
     def spans_with_common_nouns(self, word):
+        self.map_spacy_doc()
         # Let's look at the sentences
         spans = []
         # the "sents" property returns spans
@@ -399,6 +418,7 @@ class Text:
         return spans
 
     def dimensions(self, word, index=3):
+        self.map_spacy_doc()
         _spans = self.spans_with_common_nouns(word)
         _ad = {}
         for span in _spans:
@@ -412,6 +432,7 @@ class Text:
         return sorted(_ad.items(), key=operator.itemgetter(1), reverse=True)[:index]
 
     def attributes(self, word, index=3):
+        self.map_spacy_doc()
         _spans = self.spans_with_common_nouns(word)
         _ad = {}
         for span in _spans:
@@ -430,9 +451,7 @@ class Text:
         Filter documents in the corpus based on metadata.
         If id_column exists in self._corpus.df, filter the DataFrame to match filtered documents' ids.
         """
-        import logging
-
-        logger = logging.getLogger(__name__)
+        self.map_spacy_doc()
         if self._corpus is None:
             raise ValueError("Corpus is not set")
         filtered_documents = []
@@ -492,6 +511,7 @@ class Text:
         Returns:
             list: A list of summary lines
         """
+        self.map_spacy_doc()
         words = self.common_words()
         spans = []
         ct = 0
@@ -508,9 +528,8 @@ class Text:
         return list(dict.fromkeys(spans))  # remove duplicates
 
     def print_categories(self, spacy_doc=None, num=10):
-        if spacy_doc is None:
-            spacy_doc = self.make_spacy_doc()
-        bot = spacy_doc._.to_bag_of_terms(
+        self.map_spacy_doc()
+        bot = self._spacy_doc._.to_bag_of_terms( # type: ignore
             by="lemma_",
             weighting="freq",
             ngs=(1, 2, 3),
@@ -563,6 +582,7 @@ class Text:
         Args:
             num (int, optional): number of categories to generate for each doc in corpus. . Defaults to 10.
         """
+        self.map_spacy_doc()
         basket = self.category_basket(num)
         te = TransactionEncoder()
         te_ary = te.fit(basket).transform(basket)
