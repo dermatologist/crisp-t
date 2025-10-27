@@ -299,7 +299,7 @@ class Text:
                         _pos[result["text"]] = result["pos"]
                         _pos_[result["text"]] = result["pos_"]
                         _word[result["text"]] = result["word"]
-                        _sentiment = result["sentiment"]
+                        _sentiment[result["text"]] = result["sentiment"]
                         _tag = result["tag"]
                         _dep = result["dep"]
                         _prob = result["prob"]

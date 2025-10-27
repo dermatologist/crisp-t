@@ -637,13 +637,13 @@ def main(
 
         # Save corpus and csv if output path is specified
         if out and corpus:
-            if filters and inp and out and inp==out:
+            if filters and inp and out and inp == out:
                 raise click.ClickException(
                     "--out cannot be the same as --inp when using --filters. Please specify a different output folder to avoid overwriting input data."
                 )
             if filters and ((not inp) or (not out)):
                 raise click.ClickException(
-                    "--out cannot be the same as --inp when using --filters. Please specify a different output folder to avoid overwriting input data."
+                    "Both --inp and --out must be specified when using --filters."
                 )
             output_path = pathlib.Path(out)
             # Allow both directory and a file path '.../corpus.json'

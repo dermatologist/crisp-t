@@ -17,20 +17,22 @@ You should have received a copy of the GNU General Public License
 along with crisp-t.  If not, see <https://www.gnu.org/licenses/>.
 """
 
+import datetime
 import json
 import logging
+import multiprocessing
 import os
 import re
 import tempfile
-import datetime
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from functools import lru_cache
 from pathlib import Path
+
 import pandas as pd
 import requests
 from pypdf import PdfReader
 from tqdm import tqdm
-import multiprocessing
-from concurrent.futures import ThreadPoolExecutor, as_completed
-from functools import lru_cache
+
 from .csv import Csv
 from .model import Corpus, Document
 
@@ -174,7 +176,7 @@ class ReadData:
             n_cores = multiprocessing.cpu_count()
             with ThreadPoolExecutor() as executor:
                 futures = {
-                    executor.submit(lambda d: d.id == doc_id, document): i
+                    executor.submit(lambda d, doc=document: d.id == doc_id, document): i
                     for i, document in enumerate(documents)
                 }
                 with tqdm(
@@ -256,6 +258,7 @@ class ReadData:
                         )
                 processed_docs.append(document)
         else:
+
             def process_doc(document):
                 if comma_separated_ignore_words:
                     for word in comma_separated_ignore_words.split(","):
@@ -353,10 +356,9 @@ class ReadData:
                 for args in tqdm(rows, desc="Reading CSV rows", disable=True)
             ]
         else:
-            from concurrent.futures import ThreadPoolExecutor, as_completed
 
             results = []
-            import multiprocessing
+            # import multiprocessing
 
             n_cores = multiprocessing.cpu_count()
             with ThreadPoolExecutor() as executor:
@@ -370,7 +372,6 @@ class ReadData:
                     for future in as_completed(futures):
                         results.append(future.result())
                         pbar.update(1)
-        from concurrent.futures import ThreadPoolExecutor, as_completed
 
         if len(results) < 10:
             for read_from_file, _document in tqdm(
@@ -379,16 +380,12 @@ class ReadData:
                 self._documents.append(_document)
         else:
 
-            def process_result(result):
-                read_from_file, _document = result
-                return read_from_file, _document
-
-            import multiprocessing
+            # import multiprocessing
 
             n_cores = multiprocessing.cpu_count()
             with ThreadPoolExecutor() as executor:
                 futures = {
-                    executor.submit(process_result, result): result
+                    executor.submit(lambda x: x, result): result
                     for result in results
                 }
                 with tqdm(
@@ -555,8 +552,10 @@ id,number,response
             ]
         else:
             data = []
+
             def dump_doc(document):
                 return document.model_dump()
+
             n_cores = multiprocessing.cpu_count()
             with ThreadPoolExecutor() as executor:
                 futures = {
