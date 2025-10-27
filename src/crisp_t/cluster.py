@@ -80,7 +80,7 @@ class Cluster:
 
         # Create a Text object
         text = Text(corpus=self._corpus)
-        spacy_docs, ids = text.make_each_document_into_spacy_doc()
+        spacy_docs, ids = text.make_each_document_into_spacy_doc(self._corpus.id)
         self._ids = ids
         self._processed_docs = [
             self.tokenize(doc) for doc in spacy_docs if doc is not None

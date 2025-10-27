@@ -183,7 +183,8 @@ class Text:
             self._spacy_doc = nlp(text)
         return self._spacy_doc
 
-    def make_each_document_into_spacy_doc(self):
+    @lru_cache(maxsize=3)
+    def make_each_document_into_spacy_doc(self, id="corpus"):
         if self._corpus is None:
             raise ValueError("Corpus is not set")
         spacy_docs = []
