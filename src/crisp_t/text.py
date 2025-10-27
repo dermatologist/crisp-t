@@ -19,15 +19,19 @@ along with crisp-t.  If not, see <https://www.gnu.org/licenses/>.
 
 import operator
 from typing import Optional
-
+from pathlib import Path
+import pickle
 import pandas as pd
 import spacy
 import textacy
 from mlxtend.frequent_patterns import apriori, association_rules
 from mlxtend.preprocessing import TransactionEncoder
+from spacy.tokens import Doc
 from textacy import preprocessing
 from tqdm import tqdm
-
+from functools import lru_cache
+import multiprocessing
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from .model import Corpus, SpacyManager
 from .utils import QRUtils
 
@@ -36,6 +40,10 @@ textacy.set_doc_extensions("extract.bags")  # type: ignore
 import warnings
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 class Text:
@@ -47,6 +55,8 @@ class Text:
         self._lang = lang
         self._spacy_manager = SpacyManager(self._lang)
         self._max_length = max_length
+        self._initial_document_count = len(self._corpus.documents) if corpus else 0  # type: ignore
+
         self._spacy_doc = None
         self._lemma = {}
         self._pos = {}
@@ -57,8 +67,6 @@ class Text:
         self._dep = {}
         self._prob = {}
         self._idx = {}
-        self._initial_document_count = len(self._corpus.documents) if corpus else 0  # type: ignore
-        self.process_tokens()
 
     @property
     def corpus(self):
@@ -98,17 +106,17 @@ class Text:
         if not isinstance(corpus, Corpus):
             raise ValueError("Corpus must be of type Corpus")
         self._corpus = corpus
-        self._spacy_doc = None  # Reset spacy_doc when a new corpus is set
-        self._lemma = {}
-        self._pos = {}
-        self._pos_ = {}
-        self._word = {}
-        self._sentiment = {}
-        self._tag = {}
-        self._dep = {}
-        self._prob = {}
-        self._idx = {}
-        self.process_tokens()
+        spacy_doc, results = self.process_tokens(self._corpus.id if self._corpus else None)
+        self._spacy_doc = spacy_doc
+        self._lemma = results["lemma"]
+        self._pos = results["pos"]
+        self._pos_ = results["pos_"]
+        self._word = results["word"]
+        self._sentiment = results["sentiment"]
+        self._tag = results["tag"]
+        self._dep = results["dep"]
+        self._prob = results["prob"]
+        self._idx = results["idx"]
 
     @max_length.setter
     def max_length(self, max_length: int):
@@ -129,26 +137,73 @@ class Text:
         if not isinstance(lang, str):
             raise ValueError("lang must be a string")
         self._lang = lang
-        self.process_tokens()
+        spacy_doc, results = self.process_tokens(self._corpus.id if self._corpus else None)
+        self._spacy_doc = spacy_doc
+        self._lemma = results["lemma"]
+        self._pos = results["pos"]
+        self._pos_ = results["pos_"]
+        self._word = results["word"]
+        self._sentiment = results["sentiment"]
+        self._tag = results["tag"]
+        self._dep = results["dep"]
+        self._prob = results["prob"]
+        self._idx = results["idx"]
 
     def make_spacy_doc(self):
         if self._corpus is None:
             raise ValueError("Corpus is not set")
         text = ""
-        for document in tqdm(self._corpus.documents, desc="Processing documents", disable=len(self._corpus.documents) < 10):
+        for document in tqdm(
+            self._corpus.documents,
+            desc="Processing documents",
+            disable=len(self._corpus.documents) < 10,
+        ):
             text += self.process_text(document.text) + " \n"
             metadata = document.metadata
         nlp = self._spacy_manager.get_model()
         nlp.max_length = self._max_length
-        self._spacy_doc = nlp(text)
+        if len(text) > self._max_length:
+            logger.warning(
+                f"Text length {len(text)} exceeds max_length {self._max_length}."
+            )
+            text_chunks = [
+                text[i : i + self._max_length]
+                for i in range(0, len(text), self._max_length)
+            ]
+            spacy_docs = []
+            for chunk in tqdm(
+                text_chunks, desc="Processing text as chunks of max_length"
+            ):
+                spacy_doc = nlp(chunk)
+                spacy_docs.append(spacy_doc)
+            self._spacy_doc = spacy_docs[0]
+            for doc in tqdm(spacy_docs[1:], desc="Merging spacy docs"):
+                self._spacy_doc = Doc.from_docs([self._spacy_doc, doc])  # type: ignore
+        else:
+            self._spacy_doc = nlp(text)
         return self._spacy_doc
 
-    def make_each_document_into_spacy_doc(self):
+    # @lru_cache(maxsize=3)
+    def make_each_document_into_spacy_doc(self, id="corpus"):
         if self._corpus is None:
             raise ValueError("Corpus is not set")
+
+        # ! if cached file exists, load it
+        cache_dir = Path("cache")
+        cache_file = cache_dir / f"spacy_docs_{id}.pkl"
+        if cache_file.exists():
+            with open(cache_file, "rb") as f:
+                spacy_docs, ids = pickle.load(f)
+            logger.info("Loaded cached spacy docs and ids.")
+            return spacy_docs, ids
+
         spacy_docs = []
         ids = []
-        for document in tqdm(self._corpus.documents, desc="Creating spacy docs", disable=len(self._corpus.documents) < 10):
+        for document in tqdm(
+            self._corpus.documents,
+            desc="Creating spacy docs",
+            disable=len(self._corpus.documents) < 10,
+        ):
             text = self.process_text(document.text)
             metadata = document.metadata
             nlp = self._spacy_manager.get_model()
@@ -156,6 +211,13 @@ class Text:
             spacy_doc = nlp(text)
             spacy_docs.append(spacy_doc)
             ids.append(document.id)
+
+        # ! dump spacy_docs, ids to a file for caching with the corpus id
+        cache_dir = Path("cache")
+        cache_dir.mkdir(exist_ok=True)
+        cache_file = cache_dir / f"spacy_docs_{id}.pkl"
+        with open(cache_file, "wb") as f:
+            pickle.dump((spacy_docs, ids), f)
         return spacy_docs, ids
 
     def process_text(self, text: str) -> str:
@@ -174,35 +236,118 @@ class Text:
         text = text.lower()
         return text
 
-    def process_tokens(self):
-        if self._spacy_doc is None:
-            spacy_doc = self.make_spacy_doc()
-        else:
-            spacy_doc = self._spacy_doc
-        for token in spacy_doc:
+    # @lru_cache(maxsize=3)
+    def process_tokens(self, id="corpus"):
+        """
+        Process tokens in the spacy document and extract relevant information.
+        """
+
+        # ! if cached file exists, load it
+        cache_dir = Path("cache")
+        cache_file = cache_dir / f"spacy_doc_{id}.pkl"
+        if cache_file.exists():
+            with open(cache_file, "rb") as f:
+                spacy_doc, results = pickle.load(f)
+            logger.info("Loaded cached spacy doc and results.")
+            return spacy_doc, results
+
+        spacy_doc = self.make_spacy_doc()
+        logger.info("Spacy doc created.")
+
+        n_cores = multiprocessing.cpu_count()
+
+        def process_token(token):
             if token.is_stop or token.is_digit or token.is_punct or token.is_space:
-                continue
+                return None
             if token.like_url or token.like_num or token.like_email:
-                continue
+                return None
             if len(token.text) < 3 or token.text.isupper():
-                continue
-            self._lemma[token.text] = token.lemma_
-            self._pos[token.text] = token.pos_
-            self._pos_[token.text] = token.pos
-            self._word[token.text] = token.lemma_
-            self._sentiment = token.sentiment
-            self._tag = token.tag_
-            self._dep = token.dep_
-            self._prob = token.prob
-            self._idx = token.idx
+                return None
+            return {
+                "text": token.text,
+                "lemma": token.lemma_,
+                "pos": token.pos_,
+                "pos_": token.pos,
+                "word": token.lemma_,
+                "sentiment": token.sentiment,
+                "tag": token.tag_,
+                "dep": token.dep_,
+                "prob": token.prob,
+                "idx": token.idx,
+            }
+
+        tokens = list(spacy_doc)
+        _lemma = {}
+        _pos = {}
+        _pos_ = {}
+        _word = {}
+        _sentiment = {}
+        _tag = {}
+        _dep = {}
+        _prob = {}
+        _idx = {}
+        with ThreadPoolExecutor() as executor:
+            futures = {executor.submit(process_token, token): token for token in tokens}
+            with tqdm(
+                total=len(futures),
+                desc=f"Processing tokens (parallel, {n_cores} cores)",
+            ) as pbar:
+                for future in as_completed(futures):
+                    result = future.result()
+                    if result is not None:
+                        _lemma[result["text"]] = result["lemma"]
+                        _pos[result["text"]] = result["pos"]
+                        _pos_[result["text"]] = result["pos_"]
+                        _word[result["text"]] = result["word"]
+                        _sentiment[result["text"]] = result["sentiment"]
+                        _tag = result["tag"]
+                        _dep = result["dep"]
+                        _prob = result["prob"]
+                        _idx = result["idx"]
+                    pbar.update(1)
+        logger.info("Token processing complete.")
+        results = {
+            "lemma": _lemma,
+            "pos": _pos,
+            "pos_": _pos_,
+            "word": _word,
+            "sentiment": _sentiment,
+            "tag": _tag,
+            "dep": _dep,
+            "prob": _prob,
+            "idx": _idx,
+        }
+        # ! dump spacy_doc, results to a file for caching with the corpus id
+        cache_dir = Path("cache")
+        cache_dir.mkdir(exist_ok=True)
+        cache_file = cache_dir / f"spacy_doc_{id}.pkl"
+        with open(cache_file, "wb") as f:
+            pickle.dump((spacy_doc, results), f)
+
+        return spacy_doc, results
+
+    def map_spacy_doc(self):
+        spacy_doc, results = self.process_tokens(self._corpus.id if self._corpus else None)
+        self._spacy_doc = spacy_doc
+        self._lemma = results["lemma"]
+        self._pos = results["pos"]
+        self._pos_ = results["pos_"]
+        self._word = results["word"]
+        self._sentiment = results["sentiment"]
+        self._tag = results["tag"]
+        self._dep = results["dep"]
+        self._prob = results["prob"]
+        self._idx = results["idx"]
 
     def common_words(self, index=10):
+        self.map_spacy_doc()
         _words = {}
         for key, value in self._word.items():
             _words[value] = _words.get(value, 0) + 1
         return sorted(_words.items(), key=operator.itemgetter(1), reverse=True)[:index]
 
     def common_nouns(self, index=10):
+        self.map_spacy_doc()
         _words = {}
         for key, value in self._word.items():
             if self._pos.get(key, None) == "NOUN":
@@ -210,6 +355,7 @@ class Text:
         return sorted(_words.items(), key=operator.itemgetter(1), reverse=True)[:index]
 
     def common_verbs(self, index=10):
+        self.map_spacy_doc()
         _words = {}
         for key, value in self._word.items():
             if self._pos.get(key, None) == "VERB":
@@ -226,6 +372,7 @@ class Text:
             top_n (int, optional): Number of top attributes and dimensions to consider for each verb. Defaults to 5.
 
         """
+        self.map_spacy_doc()
         output = []
         coding_dict = []
         output.append(("CATEGORY", "PROPERTY", "DIMENSION"))
@@ -248,6 +395,7 @@ class Text:
         return output
 
     def sentences_with_common_nouns(self, index=10):
+        self.map_spacy_doc()
         _nouns = self.common_nouns(index)
         # Let's look at the sentences
         sents = []
@@ -269,6 +417,7 @@ class Text:
         return sents
 
     def spans_with_common_nouns(self, word):
+        self.map_spacy_doc()
         # Let's look at the sentences
         spans = []
         # the "sents" property returns spans
@@ -285,6 +434,7 @@ class Text:
         return spans
 
     def dimensions(self, word, index=3):
+        self.map_spacy_doc()
         _spans = self.spans_with_common_nouns(word)
         _ad = {}
         for span in _spans:
@@ -298,6 +448,7 @@ class Text:
         return sorted(_ad.items(), key=operator.itemgetter(1), reverse=True)[:index]
 
     def attributes(self, word, index=3):
+        self.map_spacy_doc()
         _spans = self.spans_with_common_nouns(word)
         _ad = {}
         for span in _spans:
@@ -316,13 +467,15 @@ class Text:
         Filter documents in the corpus based on metadata.
         If id_column exists in self._corpus.df, filter the DataFrame to match filtered documents' ids.
         """
-        import logging
-
-        logger = logging.getLogger(__name__)
+        self.map_spacy_doc()
         if self._corpus is None:
             raise ValueError("Corpus is not set")
         filtered_documents = []
-        for document in tqdm(self._corpus.documents, desc="Filtering documents", disable=len(self._corpus.documents) < 10):
+        for document in tqdm(
+            self._corpus.documents,
+            desc="Filtering documents",
+            disable=len(self._corpus.documents) < 10,
+        ):
             meta_val = document.metadata.get(metadata_key)
             # Check meta_val is not None and is iterable (str, list, tuple, set)
             if meta_val is not None and isinstance(meta_val, (str, list, tuple, set)):
@@ -374,6 +527,7 @@ class Text:
         Returns:
             list: A list of summary lines
         """
+        self.map_spacy_doc()
         words = self.common_words()
         spans = []
         ct = 0
@@ -390,9 +544,8 @@ class Text:
         return list(dict.fromkeys(spans))  # remove duplicates
 
     def print_categories(self, spacy_doc=None, num=10):
-        if spacy_doc is None:
-            spacy_doc = self.make_spacy_doc()
-        bot = spacy_doc._.to_bag_of_terms(
+        self.map_spacy_doc()
+        bot = self._spacy_doc._.to_bag_of_terms( # type: ignore
             by="lemma_",
             weighting="freq",
             ngs=(1, 2, 3),
@@ -445,6 +598,7 @@ class Text:
         Args:
             num (int, optional): number of categories to generate for each doc in corpus. . Defaults to 10.
         """
+        self.map_spacy_doc()
         basket = self.category_basket(num)
         te = TransactionEncoder()
         te_ary = te.fit(basket).transform(basket)

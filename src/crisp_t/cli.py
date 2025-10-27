@@ -2,7 +2,8 @@ import logging
 import pathlib
 import warnings
 from typing import List, Optional
-
+from pathlib import Path
+import shutil
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 import click
@@ -111,6 +112,7 @@ except ImportError:
     multiple=True,
     help="Multiple sources (URLs or directories) to read data from; can be used multiple times",
 )
+@click.option("--clear", is_flag=True, help="Clear cache before running analysis")
 def main(
     verbose,
     covid,
@@ -145,6 +147,7 @@ def main(
     source,
     sources,
     print_args,
+    clear,
 ):
     """CRISP-T: Cross Industry Standard Process for Triangulation.
 
@@ -168,10 +171,8 @@ def main(
     csv_analyzer = None
     ml_analyzer = None
 
-    # Assign inp to out if out not provided
-    if inp and not out:
-        out = inp
-        click.echo(f"Output path not provided. Using input path as output: {out}")
+    if clear:
+        _clear_cache()
 
     try:
         # Handle COVID data download
@@ -635,7 +636,15 @@ def main(
             click.echo("Install with: pip install crisp-t[ml]")
 
         # Save corpus and csv if output path is specified
-        if out and corpus and not filters:
+        if out and corpus:
+            if filters and inp and out and inp == out:
+                raise click.ClickException(
+                    "--out cannot be the same as --inp when using --filters. Please specify a different output folder to avoid overwriting input data."
+                )
+            if filters and ((not inp) or (not out)):
+                raise click.ClickException(
+                    "Both --inp and --out must be specified when using --filters."
+                )
             output_path = pathlib.Path(out)
             # Allow both directory and a file path '.../corpus.json'
             if output_path.suffix:
@@ -701,6 +710,15 @@ def _save_output(data, base_path: str, suffix: str):
     except Exception as e:
         click.echo(f"Warning: Could not save output to {base_path}_{suffix}: {str(e)}")
 
+
+def _clear_cache():
+    """ Delete cache folder if it exists. """
+    cache_dir = Path("cache")
+    if cache_dir.exists() and cache_dir.is_dir():
+        shutil.rmtree(cache_dir)
+        click.echo("Cache cleared.")
+    else:
+        click.echo("No cache to clear.")
 
 def _process_csv(csv_analyzer, unstructured, ignore, filters):
     text_columns = ",".join(unstructured) if unstructured else ""
