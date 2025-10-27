@@ -28,7 +28,9 @@ from mlxtend.preprocessing import TransactionEncoder
 from spacy.tokens import Doc
 from textacy import preprocessing
 from tqdm import tqdm
-
+import tempfile
+import os
+from spacy.tokens import DocBin
 from .model import Corpus, SpacyManager
 from .utils import QRUtils
 
@@ -139,6 +141,20 @@ class Text:
     def make_spacy_doc(self):
         if self._corpus is None:
             raise ValueError("Corpus is not set")
+        # Determine temp .spacy file path
+        temp_dir = tempfile.gettempdir()
+        corpus_id = getattr(self._corpus, "id", None) or id(self._corpus)
+        spacy_file = os.path.join(temp_dir, f"corpus_{corpus_id}.spacy")
+        # Check if file exists and load if present
+        if os.path.exists(spacy_file):
+            logger.info(f"Loading spacy doc from {spacy_file}")
+            doc_bin = DocBin().from_disk(spacy_file)
+            docs = list(doc_bin.get_docs(self._spacy_manager.get_model().vocab))
+            if docs:
+                self._spacy_doc = docs[0]
+                self._corpus.metadata["spacy_doc"] = spacy_file
+                return self._spacy_doc
+        # Otherwise, create spacy doc as before
         text = ""
         for document in tqdm(
             self._corpus.documents,
@@ -150,25 +166,30 @@ class Text:
         nlp = self._spacy_manager.get_model()
         nlp.max_length = self._max_length
         if len(text) > self._max_length:
-            # Process self._max_length at a time
             logger.warning(
                 f"Text length {len(text)} exceeds max_length {self._max_length}."
             )
-            # split text into chunks of max_length
             text_chunks = [
                 text[i : i + self._max_length]
                 for i in range(0, len(text), self._max_length)
             ]
             spacy_docs = []
-            for chunk in tqdm(text_chunks, desc="Processing text as chunks of max_length"):
+            for chunk in tqdm(
+                text_chunks, desc="Processing text as chunks of max_length"
+            ):
                 spacy_doc = nlp(chunk)
                 spacy_docs.append(spacy_doc)
-            # merge spacy_docs into one
             self._spacy_doc = spacy_docs[0]
             for doc in tqdm(spacy_docs[1:], desc="Merging spacy docs"):
                 self._spacy_doc = Doc.from_docs([self._spacy_doc, doc])  # type: ignore
         else:
             self._spacy_doc = nlp(text)
+        # Save to .spacy file using DocBin
+        doc_bin = DocBin(store_user_data=True)
+        doc_bin.add(self._spacy_doc)
+        doc_bin.to_disk(spacy_file)
+        self._corpus.metadata["spacy_doc"] = spacy_file
+        logger.info(f"Saved spacy doc to {spacy_file}")
         return self._spacy_doc
 
     def make_each_document_into_spacy_doc(self):
