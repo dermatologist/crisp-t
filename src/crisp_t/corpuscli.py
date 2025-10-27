@@ -192,10 +192,6 @@ def main(
     click.echo("CRISP-T: Corpus CLI")
     click.echo("_________________________________________")
 
-    # if --inp provided, and not --out, set out to inp
-    if inp and not out:
-        out = inp
-        click.echo(f"Output path not provided. Using input path as output: {out}")
     # Load corpus from --inp if provided
     corpus = initialize_corpus(inp=inp)
     if not corpus:

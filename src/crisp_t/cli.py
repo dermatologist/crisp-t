@@ -171,11 +171,6 @@ def main(
     csv_analyzer = None
     ml_analyzer = None
 
-    # Assign inp to out if out not provided
-    if inp and not out:
-        out = inp
-        click.echo(f"Output path not provided. Using input path as output: {out}")
-
     if clear:
         _clear_cache()
 
@@ -641,7 +636,15 @@ def main(
             click.echo("Install with: pip install crisp-t[ml]")
 
         # Save corpus and csv if output path is specified
-        if out and corpus and not filters:
+        if out and corpus:
+            if filters and inp and out and inp==out:
+                raise click.ClickException(
+                    "--out cannot be the same as --inp when using --filters. Please specify a different output folder to avoid overwriting input data."
+                )
+            if filters and ((not inp) or (not out)):
+                raise click.ClickException(
+                    "--out cannot be the same as --inp when using --filters. Please specify a different output folder to avoid overwriting input data."
+                )
             output_path = pathlib.Path(out)
             # Allow both directory and a file path '.../corpus.json'
             if output_path.suffix:

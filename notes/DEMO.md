@@ -39,14 +39,14 @@ crisp --inp crisp_input --assign
 crisp --print "documents 10"
 ```
 
-* Notice that we have omitted --inp and --out as it defaults to `crisp_input` folder. If you want to use a different folder, use --inp or --out to specify it. The *--out* option helps to save intermediate results in a different folder.
+* Notice that we have omitted --inp as it defaults to `crisp_input` folder. If you want to use a different folder, use --inp or --out to specify it. The *--out* option helps to save intermediate results in a different folder.
 * The above command prints first 10 documents in the corpus with their assigned keywords.
 * Notice keywords assigned to each narrative.
 * You will notice *interviewee* and *interviewer* keywords. These are assigned based on the presence of these words in the narratives and may not be useful.
 * You may remove these keywords by using --ignore with assign and check the results again.
 
 ```bash
-crisp --clear --assign --ignore interviewee,interviewer
+crisp --clear --assign --ignore interviewee,interviewer --out crisp_input
 crisp --print documents
 crisp --print "metadata clusters"
 ```
@@ -59,11 +59,12 @@ crisp --print "metadata clusters"
 * Let us choose narratives that contain 'work' keyword and show the concepts/topics in these narratives.
 
 ```bash
-crisp --clear --filters keywords=work --topics
+crisp --inp crisp_input --clear --filters keywords=work --topics --out crisp_input2
 ```
 
 * `Applied filters ['keywords=work']; remaining documents: 51`
 * Notice *time*, *people* as topics in this subset of narratives.
+* If --filters is used, only the filtered documents are used for the analysis. When using filters you should explicitly specify --inp and --out options with different folders to avoid overwriting the input data.
 
 ## Quantitative exploratory analysis
 
