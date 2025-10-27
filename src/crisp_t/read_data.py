@@ -167,15 +167,18 @@ class ReadData:
                 if document.id == doc_id:
                     return document
         else:
+            import multiprocessing
             from concurrent.futures import ThreadPoolExecutor, as_completed
 
+            n_cores = multiprocessing.cpu_count()
             with ThreadPoolExecutor() as executor:
                 futures = {
                     executor.submit(lambda d: d.id == doc_id, document): i
                     for i, document in enumerate(documents)
                 }
                 with tqdm(
-                    total=len(futures), desc="Searching documents (parallel)"
+                    total=len(futures),
+                    desc=f"Searching documents (parallel, {n_cores} cores)",
                 ) as pbar:
                     for future in as_completed(futures):
                         i = futures[future]
@@ -265,13 +268,17 @@ class ReadData:
                 return document
 
             processed_docs = []
+            import multiprocessing
+
+            n_cores = multiprocessing.cpu_count()
             with ThreadPoolExecutor() as executor:
                 futures = {
                     executor.submit(process_doc, document): document
                     for document in documents
                 }
                 with tqdm(
-                    total=len(futures), desc="Processing documents (parallel)"
+                    total=len(futures),
+                    desc=f"Processing documents (parallel, {n_cores} cores)",
                 ) as pbar:
                     for future in as_completed(futures):
                         processed_docs.append(future.result())
@@ -350,12 +357,16 @@ class ReadData:
             from concurrent.futures import ThreadPoolExecutor, as_completed
 
             results = []
+            import multiprocessing
+
+            n_cores = multiprocessing.cpu_count()
             with ThreadPoolExecutor() as executor:
                 futures = {
                     executor.submit(create_document, args): args for args in rows
                 }
                 with tqdm(
-                    total=len(futures), desc="Reading CSV rows (parallel)"
+                    total=len(futures),
+                    desc=f"Reading CSV rows (parallel, {n_cores} cores)",
                 ) as pbar:
                     for future in as_completed(futures):
                         results.append(future.result())
@@ -374,13 +385,17 @@ class ReadData:
                 read_from_file, _document = result
                 return read_from_file, _document
 
+            import multiprocessing
+
+            n_cores = multiprocessing.cpu_count()
             with ThreadPoolExecutor() as executor:
                 futures = {
                     executor.submit(process_result, result): result
                     for result in results
                 }
                 with tqdm(
-                    total=len(futures), desc="Finalizing corpus (parallel)"
+                    total=len(futures),
+                    desc=f"Finalizing corpus (parallel, {n_cores} cores)",
                 ) as pbar:
                     for future in as_completed(futures):
                         read_from_file, _document = future.result()
@@ -551,13 +566,17 @@ id,number,response
             def dump_doc(document):
                 return document.model_dump()
 
+            import multiprocessing
+
+            n_cores = multiprocessing.cpu_count()
             with ThreadPoolExecutor() as executor:
                 futures = {
                     executor.submit(dump_doc, document): document
                     for document in documents
                 }
                 with tqdm(
-                    total=len(futures), desc="Converting to dataframe (parallel)"
+                    total=len(futures),
+                    desc=f"Converting to dataframe (parallel, {n_cores} cores)",
                 ) as pbar:
                     for future in as_completed(futures):
                         data.append(future.result())
