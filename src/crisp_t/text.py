@@ -183,7 +183,7 @@ class Text:
             self._spacy_doc = nlp(text)
         return self._spacy_doc
 
-    @lru_cache(maxsize=3)
+    # @lru_cache(maxsize=3)
     def make_each_document_into_spacy_doc(self, id="corpus"):
         if self._corpus is None:
             raise ValueError("Corpus is not set")
@@ -236,7 +236,7 @@ class Text:
         text = text.lower()
         return text
 
-    @lru_cache(maxsize=3)
+    # @lru_cache(maxsize=3)
     def process_tokens(self, id="corpus"):
         """
         Process tokens in the spacy document and extract relevant information.

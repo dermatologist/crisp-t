@@ -176,7 +176,7 @@ class ReadData:
             n_cores = multiprocessing.cpu_count()
             with ThreadPoolExecutor() as executor:
                 futures = {
-                    executor.submit(lambda d, doc=document: d.id == doc_id, document): i
+                    executor.submit(lambda doc: doc.id == doc_id, document): i
                     for i, document in enumerate(documents)
                 }
                 with tqdm(
@@ -221,7 +221,7 @@ class ReadData:
                 corp.df.to_csv(df_name, index=False)
         logger.info("Corpus written to %s", file_name)
 
-    @lru_cache(maxsize=3)
+    # @lru_cache(maxsize=3)
     def read_corpus_from_json(self, file_path="", comma_separated_ignore_words=""):
         """
         Read the corpus from a json file. Parallelizes ignore word removal for large corpora.
@@ -287,7 +287,7 @@ class ReadData:
         self._corpus.documents = processed_docs
         return self._corpus
 
-    @lru_cache(maxsize=3)
+    # @lru_cache(maxsize=3)
     def read_csv_to_corpus(
         self,
         file_name,
@@ -383,19 +383,13 @@ class ReadData:
             # import multiprocessing
 
             n_cores = multiprocessing.cpu_count()
-            with ThreadPoolExecutor() as executor:
-                futures = {
-                    executor.submit(lambda x: x, result): result
-                    for result in results
-                }
-                with tqdm(
-                    total=len(futures),
-                    desc=f"Finalizing corpus (parallel, {n_cores} cores)",
-                ) as pbar:
-                    for future in as_completed(futures):
-                        read_from_file, _document = future.result()
-                        self._documents.append(_document)
-                        pbar.update(1)
+            with tqdm(
+                results,
+                total=len(results),
+                desc=f"Finalizing corpus (parallel, {n_cores} cores)",
+            ) as pbar:
+                for read_from_file, _document in pbar:
+                    self._documents.append(_document)
         logger.info(f"Corpus read from {file_name}")
         self.create_corpus()
         return self._corpus
