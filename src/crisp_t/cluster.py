@@ -36,6 +36,7 @@ from .text import Text
 
 # Set the logging level for the 'gensim' logger
 logging.getLogger("gensim").setLevel(logging.WARNING)
+logger = logging.getLogger(__name__)
 
 
 class Cluster:
@@ -93,6 +94,7 @@ class Cluster:
 
     def build_lda_model(self, topics: int = 0):
         if self._lda_model is None:
+            logger.info("Building LDA model... This may take a while.")
             self._lda_model = LdaModel(
                 self._bag_of_words,
                 num_topics=topics if topics != 0 else self._num_topics,
@@ -109,7 +111,7 @@ class Cluster:
 
         safe_word_cloud = [_safe_topic(topic) for topic in _word_cloud]
         if self._corpus is not None:
-            logging.info("Storing word cloud in corpus metadata")
+            logger.info("Storing word cloud in corpus metadata")
             self._corpus.visualization["word_cloud"] = safe_word_cloud
         return _word_cloud
 
