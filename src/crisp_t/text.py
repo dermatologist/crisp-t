@@ -467,7 +467,7 @@ class Text:
         Filter documents in the corpus based on metadata.
         If id_column exists in self._corpus.df, filter the DataFrame to match filtered documents' ids.
         """
-        self.map_spacy_doc()
+        # self.map_spacy_doc()
         if self._corpus is None:
             raise ValueError("Corpus is not set")
         filtered_documents = []
