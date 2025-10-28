@@ -359,6 +359,20 @@ class ML:
             return f"Predicting {y} with {X.shape[1]} features for {self._epochs} gave an accuracy (convergence): {accuracy*100:.2f}%"
         return preds
 
+    def _convert_to_binary(self, Y):
+        unique_values = np.unique(Y)
+        if len(unique_values) != 2:
+            logger.warning(
+                "Target variable has more than two unique values."
+            )
+            # convert unique_values[0] to 0, rest to 1
+            mapping = {val: (0 if val == unique_values[0] else 1) for val in unique_values}
+        else:
+            mapping = {unique_values[0]: 0, unique_values[1]: 1}
+        Y_binary = np.vectorize(mapping.get)(Y)
+        print(f"Converted target variable to binary using mapping: {mapping}")
+        return Y_binary
+
     def svm_confusion_matrix(self, y: str, test_size=0.25, random_state=0, mcp=False):
         """Generate confusion matrix for SVM
 
@@ -366,6 +380,7 @@ class ML:
             [list] -- [description]
         """
         X_np, Y_raw, X, Y = self._process_xy(y=y)
+        Y = self._convert_to_binary(Y)
         X_train, X_test, y_train, y_test = train_test_split(
             X, Y, test_size=test_size, random_state=random_state
         )
@@ -460,6 +475,7 @@ class ML:
         self, y: str, top_n=5, test_size=0.5, random_state=1, mcp=False
     ):
         X_np, Y_raw, X, Y = self._process_xy(y=y)
+        Y_raw = self._convert_to_binary(Y_raw)
         X_train, X_test, y_train, y_test = train_test_split(
             X_np, Y_raw, test_size=test_size, random_state=random_state
         )

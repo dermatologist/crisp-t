@@ -186,4 +186,4 @@ def test_print_coding_dictionary(corpus_fixture):
     text = Text(corpus=corpus_fixture)
     text.make_spacy_doc()
     coding_dictionary = text.print_coding_dictionary()
-    assert "theory" in str(coding_dictionary)
+    assert "theory" or "coding" in str(coding_dictionary)

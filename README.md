@@ -91,6 +91,8 @@ crisp --source PATH --out PATH
 
 ⚡️ Advanced users may also load corpus from URL `--source` or multiple URLs using `--sources` option. ⚡️
 
+⚠️ **While analysing multiple datasets, use `crisp --clear` option to clear cache before switching datasets.** ⚠️
+
 #### Input/Output Options
 
 - `--source, -s PATH|URL`: Read source data from a directory (reads .txt, .pdf and a single .csv) or from a URL

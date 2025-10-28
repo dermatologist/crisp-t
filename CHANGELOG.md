@@ -2,14 +2,11 @@
 
 ## [Unreleased](https://github.com/dermatologist/crisp-t/tree/HEAD)
 
-[Full Changelog](https://github.com/dermatologist/crisp-t/compare/v0.9.0...HEAD)
-
-**Implemented enhancements:**
-
-- Feature request: Improve the --print command with more options and better display. [\#45](https://github.com/dermatologist/crisp-t/issues/45)
+[Full Changelog](https://github.com/dermatologist/crisp-t/compare/v1.0.0...HEAD)
 
 **Merged pull requests:**
 
+- Feature/parallel 1 [\#47](https://github.com/dermatologist/crisp-t/pull/47) ([dermatologist](https://github.com/dermatologist))
 - Add subcommand support, unquoted syntax, and color formatting to --print option [\#46](https://github.com/dermatologist/crisp-t/pull/46) ([Copilot](https://github.com/apps/copilot-swe-agent))
 - Update README and add TDABM documentation for multidimensional data v… [\#44](https://github.com/dermatologist/crisp-t/pull/44) ([dermatologist](https://github.com/dermatologist))
 - Implement TDABM \(Topological Data Analysis Ball Mapper\) for multidimensional data visualization [\#43](https://github.com/dermatologist/crisp-t/pull/43) ([Copilot](https://github.com/apps/copilot-swe-agent))
@@ -39,6 +36,14 @@
 - Feature/uv 1 [\#8](https://github.com/dermatologist/crisp-t/pull/8) ([dermatologist](https://github.com/dermatologist))
 - Feature/readme 1 [\#4](https://github.com/dermatologist/crisp-t/pull/4) ([dermatologist](https://github.com/dermatologist))
 - Bump astral-sh/setup-uv from 5 to 6 [\#2](https://github.com/dermatologist/crisp-t/pull/2) ([dependabot[bot]](https://github.com/apps/dependabot))
+
+## [v1.0.0](https://github.com/dermatologist/crisp-t/tree/v1.0.0) (2025-10-26)
+
+[Full Changelog](https://github.com/dermatologist/crisp-t/compare/v0.9.0...v1.0.0)
+
+**Implemented enhancements:**
+
+- Feature request: Improve the --print command with more options and better display. [\#45](https://github.com/dermatologist/crisp-t/issues/45)
 
 ## [v0.9.0](https://github.com/dermatologist/crisp-t/tree/v0.9.0) (2025-10-25)
 

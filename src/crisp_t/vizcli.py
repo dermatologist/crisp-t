@@ -113,11 +113,6 @@ def main(
 
     corpus = initialize_corpus(inp=inp)
 
-    # if --inp provided, and not --out, set out to inp
-    if inp and not out:
-        out = inp
-        click.echo(f"Output path not provided. Using input path as output: {out}")
-
     if not corpus:
         raise click.ClickException("No input provided. Use --source/--sources or --inp")
 
