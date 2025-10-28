@@ -92,7 +92,7 @@ crisp --source PATH --out PATH
 
 ⚡️ Advanced users may also load corpus from URL `--source` or multiple URLs using `--sources` option. ⚡️
 
-⚠️ **While analysing multiple datasets, use `crisp --clear` option to clear cache before switching datasets.** ⚠️
+⚠️ **While analysing multiple datasets, use `crisp --clear` option to clear cache before switching datasets.**
 
 #### Input/Output Options
 
