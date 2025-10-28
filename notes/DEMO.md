@@ -67,7 +67,7 @@ crisp --print "metadata clusters"
 ```
 * Prints the clusters assigned to each document based on keywords.
 * There are many other options to explore the results. See documentation for details.
-* Let us choose narratives that contain 'work' keyword and show the concepts/topics in these narratives.
+* Let us choose narratives that contain 'mask' keyword and show the concepts/topics in these narratives.
 
 ```bash
 crisp --inp crisp_input --clear --filters keywords=mask --topics
