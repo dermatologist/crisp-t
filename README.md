@@ -11,37 +11,37 @@
 [![Wiki](https://img.shields.io/badge/CRISP-wiki-demo)](https://github.com/dermatologist/crisp-t/wiki)
 [![Documentation](https://badgen.net/badge/icon/documentation?icon=libraries&label)](https://dermatologist.github.io/crisp-t/)
 
-**TL;DR** 🚀 *CRISP-T is a qualitative research method and a toolkit to perform textual (e.g. topic modelling) and numeric (e.g. decision trees) analysis of mixed datasets for computational triangulation and sense-making (optionally) using large language models.* 👉 [See Demo](/notes/DEMO.md).
+**TL;DR** 🚀 *CRISP-T is a qualitative research method and a toolkit to perform textual (e.g. topic modelling) and numeric (e.g. decision trees) analysis of mixed datasets for computational triangulation and sense-making (optionally) using large language models.* 👉 [See Demo](/notes/DEMO.md). Give us a star ⭐️ if you find this useful!
 
 <p align="center">
   <img src="https://github.com/dermatologist/crisp-t/blob/develop/notes/crisp-logo.jpg" />
 </p>
 
-## What CRISP is not!
+## CRISP is ❌ **NOT** for:
 
-❌  CRISP is NOT for multimodal prediction. [Use this instead!](https://github.com/dermatologist/kedro-multimodal)
+❌  Multimodal prediction. [Use this instead!](https://github.com/dermatologist/kedro-multimodal)
 
-❌  [CRISP is NOT for sequential mixed methods research,](https://us.sagepub.com/sites/default/files/upm-assets/106361_book_item_106361.pdf) where qualitative and quantitative data are collected and analyzed in separate phases.
+❌  [Sequential mixed methods research,](https://us.sagepub.com/sites/default/files/upm-assets/106361_book_item_106361.pdf) where qualitative and quantitative data are collected and analyzed in separate phases.
 
-❌  CRISP is NOT for convergent parallel mixed method designs where qualitative and quantitative data are collected simultaneously but analyzed separately.
+❌  Convergent parallel mixed method designs where qualitative and quantitative data are collected simultaneously but analyzed separately.
 
-## What CRISP is intended to be:
+## CRISP is intended to:
 
-✅  CRISP (approach and tool) primarily aligns with grounded theory, where disparate datatypes (sometimes collected independently) are explored simultaneously with an [interpretivist world view](https://open.library.okstate.edu/gognresearchmethods/chapter/interpretivism/).
+✅  Facilitate grounded theory, where disparate datatypes (sometimes collected independently) are explored simultaneously with an [interpretivist world view](https://open.library.okstate.edu/gognresearchmethods/chapter/interpretivism/).
 
-✅  Reality is co-created reflectively, **often with GenAI in the loop.**
+✅  Co-create reality reflectively, **often with GenAI in the loop.**
 
-✅  CRISP is for [INDUCTIVE analysis](https://www.frankumstein.com/PDF/Psychology/Inductive%20Content%20Analysis.pdf) of textual and numeric data to generate insights, patterns, and theories.
+✅  Perform [INDUCTIVE analysis](https://www.frankumstein.com/PDF/Psychology/Inductive%20Content%20Analysis.pdf) of textual and numeric data to generate insights, patterns, and theories.
 
 ## The CRISP tools may also be useful for:
 
-⭕ An automated interview **coding dictionary** generation.
+⭕ Automated interview **coding dictionary** generation.
 
-⭕ For semantically filtering journal articles for **literature review**.
+⭕ Semantically filtering journal articles for **literature review**.
 
-⭕ For generating **visualizations** for qualitative (e.g. word cloud) and quantitative (e.g. [TDABM](https://github.com/dermatologist/crisp-t/wiki/Topological-Data-Analysis)) data.
+⭕ Generating **visualizations** for qualitative (e.g. word cloud) and quantitative (e.g. [TDABM](https://github.com/dermatologist/crisp-t/wiki/Topological-Data-Analysis)) data.
 
-⭕ May be many other ….
+⭕ Many other ….
 
 ## Key Features
   ✅ CRISP is written in Python, but **you don’t need to know Python** to use it!
@@ -61,11 +61,11 @@
 
 **Qualitative research** focuses on collecting and analyzing textual data—such as interview transcripts, open-ended survey responses, and field notes—to explore complex phenomena and human experiences. Researchers may also incorporate quantitative or external sources (e.g., demographics, census data, social media) to provide context and triangulate findings. Characterized by an inductive approach, qualitative research emphasizes generating theories from data rather than testing hypotheses. While qualitative and quantitative data are often used together, there is **no standard method for combining them.**
 
-**CRISP-T is a method and toolset** to integrate **textual data** (as a list of documents) and **numeric data** (as Pandas DataFrame) into structured classes that retain **metadata** from various analytical processes, such as **topic modeling** and **decision trees**. Researchers, with or without **GenAI assistance**, can define relationships between textual and numerical datasets based on their chosen **theoretical lens**.  An optional final analytical phase ensures that proposed relationships actually hold true. Further, if the numeric and textual datasets share same id, or if the textual metadata contains keywords that match numeric column names; both datasets are filtered simultaneously, ensuring alignment and facilitating triangulation. 👉 [See Demo](/notes/DEMO.md).
+**CRISP-T is a method and toolset** to integrate **textual data** (as a list of documents) and **numeric data** (as Pandas DataFrame) into structured classes that retain **metadata** from various analytical processes, such as **topic modeling** and **decision trees**. Researchers, with or without **GenAI assistance**, can define relationships between textual and numerical datasets based on their chosen **theoretical lens**.  An optional final analytical phase ensures that proposed relationships actually hold true. Further, if the numeric and textual datasets share the same ID, or if the textual metadata contains keywords that match numeric column names, both datasets are filtered simultaneously, ensuring alignment and facilitating triangulation. 👉 [See Demo](/notes/DEMO.md).
 
-CRISP-T implements **semantic search** using **ChromaDB** to find relevant documents or document chunks based on similarity to a query or reference documents. This is useful for literature reviews to find documents likely to fit inclusion criteria within your corpus/search results. It can also be used for coding/annotating documents by finding relevant chunks within a specific document.
+CRISP-T implements **semantic search** using **ChromaDB** to find relevant documents or document chunks based on similarity to a query or reference documents. This is useful for literature reviews to find documents likely to fit the inclusion criteria within your corpus/search results. It can also be used for coding/annotating documents by finding relevant chunks within a specific document.
 
-An **MCP server** exposes all functionality as tools, resources, and prompts, enabling integration with AI agent platforms such as Claude desktop, VSCODE and other MCP-compatible clients. CRISP-T cannot directly code the documents, but it provides semantic chunk search that **may be used in association with other tools to acheive automated coding**. For example, VSCODE provides built in tools for editing text and markdown files, which can be used to code documents based on semantic search.
+An **MCP server** exposes all functionality as tools, resources, and prompts, enabling integration with AI agent platforms such as Claude desktop, VSCODE and other MCP-compatible clients. CRISP-T cannot directly code the documents, but it provides semantic chunk search that **may be used in association with other tools to achieve automated coding**. For example, VSCODE provides built-in tools for editing text and markdown files, which can be used to code documents based on semantic search.
 
 ## Installation
 
