@@ -11,13 +11,39 @@
 [![Wiki](https://img.shields.io/badge/CRISP-wiki-demo)](https://github.com/dermatologist/crisp-t/wiki)
 [![Documentation](https://badgen.net/badge/icon/documentation?icon=libraries&label)](https://dermatologist.github.io/crisp-t/)
 
-**TL;DR** 🚀 *CRISP-T is a qualitative research method and a toolkit to perform textual (e.g. topic modelling) and numeric (e.g. decision trees) analysis of mixed datasets for computational triangulation and sense-making using large language models.* 👉 [See Demo](/notes/DEMO.md).
+**TL;DR** 🚀 *CRISP-T is a qualitative research approach and a toolkit to perform textual (e.g. topic modelling) and numeric (e.g. decision trees) analysis of mixed datasets for computational triangulation and sense-making (optionally) using large language models.* 👉 [See Demo](/notes/DEMO.md).
 
 <p align="center">
   <img src="https://github.com/dermatologist/crisp-t/blob/develop/notes/crisp-logo.jpg" />
 </p>
 
+## What CRISP is not!
 
+❌  CRISP is NOT a tool for multimodal prediction. [Use this instead!](https://github.com/dermatologist/kedro-multimodal)
+
+❌  [CRISP is NOT for sequential mixed methods research,](https://us.sagepub.com/sites/default/files/upm-assets/106361_book_item_106361.pdf) where qualitative and quantitative data are collected and analyzed in separate phases.
+
+❌  CRISP is NOT for convergent parallel mixed method designs where qualitative and quantitative data are collected simultaneously but analyzed separately.
+
+## What CRISP is intended to be:
+
+✅  CRISP (approach and tool) primarily aligns with grounded theory, where disparate datatypes (sometimes collected independently) are explored simultaneously with an [interpretivist world view](https://open.library.okstate.edu/gognresearchmethods/chapter/interpretivism/).
+
+✅  Reality is co-created reflectively, **often with GenAI in the loop.**
+
+✅  CRISP is for [INDUCTIVE analysis](https://www.frankumstein.com/PDF/Psychology/Inductive%20Content%20Analysis.pdf) of textual and numeric data to generate insights, patterns, and theories.
+
+## The CRISP tool may also be useful for:
+
+⭕ An automated interview **coding dictionary** generation tool.
+
+⭕ A tool for semantically filtering journal articles for **literature review**.
+
+⭕ Tool for generating **visualizations** for qualitative (e.g. word cloud) and quantitative (e.g. [TDABM](https://github.com/dermatologist/crisp-t/wiki/Topological-Data-Analysis)) data.
+
+⭕ May be many other ….
+
+## Key Features
   ✅ CRISP is written in Python, but **you don’t need to know Python** to use it!
 
   ✅ CRISP is not a data science tool; it’s a **sense-making** tool!
@@ -26,7 +52,7 @@
 
   ✅ CRISP employs an **interpretivist approach**, and the same lens is required to comprehend its results!
 
-  ✅ CRISP does not need LLMs but can augment them with **tools**!
+  ✅ CRISP does not use LLMs but can augment LLMs with **tools**!
 
   ✅ CRISP is designed to **simplify your life as a qualitative researcher!**
 
