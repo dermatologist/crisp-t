@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 
 class CrispGraph:
     """
-    Class for creating graph representations of a corpus using BioCypher.
+    Class for creating graph representations of a corpus using NetworkX.
     
     The graph nodes include:
     - Documents (labelled with IDs)
@@ -133,7 +133,9 @@ class CrispGraph:
                     for col in df_columns:
                         if col != id_col:
                             value = row[col]
-                            if not (isinstance(value, float) and value != value):  # Skip NaN
+                            # Skip NaN values
+                            import pandas as pd
+                            if not pd.isna(value):
                                 properties[col] = value
                     
                     if properties:  # Only create node if there are properties

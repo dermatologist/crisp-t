@@ -6,6 +6,7 @@ from typing import Iterable, Sequence, Tuple, cast
 
 import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
+import networkx as nx
 import numpy as np
 import pandas as pd
 import seaborn as sns
@@ -1043,8 +1044,6 @@ class QRVisualize:
             raise ValueError("No nodes found in graph data")
 
         # Create NetworkX graph
-        import networkx as nx
-
         G = nx.Graph()
 
         # Add nodes with their labels
