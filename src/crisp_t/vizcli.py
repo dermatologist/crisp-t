@@ -73,6 +73,17 @@ logger = logging.getLogger(__name__)
     is_flag=True,
     help="Export: TDABM visualization (requires TDABM analysis in corpus metadata)",
 )
+@click.option(
+    "--graph",
+    is_flag=True,
+    help="Export: graph visualization (requires graph data in corpus metadata)",
+)
+@click.option(
+    "--graph-layout",
+    default="spring",
+    show_default=True,
+    help="Layout algorithm for graph visualization: spring, circular, kamada_kawai, or spectral",
+)
 def main(
     verbose: bool,
     inp: Optional[str],
@@ -88,6 +99,8 @@ def main(
     top_terms: bool,
     corr_heatmap: bool,
     tdabm: bool,
+    graph: bool,
+    graph_layout: str,
 ):
     """CRISP-T: Visualization CLI
 
@@ -237,6 +250,25 @@ def main(
             except Exception as e:
                 click.echo(f"Error generating TDABM visualization: {e}")
                 logger.error(f"TDABM visualization error: {e}", exc_info=True)
+
+    # Graph visualization
+    if graph:
+        if 'graph' not in corpus.metadata:
+            click.echo("Warning: No graph data found in corpus metadata.")
+            click.echo("Hint: Run graph generation first with: crispt --graph --inp <corpus_dir>")
+        else:
+            out_path = out_dir / "graph.png"
+            try:
+                viz.draw_graph(
+                    corpus=corpus,
+                    folder_path=str(out_path),
+                    show=False,
+                    layout=graph_layout
+                )
+                click.echo(f"Saved: {out_path}")
+            except Exception as e:
+                click.echo(f"Error generating graph visualization: {e}")
+                logger.error(f"Graph visualization error: {e}", exc_info=True)
 
     click.echo("\n=== Visualization Complete ===")
 

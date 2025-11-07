@@ -38,6 +38,8 @@ dependencies = [
     "chromadb",
     "tqdm",
     "pyLDAvis",
+    "biocypher",
+    "networkx",
 ]
 
 

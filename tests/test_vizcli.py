@@ -270,3 +270,166 @@ def test_vizcli_tdabm_with_metadata(tmp_dir):
 
     assert result.exit_code == 0, result.output
     assert (out_dir / "tdabm.png").exists()
+
+
+def test_vizcli_graph_without_metadata(tmp_dir):
+    """Test graph visualization without graph metadata shows warning"""
+    from src.crisp_t.model.corpus import Corpus
+    from src.crisp_t.read_data import ReadData
+
+    corpus_dir = Path(tmp_dir) / "corpus_no_graph"
+    corpus_dir.mkdir()
+
+    corpus = Corpus(id="test", name="Test Corpus")
+    rd = ReadData(corpus=corpus)
+    rd.write_corpus_to_json(str(corpus_dir), corpus=corpus)
+
+    runner = CliRunner()
+    out_dir = Path(tmp_dir) / "out"
+    result = runner.invoke(
+        viz_main,
+        [
+            "--inp",
+            str(corpus_dir),
+            "--out",
+            str(out_dir),
+            "--graph",
+        ],
+    )
+
+    # Should not crash but should show warning
+    assert result.exit_code == 0
+    assert "No graph data found" in result.output or "Warning" in result.output
+
+
+def test_vizcli_graph_with_metadata(tmp_dir):
+    """Test graph visualization with proper metadata"""
+    from src.crisp_t.model.corpus import Corpus
+    from src.crisp_t.model.document import Document
+    from src.crisp_t.read_data import ReadData
+
+    # Create a corpus with graph metadata
+    corpus_dir = Path(tmp_dir) / "corpus_graph"
+    corpus_dir.mkdir()
+
+    doc1 = Document(
+        id="doc1",
+        name="Document 1",
+        text="Test document 1",
+        metadata={"keywords": ["health", "research"]}
+    )
+    doc2 = Document(
+        id="doc2",
+        name="Document 2",
+        text="Test document 2",
+        metadata={"keywords": ["health", "policy"]}
+    )
+
+    corpus = Corpus(
+        id="test",
+        name="Test Corpus",
+        documents=[doc1, doc2],
+        metadata={
+            "graph": {
+                "nodes": [
+                    {"id": "doc1", "label": "document", "properties": {"name": "Document 1"}},
+                    {"id": "doc2", "label": "document", "properties": {"name": "Document 2"}},
+                    {"id": "keyword:health", "label": "keyword", "properties": {"name": "health"}},
+                    {"id": "keyword:research", "label": "keyword", "properties": {"name": "research"}},
+                    {"id": "keyword:policy", "label": "keyword", "properties": {"name": "policy"}},
+                ],
+                "edges": [
+                    {"source": "doc1", "target": "keyword:health", "label": "HAS_KEYWORD", "properties": {}},
+                    {"source": "doc1", "target": "keyword:research", "label": "HAS_KEYWORD", "properties": {}},
+                    {"source": "doc2", "target": "keyword:health", "label": "HAS_KEYWORD", "properties": {}},
+                    {"source": "doc2", "target": "keyword:policy", "label": "HAS_KEYWORD", "properties": {}},
+                ],
+                "num_nodes": 5,
+                "num_edges": 4,
+                "num_documents": 2,
+                "has_keywords": True,
+                "has_clusters": False,
+                "has_metadata": False
+            }
+        },
+    )
+
+    rd = ReadData(corpus=corpus)
+    rd.write_corpus_to_json(str(corpus_dir), corpus=corpus)
+
+    runner = CliRunner()
+    out_dir = Path(tmp_dir) / "out_graph"
+    result = runner.invoke(
+        viz_main,
+        [
+            "--inp",
+            str(corpus_dir),
+            "--out",
+            str(out_dir),
+            "--graph",
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert (out_dir / "graph.png").exists()
+
+
+def test_vizcli_graph_with_layout(tmp_dir):
+    """Test graph visualization with different layout option"""
+    from src.crisp_t.model.corpus import Corpus
+    from src.crisp_t.model.document import Document
+    from src.crisp_t.read_data import ReadData
+
+    corpus_dir = Path(tmp_dir) / "corpus_graph_layout"
+    corpus_dir.mkdir()
+
+    doc1 = Document(
+        id="doc1",
+        name="Doc 1",
+        text="Test",
+        metadata={"keywords": ["test"]}
+    )
+
+    corpus = Corpus(
+        id="test",
+        name="Test Corpus",
+        documents=[doc1],
+        metadata={
+            "graph": {
+                "nodes": [
+                    {"id": "doc1", "label": "document", "properties": {"name": "Doc 1"}},
+                    {"id": "keyword:test", "label": "keyword", "properties": {"name": "test"}},
+                ],
+                "edges": [
+                    {"source": "doc1", "target": "keyword:test", "label": "HAS_KEYWORD", "properties": {}},
+                ],
+                "num_nodes": 2,
+                "num_edges": 1,
+                "num_documents": 1,
+                "has_keywords": True,
+                "has_clusters": False,
+                "has_metadata": False
+            }
+        },
+    )
+
+    rd = ReadData(corpus=corpus)
+    rd.write_corpus_to_json(str(corpus_dir), corpus=corpus)
+
+    runner = CliRunner()
+    out_dir = Path(tmp_dir) / "out_graph_circular"
+    result = runner.invoke(
+        viz_main,
+        [
+            "--inp",
+            str(corpus_dir),
+            "--out",
+            str(out_dir),
+            "--graph",
+            "--graph-layout",
+            "circular",
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert (out_dir / "graph.png").exists()
