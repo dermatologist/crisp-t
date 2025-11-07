@@ -21,6 +21,7 @@ import logging
 from typing import Any, Dict, List, Tuple
 
 import networkx as nx
+import pandas as pd
 
 from .model.corpus import Corpus
 
@@ -134,7 +135,6 @@ class CrispGraph:
                         if col != id_col:
                             value = row[col]
                             # Skip NaN values
-                            import pandas as pd
                             if not pd.isna(value):
                                 properties[col] = value
                     
