@@ -6,6 +6,7 @@ from typing import Iterable, Sequence, Tuple, cast
 
 import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
+import networkx as nx
 import numpy as np
 import pandas as pd
 import seaborn as sns
@@ -953,7 +954,7 @@ class QRVisualize:
             cmap=mcolors.LinearSegmentedColormap.from_list(
                 "red_green", ["red", "green"]
             ),
-            norm=plt.Normalize(vmin=min_y, vmax=max_y),
+            norm=mcolors.Normalize(vmin=min_y, vmax=max_y),
         )
         sm.set_array([])
         cbar = plt.colorbar(sm, ax=ax)
@@ -995,6 +996,218 @@ class QRVisualize:
         ax.grid(True, alpha=0.3)
         ax.set_aspect("equal", adjustable="box")
 
+        plt.tight_layout()
+
+        return self._finalize_plot(fig, folder_path, show)
+
+    def draw_graph(
+        self,
+        corpus: Corpus | None = None,
+        folder_path: str | None = None,
+        show: bool = True,
+        layout: str = "spring",
+    ) -> Figure:
+        """
+        Draw graph visualization from corpus metadata.
+
+        Creates a visualization of the graph structure showing documents,
+        keywords, clusters, and metadata nodes along with their relationships.
+
+        Args:
+            corpus: Corpus with 'graph' metadata. If None, uses self.corpus
+            folder_path: Path to save the figure. If None, uses self.folder_path
+            show: Whether to display the plot
+            layout: Graph layout algorithm ('spring', 'circular', 'kamada_kawai', 'spectral')
+
+        Returns:
+            Matplotlib Figure object
+
+        Raises:
+            ValueError: If corpus or graph metadata is missing
+        """
+        if corpus is None:
+            corpus = self.corpus
+
+        if corpus is None:
+            raise ValueError("No corpus provided")
+
+        if "graph" not in corpus.metadata:
+            raise ValueError(
+                "Corpus metadata does not contain 'graph' data. Run graph generation first."
+            )
+
+        graph_data = corpus.metadata["graph"]
+        nodes = graph_data["nodes"]
+        edges = graph_data["edges"]
+
+        if not nodes:
+            raise ValueError("No nodes found in graph data")
+
+        # Create NetworkX graph
+        G = nx.Graph()
+
+        # Add nodes with their labels (store as maps keyed by node id)
+        node_labels: dict[str, str] = {}
+        node_color_map_by_id: dict[str, str] = {}
+        node_size_map_by_id: dict[str, float] = {}
+
+        # Color mapping for different node types
+        color_map = {
+            "document": "#FF6B6B",  # Red
+            "keyword": "#4ECDC4",  # Teal
+            "cluster": "#95E1D3",  # Light green
+            "metadata": "#FFD93D",  # Yellow
+        }
+
+        for node in nodes:
+            node_id = str(node.get("id"))
+            label = node.get("label", "metadata")
+            properties = node.get("properties", {})
+
+            G.add_node(node_id, label=label, **properties)
+
+            # Set node label (use name property if available)
+            if "name" in properties and properties["name"]:
+                node_labels[node_id] = str(properties["name"])
+            else:
+                # For keywords, remove the "keyword:" prefix
+                if node_id.startswith("keyword:"):
+                    node_labels[node_id] = node_id.replace("keyword:", "")
+                elif node_id.startswith("cluster:"):
+                    node_labels[node_id] = f"C{node_id.replace('cluster:', '')}"
+                elif node_id.startswith("metadata:"):
+                    node_labels[node_id] = "M"
+                else:
+                    node_labels[node_id] = node_id
+
+            # Set node color based on type
+            node_color_map_by_id[node_id] = color_map.get(label, "#CCCCCC")
+
+            # Set node size based on type (documents larger)
+            if label == "document":
+                node_size_map_by_id[node_id] = 800.0
+            elif label == "keyword":
+                node_size_map_by_id[node_id] = 500.0
+            elif label == "cluster":
+                node_size_map_by_id[node_id] = 600.0
+            else:
+                node_size_map_by_id[node_id] = 400.0
+
+        # Add edges
+        for edge in edges:
+            source = str(edge.get("source"))
+            target = str(edge.get("target"))
+            # If edge introduces unknown nodes, add with default properties
+            if source not in G:
+                G.add_node(source, label="metadata")
+                node_labels[source] = (
+                    source if not source.startswith("metadata:") else "M"
+                )
+                node_color_map_by_id[source] = color_map.get("metadata", "#CCCCCC")
+                node_size_map_by_id[source] = 400.0
+            if target not in G:
+                G.add_node(target, label="metadata")
+                node_labels[target] = (
+                    target if not target.startswith("metadata:") else "M"
+                )
+                node_color_map_by_id[target] = color_map.get("metadata", "#CCCCCC")
+                node_size_map_by_id[target] = 400.0
+            G.add_edge(source, target)
+
+        # Create figure
+        fig, ax = plt.subplots(figsize=(16, 12))
+
+        # Choose layout algorithm
+        if layout == "spring":
+            pos = nx.spring_layout(G, k=2, iterations=50, seed=42)
+        elif layout == "circular":
+            pos = nx.circular_layout(G)
+        elif layout == "kamada_kawai":
+            pos = nx.kamada_kawai_layout(G)
+        elif layout == "spectral":
+            pos = nx.spectral_layout(G)
+        else:
+            pos = nx.spring_layout(G, seed=42)
+
+        # Draw edges first (so they appear behind nodes)
+        nx.draw_networkx_edges(
+            G,
+            pos,
+            ax=ax,
+            edge_color="#CCCCCC",
+            width=1.5,
+            alpha=0.6,
+        )
+
+        # Build aligned arrays for node attributes
+        nodelist = list(G.nodes())
+        node_colors = [node_color_map_by_id.get(n, "#CCCCCC") for n in nodelist]
+        node_sizes = np.asarray(
+            [float(node_size_map_by_id.get(n, 400.0)) for n in nodelist]
+        )
+        # Draw nodes with explicit nodelist
+        nx.draw_networkx_nodes(
+            G,
+            pos,
+            nodelist=nodelist,
+            ax=ax,
+            node_color=node_colors,
+            node_size=node_sizes,
+            alpha=0.9,
+            edgecolors="black",
+            linewidths=1.5,
+        )
+
+        # Draw labels
+        # Labels aligned to nodelist
+        labels_ordered = {n: node_labels.get(n, str(n)) for n in nodelist}
+        nx.draw_networkx_labels(
+            G,
+            pos,
+            labels=labels_ordered,
+            ax=ax,
+            font_size=8,
+            font_weight="bold",
+            font_color="black",
+        )
+
+        # Add title and legend
+        # Compute stats if not provided
+        num_nodes = int(graph_data.get("num_nodes", len(G.nodes())))
+        num_edges = int(graph_data.get("num_edges", len(G.edges())))
+        num_documents = int(
+            graph_data.get(
+                "num_documents",
+                sum(1 for _, d in G.nodes(data=True) if d.get("label") == "document"),
+            )
+        )
+        ax.set_title(
+            f"Graph Visualization\n"
+            f"Nodes: {num_nodes}, "
+            f"Edges: {num_edges}, "
+            f"Documents: {num_documents}",
+            fontsize=14,
+            fontweight="bold",
+            pad=20,
+        )
+
+        # Create legend
+        from matplotlib.patches import Patch
+
+        legend_elements = []
+        for node_type, color in color_map.items():
+            legend_elements.append(
+                Patch(facecolor=color, edgecolor="black", label=node_type.capitalize())
+            )
+
+        ax.legend(
+            handles=legend_elements,
+            loc="upper left",
+            framealpha=0.9,
+            title="Node Types",
+        )
+
+        ax.axis("off")
         plt.tight_layout()
 
         return self._finalize_plot(fig, folder_path, show)

@@ -201,6 +201,7 @@ crisp --print metadata --print pca
 crisp --print dataframe --print stats
 ```
 
+
 ### crispviz (Visualization CLI)
 
 ```bash
@@ -209,8 +210,8 @@ crispviz [OPTIONS]
 
 - `--inp, --source, --sources`: Input corpus or sources
 - `--out`: Output directory for PNG images
-- Visualization flags: `--freq`, `--by-topic`, `--wordcloud`, `--ldavis`, `--top-terms`, `--corr-heatmap`, `--tdabm`
-- Optional params: `--bins`, `--top-n`, `--columns`, `--topics-num`
+- Visualization flags: `--freq`, `--by-topic`, `--wordcloud`, `--ldavis`, `--top-terms`, `--corr-heatmap`, `--tdabm`, `--graph`
+- Optional params: `--bins`, `--top-n`, `--columns`, `--topics-num`, `--graph-layout`, `--graph-nodes`
 
 **Visualization Options:**
 - `--freq`: Export word frequency distribution
@@ -220,6 +221,9 @@ crispviz [OPTIONS]
 - `--top-terms`: Export top terms bar chart
 - `--corr-heatmap`: Export correlation heatmap from CSV numeric columns
 - `--tdabm`: Export TDABM visualization (requires TDABM analysis in corpus metadata). Use `crispt --tdabm` to perform the analysis first.
+- `--graph`: Export graph visualization (requires graph data in corpus metadata). Use `crispt --graph` to generate the graph first.
+- `--graph-layout`: Layout algorithm for graph visualization: `spring` (default), `circular`, `kamada_kawai`, or `spectral`
+- `--graph-nodes`: Comma-separated list of node types to include in the graph visualization. Valid types: `document`, `keyword`, `cluster`, `metadata`. Example: `--graph-nodes document,keyword` will only show document and keyword nodes (and their connecting edges). If omitted or set to `all`, all node types are included.
 - `--topics-num N`: Number of topics for LDA (default: 8, based on Mettler et al., 2025)
 
 ### crispt (Corpus Manipulation CLI)
@@ -254,8 +258,11 @@ crispt [OPTIONS]
 	- `--metadata-keys KEYS`: Comma-separated metadata keys to include+
 - [TDABM analysis](/notes/TDABM.md):
 	- `--tdabm Y_VAR:X_VARS:RADIUS`: Perform Topological Data Analysis Ball Mapper (TDABM) analysis. Format: `y_variable:x_variables:radius` (e.g., `satisfaction:age,income:0.3`). Radius defaults to 0.3 if omitted.
+- Graph generation:
+	- `--graph`: Generate graph representation of the corpus. Creates nodes for documents, keywords, clusters (if present), and metadata (if DataFrame has aligning ID field). Edges connect documents to their keywords, clusters, and metadata. Graph data is stored in corpus metadata['graph']. **Requires documents to have keywords assigned first** (e.g., using text analysis features).
 
 ℹ️ *`--metadata-df` and `--metadata-keys` options can be used  to export or add metadata from NLP to the DataFrame. For example, you can extract sentiment scores or topic assignments as additional columns for numerical analysis. This is useful if dataframe and documents are aligned as in a survey response.*
+
 
 ### [Example Usage](/notes/DEMO.md)
 

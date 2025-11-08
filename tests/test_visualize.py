@@ -237,3 +237,117 @@ def test_draw_tdabm_1d_coordinates(visualize: QRVisualize):
     
     assert fig is not None
     plt.close(fig)
+
+
+def test_draw_graph_basic(visualize: QRVisualize):
+    """Test basic graph visualization"""
+    from src.crisp_t.model.corpus import Corpus
+    from src.crisp_t.model.document import Document
+    
+    # Create test corpus with graph metadata
+    doc1 = Document(
+        id="doc1",
+        name="Doc 1",
+        text="Test document 1",
+        metadata={"keywords": ["health", "research"]}
+    )
+    doc2 = Document(
+        id="doc2",
+        name="Doc 2",
+        text="Test document 2",
+        metadata={"keywords": ["health", "policy"]}
+    )
+    
+    corpus = Corpus(
+        id="test",
+        name="Test",
+        documents=[doc1, doc2],
+        metadata={
+            'graph': {
+                'nodes': [
+                    {'id': 'doc1', 'label': 'document', 'properties': {'name': 'Doc 1'}},
+                    {'id': 'doc2', 'label': 'document', 'properties': {'name': 'Doc 2'}},
+                    {'id': 'keyword:health', 'label': 'keyword', 'properties': {'name': 'health'}},
+                    {'id': 'keyword:research', 'label': 'keyword', 'properties': {'name': 'research'}},
+                    {'id': 'keyword:policy', 'label': 'keyword', 'properties': {'name': 'policy'}},
+                ],
+                'edges': [
+                    {'source': 'doc1', 'target': 'keyword:health', 'label': 'HAS_KEYWORD', 'properties': {}},
+                    {'source': 'doc1', 'target': 'keyword:research', 'label': 'HAS_KEYWORD', 'properties': {}},
+                    {'source': 'doc2', 'target': 'keyword:health', 'label': 'HAS_KEYWORD', 'properties': {}},
+                    {'source': 'doc2', 'target': 'keyword:policy', 'label': 'HAS_KEYWORD', 'properties': {}},
+                ],
+                'num_nodes': 5,
+                'num_edges': 4,
+                'num_documents': 2,
+                'has_keywords': True,
+                'has_clusters': False,
+                'has_metadata': False
+            }
+        }
+    )
+    
+    fig = visualize.draw_graph(corpus=corpus, show=False)
+    
+    assert fig is not None
+    plt.close(fig)
+
+
+def test_draw_graph_without_graph_metadata(visualize: QRVisualize):
+    """Test graph visualization fails without graph metadata"""
+    from src.crisp_t.model.corpus import Corpus
+    
+    corpus = Corpus(id="test", name="Test")
+    
+    with pytest.raises(ValueError, match="does not contain 'graph' data"):
+        visualize.draw_graph(corpus=corpus, show=False)
+
+
+def test_draw_graph_without_corpus(visualize: QRVisualize):
+    """Test graph visualization fails without corpus"""
+    
+    with pytest.raises(ValueError, match="No corpus provided"):
+        visualize.draw_graph(corpus=None, show=False)
+
+
+def test_draw_graph_with_different_layouts(visualize: QRVisualize):
+    """Test graph visualization with different layout algorithms"""
+    from src.crisp_t.model.corpus import Corpus
+    from src.crisp_t.model.document import Document
+    
+    # Create simple graph
+    doc1 = Document(
+        id="doc1",
+        name="Doc 1",
+        text="Test",
+        metadata={"keywords": ["test"]}
+    )
+    
+    corpus = Corpus(
+        id="test",
+        name="Test",
+        documents=[doc1],
+        metadata={
+            'graph': {
+                'nodes': [
+                    {'id': 'doc1', 'label': 'document', 'properties': {'name': 'Doc 1'}},
+                    {'id': 'keyword:test', 'label': 'keyword', 'properties': {'name': 'test'}},
+                ],
+                'edges': [
+                    {'source': 'doc1', 'target': 'keyword:test', 'label': 'HAS_KEYWORD', 'properties': {}},
+                ],
+                'num_nodes': 2,
+                'num_edges': 1,
+                'num_documents': 1,
+                'has_keywords': True,
+                'has_clusters': False,
+                'has_metadata': False
+            }
+        }
+    )
+    
+    # Test different layouts
+    for layout in ["spring", "circular", "kamada_kawai", "spectral"]:
+        fig = visualize.draw_graph(corpus=corpus, show=False, layout=layout)
+        assert fig is not None
+        plt.close(fig)

@@ -38,6 +38,7 @@ dependencies = [
     "chromadb",
     "tqdm",
     "pyLDAvis",
+    "networkx",
 ]
 
 
