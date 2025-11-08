@@ -160,12 +160,7 @@ class CrispGraph:
                     keywords_list = [kw.strip() for kw in doc_keywords.split(",")]
 
                 for keyword in keywords_list:
-                    yield (
-                        doc.id,
-                        f"keyword:{keyword}",
-                        "HAS_KEYWORD",
-                        {}
-                    )
+                    yield (doc.id, f"keyword:{keyword}", "HAS_KEYWORD", {})
 
     def _generate_document_cluster_edges(self):
         """
@@ -178,12 +173,7 @@ class CrispGraph:
         for doc in self.corpus.documents:
             if doc.metadata and "cluster" in doc.metadata:
                 cluster_id = doc.metadata["cluster"]
-                yield (
-                    doc.id,
-                    f"cluster:{cluster_id}",
-                    "BELONGS_TO_CLUSTER",
-                    {}
-                )
+                yield (doc.id, f"cluster:{cluster_id}", "BELONGS_TO_CLUSTER", {})
 
     def _generate_document_metadata_edges(self):
         """
@@ -205,12 +195,37 @@ class CrispGraph:
             if id_col:
                 for idx, row in self.corpus.df.iterrows():
                     doc_id = row[id_col]
-                    yield (
-                        doc_id,
-                        f"metadata:{doc_id}",
-                        "HAS_METADATA",
-                        {}
-                    )
+                    yield (doc_id, f"metadata:{doc_id}", "HAS_METADATA", {})
+
+    def _generate_cluster_keyword_edges(self):
+        """
+        Generator for edges connecting clusters to keywords.
+
+        Yields:
+            Tuple of (source_id, target_id, label, properties) for each edge
+        """
+        # Collect all clusters and keywords
+        clusters = set()
+        keywords = set()
+        for doc in self.corpus.documents:
+            if doc.metadata:
+                if "cluster" in doc.metadata:
+                    clusters.add(doc.metadata["cluster"])
+                if "keywords" in doc.metadata:
+                    doc_keywords = doc.metadata["keywords"]
+                    if isinstance(doc_keywords, list):
+                        keywords.update(doc_keywords)
+                    elif isinstance(doc_keywords, str):
+                        keywords.update([kw.strip() for kw in doc_keywords.split(",")])
+        # Create edges between every cluster and every keyword
+        for cluster_id in clusters:
+            for keyword in keywords:
+                yield (
+                    f"cluster:{cluster_id}",
+                    f"keyword:{keyword}",
+                    "CLUSTER_HAS_KEYWORD",
+                    {},
+                )
 
     def create_graph(self) -> Dict[str, Any]:
         """
@@ -233,8 +248,12 @@ class CrispGraph:
                 break
 
         if not has_keywords:
-            logger.error("Documents do not have keywords assigned. Please run --assign before generating the graph.")
-            raise ValueError("Documents do not have keywords assigned. Run keyword assignment (--assign) first.")
+            logger.error(
+                "Documents do not have keywords assigned. Please run --assign before generating the graph."
+            )
+            raise ValueError(
+                "Documents do not have keywords assigned. Run keyword assignment (--assign) first."
+            )
 
         # Check if DataFrame can be included
         can_include_df = False
@@ -246,7 +265,9 @@ class CrispGraph:
                     break
 
             if not can_include_df:
-                logger.warning("DataFrame does not have an aligning ID field. DataFrame metadata will not be included in the graph.")
+                logger.warning(
+                    "DataFrame does not have an aligning ID field. DataFrame metadata will not be included in the graph."
+                )
 
         # Create NetworkX graph for internal representation
         self.graph = nx.Graph()
@@ -283,36 +304,55 @@ class CrispGraph:
         # Add document-keyword edges
         for edge_data in self._generate_document_keyword_edges():
             source_id, target_id, label, properties = edge_data
-            edges.append({
-                "source": source_id,
-                "target": target_id,
-                "label": label,
-                "properties": properties
-            })
+            edges.append(
+                {
+                    "source": source_id,
+                    "target": target_id,
+                    "label": label,
+                    "properties": properties,
+                }
+            )
             self.graph.add_edge(source_id, target_id, label=label, **properties)
 
         # Add document-cluster edges if present
         for edge_data in self._generate_document_cluster_edges():
             source_id, target_id, label, properties = edge_data
-            edges.append({
-                "source": source_id,
-                "target": target_id,
-                "label": label,
-                "properties": properties
-            })
+            edges.append(
+                {
+                    "source": source_id,
+                    "target": target_id,
+                    "label": label,
+                    "properties": properties,
+                }
+            )
             self.graph.add_edge(source_id, target_id, label=label, **properties)
 
         # Add document-metadata edges if applicable
         if can_include_df:
             for edge_data in self._generate_document_metadata_edges():
                 source_id, target_id, label, properties = edge_data
-                edges.append({
+                edges.append(
+                    {
+                        "source": source_id,
+                        "target": target_id,
+                        "label": label,
+                        "properties": properties,
+                    }
+                )
+                self.graph.add_edge(source_id, target_id, label=label, **properties)
+
+        # Add cluster-keyword edges
+        for edge_data in self._generate_cluster_keyword_edges():
+            source_id, target_id, label, properties = edge_data
+            edges.append(
+                {
                     "source": source_id,
                     "target": target_id,
                     "label": label,
-                    "properties": properties
-                })
-                self.graph.add_edge(source_id, target_id, label=label, **properties)
+                    "properties": properties,
+                }
+            )
+            self.graph.add_edge(source_id, target_id, label=label, **properties)
 
         # Create graph data structure
         graph_data = {
@@ -323,7 +363,7 @@ class CrispGraph:
             "num_documents": len(self.corpus.documents),
             "has_keywords": has_keywords,
             "has_clusters": "clusters" in self.corpus.metadata,
-            "has_metadata": can_include_df
+            "has_metadata": can_include_df,
         }
 
         # Store in corpus metadata
