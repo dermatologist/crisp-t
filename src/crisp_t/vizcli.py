@@ -117,7 +117,11 @@ def main(
     click.echo(f"Version: {__version__}")
     click.echo("_________________________________________")
 
-    out_dir = Path(out)
+    try:
+        out_dir = Path(out)
+    except TypeError:
+        click.echo(f"No output directory specified. Visualizations need an output folder.")
+        raise click.Abort()
     out_dir.mkdir(parents=True, exist_ok=True)
 
     # Initialize components
