@@ -31,20 +31,20 @@ logger = logging.getLogger(__name__)
 class CrispGraph:
     """
     Class for creating graph representations of a corpus using NetworkX.
-    
+
     The graph nodes include:
     - Documents (labelled with IDs)
     - Keywords
     - Clusters (if present)
     - Metadata from DataFrame (if present)
-    
+
     The graph edges connect keywords, clusters and metadata nodes to the corresponding documents.
     """
 
     def __init__(self, corpus: Corpus):
         """
         Initialize CrispGraph with a corpus.
-        
+
         Args:
             corpus: Corpus object to create graph from
         """
@@ -54,7 +54,7 @@ class CrispGraph:
     def _generate_document_nodes(self):
         """
         Generator for document nodes.
-        
+
         Yields:
             Tuple of (id, label, properties) for each document
         """
@@ -69,13 +69,13 @@ class CrispGraph:
                     # Skip large metadata items
                     if isinstance(value, (str, int, float, bool)):
                         properties[f"doc_{key}"] = value
-            
+
             yield (doc.id, "document", properties)
 
     def _generate_keyword_nodes(self):
         """
         Generator for keyword nodes.
-        
+
         Yields:
             Tuple of (id, label, properties) for each unique keyword
         """
@@ -87,45 +87,46 @@ class CrispGraph:
                     keywords.update(doc_keywords)
                 elif isinstance(doc_keywords, str):
                     keywords.update([kw.strip() for kw in doc_keywords.split(",")])
-        
+
         for keyword in keywords:
             yield (f"keyword:{keyword}", "keyword", {"name": keyword})
 
     def _generate_cluster_nodes(self):
         """
         Generator for cluster nodes.
-        
+
         Yields:
             Tuple of (id, label, properties) for each cluster
         """
         # Check if corpus has cluster metadata
-        if "clusters" in self.corpus.metadata:
-            clusters_data = self.corpus.metadata["clusters"]
-            if isinstance(clusters_data, dict):
-                for cluster_id, cluster_info in clusters_data.items():
-                    properties = {"cluster_id": cluster_id}
-                    if isinstance(cluster_info, dict):
-                        properties.update(cluster_info)
-                    yield (f"cluster:{cluster_id}", "cluster", properties)
+        clusters = set()
+        for doc in self.corpus.documents:
+            if doc.metadata and "cluster" in doc.metadata:
+                doc_cluster = doc.metadata["cluster"]
+                if isinstance(doc_cluster, (str, int)):
+                    clusters.add(doc_cluster)
+
+        for cluster_id in clusters:
+            yield (f"cluster:{cluster_id}", "cluster", {"name": cluster_id})
 
     def _generate_metadata_nodes(self):
         """
         Generator for metadata nodes from DataFrame.
-        
+
         Yields:
             Tuple of (id, label, properties) for metadata fields
         """
         if self.corpus.df is not None and not self.corpus.df.empty:
             # Check if there's an ID column that aligns with documents
             df_columns = list(self.corpus.df.columns)
-            
+
             # Look for ID or common identifier columns
             id_col = None
             for potential_id in ["id", "ID", "doc_id", "document_id", "index"]:
                 if potential_id in df_columns:
                     id_col = potential_id
                     break
-            
+
             if id_col:
                 # Create metadata nodes for each row
                 for idx, row in self.corpus.df.iterrows():
@@ -137,14 +138,14 @@ class CrispGraph:
                             # Skip NaN values
                             if not pd.isna(value):
                                 properties[col] = value
-                    
+
                     if properties:  # Only create node if there are properties
                         yield (f"metadata:{doc_id}", "metadata", properties)
 
     def _generate_document_keyword_edges(self):
         """
         Generator for edges connecting documents to keywords.
-        
+
         Yields:
             Tuple of (source_id, target_id, label, properties) for each edge
         """
@@ -152,12 +153,12 @@ class CrispGraph:
             if doc.metadata and "keywords" in doc.metadata:
                 doc_keywords = doc.metadata["keywords"]
                 keywords_list = []
-                
+
                 if isinstance(doc_keywords, list):
                     keywords_list = doc_keywords
                 elif isinstance(doc_keywords, str):
                     keywords_list = [kw.strip() for kw in doc_keywords.split(",")]
-                
+
                 for keyword in keywords_list:
                     yield (
                         doc.id,
@@ -169,7 +170,7 @@ class CrispGraph:
     def _generate_document_cluster_edges(self):
         """
         Generator for edges connecting documents to clusters.
-        
+
         Yields:
             Tuple of (source_id, target_id, label, properties) for each edge
         """
@@ -187,20 +188,20 @@ class CrispGraph:
     def _generate_document_metadata_edges(self):
         """
         Generator for edges connecting documents to metadata.
-        
+
         Yields:
             Tuple of (source_id, target_id, label, properties) for each edge
         """
         if self.corpus.df is not None and not self.corpus.df.empty:
             df_columns = list(self.corpus.df.columns)
-            
+
             # Look for ID column
             id_col = None
             for potential_id in ["id", "ID", "doc_id", "document_id", "index"]:
                 if potential_id in df_columns:
                     id_col = potential_id
                     break
-            
+
             if id_col:
                 for idx, row in self.corpus.df.iterrows():
                     doc_id = row[id_col]
@@ -214,13 +215,13 @@ class CrispGraph:
     def create_graph(self) -> Dict[str, Any]:
         """
         Create a graph representation of the corpus.
-        
+
         This method creates nodes for documents, keywords, clusters, and metadata,
         and edges connecting them. The graph is stored in corpus metadata.
-        
+
         Returns:
             Dictionary containing graph data (nodes and edges)
-            
+
         Raises:
             ValueError: If documents don't have keywords assigned
         """
@@ -230,11 +231,11 @@ class CrispGraph:
             if doc.metadata and "keywords" in doc.metadata:
                 has_keywords = True
                 break
-        
+
         if not has_keywords:
             logger.error("Documents do not have keywords assigned. Please run --assign before generating the graph.")
             raise ValueError("Documents do not have keywords assigned. Run keyword assignment (--assign) first.")
-        
+
         # Check if DataFrame can be included
         can_include_df = False
         if self.corpus.df is not None and not self.corpus.df.empty:
@@ -243,42 +244,42 @@ class CrispGraph:
                 if potential_id in df_columns:
                     can_include_df = True
                     break
-            
+
             if not can_include_df:
                 logger.warning("DataFrame does not have an aligning ID field. DataFrame metadata will not be included in the graph.")
-        
+
         # Create NetworkX graph for internal representation
         self.graph = nx.Graph()
-        
+
         # Collect all nodes and edges
         nodes = []
         edges = []
-        
+
         # Add document nodes
         for node_data in self._generate_document_nodes():
             node_id, label, properties = node_data
             nodes.append({"id": node_id, "label": label, "properties": properties})
             self.graph.add_node(node_id, label=label, **properties)
-        
+
         # Add keyword nodes
         for node_data in self._generate_keyword_nodes():
             node_id, label, properties = node_data
             nodes.append({"id": node_id, "label": label, "properties": properties})
             self.graph.add_node(node_id, label=label, **properties)
-        
+
         # Add cluster nodes if present
         for node_data in self._generate_cluster_nodes():
             node_id, label, properties = node_data
             nodes.append({"id": node_id, "label": label, "properties": properties})
             self.graph.add_node(node_id, label=label, **properties)
-        
+
         # Add metadata nodes if applicable
         if can_include_df:
             for node_data in self._generate_metadata_nodes():
                 node_id, label, properties = node_data
                 nodes.append({"id": node_id, "label": label, "properties": properties})
                 self.graph.add_node(node_id, label=label, **properties)
-        
+
         # Add document-keyword edges
         for edge_data in self._generate_document_keyword_edges():
             source_id, target_id, label, properties = edge_data
@@ -289,7 +290,7 @@ class CrispGraph:
                 "properties": properties
             })
             self.graph.add_edge(source_id, target_id, label=label, **properties)
-        
+
         # Add document-cluster edges if present
         for edge_data in self._generate_document_cluster_edges():
             source_id, target_id, label, properties = edge_data
@@ -300,7 +301,7 @@ class CrispGraph:
                 "properties": properties
             })
             self.graph.add_edge(source_id, target_id, label=label, **properties)
-        
+
         # Add document-metadata edges if applicable
         if can_include_df:
             for edge_data in self._generate_document_metadata_edges():
@@ -312,7 +313,7 @@ class CrispGraph:
                     "properties": properties
                 })
                 self.graph.add_edge(source_id, target_id, label=label, **properties)
-        
+
         # Create graph data structure
         graph_data = {
             "nodes": nodes,
@@ -324,21 +325,21 @@ class CrispGraph:
             "has_clusters": "clusters" in self.corpus.metadata,
             "has_metadata": can_include_df
         }
-        
+
         # Store in corpus metadata
         self.corpus.metadata["graph"] = graph_data
-        
+
         logger.info(f"Graph created with {len(nodes)} nodes and {len(edges)} edges")
-        
+
         return graph_data
 
     def get_networkx_graph(self) -> nx.Graph:
         """
         Get the NetworkX graph representation.
-        
+
         Returns:
             NetworkX Graph object
-            
+
         Raises:
             ValueError: If graph hasn't been created yet
         """

@@ -58,7 +58,9 @@ logger = logging.getLogger(__name__)
     "--wordcloud", is_flag=True, help="Export: topic wordcloud (requires LDA)"
 )
 @click.option(
-    "--ldavis", is_flag=True, help="Export: interactive LDA visualization HTML (requires LDA)"
+    "--ldavis",
+    is_flag=True,
+    help="Export: interactive LDA visualization HTML (requires LDA)",
 )
 @click.option(
     "--top-terms", is_flag=True, help="Export: top terms bar chart (computed from text)"
@@ -77,6 +79,14 @@ logger = logging.getLogger(__name__)
     "--graph",
     is_flag=True,
     help="Export: graph visualization (requires graph data in corpus metadata)",
+)
+@click.option(
+    "--graph-nodes",
+    default="",
+    help=(
+        "Comma separated node types to include for graph: document,keyword,cluster,metadata. "
+        "Example: --graph-nodes document,keyword. If empty or 'all', include all."
+    ),
 )
 @click.option(
     "--graph-layout",
@@ -100,6 +110,7 @@ def main(
     corr_heatmap: bool,
     tdabm: bool,
     graph: bool,
+    graph_nodes: str,
     graph_layout: str,
 ):
     """CRISP-T: Visualization CLI
@@ -120,7 +131,9 @@ def main(
     try:
         out_dir = Path(out)
     except TypeError:
-        click.echo(f"No output directory specified. Visualizations need an output folder.")
+        click.echo(
+            f"No output directory specified. Visualizations need an output folder."
+        )
         raise click.Abort()
     out_dir.mkdir(parents=True, exist_ok=True)
 
@@ -137,6 +150,7 @@ def main(
 
     # Helper: build LDA if by-topic or wordcloud requested
     cluster_instance = None
+
     def ensure_topics():
         nonlocal cluster_instance
         if cluster_instance is None:
@@ -183,7 +197,7 @@ def main(
                 corpus_bow=cluster._bag_of_words,
                 dictionary=cluster._dictionary,
                 folder_path=str(out_path),
-                show=False
+                show=False,
             )
             click.echo(f"Saved: {out_path}")
         except ImportError as e:
@@ -243,9 +257,11 @@ def main(
 
     # TDABM visualization
     if tdabm:
-        if 'tdabm' not in corpus.metadata:
+        if "tdabm" not in corpus.metadata:
             click.echo("Warning: No TDABM data found in corpus metadata.")
-            click.echo("Hint: Run TDABM analysis first with: crispt --tdabm y_var:x_vars:radius --inp <corpus_dir>")
+            click.echo(
+                "Hint: Run TDABM analysis first with: crispt --tdabm y_var:x_vars:radius --inp <corpus_dir>"
+            )
         else:
             out_path = out_dir / "tdabm.png"
             try:
@@ -255,24 +271,82 @@ def main(
                 click.echo(f"Error generating TDABM visualization: {e}")
                 logger.error(f"TDABM visualization error: {e}", exc_info=True)
 
-    # Graph visualization
-    if graph:
-        if 'graph' not in corpus.metadata:
+    # Graph visualization (filtered by node types if provided)
+    if graph or graph_nodes:
+        if "graph" not in corpus.metadata:
             click.echo("Warning: No graph data found in corpus metadata.")
-            click.echo("Hint: Run graph generation first with: crispt --graph --inp <corpus_dir>")
+            click.echo(
+                "Hint: Run graph generation first with: crispt --graph --inp <corpus_dir>"
+            )
         else:
+            raw_types = (graph_nodes or "").strip().lower()
+            include_all = raw_types in ("", "all", "*")
+            allowed_types = {"document", "keyword", "cluster", "metadata"}
+            requested_types = set()
+            if not include_all:
+                for part in raw_types.split(","):
+                    p = part.strip()
+                    if not p:
+                        continue
+                    if p in allowed_types:
+                        requested_types.add(p)
+                    else:
+                        click.echo(
+                            f"Warning: Unknown node type '{p}' ignored. Allowed: {', '.join(sorted(allowed_types))}"
+                        )
+                if not requested_types:
+                    click.echo("No valid node types specified; defaulting to all.")
+                    include_all = True
+
+            graph_data = corpus.metadata.get("graph", {})
+            nodes = graph_data.get("nodes", [])
+            edges = graph_data.get("edges", [])
+
+            if include_all:
+                filtered_nodes = nodes
+                filtered_edges = edges
+            else:
+                filtered_nodes = [n for n in nodes if n.get("label") in requested_types]
+                kept_ids = {str(n.get("id")) for n in filtered_nodes}
+                filtered_edges = [
+                    e
+                    for e in edges
+                    if str(e.get("source")) in kept_ids
+                    and str(e.get("target")) in kept_ids
+                ]
+
+            # Build a shallow copy of graph metadata with filtered components
+            filtered_graph_meta = dict(graph_data)
+            filtered_graph_meta["nodes"] = filtered_nodes
+            filtered_graph_meta["edges"] = filtered_edges
+            filtered_graph_meta["num_nodes"] = len(filtered_nodes)
+            filtered_graph_meta["num_edges"] = len(filtered_edges)
+            filtered_graph_meta["num_documents"] = sum(
+                1 for n in filtered_nodes if n.get("label") == "document"
+            )
+
+            # Inject temporary filtered metadata for visualization
+            original_graph_meta = corpus.metadata.get("graph")
+            corpus.metadata["graph"] = filtered_graph_meta
             out_path = out_dir / "graph.png"
             try:
                 viz.draw_graph(
                     corpus=corpus,
                     folder_path=str(out_path),
                     show=False,
-                    layout=graph_layout
+                    layout=graph_layout,
                 )
                 click.echo(f"Saved: {out_path}")
+                if not include_all:
+                    click.echo(
+                        f"Graph filtered to node types: {', '.join(sorted(requested_types))}"
+                    )
             except Exception as e:
                 click.echo(f"Error generating graph visualization: {e}")
                 logger.error(f"Graph visualization error: {e}", exc_info=True)
+            finally:
+                # Restore original metadata (avoid side-effects)
+                corpus.metadata["graph"] = original_graph_meta
 
     click.echo("\n=== Visualization Complete ===")
 
