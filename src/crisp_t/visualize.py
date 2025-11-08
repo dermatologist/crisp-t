@@ -954,7 +954,7 @@ class QRVisualize:
             cmap=mcolors.LinearSegmentedColormap.from_list(
                 "red_green", ["red", "green"]
             ),
-            norm=plt.Normalize(vmin=min_y, vmax=max_y),
+            norm=mcolors.Normalize(vmin=min_y, vmax=max_y),
         )
         sm.set_array([])
         cbar = plt.colorbar(sm, ax=ax)
@@ -1046,29 +1046,29 @@ class QRVisualize:
         # Create NetworkX graph
         G = nx.Graph()
 
-        # Add nodes with their labels
-        node_labels = {}
-        node_colors = []
-        node_sizes = []
+        # Add nodes with their labels (store as maps keyed by node id)
+        node_labels: dict[str, str] = {}
+        node_color_map_by_id: dict[str, str] = {}
+        node_size_map_by_id: dict[str, float] = {}
 
         # Color mapping for different node types
         color_map = {
-            "document": "#FF6B6B",     # Red
-            "keyword": "#4ECDC4",      # Teal
-            "cluster": "#95E1D3",      # Light green
-            "metadata": "#FFD93D",     # Yellow
+            "document": "#FF6B6B",  # Red
+            "keyword": "#4ECDC4",  # Teal
+            "cluster": "#95E1D3",  # Light green
+            "metadata": "#FFD93D",  # Yellow
         }
 
         for node in nodes:
-            node_id = node["id"]
-            label = node["label"]
+            node_id = str(node.get("id"))
+            label = node.get("label", "metadata")
             properties = node.get("properties", {})
 
             G.add_node(node_id, label=label, **properties)
 
             # Set node label (use name property if available)
-            if "name" in properties:
-                node_labels[node_id] = properties["name"]
+            if "name" in properties and properties["name"]:
+                node_labels[node_id] = str(properties["name"])
             else:
                 # For keywords, remove the "keyword:" prefix
                 if node_id.startswith("keyword:"):
@@ -1081,22 +1081,37 @@ class QRVisualize:
                     node_labels[node_id] = node_id
 
             # Set node color based on type
-            node_colors.append(color_map.get(label, "#CCCCCC"))
+            node_color_map_by_id[node_id] = color_map.get(label, "#CCCCCC")
 
             # Set node size based on type (documents larger)
             if label == "document":
-                node_sizes.append(800)
+                node_size_map_by_id[node_id] = 800.0
             elif label == "keyword":
-                node_sizes.append(500)
+                node_size_map_by_id[node_id] = 500.0
             elif label == "cluster":
-                node_sizes.append(600)
+                node_size_map_by_id[node_id] = 600.0
             else:
-                node_sizes.append(400)
+                node_size_map_by_id[node_id] = 400.0
 
         # Add edges
         for edge in edges:
-            source = edge["source"]
-            target = edge["target"]
+            source = str(edge.get("source"))
+            target = str(edge.get("target"))
+            # If edge introduces unknown nodes, add with default properties
+            if source not in G:
+                G.add_node(source, label="metadata")
+                node_labels[source] = (
+                    source if not source.startswith("metadata:") else "M"
+                )
+                node_color_map_by_id[source] = color_map.get("metadata", "#CCCCCC")
+                node_size_map_by_id[source] = 400.0
+            if target not in G:
+                G.add_node(target, label="metadata")
+                node_labels[target] = (
+                    target if not target.startswith("metadata:") else "M"
+                )
+                node_color_map_by_id[target] = color_map.get("metadata", "#CCCCCC")
+                node_size_map_by_id[target] = 400.0
             G.add_edge(source, target)
 
         # Create figure
@@ -1124,10 +1139,17 @@ class QRVisualize:
             alpha=0.6,
         )
 
-        # Draw nodes
+        # Build aligned arrays for node attributes
+        nodelist = list(G.nodes())
+        node_colors = [node_color_map_by_id.get(n, "#CCCCCC") for n in nodelist]
+        node_sizes = np.asarray(
+            [float(node_size_map_by_id.get(n, 400.0)) for n in nodelist]
+        )
+        # Draw nodes with explicit nodelist
         nx.draw_networkx_nodes(
             G,
             pos,
+            nodelist=nodelist,
             ax=ax,
             node_color=node_colors,
             node_size=node_sizes,
@@ -1137,10 +1159,12 @@ class QRVisualize:
         )
 
         # Draw labels
+        # Labels aligned to nodelist
+        labels_ordered = {n: node_labels.get(n, str(n)) for n in nodelist}
         nx.draw_networkx_labels(
             G,
             pos,
-            labels=node_labels,
+            labels=labels_ordered,
             ax=ax,
             font_size=8,
             font_weight="bold",
@@ -1148,11 +1172,20 @@ class QRVisualize:
         )
 
         # Add title and legend
+        # Compute stats if not provided
+        num_nodes = int(graph_data.get("num_nodes", len(G.nodes())))
+        num_edges = int(graph_data.get("num_edges", len(G.edges())))
+        num_documents = int(
+            graph_data.get(
+                "num_documents",
+                sum(1 for _, d in G.nodes(data=True) if d.get("label") == "document"),
+            )
+        )
         ax.set_title(
             f"Graph Visualization\n"
-            f"Nodes: {graph_data['num_nodes']}, "
-            f"Edges: {graph_data['num_edges']}, "
-            f"Documents: {graph_data['num_documents']}",
+            f"Nodes: {num_nodes}, "
+            f"Edges: {num_edges}, "
+            f"Documents: {num_documents}",
             fontsize=14,
             fontweight="bold",
             pad=20,
