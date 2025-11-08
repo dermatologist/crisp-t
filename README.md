@@ -201,6 +201,7 @@ crisp --print metadata --print pca
 crisp --print dataframe --print stats
 ```
 
+
 ### crispviz (Visualization CLI)
 
 ```bash
@@ -209,8 +210,8 @@ crispviz [OPTIONS]
 
 - `--inp, --source, --sources`: Input corpus or sources
 - `--out`: Output directory for PNG images
-- Visualization flags: `--freq`, `--by-topic`, `--wordcloud`, `--ldavis`, `--top-terms`, `--corr-heatmap`, `--tdabm`
-- Optional params: `--bins`, `--top-n`, `--columns`, `--topics-num`
+- Visualization flags: `--freq`, `--by-topic`, `--wordcloud`, `--ldavis`, `--top-terms`, `--corr-heatmap`, `--tdabm`, `--graph`
+- Optional params: `--bins`, `--top-n`, `--columns`, `--topics-num`, `--graph-layout`, `--graph-nodes`
 
 **Visualization Options:**
 - `--freq`: Export word frequency distribution
@@ -222,6 +223,7 @@ crispviz [OPTIONS]
 - `--tdabm`: Export TDABM visualization (requires TDABM analysis in corpus metadata). Use `crispt --tdabm` to perform the analysis first.
 - `--graph`: Export graph visualization (requires graph data in corpus metadata). Use `crispt --graph` to generate the graph first.
 - `--graph-layout`: Layout algorithm for graph visualization: `spring` (default), `circular`, `kamada_kawai`, or `spectral`
+- `--graph-nodes`: Comma-separated list of node types to include in the graph visualization. Valid types: `document`, `keyword`, `cluster`, `metadata`. Example: `--graph-nodes document,keyword` will only show document and keyword nodes (and their connecting edges). If omitted or set to `all`, all node types are included.
 - `--topics-num N`: Number of topics for LDA (default: 8, based on Mettler et al., 2025)
 
 ### crispt (Corpus Manipulation CLI)
@@ -261,17 +263,31 @@ crispt [OPTIONS]
 
 ℹ️ *`--metadata-df` and `--metadata-keys` options can be used  to export or add metadata from NLP to the DataFrame. For example, you can extract sentiment scores or topic assignments as additional columns for numerical analysis. This is useful if dataframe and documents are aligned as in a survey response.*
 
+
 **Example: Graph Generation Workflow**
 ```bash
 # Step 1: Load corpus with documents that have keywords
 crispt --inp crisp_input --graph --out crisp_input
 
-# Step 2: Visualize the graph
+# Step 2: Visualize the graph (all node types)
 crispviz --inp crisp_input --out visualizations --graph
 
-# Step 3: Try different graph layouts
+# Step 3: Visualize only documents and keywords
+crispviz --inp crisp_input --out visualizations --graph --graph-nodes document,keyword
+
+# Step 4: Try different graph layouts
 crispviz --inp crisp_input --out visualizations --graph --graph-layout circular
 ```
+
+**About `--graph-nodes`:**
+
+The `--graph-nodes` option allows you to filter which node types are included in the graph visualization. For example, to show only documents and keywords, use:
+
+```bash
+crispviz --inp crisp_input --out visualizations --graph --graph-nodes document,keyword
+```
+
+Valid node types: `document`, `keyword`, `cluster`, `metadata`. If omitted or set to `all`, all node types are included. Edges are only shown if both endpoints are present in the filtered node set.
 
 The graph visualization shows:
 - **Documents** (red nodes): Your corpus documents
