@@ -29,6 +29,80 @@ logger = logging.getLogger(__name__)
 
 
 class CrispGraph:
+    def _generate_keyword_metadata_edges(self):
+        """
+        Generator for edges connecting keywords to metadata nodes.
+
+        Yields:
+            Tuple of (source_id, target_id, label, properties) for each edge
+        """
+        # Collect all keywords
+        keywords = set()
+        for doc in self.corpus.documents:
+            if doc.metadata and "keywords" in doc.metadata:
+                doc_keywords = doc.metadata["keywords"]
+                if isinstance(doc_keywords, list):
+                    keywords.update(doc_keywords)
+                elif isinstance(doc_keywords, str):
+                    keywords.update([kw.strip() for kw in doc_keywords.split(",")])
+        # Collect all metadata node ids
+        metadata_ids = set()
+        if self.corpus.df is not None and not self.corpus.df.empty:
+            df_columns = list(self.corpus.df.columns)
+            id_col = None
+            for potential_id in ["id", "ID", "doc_id", "document_id", "index"]:
+                if potential_id in df_columns:
+                    id_col = potential_id
+                    break
+            if id_col:
+                for idx, row in self.corpus.df.iterrows():
+                    doc_id = row[id_col]
+                    metadata_ids.add(doc_id)
+        # Create edges between every keyword and every metadata node
+        for keyword in keywords:
+            for meta_id in metadata_ids:
+                yield (
+                    f"keyword:{keyword}",
+                    f"metadata:{meta_id}",
+                    "KEYWORD_HAS_METADATA",
+                    {},
+                )
+
+    def _generate_cluster_metadata_edges(self):
+        """
+        Generator for edges connecting clusters to metadata nodes.
+
+        Yields:
+            Tuple of (source_id, target_id, label, properties) for each edge
+        """
+        # Collect all clusters
+        clusters = set()
+        for doc in self.corpus.documents:
+            if doc.metadata and "cluster" in doc.metadata:
+                clusters.add(doc.metadata["cluster"])
+        # Collect all metadata node ids
+        metadata_ids = set()
+        if self.corpus.df is not None and not self.corpus.df.empty:
+            df_columns = list(self.corpus.df.columns)
+            id_col = None
+            for potential_id in ["id", "ID", "doc_id", "document_id", "index"]:
+                if potential_id in df_columns:
+                    id_col = potential_id
+                    break
+            if id_col:
+                for idx, row in self.corpus.df.iterrows():
+                    doc_id = row[id_col]
+                    metadata_ids.add(doc_id)
+        # Create edges between every cluster and every metadata node
+        for cluster_id in clusters:
+            for meta_id in metadata_ids:
+                yield (
+                    f"cluster:{cluster_id}",
+                    f"metadata:{meta_id}",
+                    "CLUSTER_HAS_METADATA",
+                    {},
+                )
+
     """
     Class for creating graph representations of a corpus using NetworkX.
 
@@ -343,6 +417,32 @@ class CrispGraph:
 
         # Add cluster-keyword edges
         for edge_data in self._generate_cluster_keyword_edges():
+            source_id, target_id, label, properties = edge_data
+            edges.append(
+                {
+                    "source": source_id,
+                    "target": target_id,
+                    "label": label,
+                    "properties": properties,
+                }
+            )
+            self.graph.add_edge(source_id, target_id, label=label, **properties)
+
+        # Add keyword-metadata edges
+        for edge_data in self._generate_keyword_metadata_edges():
+            source_id, target_id, label, properties = edge_data
+            edges.append(
+                {
+                    "source": source_id,
+                    "target": target_id,
+                    "label": label,
+                    "properties": properties,
+                }
+            )
+            self.graph.add_edge(source_id, target_id, label=label, **properties)
+
+        # Add cluster-metadata edges
+        for edge_data in self._generate_cluster_metadata_edges():
             source_id, target_id, label, properties = edge_data
             edges.append(
                 {
