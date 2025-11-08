@@ -13,6 +13,9 @@ nav:
   - Contributing: contributing.md
   - Changelog: changelog.md
   - MCP: MCP_SERVER.md
+  - Semantic Search: SEMANTIC_SEARCH.md
+  - GRAPH: GRAPH.md
+  - TDABM: TDABM.md
 plugins:
   - search
   - mkdocstrings:

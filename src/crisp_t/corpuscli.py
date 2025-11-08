@@ -150,6 +150,11 @@ def _parse_relationship(value: str) -> tuple[str, str, str]:
     default=None,
     help="Perform TDABM analysis. Format: 'y_variable:x_variables:radius' (e.g., 'satisfaction:age,income:0.3'). Radius defaults to 0.3 if omitted.",
 )
+@click.option(
+    "--graph",
+    is_flag=True,
+    help="Generate graph representation of the corpus. Requires documents to have keywords assigned (run with --assign first).",
+)
 def main(
     verbose: bool,
     id: Optional[str],
@@ -178,6 +183,7 @@ def main(
     metadata_df: bool,
     metadata_keys: Optional[str],
     tdabm: Optional[str],
+    graph: bool,
 ):
     """
     CRISP-T Corpus CLI: create and manipulate a corpus quickly from the command line.
@@ -490,6 +496,35 @@ def main(
             click.echo("Hint: X variables must be numeric/ordinal")
         except Exception as e:
             click.echo(f"Error during TDABM analysis: {e}")
+
+    # Graph generation
+    if graph:
+        try:
+            from .graph import CrispGraph
+
+            click.echo("\nGenerating graph representation...")
+            graph_gen = CrispGraph(corpus)
+            graph_data = graph_gen.create_graph()
+
+            click.echo(f"✓ Graph created successfully")
+            click.echo(f"  Nodes: {graph_data['num_nodes']}")
+            click.echo(f"  Edges: {graph_data['num_edges']}")
+            click.echo(f"  Documents: {graph_data['num_documents']}")
+            click.echo(f"  Has keywords: {graph_data['has_keywords']}")
+            click.echo(f"  Has clusters: {graph_data['has_clusters']}")
+            click.echo(f"  Has metadata: {graph_data['has_metadata']}")
+
+            click.echo("\nHint: Graph data stored in corpus metadata['graph']")
+            click.echo("Hint: Use --out to save the corpus with graph metadata")
+            click.echo("Hint: Use 'crispviz --graph' to visualize the graph")
+
+        except ValueError as e:
+            click.echo(f"Error: {e}")
+            click.echo("Hint: Make sure documents have keywords assigned first")
+            click.echo("Hint: You can assign keywords using text analysis features")
+        except Exception as e:
+            click.echo(f"Error generating graph: {e}")
+            logger.error(f"Graph generation error: {e}", exc_info=True)
 
     # Save corpus to --out if provided
     if out:

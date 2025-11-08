@@ -11,13 +11,39 @@
 [![Wiki](https://img.shields.io/badge/CRISP-wiki-demo)](https://github.com/dermatologist/crisp-t/wiki)
 [![Documentation](https://badgen.net/badge/icon/documentation?icon=libraries&label)](https://dermatologist.github.io/crisp-t/)
 
-**TL;DR** 🚀 *CRISP-T is a qualitative research method and a toolkit to perform textual (e.g. topic modelling) and numeric (e.g. decision trees) analysis of mixed datasets for computational triangulation and sense-making using large language models.* 👉 [See Demo](/notes/DEMO.md).
+**TL;DR** 🚀 *CRISP-T is a qualitative research method and a toolkit to perform textual (e.g. topic modelling) and numeric (e.g. decision trees) analysis of mixed datasets for computational triangulation and sense-making (optionally) using large language models.* 👉 [See Demo](/notes/DEMO.md). Give us a star ⭐️ if you find this useful!
 
 <p align="center">
   <img src="https://github.com/dermatologist/crisp-t/blob/develop/notes/crisp-logo.jpg" />
 </p>
 
+## CRISP is ❌ **NOT** for:
 
+❌  Multimodal prediction. [Use this instead!](https://github.com/dermatologist/kedro-multimodal)
+
+❌  [Sequential mixed methods research,](https://us.sagepub.com/sites/default/files/upm-assets/106361_book_item_106361.pdf) where qualitative and quantitative data are collected and analyzed in separate phases.
+
+❌  Convergent parallel mixed method designs where qualitative and quantitative data are collected simultaneously but analyzed separately.
+
+## CRISP is intended to:
+
+✅  Facilitate grounded theory, where disparate datatypes (sometimes collected independently) are explored simultaneously with an [interpretivist world view](https://open.library.okstate.edu/gognresearchmethods/chapter/interpretivism/).
+
+✅  Co-create reality reflectively, **often with GenAI in the loop.**
+
+✅  Perform [INDUCTIVE analysis](https://www.frankumstein.com/PDF/Psychology/Inductive%20Content%20Analysis.pdf) of textual and numeric data to generate insights, patterns, and theories.
+
+## The CRISP tools may also be useful for:
+
+⭕ Automated interview **coding dictionary** generation.
+
+⭕ Semantically filtering journal articles for **literature review**.
+
+⭕ Generating **visualizations** for qualitative (e.g. word cloud) and quantitative (e.g. [TDABM](https://github.com/dermatologist/crisp-t/wiki/Topological-Data-Analysis)) data.
+
+⭕ Many other ….
+
+## Key Features
   ✅ CRISP is written in Python, but **you don’t need to know Python** to use it!
 
   ✅ CRISP is not a data science tool; it’s a **sense-making** tool!
@@ -26,7 +52,7 @@
 
   ✅ CRISP employs an **interpretivist approach**, and the same lens is required to comprehend its results!
 
-  ✅ CRISP does not need LLMs but can augment them with **tools**!
+  ✅ CRISP does not use LLMs but can augment LLMs with *agentic* tools!
 
   ✅ CRISP is designed to **simplify your life as a qualitative researcher!**
 
@@ -35,11 +61,11 @@
 
 **Qualitative research** focuses on collecting and analyzing textual data—such as interview transcripts, open-ended survey responses, and field notes—to explore complex phenomena and human experiences. Researchers may also incorporate quantitative or external sources (e.g., demographics, census data, social media) to provide context and triangulate findings. Characterized by an inductive approach, qualitative research emphasizes generating theories from data rather than testing hypotheses. While qualitative and quantitative data are often used together, there is **no standard method for combining them.**
 
-**CRISP-T is a method and toolset** to integrate **textual data** (as a list of documents) and **numeric data** (as Pandas DataFrame) into structured classes that retain **metadata** from various analytical processes, such as **topic modeling** and **decision trees**. Researchers, with or without **GenAI assistance**, can define relationships between textual and numerical datasets based on their chosen **theoretical lens**.  An optional final analytical phase ensures that proposed relationships actually hold true. Further, if the numeric and textual datasets share same id, or if the textual metadata contains keywords that match numeric column names; both datasets are filtered simultaneously, ensuring alignment and facilitating triangulation. 👉 [See Demo](/notes/DEMO.md).
+**CRISP-T is a method and toolset** to integrate **textual data** (as a list of documents) and **numeric data** (as Pandas DataFrame) into structured classes that retain **metadata** from various analytical processes, such as **topic modeling** and **decision trees**. Researchers, with or without **GenAI assistance**, can define relationships between textual and numerical datasets based on their chosen **theoretical lens**.  An optional final analytical phase ensures that proposed relationships actually hold true. Further, if the numeric and textual datasets share the same ID, or if the textual metadata contains keywords that match numeric column names, both datasets are filtered simultaneously, ensuring alignment and facilitating triangulation. 👉 [See Demo](/notes/DEMO.md).
 
-CRISP-T implements **semantic search** using **ChromaDB** to find relevant documents or document chunks based on similarity to a query or reference documents. This is useful for literature reviews to find documents likely to fit inclusion criteria within your corpus/search results. It can also be used for coding/annotating documents by finding relevant chunks within a specific document.
+CRISP-T implements **semantic search** using **ChromaDB** to find relevant documents or document chunks based on similarity to a query or reference documents. This is useful for literature reviews to find documents likely to fit the inclusion criteria within your corpus/search results. It can also be used for coding/annotating documents by finding relevant chunks within a specific document.
 
-An **MCP server** exposes all functionality as tools, resources, and prompts, enabling integration with AI agent platforms such as Claude desktop, VSCODE and other MCP-compatible clients. CRISP-T cannot directly code the documents, but it provides semantic chunk search that **may be used in association with other tools to acheive automated coding**. For example, VSCODE provides built in tools for editing text and markdown files, which can be used to code documents based on semantic search.
+An **MCP server** exposes all functionality as tools, resources, and prompts, enabling integration with AI agent platforms such as Claude desktop, VSCODE and other MCP-compatible clients. CRISP-T cannot directly code the documents, but it provides semantic chunk search that **may be used in association with other tools to achieve automated coding**. For example, VSCODE provides built-in tools for editing text and markdown files, which can be used to code documents based on semantic search.
 
 ## Installation
 
@@ -175,6 +201,7 @@ crisp --print metadata --print pca
 crisp --print dataframe --print stats
 ```
 
+
 ### crispviz (Visualization CLI)
 
 ```bash
@@ -183,8 +210,8 @@ crispviz [OPTIONS]
 
 - `--inp, --source, --sources`: Input corpus or sources
 - `--out`: Output directory for PNG images
-- Visualization flags: `--freq`, `--by-topic`, `--wordcloud`, `--ldavis`, `--top-terms`, `--corr-heatmap`, `--tdabm`
-- Optional params: `--bins`, `--top-n`, `--columns`, `--topics-num`
+- Visualization flags: `--freq`, `--by-topic`, `--wordcloud`, `--ldavis`, `--top-terms`, `--corr-heatmap`, `--tdabm`, `--graph`
+- Optional params: `--bins`, `--top-n`, `--columns`, `--topics-num`, `--graph-layout`, `--graph-nodes`
 
 **Visualization Options:**
 - `--freq`: Export word frequency distribution
@@ -194,6 +221,9 @@ crispviz [OPTIONS]
 - `--top-terms`: Export top terms bar chart
 - `--corr-heatmap`: Export correlation heatmap from CSV numeric columns
 - `--tdabm`: Export TDABM visualization (requires TDABM analysis in corpus metadata). Use `crispt --tdabm` to perform the analysis first.
+- `--graph`: Export graph visualization (requires graph data in corpus metadata). Use `crispt --graph` to generate the graph first.
+- `--graph-layout`: Layout algorithm for graph visualization: `spring` (default), `circular`, `kamada_kawai`, or `spectral`
+- `--graph-nodes`: Comma-separated list of node types to include in the graph visualization. Valid types: `document`, `keyword`, `cluster`, `metadata`. Example: `--graph-nodes document,keyword` will only show document and keyword nodes (and their connecting edges). If omitted or set to `all`, all node types are included.
 - `--topics-num N`: Number of topics for LDA (default: 8, based on Mettler et al., 2025)
 
 ### crispt (Corpus Manipulation CLI)
@@ -228,8 +258,11 @@ crispt [OPTIONS]
 	- `--metadata-keys KEYS`: Comma-separated metadata keys to include+
 - [TDABM analysis](/notes/TDABM.md):
 	- `--tdabm Y_VAR:X_VARS:RADIUS`: Perform Topological Data Analysis Ball Mapper (TDABM) analysis. Format: `y_variable:x_variables:radius` (e.g., `satisfaction:age,income:0.3`). Radius defaults to 0.3 if omitted.
+- Graph generation:
+	- `--graph`: Generate graph representation of the corpus. Creates nodes for documents, keywords, clusters (if present), and metadata (if DataFrame has aligning ID field). Edges connect documents to their keywords, clusters, and metadata. Graph data is stored in corpus metadata['graph']. **Requires documents to have keywords assigned first** (e.g., using text analysis features).
 
 ℹ️ *`--metadata-df` and `--metadata-keys` options can be used  to export or add metadata from NLP to the DataFrame. For example, you can extract sentiment scores or topic assignments as additional columns for numerical analysis. This is useful if dataframe and documents are aligned as in a survey response.*
+
 
 ### [Example Usage](/notes/DEMO.md)
 
