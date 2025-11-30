@@ -322,8 +322,8 @@ class ReadData:
 
         def create_document(args):
             index, row = args
-            # Use list and join for efficient string concatenation
-            text_parts = [str(row[column]) for column in text_columns]
+            # Use list and join for efficient string concatenation, handle None values
+            text_parts = [str(row[column]) if row[column] is not None and not (isinstance(row[column], float) and row[column] != row[column]) else '' for column in text_columns]
             read_from_file = " ".join(text_parts)
             # Apply pre-compiled patterns
             for pattern in compiled_patterns:
