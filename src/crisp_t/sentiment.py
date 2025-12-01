@@ -37,15 +37,17 @@ class Sentiment:
                 sentiment[str(self._ids[idx])] = self._analyzer.polarity_scores(
                     doc.text
                 )
+            # Build a set of IDs for O(1) lookup instead of O(n) nested loop
+            id_set = set(str(doc_id) for doc_id in self._ids)
             documents_copy = []
             # add sentiment metadata to each document
             for doc in tqdm(self._corpus.documents, desc="Adding sentiment metadata", disable=len(self._corpus.documents) < 10):
-                for idx, doc_id in enumerate(self._ids):
-                    if doc.id == doc_id:
-                        documents_copy.append(doc)
-                        documents_copy[-1].metadata["sentiment"] = self.max_sentiment(
-                            sentiment[str(doc_id)]
-                        )
+                doc_id_str = str(doc.id)
+                if doc_id_str in id_set:
+                    doc.metadata["sentiment"] = self.max_sentiment(
+                        sentiment[doc_id_str]
+                    )
+                    documents_copy.append(doc)
             self._corpus.documents = documents_copy
 
         if verbose:

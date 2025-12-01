@@ -152,14 +152,15 @@ class Text:
     def make_spacy_doc(self):
         if self._corpus is None:
             raise ValueError("Corpus is not set")
-        text = ""
+        # Use list and join for efficient string concatenation instead of +=
+        text_parts = []
         for document in tqdm(
             self._corpus.documents,
             desc="Processing documents",
             disable=len(self._corpus.documents) < 10,
         ):
-            text += self.process_text(document.text) + " \n"
-            metadata = document.metadata
+            text_parts.append(self.process_text(document.text))
+        text = " \n".join(text_parts)
         nlp = self._spacy_manager.get_model()
         nlp.max_length = self._max_length
         if len(text) > self._max_length:
@@ -199,15 +200,15 @@ class Text:
 
         spacy_docs = []
         ids = []
+        # Load SpaCy model once outside the loop for efficiency
+        nlp = self._spacy_manager.get_model()
+        nlp.max_length = self._max_length
         for document in tqdm(
             self._corpus.documents,
             desc="Creating spacy docs",
             disable=len(self._corpus.documents) < 10,
         ):
             text = self.process_text(document.text)
-            metadata = document.metadata
-            nlp = self._spacy_manager.get_model()
-            nlp.max_length = self._max_length
             spacy_doc = nlp(text)
             spacy_docs.append(spacy_doc)
             ids.append(document.id)

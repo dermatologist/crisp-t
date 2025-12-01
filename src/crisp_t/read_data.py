@@ -245,29 +245,25 @@ class ReadData:
             self._corpus.df = None
         # Remove ignore words from self._corpus.documents text
         documents = self._corpus.documents
+        
+        # Pre-compile regex patterns once for efficiency instead of inside loops
+        compiled_patterns = []
+        if comma_separated_ignore_words:
+            for word in comma_separated_ignore_words.split(","):
+                pattern = re.compile(r"\b" + word.strip() + r"\b", flags=re.IGNORECASE)
+                compiled_patterns.append(pattern)
+        
         if len(documents) < 10:
             processed_docs = []
             for document in tqdm(documents, desc="Processing documents", disable=True):
-                if comma_separated_ignore_words:
-                    for word in comma_separated_ignore_words.split(","):
-                        document.text = re.sub(
-                            r"\b" + word.strip() + r"\b",
-                            "",
-                            document.text,
-                            flags=re.IGNORECASE,
-                        )
+                for pattern in compiled_patterns:
+                    document.text = pattern.sub("", document.text)
                 processed_docs.append(document)
         else:
 
             def process_doc(document):
-                if comma_separated_ignore_words:
-                    for word in comma_separated_ignore_words.split(","):
-                        document.text = re.sub(
-                            r"\b" + word.strip() + r"\b",
-                            "",
-                            document.text,
-                            flags=re.IGNORECASE,
-                        )
+                for pattern in compiled_patterns:
+                    document.text = pattern.sub("", document.text)
                 return document
 
             processed_docs = []
@@ -317,20 +313,21 @@ class ReadData:
         self._df = df.copy()
         rows = list(original_df.iterrows())
 
+        # Pre-compile regex patterns once for efficiency instead of inside loops
+        compiled_patterns = []
+        if comma_separated_ignore_words:
+            for word in comma_separated_ignore_words.split(","):
+                pattern = re.compile(r"\b" + word.strip() + r"\b", flags=re.IGNORECASE)
+                compiled_patterns.append(pattern)
+
         def create_document(args):
             index, row = args
-            read_from_file = ""
-            for column in text_columns:
-                read_from_file += f"{row[column]} "
-            # remove comma separated ignore words
-            if comma_separated_ignore_words:
-                for word in comma_separated_ignore_words.split(","):
-                    read_from_file = re.sub(
-                        r"\b" + word.strip() + r"\b",
-                        "",
-                        read_from_file,
-                        flags=re.IGNORECASE,
-                    )
+            # Use list and join for efficient string concatenation, handle None values
+            text_parts = [str(row[column]) if row[column] is not None and not (isinstance(row[column], float) and row[column] != row[column]) else '' for column in text_columns]
+            read_from_file = " ".join(text_parts)
+            # Apply pre-compiled patterns
+            for pattern in compiled_patterns:
+                read_from_file = pattern.sub("", read_from_file)
             _document = Document(
                 text=read_from_file,
                 metadata={
@@ -398,20 +395,26 @@ class ReadData:
         self, source, comma_separated_ignore_words=None, comma_separated_text_columns=""
     ):
         _CSV_EXISTS = False
+        
+        # Pre-compile regex patterns once for efficiency instead of inside loops
+        compiled_patterns = []
+        if comma_separated_ignore_words:
+            for word in comma_separated_ignore_words.split(","):
+                pattern = re.compile(r"\b" + word.strip() + r"\b", flags=re.IGNORECASE)
+                compiled_patterns.append(pattern)
+        
+        def apply_ignore_patterns(text):
+            """Apply pre-compiled ignore patterns to text."""
+            for pattern in compiled_patterns:
+                text = pattern.sub("", text)
+            return text
+        
         # if source is a url
         if source.startswith("http://") or source.startswith("https://"):
             response = requests.get(source)
             if response.status_code == 200:
                 read_from_file = response.text
-                # remove comma separated ignore words
-                if comma_separated_ignore_words:
-                    for word in comma_separated_ignore_words.split(","):
-                        read_from_file = re.sub(
-                            r"\b" + word.strip() + r"\b",
-                            "",
-                            read_from_file,
-                            flags=re.IGNORECASE,
-                        )
+                read_from_file = apply_ignore_patterns(read_from_file)
                 # self._content removed
                 _document = Document(
                     text=read_from_file,
@@ -434,15 +437,7 @@ class ReadData:
                 if file_name.endswith(".txt"):
                     with open(file_path, "r") as f:
                         read_from_file = f.read()
-                        # remove comma separated ignore words
-                        if comma_separated_ignore_words:
-                            for word in comma_separated_ignore_words.split(","):
-                                read_from_file = re.sub(
-                                    r"\b" + word.strip() + r"\b",
-                                    "",
-                                    read_from_file,
-                                    flags=re.IGNORECASE,
-                                )
+                        read_from_file = apply_ignore_patterns(read_from_file)
                         # self._content removed
                         _document = Document(
                             text=read_from_file,
@@ -459,23 +454,17 @@ class ReadData:
                 if file_name.endswith(".pdf"):
                     with open(file_path, "rb") as f:
                         reader = PdfReader(f)
-                        read_from_file = ""
+                        # Use list and join for efficient string concatenation
+                        page_texts = []
                         for page in tqdm(
                             reader.pages,
                             desc=f"Reading PDF {file_name}",
                             leave=False,
                             disable=len(reader.pages) < 10,
                         ):
-                            read_from_file += page.extract_text()
-                        # remove comma separated ignore words
-                        if comma_separated_ignore_words:
-                            for word in comma_separated_ignore_words.split(","):
-                                read_from_file = re.sub(
-                                    r"\b" + word.strip() + r"\b",
-                                    "",
-                                    read_from_file,
-                                    flags=re.IGNORECASE,
-                                )
+                            page_texts.append(page.extract_text())
+                        read_from_file = "".join(page_texts)
+                        read_from_file = apply_ignore_patterns(read_from_file)
                         # self._content removed
                         _document = Document(
                             text=read_from_file,
