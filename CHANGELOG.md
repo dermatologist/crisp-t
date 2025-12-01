@@ -2,14 +2,12 @@
 
 ## [Unreleased](https://github.com/dermatologist/crisp-t/tree/HEAD)
 
-[Full Changelog](https://github.com/dermatologist/crisp-t/compare/v1.1.1...HEAD)
-
-**Implemented enhancements:**
-
-- Feature Request: Add a graph creation and visualization feature. [\#49](https://github.com/dermatologist/crisp-t/issues/49)
+[Full Changelog](https://github.com/dermatologist/crisp-t/compare/v1.2.0...HEAD)
 
 **Merged pull requests:**
 
+- Optimize slow code patterns in text processing and data loading [\#52](https://github.com/dermatologist/crisp-t/pull/52) ([Copilot](https://github.com/apps/copilot-swe-agent))
+- Bump actions/checkout from 5 to 6 [\#51](https://github.com/dermatologist/crisp-t/pull/51) ([dependabot[bot]](https://github.com/apps/dependabot))
 - Add graph creation and visualization for corpus relationships [\#50](https://github.com/dermatologist/crisp-t/pull/50) ([Copilot](https://github.com/apps/copilot-swe-agent))
 - Feature/fix filter 1 [\#48](https://github.com/dermatologist/crisp-t/pull/48) ([dermatologist](https://github.com/dermatologist))
 - Feature/parallel 1 [\#47](https://github.com/dermatologist/crisp-t/pull/47) ([dermatologist](https://github.com/dermatologist))
@@ -42,6 +40,14 @@
 - Feature/uv 1 [\#8](https://github.com/dermatologist/crisp-t/pull/8) ([dermatologist](https://github.com/dermatologist))
 - Feature/readme 1 [\#4](https://github.com/dermatologist/crisp-t/pull/4) ([dermatologist](https://github.com/dermatologist))
 - Bump astral-sh/setup-uv from 5 to 6 [\#2](https://github.com/dermatologist/crisp-t/pull/2) ([dependabot[bot]](https://github.com/apps/dependabot))
+
+## [v1.2.0](https://github.com/dermatologist/crisp-t/tree/v1.2.0) (2025-11-08)
+
+[Full Changelog](https://github.com/dermatologist/crisp-t/compare/v1.1.1...v1.2.0)
+
+**Implemented enhancements:**
+
+- Feature Request: Add a graph creation and visualization feature. [\#49](https://github.com/dermatologist/crisp-t/issues/49)
 
 ## [v1.1.1](https://github.com/dermatologist/crisp-t/tree/v1.1.1) (2025-10-28)
 
