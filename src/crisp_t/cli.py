@@ -105,7 +105,7 @@ except ImportError:
     "--include", default="", help="Comma separated columns to include from csv"
 )
 @click.option("--outcome", default="", help="Outcome variable for ML tasks")
-@click.option("--source", "-s", help="Source URL or directory path to read data from")
+@click.option("--source", "--import", "-s", help="Source URL or directory path to read data from")
 @click.option("--print", "-p", "print_args", multiple=True, help="Display corpus information. Usage: --print documents --print 10, or quoted: --print 'documents 10'")
 @click.option(
     "--sources",
@@ -153,6 +153,24 @@ def main(
 
     A comprehensive framework for analyzing textual and numerical data using
     advanced NLP, machine learning, and statistical techniques.
+
+    \b
+    DATA PREPARATION STEPS:
+    1. Create a subdirectory (e.g. crisp_source) in your work directory.
+    2. Copy all textual data as .txt or .pdf files into this directory.
+       (e.g., each interview transcript as a separate TXT or PDF file)
+    3. Copy numeric data as a single .csv file into this directory.
+       (Note: Only one CSV file with numeric data is currently supported)
+    4. Import data from crisp_source to crisp_input with:
+       crisp --source crisp_source --out crisp_input
+       (or use --import instead of --source; both are equivalent)
+    5. For survey data with only a CSV file containing free text columns:
+       crisp --source crisp_source/ --unstructured <free_text_column_name>
+       (This creates CRISP documents from the text column)
+    6. Ignore warnings related to PDF files.
+    7. Data is now imported to crisp_input.
+    8. Use --inp crisp_input in all subsequent commands.
+    9. You may save intermediary results using --out option if required.
     """
 
     if verbose:
