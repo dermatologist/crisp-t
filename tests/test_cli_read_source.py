@@ -2,7 +2,6 @@
 Test CLI read_source functionality.
 """
 
-import os
 import tempfile
 from pathlib import Path
 
@@ -49,9 +48,7 @@ def test_read_source_with_output(test_directory, output_directory):
     runner = CliRunner()
     output_path = Path(output_directory) / "output" / "corpus.json"
 
-    result = runner.invoke(
-        main, ["--source", test_directory, "--out", str(output_path)]
-    )
+    result = runner.invoke(main, ["--source", test_directory, "--out", str(output_path)])
 
     assert result.exit_code == 0
     assert "Successfully loaded" in result.output
@@ -65,9 +62,7 @@ def test_read_source_with_output(test_directory, output_directory):
 def test_read_source_with_ignore_words(test_directory):
     """Test reading source with ignore words."""
     runner = CliRunner()
-    result = runner.invoke(
-        main, ["--source", test_directory, "--ignore", "test,number"]
-    )
+    result = runner.invoke(main, ["--source", test_directory, "--ignore", "test,number"])
 
     assert result.exit_code == 0
     assert "Successfully loaded" in result.output
@@ -101,3 +96,61 @@ def test_read_source_url_format():
 
     # Should not crash, even if it fails to read
     assert result.exit_code == 0
+
+
+def test_import_flag_from_directory(test_directory):
+    """Test reading source data using --import flag."""
+    runner = CliRunner()
+    result = runner.invoke(main, ["--import", test_directory])
+
+    assert result.exit_code == 0
+    assert "Reading data from source:" in result.output
+    assert "Successfully loaded" in result.output
+    assert "document(s)" in result.output
+
+
+def test_import_flag_with_output(test_directory, output_directory):
+    """Test reading source using --import flag and saving corpus."""
+    runner = CliRunner()
+    output_path = Path(output_directory) / "output" / "corpus.json"
+
+    result = runner.invoke(main, ["--import", test_directory, "--out", str(output_path)])
+
+    assert result.exit_code == 0
+    assert "Successfully loaded" in result.output
+    assert "CRISP-T" in result.output
+
+    # Check if corpus.json was created
+    corpus_file = Path(output_directory) / "output" / "corpus.json"
+    assert corpus_file.exists()
+
+
+def test_import_flag_with_ignore_words(test_directory):
+    """Test reading source using --import flag with ignore words."""
+    runner = CliRunner()
+    result = runner.invoke(main, ["--import", test_directory, "--ignore", "test,number"])
+
+    assert result.exit_code == 0
+    assert "Successfully loaded" in result.output
+
+
+def test_help_contains_data_preparation_steps():
+    """Test that help output includes data preparation steps."""
+    runner = CliRunner()
+    result = runner.invoke(main, ["--help"])
+
+    assert result.exit_code == 0
+    assert "DATA PREPARATION STEPS:" in result.output
+    assert "Create a subdirectory" in result.output
+    assert "crisp --source crisp_source --out crisp_input" in result.output
+    assert "--import instead of --source" in result.output
+    assert "both are equivalent" in result.output
+
+
+def test_help_shows_import_flag():
+    """Test that help output shows --import flag."""
+    runner = CliRunner()
+    result = runner.invoke(main, ["--help"])
+
+    assert result.exit_code == 0
+    assert "--source, --import" in result.output or "--import, --source" in result.output
