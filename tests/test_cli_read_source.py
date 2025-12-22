@@ -2,7 +2,6 @@
 Test CLI read_source functionality.
 """
 
-import os
 import tempfile
 from pathlib import Path
 
@@ -49,9 +48,7 @@ def test_read_source_with_output(test_directory, output_directory):
     runner = CliRunner()
     output_path = Path(output_directory) / "output" / "corpus.json"
 
-    result = runner.invoke(
-        main, ["--source", test_directory, "--out", str(output_path)]
-    )
+    result = runner.invoke(main, ["--source", test_directory, "--out", str(output_path)])
 
     assert result.exit_code == 0
     assert "Successfully loaded" in result.output
@@ -65,9 +62,7 @@ def test_read_source_with_output(test_directory, output_directory):
 def test_read_source_with_ignore_words(test_directory):
     """Test reading source with ignore words."""
     runner = CliRunner()
-    result = runner.invoke(
-        main, ["--source", test_directory, "--ignore", "test,number"]
-    )
+    result = runner.invoke(main, ["--source", test_directory, "--ignore", "test,number"])
 
     assert result.exit_code == 0
     assert "Successfully loaded" in result.output
@@ -119,9 +114,7 @@ def test_import_flag_with_output(test_directory, output_directory):
     runner = CliRunner()
     output_path = Path(output_directory) / "output" / "corpus.json"
 
-    result = runner.invoke(
-        main, ["--import", test_directory, "--out", str(output_path)]
-    )
+    result = runner.invoke(main, ["--import", test_directory, "--out", str(output_path)])
 
     assert result.exit_code == 0
     assert "Successfully loaded" in result.output
@@ -135,9 +128,7 @@ def test_import_flag_with_output(test_directory, output_directory):
 def test_import_flag_with_ignore_words(test_directory):
     """Test reading source using --import flag with ignore words."""
     runner = CliRunner()
-    result = runner.invoke(
-        main, ["--import", test_directory, "--ignore", "test,number"]
-    )
+    result = runner.invoke(main, ["--import", test_directory, "--ignore", "test,number"])
 
     assert result.exit_code == 0
     assert "Successfully loaded" in result.output
