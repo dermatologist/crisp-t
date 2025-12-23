@@ -2,10 +2,14 @@
 
 ## [Unreleased](https://github.com/dermatologist/crisp-t/tree/HEAD)
 
-[Full Changelog](https://github.com/dermatologist/crisp-t/compare/v1.2.0...HEAD)
+[Full Changelog](https://github.com/dermatologist/crisp-t/compare/v1.2.1...HEAD)
 
 **Merged pull requests:**
 
+- Add --import flag synonym for --source and enhance help with data preparation steps [\#56](https://github.com/dermatologist/crisp-t/pull/56) ([Copilot](https://github.com/apps/copilot-swe-agent))
+- Bump peter-evans/create-pull-request from 7 to 8 [\#55](https://github.com/dermatologist/crisp-t/pull/55) ([dependabot[bot]](https://github.com/apps/dependabot))
+- Bump nvuillam/github-dependents-info from 1.6.3 to 2.0.2 [\#54](https://github.com/dermatologist/crisp-t/pull/54) ([dependabot[bot]](https://github.com/apps/dependabot))
+- Add getting started video link to README [\#53](https://github.com/dermatologist/crisp-t/pull/53) ([dermatologist](https://github.com/dermatologist))
 - Optimize slow code patterns in text processing and data loading [\#52](https://github.com/dermatologist/crisp-t/pull/52) ([Copilot](https://github.com/apps/copilot-swe-agent))
 - Bump actions/checkout from 5 to 6 [\#51](https://github.com/dermatologist/crisp-t/pull/51) ([dependabot[bot]](https://github.com/apps/dependabot))
 - Add graph creation and visualization for corpus relationships [\#50](https://github.com/dermatologist/crisp-t/pull/50) ([Copilot](https://github.com/apps/copilot-swe-agent))
@@ -40,6 +44,10 @@
 - Feature/uv 1 [\#8](https://github.com/dermatologist/crisp-t/pull/8) ([dermatologist](https://github.com/dermatologist))
 - Feature/readme 1 [\#4](https://github.com/dermatologist/crisp-t/pull/4) ([dermatologist](https://github.com/dermatologist))
 - Bump astral-sh/setup-uv from 5 to 6 [\#2](https://github.com/dermatologist/crisp-t/pull/2) ([dependabot[bot]](https://github.com/apps/dependabot))
+
+## [v1.2.1](https://github.com/dermatologist/crisp-t/tree/v1.2.1) (2025-12-01)
+
+[Full Changelog](https://github.com/dermatologist/crisp-t/compare/v1.2.0...v1.2.1)
 
 ## [v1.2.0](https://github.com/dermatologist/crisp-t/tree/v1.2.0) (2025-11-08)
 
