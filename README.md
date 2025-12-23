@@ -58,6 +58,8 @@
 
   💯 CRISP is open-source! licensed under the GPL-3.0 License.
 
+*Watch this getting started video:*
+[![WATCH DHTI DEMO](https://img.youtube.com/vi/76rVJjUD_4Y/0.jpg)](https://www.youtube.com/watch?v=76rVJjUD_4Y)
 
 **Qualitative research** focuses on collecting and analyzing textual data—such as interview transcripts, open-ended survey responses, and field notes—to explore complex phenomena and human experiences. Researchers may also incorporate quantitative or external sources (e.g., demographics, census data, social media) to provide context and triangulate findings. Characterized by an inductive approach, qualitative research emphasizes generating theories from data rather than testing hypotheses. While qualitative and quantitative data are often used together, there is **no standard method for combining them.**
 
