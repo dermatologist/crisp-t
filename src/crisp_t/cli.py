@@ -6,11 +6,11 @@ from pathlib import Path
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
-import typer
-from typing import List, Optional
+import click
 from rich.console import Console
 from rich.panel import Panel
 
+# Rich console for better output
 console = Console()
 
 from . import __version__
@@ -33,9 +33,7 @@ except ImportError:
     logger.warning("ML dependencies not available. Install with: pip install crisp-t[ml]")
 
 
-app = typer.Typer(add_completion=False, rich_markup_mode="rich")
-
-@app.command()
+@click.command()
 @click.option("--verbose", "-v", is_flag=True, help="Print verbose messages.")
 @click.option("--covid", "-cf", default="", help="Download COVID narratives from the website")
 @click.option("--inp", "-i", help="Load corpus from a folder containing corpus.json")
@@ -152,7 +150,7 @@ def main(
     A comprehensive framework for analyzing textual and numerical data using
     advanced NLP, machine learning, and statistical techniques.
 
-    
+    \b
     DATA PREPARATION STEPS:
     1. Create a subdirectory (e.g. crisp_source) in your work directory.
     2. Copy all textual data as .txt or .pdf files into this directory.
@@ -173,12 +171,15 @@ def main(
 
     if verbose:
         logging.getLogger().setLevel(logging.DEBUG)
-        console.print("Verbose mode enabled")
+        console.print("[dim]Verbose mode enabled[/dim]")
 
-    console.print("_________________________________________")
-    console.print("CRISP-T: Qualitative Research Analysis Framework")
-    console.print(f"Version: {__version__}")
-    console.print("_________________________________________")
+    console.print()
+    console.print(Panel.fit(
+        f"[bold cyan]CRISP-T[/bold cyan]: Qualitative Research Analysis Framework\n"
+        f"Version: [yellow]{__version__}[/yellow]",
+        border_style="cyan"
+    ))
+    console.print()
 
     # Initialize components
     read_data = ReadData()
@@ -194,17 +195,15 @@ def main(
         # Handle COVID data download
         if covid:
             if not source:
-                console.print(f"[red]Error:[/red] "--source (output folder")
-        raise typer.Exit(code=1) is required when using --covid.")
+                raise click.ClickException("--source (output folder) is required when using --covid.")
             console.print(f"Downloading COVID narratives from: {covid} to {source}")
             try:
                 from .utils import QRUtils
 
                 QRUtils.read_covid_narratives(source, covid)
-                console.print(f"✓ COVID narratives downloaded to {source}")
+                console.print(f"[green]✓[/green] COVID narratives downloaded to {source}")
             except Exception as e:
-                console.print(f"[red]Error:[/red] {COVID download failed: {e}}")
-        raise typer.Exit(code=1)
+                raise click.ClickException(f"COVID download failed: {e}")
 
         # Build corpus using helpers (source preferred over inp)
         # if not source or inp, use default folders or env vars
@@ -220,10 +219,10 @@ def main(
             if source and filters:
                 if any(":" in flt and "=" not in flt for flt in filters):
                     console.print("Filters are not supported when using --source")
-        except (typer.Exit, KeyboardInterrupt):
-        raise
+        except click.ClickException:
+            raise
         except Exception as e:
-            console.print(f"✗ Error initializing corpus: {e}", style="red")
+            console.print(f"[red]✗[/red] Error initializing corpus: {e}", err=True)
             logger.error(f"Failed to initialize corpus: {e}")
             return
 
@@ -237,15 +236,14 @@ def main(
                     loaded_any = True
                 except Exception as e:
                     logger.error(f"Failed to read source {src}: {e}")
-                    console.print(f"[red]Error:[/red] str(e")
-        raise typer.Exit(code=1))
+                    raise click.ClickException(str(e))
 
             if loaded_any:
                 corpus = read_data.create_corpus(
                     name="Corpus from multiple sources",
                     description=f"Data loaded from {len(sources)} sources",
                 )
-                console.print(f"✓ Successfully loaded {len(corpus.documents)} document(s) from {len(sources)} sources")
+                console.print(f"[green]✓[/green] Successfully loaded {len(corpus.documents)} document(s) from {len(sources)} sources")
                 # Filters are not applied for --sources in bulk mode
 
         # Load csv from corpus.df if available via helper
@@ -259,7 +257,7 @@ def main(
                     filters=filters,
                 )
             except Exception as e:
-                console.print(f"✗ Error preparing CSV analyzer: {e}", style="red")
+                console.print(f"[red]✗[/red] Error preparing CSV analyzer: {e}", err=True)
                 logger.error(f"Failed to create CSV analyzer: {e}")
                 return
 
@@ -291,7 +289,7 @@ def main(
         # Text Analysis Operations
         if text_analyzer:
             if nlp or codedict:
-                console.print("\n=== Generating Coding Dictionary ===")
+                console.print("\n=== Generating Coding Dictionary ===[/bold cyan]")
                 console.print(
                     """
                 Coding Dictionary Format:
@@ -314,7 +312,7 @@ def main(
                     console.print(f"Error generating coding dictionary: {e}")
 
             if nlp or topics:
-                console.print("\n=== Topic Modeling ===")
+                console.print("\n=== Topic Modeling ===[/bold cyan]")
                 console.print(
                     """
                 Topic Modeling Output Format:
@@ -337,7 +335,7 @@ def main(
                     console.print(f"Error generating topics: {e}")
 
             if nlp or assign:
-                console.print("\n=== Document-Topic Assignments ===")
+                console.print("\n=== Document-Topic Assignments ===[/bold cyan]")
                 console.print(
                     """
                 Document-Topic Assignment Format:
@@ -358,7 +356,7 @@ def main(
                     console.print(f"Error assigning topics: {e}")
 
             if nlp or cat:
-                console.print("\n=== Category Analysis ===")
+                console.print("\n=== Category Analysis ===[/bold cyan]")
                 console.print(
                     """
                 Category Analysis Output Format:
@@ -376,7 +374,7 @@ def main(
                     console.print(f"Error generating categories: {e}")
 
             if nlp or summary:
-                console.print("\n=== Text Summarization ===")
+                console.print("\n=== Text Summarization ===[/bold cyan]")
                 console.print(
                     """
                 Text Summarization Output Format: A list of important sentences representing the main points of the text.
@@ -394,7 +392,7 @@ def main(
                     console.print(f"Error generating summary: {e}")
 
             if nlp or sentiment:
-                console.print("\n=== Sentiment Analysis ===")
+                console.print("\n=== Sentiment Analysis ===[/bold cyan]")
                 console.print(
                     """
                 Sentiment Analysis Output Format:
@@ -417,7 +415,7 @@ def main(
             target_col = outcome
 
             if kmeans or ml:
-                console.print("\n=== K-Means Clustering ===")
+                console.print("\n=== K-Means Clustering ===[/bold cyan]")
                 console.print(
                     """
                            K-Means clustering removes non-numeric columns.
@@ -435,7 +433,7 @@ def main(
                     _save_output({"clusters": clusters, "members": members}, out, "kmeans")
 
             if (cls or ml) and target_col:
-                console.print("\n=== Classifier Evaluation ===")
+                console.print("\n=== Classifier Evaluation ===[/bold cyan]")
                 console.print(
                     """
                            Classifier
@@ -447,9 +445,8 @@ def main(
                 """
                 )
                 if not target_col:
-                    console.print(f"[red]Error:[/red] "--outcome is required for classification tasks"")
-        raise typer.Exit(code=1)
-                console.print("\n=== SVM ===")
+                    raise click.ClickException("--outcome is required for classification tasks")
+                console.print("\n=== SVM ===[/bold cyan]")
                 try:
                     confusion_matrix = ml_analyzer.svm_confusion_matrix(y=target_col, test_size=0.25)
                     console.print(ml_analyzer.format_confusion_matrix_to_human_readable(confusion_matrix))
@@ -457,10 +454,10 @@ def main(
                         _save_output(confusion_matrix, out, "svm_results")
                 except Exception as e:
                     console.print(f"Error performing SVM classification: {e}")
-                console.print("\n=== Decision Tree Classification ===")
+                console.print("\n=== Decision Tree Classification ===[/bold cyan]")
                 try:
                     cm, importance = ml_analyzer.get_decision_tree_classes(y=target_col, top_n=rec)
-                    console.print("\n=== Feature Importance ===")
+                    console.print("\n=== Feature Importance ===[/bold cyan]")
                     console.print(ml_analyzer.format_confusion_matrix_to_human_readable(cm))
                     if out:
                         _save_output(cm, out, "decision_tree_results")
@@ -468,7 +465,7 @@ def main(
                     console.print(f"Error performing Decision Tree classification: {e}")
 
             if (nnet or ml) and target_col:
-                console.print("\n=== Neural Network Classification Accuracy ===")
+                console.print("\n=== Neural Network Classification Accuracy ===[/bold cyan]")
                 console.print(
                     """
                             Neural Network classifier with accuracy output.
@@ -477,8 +474,7 @@ def main(
                 """
                 )
                 if not target_col:
-                    console.print(f"[red]Error:[/red] "--outcome is required for neural network tasks"")
-        raise typer.Exit(code=1)
+                    raise click.ClickException("--outcome is required for neural network tasks")
                 try:
                     predictions = ml_analyzer.get_nnet_predictions(y=target_col)
                     if out:
@@ -487,7 +483,7 @@ def main(
                     console.print(f"Error performing Neural Network classification: {e}")
 
             if (knn or ml) and target_col:
-                console.print("\n=== K-Nearest Neighbors ===")
+                console.print("\n=== K-Nearest Neighbors ===[/bold cyan]")
                 console.print(
                     """
                            K-Nearest Neighbors search results.
@@ -498,11 +494,9 @@ def main(
                 """
                 )
                 if not target_col:
-                    console.print(f"[red]Error:[/red] "--outcome is required for KNN search tasks"")
-        raise typer.Exit(code=1)
+                    raise click.ClickException("--outcome is required for KNN search tasks")
                 if rec < 1:
-                    console.print(f"[red]Error:[/red] "--rec must be a positive integer (1-based index")
-        raise typer.Exit(code=1)")
+                    raise click.ClickException("--rec must be a positive integer (1-based index)")
                 try:
                     knn_results = ml_analyzer.knn_search(y=target_col, n=num, r=rec)
                     if out:
@@ -511,7 +505,7 @@ def main(
                     console.print(f"Error performing K-Nearest Neighbors search: {e}")
 
             if (cart or ml) and target_col:
-                console.print("\n=== Association Rules (CART) ===")
+                console.print("\n=== Association Rules (CART) ===[/bold cyan]")
                 console.print(
                     """
                            Association Rules using the Apriori algorithm.
@@ -522,14 +516,11 @@ def main(
                 """
                 )
                 if not target_col:
-                    console.print(f"[red]Error:[/red] "--outcome is required for association rules tasks"")
-        raise typer.Exit(code=1)
+                    raise click.ClickException("--outcome is required for association rules tasks")
                 if not (1 <= num <= 99):
-                    console.print(f"[red]Error:[/red] "--num must be between 1 and 99 for min_support"")
-        raise typer.Exit(code=1)
+                    raise click.ClickException("--num must be between 1 and 99 for min_support")
                 if not (1 <= rec <= 99):
-                    console.print(f"[red]Error:[/red] "--rec must be between 1 and 99 for min_threshold"")
-        raise typer.Exit(code=1)
+                    raise click.ClickException("--rec must be between 1 and 99 for min_threshold")
                 _min_support = float(num / 100)
                 _min_threshold = float(rec / 100)
                 console.print(f"Using min_support={_min_support:.2f} and min_threshold={_min_threshold:.2f}")
@@ -546,7 +537,7 @@ def main(
                     console.print(f"Error generating association rules: {e}")
 
             if (pca or ml) and target_col:
-                console.print("\n=== Principal Component Analysis ===")
+                console.print("\n=== Principal Component Analysis ===[/bold cyan]")
                 console.print(
                     """
                            Principal Component Analysis (PCA) results.
@@ -563,7 +554,7 @@ def main(
                     console.print(f"Error performing Principal Component Analysis: {e}")
 
             if (regression or ml) and target_col:
-                console.print("\n=== Regression Analysis ===")
+                console.print("\n=== Regression Analysis ===[/bold cyan]")
                 console.print(
                     """
                            Regression Analysis (Linear or Logistic Regression).
@@ -581,7 +572,7 @@ def main(
                     console.print(f"Error performing regression analysis: {e}")
 
             if (lstm or ml) and target_col:
-                console.print("\n=== LSTM Text Classification ===")
+                console.print("\n=== LSTM Text Classification ===[/bold cyan]")
                 console.print(
                     """
                            LSTM (Long Short-Term Memory) model for text-based prediction.
@@ -593,8 +584,7 @@ def main(
                 """
                 )
                 if not target_col:
-                    console.print(f"[red]Error:[/red] "--outcome is required for LSTM prediction tasks"")
-        raise typer.Exit(code=1)
+                    raise click.ClickException("--outcome is required for LSTM prediction tasks")
                 try:
                     lstm_results = ml_analyzer.get_lstm_predictions(y=target_col)
                     if out:
@@ -613,8 +603,7 @@ def main(
                     "--out cannot be the same as --inp when using --filters. Please specify a different output folder to avoid overwriting input data."
                 )
             if filters and ((not inp) or (not out)):
-                console.print(f"[red]Error:[/red] "Both --inp and --out must be specified when using --filters."")
-        raise typer.Exit(code=1)
+                raise click.ClickException("Both --inp and --out must be specified when using --filters.")
             output_path = pathlib.Path(out)
             # Allow both directory and a file path '.../corpus.json'
             if output_path.suffix:
@@ -625,16 +614,16 @@ def main(
                 output_path.mkdir(parents=True, exist_ok=True)
                 save_base = output_path / "corpus.json"
             read_data.write_corpus_to_json(str(save_base), corpus=corpus)
-            console.print(f"✓ Corpus and csv saved to {save_base}")
+            console.print(f"[green]✓[/green] Corpus and csv saved to {save_base}")
 
         if print_args and corpus:
-            console.print("\n=== Corpus Details ===")
+            console.print("\n=== Corpus Details ===[/bold cyan]")
             # Join the print arguments into a single string
             print_command = " ".join(print_args) if print_args else None
             if print_command:
                 console.print(corpus.pretty_print(show=print_command))
 
-        console.print("\n=== Analysis Complete ===")
+        console.print("\n=== Analysis Complete ===[/bold cyan]")
 
     except click.ClickException:
         # Let Click handle and set non-zero exit code
@@ -645,8 +634,7 @@ def main(
             import traceback
 
             traceback.print_exc()
-        console.print(f"[red]Error:[/red] str(e")
-        raise typer.Exit(code=1))
+        raise click.ClickException(str(e))
 
 
 def _save_output(data, base_path: str, suffix: str):
