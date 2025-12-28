@@ -6,7 +6,12 @@ from pathlib import Path
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
-import click
+import typer
+from typing import List, Optional
+from rich.console import Console
+from rich.panel import Panel
+
+console = Console()
 
 from . import __version__
 from .cluster import Cluster
@@ -28,7 +33,9 @@ except ImportError:
     logger.warning("ML dependencies not available. Install with: pip install crisp-t[ml]")
 
 
-@click.command()
+app = typer.Typer(add_completion=False, rich_markup_mode="rich")
+
+@app.command()
 @click.option("--verbose", "-v", is_flag=True, help="Print verbose messages.")
 @click.option("--covid", "-cf", default="", help="Download COVID narratives from the website")
 @click.option("--inp", "-i", help="Load corpus from a folder containing corpus.json")
@@ -145,7 +152,7 @@ def main(
     A comprehensive framework for analyzing textual and numerical data using
     advanced NLP, machine learning, and statistical techniques.
 
-    \b
+    
     DATA PREPARATION STEPS:
     1. Create a subdirectory (e.g. crisp_source) in your work directory.
     2. Copy all textual data as .txt or .pdf files into this directory.
@@ -166,12 +173,12 @@ def main(
 
     if verbose:
         logging.getLogger().setLevel(logging.DEBUG)
-        click.echo("Verbose mode enabled")
+        console.print("Verbose mode enabled")
 
-    click.echo("_________________________________________")
-    click.echo("CRISP-T: Qualitative Research Analysis Framework")
-    click.echo(f"Version: {__version__}")
-    click.echo("_________________________________________")
+    console.print("_________________________________________")
+    console.print("CRISP-T: Qualitative Research Analysis Framework")
+    console.print(f"Version: {__version__}")
+    console.print("_________________________________________")
 
     # Initialize components
     read_data = ReadData()
@@ -187,15 +194,17 @@ def main(
         # Handle COVID data download
         if covid:
             if not source:
-                raise click.ClickException("--source (output folder) is required when using --covid.")
-            click.echo(f"Downloading COVID narratives from: {covid} to {source}")
+                console.print(f"[red]Error:[/red] "--source (output folder")
+        raise typer.Exit(code=1) is required when using --covid.")
+            console.print(f"Downloading COVID narratives from: {covid} to {source}")
             try:
                 from .utils import QRUtils
 
                 QRUtils.read_covid_narratives(source, covid)
-                click.echo(f"✓ COVID narratives downloaded to {source}")
+                console.print(f"✓ COVID narratives downloaded to {source}")
             except Exception as e:
-                raise click.ClickException(f"COVID download failed: {e}")
+                console.print(f"[red]Error:[/red] {COVID download failed: {e}}")
+        raise typer.Exit(code=1)
 
         # Build corpus using helpers (source preferred over inp)
         # if not source or inp, use default folders or env vars
@@ -210,11 +219,11 @@ def main(
             # If filters were provided with ':' while using --source, emit guidance message
             if source and filters:
                 if any(":" in flt and "=" not in flt for flt in filters):
-                    click.echo("Filters are not supported when using --source")
-        except click.ClickException:
-            raise
+                    console.print("Filters are not supported when using --source")
+        except (typer.Exit, KeyboardInterrupt):
+        raise
         except Exception as e:
-            click.echo(f"✗ Error initializing corpus: {e}", err=True)
+            console.print(f"✗ Error initializing corpus: {e}", style="red")
             logger.error(f"Failed to initialize corpus: {e}")
             return
 
@@ -222,20 +231,21 @@ def main(
         if sources and not corpus:
             loaded_any = False
             for src in sources:
-                click.echo(f"Reading data from source: {src}")
+                console.print(f"Reading data from source: {src}")
                 try:
                     read_data.read_source(src, comma_separated_ignore_words=ignore if ignore else None)
                     loaded_any = True
                 except Exception as e:
                     logger.error(f"Failed to read source {src}: {e}")
-                    raise click.ClickException(str(e))
+                    console.print(f"[red]Error:[/red] str(e")
+        raise typer.Exit(code=1))
 
             if loaded_any:
                 corpus = read_data.create_corpus(
                     name="Corpus from multiple sources",
                     description=f"Data loaded from {len(sources)} sources",
                 )
-                click.echo(f"✓ Successfully loaded {len(corpus.documents)} document(s) from {len(sources)} sources")
+                console.print(f"✓ Successfully loaded {len(corpus.documents)} document(s) from {len(sources)} sources")
                 # Filters are not applied for --sources in bulk mode
 
         # Load csv from corpus.df if available via helper
@@ -249,13 +259,13 @@ def main(
                     filters=filters,
                 )
             except Exception as e:
-                click.echo(f"✗ Error preparing CSV analyzer: {e}", err=True)
+                console.print(f"✗ Error preparing CSV analyzer: {e}", style="red")
                 logger.error(f"Failed to create CSV analyzer: {e}")
                 return
 
         # Load CSV data (deprecated)
         if csv:
-            click.echo("--csv option has been deprecated. Put csv file in --source folder instead.")
+            console.print("--csv option has been deprecated. Put csv file in --source folder instead.")
 
         # Initialize ML analyzer if available and ML functions are requested
         if ML_AVAILABLE and (nnet or cls or knn or kmeans or cart or pca or regression or lstm or ml) and csv_analyzer:
@@ -264,10 +274,10 @@ def main(
             ml_analyzer = ML(csv=csv_analyzer)  # type: ignore
         else:
             if (nnet or cls or knn or kmeans or cart or pca or regression or lstm or ml) and not ML_AVAILABLE:
-                click.echo("Machine learning features require additional dependencies.")
-                click.echo("Install with: pip install crisp-t[ml]")
+                console.print("Machine learning features require additional dependencies.")
+                console.print("Install with: pip install crisp-t[ml]")
             if (nnet or cls or knn or kmeans or cart or pca or regression or lstm or ml) and not csv_analyzer:
-                click.echo("ML analysis requires CSV data. Use --csv to provide a data file.")
+                console.print("ML analysis requires CSV data. Use --csv to provide a data file.")
 
         # Initialize Text analyzer and apply filters using helper if we have a corpus
         if corpus and not text_analyzer:
@@ -275,14 +285,14 @@ def main(
 
         # Ensure we have data to work with
         if not corpus and not csv_analyzer:
-            click.echo("No input data provided. Use --inp for text files")
+            console.print("No input data provided. Use --inp for text files")
             return
 
         # Text Analysis Operations
         if text_analyzer:
             if nlp or codedict:
-                click.echo("\n=== Generating Coding Dictionary ===")
-                click.echo(
+                console.print("\n=== Generating Coding Dictionary ===")
+                console.print(
                     """
                 Coding Dictionary Format:
                 - CATEGORY: Common verbs representing main actions or themes.
@@ -301,11 +311,11 @@ def main(
                     if out:
                         _save_output(coding_dict, out, "coding_dictionary")
                 except Exception as e:
-                    click.echo(f"Error generating coding dictionary: {e}")
+                    console.print(f"Error generating coding dictionary: {e}")
 
             if nlp or topics:
-                click.echo("\n=== Topic Modeling ===")
-                click.echo(
+                console.print("\n=== Topic Modeling ===")
+                console.print(
                     """
                 Topic Modeling Output Format:
                 Each topic is represented as a list of words with associated weights indicating their importance within the topic.
@@ -320,15 +330,15 @@ def main(
                     cluster_analyzer = Cluster(corpus=corpus)
                     cluster_analyzer.build_lda_model(topics=num)
                     topics_result = cluster_analyzer.print_topics(num_words=rec)
-                    click.echo(f"Generated {len(topics_result)} topics as above with the weights in brackets.")
+                    console.print(f"Generated {len(topics_result)} topics as above with the weights in brackets.")
                     if out:
                         _save_output(topics_result, out, "topics")
                 except Exception as e:
-                    click.echo(f"Error generating topics: {e}")
+                    console.print(f"Error generating topics: {e}")
 
             if nlp or assign:
-                click.echo("\n=== Document-Topic Assignments ===")
-                click.echo(
+                console.print("\n=== Document-Topic Assignments ===")
+                console.print(
                     """
                 Document-Topic Assignment Format:
                 Each document is assigned to the topic it is most associated with, along with the contribution percentage.
@@ -341,15 +351,15 @@ def main(
                         cluster_analyzer.build_lda_model(topics=num)
                     assignments = cluster_analyzer.format_topics_sentences(visualize=visualize)
                     document_assignments = cluster_analyzer.print_clusters()
-                    click.echo(f"Assigned {len(assignments)} documents to topics")
+                    console.print(f"Assigned {len(assignments)} documents to topics")
                     if out:
                         _save_output(assignments, out, "topic_assignments")
                 except Exception as e:
-                    click.echo(f"Error assigning topics: {e}")
+                    console.print(f"Error assigning topics: {e}")
 
             if nlp or cat:
-                click.echo("\n=== Category Analysis ===")
-                click.echo(
+                console.print("\n=== Category Analysis ===")
+                console.print(
                     """
                 Category Analysis Output Format:
                            A list of common concepts or themes in "bag_of_terms" with corresponding weights.
@@ -363,11 +373,11 @@ def main(
                     if out:
                         _save_output(categories, out, "categories")
                 except Exception as e:
-                    click.echo(f"Error generating categories: {e}")
+                    console.print(f"Error generating categories: {e}")
 
             if nlp or summary:
-                click.echo("\n=== Text Summarization ===")
-                click.echo(
+                console.print("\n=== Text Summarization ===")
+                console.print(
                     """
                 Text Summarization Output Format: A list of important sentences representing the main points of the text.
                 Hint:   Use --num to adjust the number of sentences in the summary.
@@ -377,15 +387,15 @@ def main(
                 try:
                     text_analyzer.make_spacy_doc()
                     summary_result = text_analyzer.generate_summary(weight=num)
-                    click.echo(summary_result)
+                    console.print(summary_result)
                     if out:
                         _save_output(summary_result, out, "summary")
                 except Exception as e:
-                    click.echo(f"Error generating summary: {e}")
+                    console.print(f"Error generating summary: {e}")
 
             if nlp or sentiment:
-                click.echo("\n=== Sentiment Analysis ===")
-                click.echo(
+                console.print("\n=== Sentiment Analysis ===")
+                console.print(
                     """
                 Sentiment Analysis Output Format:
                            neg, neu, pos, compound scores.
@@ -396,19 +406,19 @@ def main(
                 try:
                     sentiment_analyzer = Sentiment(corpus=corpus)  # type: ignore
                     sentiment_results = sentiment_analyzer.get_sentiment(documents=sentence, verbose=verbose)
-                    click.echo(sentiment_results)
+                    console.print(sentiment_results)
                     if out:
                         _save_output(sentiment_results, out, "sentiment")
                 except Exception as e:
-                    click.echo(f"Error generating sentiment analysis: {e}")
+                    console.print(f"Error generating sentiment analysis: {e}")
 
         # Machine Learning Operations
         if ml_analyzer and ML_AVAILABLE:
             target_col = outcome
 
             if kmeans or ml:
-                click.echo("\n=== K-Means Clustering ===")
-                click.echo(
+                console.print("\n=== K-Means Clustering ===")
+                console.print(
                     """
                            K-Means clustering removes non-numeric columns.
                            Additionally it removes NaN values.
@@ -425,8 +435,8 @@ def main(
                     _save_output({"clusters": clusters, "members": members}, out, "kmeans")
 
             if (cls or ml) and target_col:
-                click.echo("\n=== Classifier Evaluation ===")
-                click.echo(
+                console.print("\n=== Classifier Evaluation ===")
+                console.print(
                     """
                            Classifier
                             - SVM: Support Vector Machine classifier with confusion matrix output.
@@ -437,28 +447,29 @@ def main(
                 """
                 )
                 if not target_col:
-                    raise click.ClickException("--outcome is required for classification tasks")
-                click.echo("\n=== SVM ===")
+                    console.print(f"[red]Error:[/red] "--outcome is required for classification tasks"")
+        raise typer.Exit(code=1)
+                console.print("\n=== SVM ===")
                 try:
                     confusion_matrix = ml_analyzer.svm_confusion_matrix(y=target_col, test_size=0.25)
-                    click.echo(ml_analyzer.format_confusion_matrix_to_human_readable(confusion_matrix))
+                    console.print(ml_analyzer.format_confusion_matrix_to_human_readable(confusion_matrix))
                     if out:
                         _save_output(confusion_matrix, out, "svm_results")
                 except Exception as e:
-                    click.echo(f"Error performing SVM classification: {e}")
-                click.echo("\n=== Decision Tree Classification ===")
+                    console.print(f"Error performing SVM classification: {e}")
+                console.print("\n=== Decision Tree Classification ===")
                 try:
                     cm, importance = ml_analyzer.get_decision_tree_classes(y=target_col, top_n=rec)
-                    click.echo("\n=== Feature Importance ===")
-                    click.echo(ml_analyzer.format_confusion_matrix_to_human_readable(cm))
+                    console.print("\n=== Feature Importance ===")
+                    console.print(ml_analyzer.format_confusion_matrix_to_human_readable(cm))
                     if out:
                         _save_output(cm, out, "decision_tree_results")
                 except Exception as e:
-                    click.echo(f"Error performing Decision Tree classification: {e}")
+                    console.print(f"Error performing Decision Tree classification: {e}")
 
             if (nnet or ml) and target_col:
-                click.echo("\n=== Neural Network Classification Accuracy ===")
-                click.echo(
+                console.print("\n=== Neural Network Classification Accuracy ===")
+                console.print(
                     """
                             Neural Network classifier with accuracy output.
                 Hint:   Use --outcome to specify the target variable for classification.
@@ -466,17 +477,18 @@ def main(
                 """
                 )
                 if not target_col:
-                    raise click.ClickException("--outcome is required for neural network tasks")
+                    console.print(f"[red]Error:[/red] "--outcome is required for neural network tasks"")
+        raise typer.Exit(code=1)
                 try:
                     predictions = ml_analyzer.get_nnet_predictions(y=target_col)
                     if out:
                         _save_output(predictions, out, "nnet_results")
                 except Exception as e:
-                    click.echo(f"Error performing Neural Network classification: {e}")
+                    console.print(f"Error performing Neural Network classification: {e}")
 
             if (knn or ml) and target_col:
-                click.echo("\n=== K-Nearest Neighbors ===")
-                click.echo(
+                console.print("\n=== K-Nearest Neighbors ===")
+                console.print(
                     """
                            K-Nearest Neighbors search results.
                 Hint:   Use --outcome to specify the target variable for KNN search.
@@ -486,19 +498,21 @@ def main(
                 """
                 )
                 if not target_col:
-                    raise click.ClickException("--outcome is required for KNN search tasks")
+                    console.print(f"[red]Error:[/red] "--outcome is required for KNN search tasks"")
+        raise typer.Exit(code=1)
                 if rec < 1:
-                    raise click.ClickException("--rec must be a positive integer (1-based index)")
+                    console.print(f"[red]Error:[/red] "--rec must be a positive integer (1-based index")
+        raise typer.Exit(code=1)")
                 try:
                     knn_results = ml_analyzer.knn_search(y=target_col, n=num, r=rec)
                     if out:
                         _save_output(knn_results, out, "knn_results")
                 except Exception as e:
-                    click.echo(f"Error performing K-Nearest Neighbors search: {e}")
+                    console.print(f"Error performing K-Nearest Neighbors search: {e}")
 
             if (cart or ml) and target_col:
-                click.echo("\n=== Association Rules (CART) ===")
-                click.echo(
+                console.print("\n=== Association Rules (CART) ===")
+                console.print(
                     """
                            Association Rules using the Apriori algorithm.
                 Hint:   Use --outcome to specify the target variable to remove from features.
@@ -508,29 +522,32 @@ def main(
                 """
                 )
                 if not target_col:
-                    raise click.ClickException("--outcome is required for association rules tasks")
+                    console.print(f"[red]Error:[/red] "--outcome is required for association rules tasks"")
+        raise typer.Exit(code=1)
                 if not (1 <= num <= 99):
-                    raise click.ClickException("--num must be between 1 and 99 for min_support")
+                    console.print(f"[red]Error:[/red] "--num must be between 1 and 99 for min_support"")
+        raise typer.Exit(code=1)
                 if not (1 <= rec <= 99):
-                    raise click.ClickException("--rec must be between 1 and 99 for min_threshold")
+                    console.print(f"[red]Error:[/red] "--rec must be between 1 and 99 for min_threshold"")
+        raise typer.Exit(code=1)
                 _min_support = float(num / 100)
                 _min_threshold = float(rec / 100)
-                click.echo(f"Using min_support={_min_support:.2f} and min_threshold={_min_threshold:.2f}")
+                console.print(f"Using min_support={_min_support:.2f} and min_threshold={_min_threshold:.2f}")
                 try:
                     apriori_results = ml_analyzer.get_apriori(
                         y=target_col,
                         min_support=_min_support,
                         min_threshold=_min_threshold,
                     )
-                    click.echo(apriori_results)
+                    console.print(apriori_results)
                     if out:
                         _save_output(apriori_results, out, "association_rules")
                 except Exception as e:
-                    click.echo(f"Error generating association rules: {e}")
+                    console.print(f"Error generating association rules: {e}")
 
             if (pca or ml) and target_col:
-                click.echo("\n=== Principal Component Analysis ===")
-                click.echo(
+                console.print("\n=== Principal Component Analysis ===")
+                console.print(
                     """
                            Principal Component Analysis (PCA) results.
                 Hint:   Use --outcome to specify the target variable to remove from features.
@@ -543,11 +560,11 @@ def main(
                     if out:
                         _save_output(pca_results, out, "pca_results")
                 except Exception as e:
-                    click.echo(f"Error performing Principal Component Analysis: {e}")
+                    console.print(f"Error performing Principal Component Analysis: {e}")
 
             if (regression or ml) and target_col:
-                click.echo("\n=== Regression Analysis ===")
-                click.echo(
+                console.print("\n=== Regression Analysis ===")
+                console.print(
                     """
                            Regression Analysis (Linear or Logistic Regression).
                            Automatically detects binary outcomes for logistic regression.
@@ -561,11 +578,11 @@ def main(
                     if out:
                         _save_output(regression_results, out, "regression_results")
                 except Exception as e:
-                    click.echo(f"Error performing regression analysis: {e}")
+                    console.print(f"Error performing regression analysis: {e}")
 
             if (lstm or ml) and target_col:
-                click.echo("\n=== LSTM Text Classification ===")
-                click.echo(
+                console.print("\n=== LSTM Text Classification ===")
+                console.print(
                     """
                            LSTM (Long Short-Term Memory) model for text-based prediction.
                            Tests if text documents converge towards predicting the outcome variable.
@@ -576,17 +593,18 @@ def main(
                 """
                 )
                 if not target_col:
-                    raise click.ClickException("--outcome is required for LSTM prediction tasks")
+                    console.print(f"[red]Error:[/red] "--outcome is required for LSTM prediction tasks"")
+        raise typer.Exit(code=1)
                 try:
                     lstm_results = ml_analyzer.get_lstm_predictions(y=target_col)
                     if out:
                         _save_output(lstm_results, out, "lstm_results")
                 except Exception as e:
-                    click.echo(f"Error performing LSTM prediction: {e}")
+                    console.print(f"Error performing LSTM prediction: {e}")
 
         elif (nnet or cls or knn or kmeans or cart or pca or regression or lstm or ml) and not ML_AVAILABLE:
-            click.echo("Machine learning features require additional dependencies.")
-            click.echo("Install with: pip install crisp-t[ml]")
+            console.print("Machine learning features require additional dependencies.")
+            console.print("Install with: pip install crisp-t[ml]")
 
         # Save corpus and csv if output path is specified
         if out and corpus:
@@ -595,7 +613,8 @@ def main(
                     "--out cannot be the same as --inp when using --filters. Please specify a different output folder to avoid overwriting input data."
                 )
             if filters and ((not inp) or (not out)):
-                raise click.ClickException("Both --inp and --out must be specified when using --filters.")
+                console.print(f"[red]Error:[/red] "Both --inp and --out must be specified when using --filters."")
+        raise typer.Exit(code=1)
             output_path = pathlib.Path(out)
             # Allow both directory and a file path '.../corpus.json'
             if output_path.suffix:
@@ -606,16 +625,16 @@ def main(
                 output_path.mkdir(parents=True, exist_ok=True)
                 save_base = output_path / "corpus.json"
             read_data.write_corpus_to_json(str(save_base), corpus=corpus)
-            click.echo(f"✓ Corpus and csv saved to {save_base}")
+            console.print(f"✓ Corpus and csv saved to {save_base}")
 
         if print_args and corpus:
-            click.echo("\n=== Corpus Details ===")
+            console.print("\n=== Corpus Details ===")
             # Join the print arguments into a single string
             print_command = " ".join(print_args) if print_args else None
             if print_command:
-                click.echo(corpus.pretty_print(show=print_command))
+                console.print(corpus.pretty_print(show=print_command))
 
-        click.echo("\n=== Analysis Complete ===")
+        console.print("\n=== Analysis Complete ===")
 
     except click.ClickException:
         # Let Click handle and set non-zero exit code
@@ -626,7 +645,8 @@ def main(
             import traceback
 
             traceback.print_exc()
-        raise click.ClickException(str(e))
+        console.print(f"[red]Error:[/red] str(e")
+        raise typer.Exit(code=1))
 
 
 def _save_output(data, base_path: str, suffix: str):
@@ -656,10 +676,10 @@ def _save_output(data, base_path: str, suffix: str):
             with open(save_path, "w", encoding="utf-8") as f:
                 f.write(str(data))
 
-        click.echo(f"Results saved to: {save_path}")
+        console.print(f"Results saved to: {save_path}")
 
     except Exception as e:
-        click.echo(f"Warning: Could not save output to {base_path}_{suffix}: {e!s}")
+        console.print(f"Warning: Could not save output to {base_path}_{suffix}: {e!s}")
 
 
 def _clear_cache():
@@ -667,9 +687,9 @@ def _clear_cache():
     cache_dir = Path("cache")
     if cache_dir.exists() and cache_dir.is_dir():
         shutil.rmtree(cache_dir)
-        click.echo("Cache cleared.")
+        console.print("Cache cleared.")
     else:
-        click.echo("No cache to clear.")
+        console.print("No cache to clear.")
 
 
 def _process_csv(csv_analyzer, unstructured, ignore, filters):
@@ -687,10 +707,10 @@ def _process_csv(csv_analyzer, unstructured, ignore, filters):
                 else:
                     raise ValueError("Filter must be in key=value or key:value format")
                 csv_analyzer.filter_rows_by_column_value(key.strip(), value.strip())
-            click.echo(f"Applied filters {list(filters)}; remaining rows: {csv_analyzer.get_shape()[0]}")
+            console.print(f"Applied filters {list(filters)}; remaining rows: {csv_analyzer.get_shape()[0]}")
         except Exception as e:
             # Surface as CLI error with non-zero exit code
-            click.echo(f"Probably no numeric metadata to filter, but let me check document metadata: {e}")
+            console.print(f"Probably no numeric metadata to filter, but let me check document metadata: {e}")
     return text_columns, ignore_columns
 
 

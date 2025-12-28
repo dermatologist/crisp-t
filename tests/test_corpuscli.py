@@ -180,9 +180,9 @@ import re
 from pathlib import Path
 
 import pytest
-from click.testing import CliRunner
+from typer.testing import CliRunner
 
-from src.crisp_t.corpuscli import main as corpus_main
+from src.crisp_t.corpuscli import app as corpus_app
 
 
 def run_cli(args, tmp_path=None):
@@ -199,8 +199,8 @@ def run_cli(args, tmp_path=None):
                 )
                 for a in args
             ]
-            return runner.invoke(corpus_main, args)
-    return runner.invoke(corpus_main, args)
+            return runner.invoke(corpus_app, args)
+    return runner.invoke(corpus_app, args)
 
 
 def test_save_and_load_corpus(tmp_path):

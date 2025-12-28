@@ -4,9 +4,9 @@ from pathlib import Path
 
 import pandas as pd
 import pytest
-from click.testing import CliRunner
+from typer.testing import CliRunner
 
-from src.crisp_t.vizcli import main as viz_main
+from src.crisp_t.vizcli import app as viz_app
 
 
 @pytest.fixture
@@ -44,7 +44,7 @@ def test_vizcli_freq_and_top_terms(text_source, tmp_dir):
     runner = CliRunner()
     out_dir = Path(tmp_dir) / "out"
     result = runner.invoke(
-        viz_main,
+        viz_app,
         [
             "--inp",
             str(corpus_dir),
@@ -80,7 +80,7 @@ def test_vizcli_topics_and_wordcloud(text_source, tmp_dir):
     runner = CliRunner()
     out_dir = Path(tmp_dir) / "out2"
     result = runner.invoke(
-        viz_main,
+        viz_app,
         [
             "--inp",
             str(corpus_dir),
@@ -117,7 +117,7 @@ def test_vizcli_ldavis(text_source, tmp_dir):
     runner = CliRunner()
     out_dir = Path(tmp_dir) / "out_ldavis"
     result = runner.invoke(
-        viz_main,
+        viz_app,
         [
             "--inp",
             str(corpus_dir),
@@ -159,7 +159,7 @@ def test_vizcli_corr_heatmap_with_sources(tmp_dir):
     runner = CliRunner()
     out_dir = Path(tmp_dir) / "out3"
     result = runner.invoke(
-        viz_main,
+        viz_app,
         [
             "--inp",
             str(corpus_dir),
@@ -195,7 +195,7 @@ def test_vizcli_tdabm_without_metadata(tmp_dir):
     runner = CliRunner()
     out_dir = Path(tmp_dir) / "out_tdabm"
     result = runner.invoke(
-        viz_main,
+        viz_app,
         [
             "--inp",
             str(corpus_dir),
@@ -258,7 +258,7 @@ def test_vizcli_tdabm_with_metadata(tmp_dir):
     runner = CliRunner()
     out_dir = Path(tmp_dir) / "out_tdabm_viz"
     result = runner.invoke(
-        viz_main,
+        viz_app,
         [
             "--inp",
             str(corpus_dir),
@@ -287,7 +287,7 @@ def test_vizcli_graph_without_metadata(tmp_dir):
     runner = CliRunner()
     out_dir = Path(tmp_dir) / "out"
     result = runner.invoke(
-        viz_main,
+        viz_app,
         [
             "--inp",
             str(corpus_dir),
@@ -360,7 +360,7 @@ def test_vizcli_graph_with_metadata(tmp_dir):
     runner = CliRunner()
     out_dir = Path(tmp_dir) / "out_graph"
     result = runner.invoke(
-        viz_main,
+        viz_app,
         [
             "--inp",
             str(corpus_dir),
@@ -419,7 +419,7 @@ def test_vizcli_graph_with_layout(tmp_dir):
     runner = CliRunner()
     out_dir = Path(tmp_dir) / "out_graph_circular"
     result = runner.invoke(
-        viz_main,
+        viz_app,
         [
             "--inp",
             str(corpus_dir),
