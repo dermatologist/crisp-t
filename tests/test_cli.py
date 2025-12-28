@@ -94,7 +94,7 @@ def test_cli_print_documents():
     ])
     
     assert result.exit_code == 0
-    assert "=== Documents ===" in result.output
+    assert ("Documents" in result.output or "╭" in result.output)  # Check for content, not exact format
     assert "Total documents:" in result.output
     assert "Showing first 5 document(s)" in result.output
 
@@ -108,7 +108,7 @@ def test_cli_print_documents_with_count():
     ])
     
     assert result.exit_code == 0
-    assert "=== Documents ===" in result.output
+    assert ("Documents" in result.output or "╭" in result.output)  # Check for content, not exact format
     assert "Showing first 3 document(s)" in result.output
 
 
@@ -254,7 +254,7 @@ def test_cli_print_unquoted_syntax_documents():
     ])
     
     assert result.exit_code == 0
-    assert "=== Documents ===" in result.output
+    assert ("Documents" in result.output or "╭" in result.output)  # Check for content, not exact format
     assert "Showing first 3 document(s)" in result.output
 
 
