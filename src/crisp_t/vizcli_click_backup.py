@@ -6,12 +6,7 @@ from typing import Optional
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
-import typer
-from typing import List, Optional
-from rich.console import Console
-from rich.panel import Panel
-
-console = Console()
+import click
 import pandas as pd
 
 from . import __version__
@@ -25,63 +20,121 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-app = typer.Typer(add_completion=False, rich_markup_mode="rich")
-
-@app.command()
+@click.command()
+@click.option("--verbose", "-v", is_flag=True, help="Print verbose messages.")
+@click.option("--inp", "-i", help="Load corpus from a folder containing corpus.json")
+@click.option(
+    "--out",
+    "-o",
+    help="Output directory where PNG images will be written",
+)
+@click.option(
+    "--bins", default=100, show_default=True, help="Number of bins for distributions"
+)
+@click.option(
+    "--topics-num",
+    default=8,
+    show_default=True,
+    help="Number of topics for LDA when required (default 8 as per Mettler et al. 2025)",
+)
+@click.option(
+    "--top-n",
+    default=20,
+    show_default=True,
+    help="Top N terms to show in top-terms chart",
+)
+@click.option(
+    "--corr-columns",
+    default="",
+    help="Comma separated numeric columns for correlation heatmap; if empty, auto-select",
+)
+@click.option("--freq", is_flag=True, help="Export: word frequency distribution")
+@click.option(
+    "--by-topic",
+    is_flag=True,
+    help="Export: distribution by dominant topic (requires LDA)",
+)
+@click.option(
+    "--wordcloud", is_flag=True, help="Export: topic wordcloud (requires LDA)"
+)
+@click.option(
+    "--ldavis",
+    is_flag=True,
+    help="Export: interactive LDA visualization HTML (requires LDA)",
+)
+@click.option(
+    "--top-terms", is_flag=True, help="Export: top terms bar chart (computed from text)"
+)
+@click.option(
+    "--corr-heatmap",
+    is_flag=True,
+    help="Export: correlation heatmap (from CSV numeric columns)",
+)
+@click.option(
+    "--tdabm",
+    is_flag=True,
+    help="Export: TDABM visualization (requires TDABM analysis in corpus metadata)",
+)
+@click.option(
+    "--graph",
+    is_flag=True,
+    help="Export: graph visualization (requires graph data in corpus metadata)",
+)
+@click.option(
+    "--graph-nodes",
+    default="",
+    help=(
+        "Comma separated node types to include for graph: document,keyword,cluster,metadata. "
+        "Example: --graph-nodes document,keyword. If empty or 'all', include all."
+    ),
+)
+@click.option(
+    "--graph-layout",
+    default="spring",
+    show_default=True,
+    help="Layout algorithm for graph visualization: spring, circular, kamada_kawai, or spectral",
+)
 def main(
-    verbose: bool = typer.Option(False, "--verbose", "-v", help="Enable detailed logging output"),
-    inp: Optional[str] = typer.Option(None, "--inp", "-i", help="Path to folder containing corpus.json file to load"),
-    out: str = typer.Option(..., "--out", "-o", help="Output directory where visualization PNG images will be saved"),
-    bins: int = typer.Option(100, "--bins", help="Number of bins to use for frequency distribution charts"),
-    topics_num: int = typer.Option(8, "--topics-num", help="Number of topics for LDA topic modeling (default: 8)"),
-    top_n: int = typer.Option(20, "--top-n", help="Number of top terms to display in bar charts"),
-    corr_columns: str = typer.Option("", "--corr-columns", help="Comma-separated list of numeric columns for correlation heatmap (auto-selected if empty)"),
-    freq: bool = typer.Option(False, "--freq", help="Generate word frequency distribution chart"),
-    by_topic: bool = typer.Option(False, "--by-topic", help="Generate distribution chart by dominant topic (requires LDA)"),
-    wordcloud: bool = typer.Option(False, "--wordcloud", help="Generate topic wordcloud visualization (requires LDA)"),
-    ldavis: bool = typer.Option(False, "--ldavis", help="Generate interactive LDA visualization as HTML file (requires LDA)"),
-    top_terms: bool = typer.Option(False, "--top-terms", help="Generate bar chart showing top terms (computed from text)"),
-    corr_heatmap: bool = typer.Option(False, "--corr-heatmap", help="Generate correlation heatmap from CSV numeric columns"),
-    tdabm: bool = typer.Option(False, "--tdabm", help="Generate TDABM visualization (requires TDABM analysis in corpus metadata)"),
-    graph: bool = typer.Option(False, "--graph", help="Generate graph visualization (requires graph data in corpus metadata)"),
-    graph_nodes: str = typer.Option("", "--graph-nodes", help="Comma-separated node types: document,keyword,cluster,metadata (default: all)"),
-    graph_layout: str = typer.Option("spring", "--graph-layout", help="Layout algorithm: spring, circular, kamada_kawai, or spectral"),
+    verbose: bool,
+    inp: Optional[str],
+    out: str,
+    bins: int,
+    topics_num: int,
+    top_n: int,
+    corr_columns: str,
+    freq: bool,
+    by_topic: bool,
+    wordcloud: bool,
+    ldavis: bool,
+    top_terms: bool,
+    corr_heatmap: bool,
+    tdabm: bool,
+    graph: bool,
+    graph_nodes: str,
+    graph_layout: str,
 ):
-    """
-    [bold cyan]CRISP-T Visualization CLI[/bold cyan]
-    
-    Generate publication-quality visualizations from your CRISP-T corpus data.
-    Creates charts for word frequencies, topics, correlations, graphs, and more.
-    
-    [bold]Examples:[/bold]
-      [dim]# Generate all text visualizations[/dim]
-      crispviz --inp data/ --out viz/ --freq --top-terms --wordcloud
-      
-      [dim]# Generate correlation heatmap[/dim]
-      crispviz --inp data/ --out viz/ --corr-heatmap
-      
-      [dim]# Generate graph with specific nodes[/dim]
-      crispviz --inp data/ --out viz/ --graph --graph-nodes document,keyword
+    """CRISP-T: Visualization CLI
+
+    Build corpus (source preferred over inp), optionally handle multiple sources,
+    and export selected visualizations as PNG files into the output directory.
     """
 
     if verbose:
         logging.getLogger().setLevel(logging.DEBUG)
-        console.print("[dim]Verbose mode enabled[/dim]")
+        click.echo("Verbose mode enabled")
 
-    console.print()
-    console.print(Panel.fit(
-        f"[bold cyan]CRISP-T[/bold cyan]: Visualizations\n"
-        f"Version: [yellow]{__version__}[/yellow]",
-        border_style="cyan"
-    ))
-    console.print()
+    click.echo("_________________________________________")
+    click.echo("CRISP-T: Visualizations")
+    click.echo(f"Version: {__version__}")
+    click.echo("_________________________________________")
 
     try:
         out_dir = Path(out)
     except TypeError:
-        console.print("[red]Error:[/red] No output directory specified. Visualizations require an output folder.", style="bold red")
-        console.print("[yellow]Hint:[/yellow] Use --out <directory> to specify where to save visualizations")
-        raise typer.Exit(code=1)
+        click.echo(
+            f"No output directory specified. Visualizations need an output folder."
+        )
+        raise click.Abort()
     out_dir.mkdir(parents=True, exist_ok=True)
 
     # Initialize components
@@ -91,9 +144,7 @@ def main(
     corpus = initialize_corpus(inp=inp)
 
     if not corpus:
-        console.print("[red]Error:[/red] No input data provided", style="bold red")
-        console.print("[yellow]Hint:[/yellow] Use --inp <directory> to load corpus from a folder containing corpus.json")
-        raise typer.Exit(code=1)
+        raise click.ClickException("No input provided. Use --source/--sources or --inp")
 
     viz = QRVisualize(corpus=corpus)
 
@@ -118,7 +169,7 @@ def main(
         viz.plot_frequency_distribution_of_words(
             df=df_text, folder_path=str(out_path), bins=bins, show=False
         )
-        console.print(f"[green]✓[/green] Saved: [cyan]{out_path}[/cyan]")
+        click.echo(f"Saved: {out_path}")
 
     # 2) Distribution by topic (requires topics)
     if by_topic:
@@ -127,14 +178,14 @@ def main(
         viz.plot_distribution_by_topic(
             df=None, folder_path=str(out_path), bins=bins, show=False
         )
-        console.print(f"[green]✓[/green] Saved: [cyan]{out_path}[/cyan]")
+        click.echo(f"Saved: {out_path}")
 
     # 3) Topic wordcloud (requires topics)
     if wordcloud:
         ensure_topics()
         out_path = out_dir / "wordcloud.png"
         viz.plot_wordcloud(topics=None, folder_path=str(out_path), show=False)
-        console.print(f"[green]✓[/green] Saved: [cyan]{out_path}[/cyan]")
+        click.echo(f"Saved: {out_path}")
 
     # 3.5) LDA visualization (requires topics)
     if ldavis:
@@ -148,11 +199,11 @@ def main(
                 folder_path=str(out_path),
                 show=False,
             )
-            console.print(f"[green]✓[/green] Saved: [cyan]{out_path}[/cyan]")
+            click.echo(f"Saved: {out_path}")
         except ImportError as e:
-            console.print(f"Warning: {e}")
+            click.echo(f"Warning: {e}")
         except Exception as e:
-            console.print(f"Error generating LDA visualization: {e}")
+            click.echo(f"Error generating LDA visualization: {e}")
 
     # 4) Top terms (compute from text directly)
     if top_terms:
@@ -162,7 +213,7 @@ def main(
             tokens.extend((t or "").lower().split())
         freq_map = Counter(tokens)
         if not freq_map:
-            console.print("No tokens found to plot top terms.")
+            click.echo("No tokens found to plot top terms.")
         else:
             df_terms = pd.DataFrame(
                 {
@@ -175,12 +226,12 @@ def main(
             viz.plot_top_terms(
                 df=df_terms, top_n=top_n, folder_path=str(out_path), show=False
             )
-            console.print(f"[green]✓[/green] Saved: [cyan]{out_path}[/cyan]")
+            click.echo(f"Saved: {out_path}")
 
     # 5) Correlation heatmap
     if corr_heatmap:
         if getattr(corpus, "df", None) is None or corpus.df.empty:
-            console.print("No CSV data available for correlation heatmap; skipping.")
+            click.echo("No CSV data available for correlation heatmap; skipping.")
         else:
             df0 = corpus.df.copy()
             # If user specified columns, attempt to use them; else let visualize auto-select
@@ -202,29 +253,29 @@ def main(
                 viz.plot_correlation_heatmap(
                     df=df0, columns=None, folder_path=str(out_path), show=False
                 )
-            console.print(f"[green]✓[/green] Saved: [cyan]{out_path}[/cyan]")
+            click.echo(f"Saved: {out_path}")
 
     # TDABM visualization
     if tdabm:
         if "tdabm" not in corpus.metadata:
-            console.print("Warning: No TDABM data found in corpus metadata.")
-            console.print(
+            click.echo("Warning: No TDABM data found in corpus metadata.")
+            click.echo(
                 "Hint: Run TDABM analysis first with: crispt --tdabm y_var:x_vars:radius --inp <corpus_dir>"
             )
         else:
             out_path = out_dir / "tdabm.png"
             try:
                 viz.draw_tdabm(corpus=corpus, folder_path=str(out_path), show=False)
-                console.print(f"[green]✓[/green] Saved: [cyan]{out_path}[/cyan]")
+                click.echo(f"Saved: {out_path}")
             except Exception as e:
-                console.print(f"Error generating TDABM visualization: {e}")
+                click.echo(f"Error generating TDABM visualization: {e}")
                 logger.error(f"TDABM visualization error: {e}", exc_info=True)
 
     # Graph visualization (filtered by node types if provided)
     if graph or graph_nodes:
         if "graph" not in corpus.metadata:
-            console.print("Warning: No graph data found in corpus metadata.")
-            console.print(
+            click.echo("Warning: No graph data found in corpus metadata.")
+            click.echo(
                 "Hint: Run graph generation first with: crispt --graph --inp <corpus_dir>"
             )
         else:
@@ -240,11 +291,11 @@ def main(
                     if p in allowed_types:
                         requested_types.add(p)
                     else:
-                        console.print(
+                        click.echo(
                             f"Warning: Unknown node type '{p}' ignored. Allowed: {', '.join(sorted(allowed_types))}"
                         )
                 if not requested_types:
-                    console.print("No valid node types specified; defaulting to all.")
+                    click.echo("No valid node types specified; defaulting to all.")
                     include_all = True
 
             graph_data = corpus.metadata.get("graph", {})
@@ -285,26 +336,20 @@ def main(
                     show=False,
                     layout=graph_layout,
                 )
-                console.print(f"[green]✓[/green] Saved: [cyan]{out_path}[/cyan]")
+                click.echo(f"Saved: {out_path}")
                 if not include_all:
-                    console.print(
+                    click.echo(
                         f"Graph filtered to node types: {', '.join(sorted(requested_types))}"
                     )
             except Exception as e:
-                console.print(f"Error generating graph visualization: {e}")
+                click.echo(f"Error generating graph visualization: {e}")
                 logger.error(f"Graph visualization error: {e}", exc_info=True)
             finally:
                 # Restore original metadata (avoid side-effects)
                 corpus.metadata["graph"] = original_graph_meta
 
-    console.print()
-    console.print(Panel.fit(
-        "[bold green]✓ Visualization Complete[/bold green]\n"
-        f"Output saved to: [cyan]{out_dir}[/cyan]",
-        border_style="green"
-    ))
-    console.print()
+    click.echo("\n=== Visualization Complete ===")
 
 
 if __name__ == "__main__":
-    app()
+    main()
