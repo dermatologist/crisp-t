@@ -246,7 +246,7 @@ def main(
         except click.ClickException:
             raise
         except Exception as e:
-            console.print(f"[red]✗[/red] Error initializing corpus: {e}", err=True)
+            console.print(f"[red]✗[/red] Error initializing corpus: {e}")
             logger.error(f"Failed to initialize corpus: {e}")
             return
 
@@ -285,9 +285,7 @@ def main(
                     filters=filters,
                 )
             except Exception as e:
-                console.print(
-                    f"[red]✗[/red] Error preparing CSV analyzer: {e}", err=True
-                )
+                console.print(f"[red]✗[/red] Error preparing CSV analyzer: {e}")
                 logger.error(f"Failed to create CSV analyzer: {e}")
                 return
 
