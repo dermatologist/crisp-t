@@ -86,3 +86,6 @@ def delete_corpus_df_in_temp_path(tmp_path):
     corpus_df_path = Path(tmp_path) / "corpus_df.csv"
     if corpus_df_path.exists():
         os.remove(corpus_df_path)
+    corpus_df_path = Path(tmp_path) / "corpus.json"
+    if corpus_df_path.exists():
+        os.remove(corpus_df_path)

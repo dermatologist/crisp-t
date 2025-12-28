@@ -17,10 +17,14 @@ You should have received a copy of the GNU General Public License
 along with crisp-t.  If not, see <https://www.gnu.org/licenses/>.
 """
 
+import multiprocessing
 import operator
-from typing import Optional
-from pathlib import Path
 import pickle
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from functools import lru_cache
+from pathlib import Path
+from typing import Optional
+
 import pandas as pd
 import spacy
 import textacy
@@ -29,9 +33,7 @@ from mlxtend.preprocessing import TransactionEncoder
 from spacy.tokens import Doc
 from textacy import preprocessing
 from tqdm import tqdm
-from functools import lru_cache
-import multiprocessing
-from concurrent.futures import ThreadPoolExecutor, as_completed
+
 from .model import Corpus, SpacyManager
 from .utils import QRUtils
 
@@ -106,7 +108,9 @@ class Text:
         if not isinstance(corpus, Corpus):
             raise ValueError("Corpus must be of type Corpus")
         self._corpus = corpus
-        spacy_doc, results = self.process_tokens(self._corpus.id if self._corpus else None)
+        spacy_doc, results = self.process_tokens(
+            self._corpus.id if self._corpus else None
+        )
         self._spacy_doc = spacy_doc
         self._lemma = results["lemma"]
         self._pos = results["pos"]
@@ -137,7 +141,9 @@ class Text:
         if not isinstance(lang, str):
             raise ValueError("lang must be a string")
         self._lang = lang
-        spacy_doc, results = self.process_tokens(self._corpus.id if self._corpus else None)
+        spacy_doc, results = self.process_tokens(
+            self._corpus.id if self._corpus else None
+        )
         self._spacy_doc = spacy_doc
         self._lemma = results["lemma"]
         self._pos = results["pos"]
@@ -195,7 +201,6 @@ class Text:
         if cache_file.exists():
             with open(cache_file, "rb") as f:
                 spacy_docs, ids = pickle.load(f)
-            logger.info("Loaded cached spacy docs and ids.")
             return spacy_docs, ids
 
         spacy_docs = []
@@ -249,7 +254,6 @@ class Text:
         if cache_file.exists():
             with open(cache_file, "rb") as f:
                 spacy_doc, results = pickle.load(f)
-            logger.info("Loaded cached spacy doc and results.")
             return spacy_doc, results
 
         spacy_doc = self.make_spacy_doc()
@@ -328,7 +332,9 @@ class Text:
         return spacy_doc, results
 
     def map_spacy_doc(self):
-        spacy_doc, results = self.process_tokens(self._corpus.id if self._corpus else None)
+        spacy_doc, results = self.process_tokens(
+            self._corpus.id if self._corpus else None
+        )
         self._spacy_doc = spacy_doc
         self._lemma = results["lemma"]
         self._pos = results["pos"]
@@ -547,7 +553,7 @@ class Text:
 
     def print_categories(self, spacy_doc=None, num=10):
         self.map_spacy_doc()
-        bot = self._spacy_doc._.to_bag_of_terms( # type: ignore
+        bot = self._spacy_doc._.to_bag_of_terms(  # type: ignore
             by="lemma_",
             weighting="freq",
             ngs=(1, 2, 3),
