@@ -30,16 +30,22 @@ try:
     ML_AVAILABLE = True
 except ImportError:
     ML_AVAILABLE = False
-    logger.warning("ML dependencies not available. Install with: pip install crisp-t[ml]")
+    logger.warning(
+        "ML dependencies not available. Install with: pip install crisp-t[ml]"
+    )
 
 
 @click.command()
 @click.option("--verbose", "-v", is_flag=True, help="Print verbose messages.")
-@click.option("--covid", "-cf", default="", help="Download COVID narratives from the website")
+@click.option(
+    "--covid", "-cf", default="", help="Download COVID narratives from the website"
+)
 @click.option("--inp", "-i", help="Load corpus from a folder containing corpus.json")
 @click.option("--out", "-o", help="Write corpus to a folder as corpus.json")
 @click.option("--csv", default="", help="CSV file name")
-@click.option("--num", "-n", default=3, help="N (clusters/epochs, etc, depending on context)")
+@click.option(
+    "--num", "-n", default=3, help="N (clusters/epochs, etc, depending on context)"
+)
 @click.option("--rec", "-r", default=3, help="Record or top_n (based on context)")
 @click.option(
     "--unstructured",
@@ -56,7 +62,9 @@ except ImportError:
 @click.option("--codedict", is_flag=True, help="Generate coding dictionary")
 @click.option("--topics", is_flag=True, help="Generate topic model")
 @click.option("--assign", is_flag=True, help="Assign documents to topics")
-@click.option("--cat", is_flag=True, help="List categories of entire corpus or individual docs")
+@click.option(
+    "--cat", is_flag=True, help="List categories of entire corpus or individual docs"
+)
 @click.option(
     "--summary",
     is_flag=True,
@@ -85,17 +93,27 @@ except ImportError:
 @click.option("--kmeans", is_flag=True, help="Display KMeans clusters")
 @click.option("--cart", is_flag=True, help="Display Association Rules")
 @click.option("--pca", is_flag=True, help="Display PCA")
-@click.option("--regression", is_flag=True, help="Display linear or logistic regression results")
-@click.option("--lstm", is_flag=True, help="Train LSTM model on text data to predict outcome variable")
+@click.option(
+    "--regression", is_flag=True, help="Display linear or logistic regression results"
+)
+@click.option(
+    "--lstm",
+    is_flag=True,
+    help="Train LSTM model on text data to predict outcome variable",
+)
 @click.option("--visualize", is_flag=True, help="Visualize words, topics or wordcloud")
 @click.option(
     "--ignore",
     default="",
     help="Comma separated ignore words or columns depending on context",
 )
-@click.option("--include", default="", help="Comma separated columns to include from csv")
+@click.option(
+    "--include", default="", help="Comma separated columns to include from csv"
+)
 @click.option("--outcome", default="", help="Outcome variable for ML tasks")
-@click.option("--source", "--import", "-s", help="Source URL or directory path to read data from")
+@click.option(
+    "--source", "--import", "-s", help="Source URL or directory path to read data from"
+)
 @click.option(
     "--print",
     "-p",
@@ -174,11 +192,13 @@ def main(
         console.print("[dim]Verbose mode enabled[/dim]")
 
     console.print()
-    console.print(Panel.fit(
-        f"[bold cyan]CRISP-T[/bold cyan]: Qualitative Research Analysis Framework\n"
-        f"Version: [yellow]{__version__}[/yellow]",
-        border_style="cyan"
-    ))
+    console.print(
+        Panel.fit(
+            f"[bold cyan]CRISP-T[/bold cyan]: Qualitative Research Analysis Framework\n"
+            f"Version: [yellow]{__version__}[/yellow]",
+            border_style="cyan",
+        )
+    )
     console.print()
 
     # Initialize components
@@ -195,13 +215,17 @@ def main(
         # Handle COVID data download
         if covid:
             if not source:
-                raise click.ClickException("--source (output folder) is required when using --covid.")
+                raise click.ClickException(
+                    "--source (output folder) is required when using --covid."
+                )
             console.print(f"Downloading COVID narratives from: {covid} to {source}")
             try:
                 from .utils import QRUtils
 
                 QRUtils.read_covid_narratives(source, covid)
-                console.print(f"[green]✓[/green] COVID narratives downloaded to {source}")
+                console.print(
+                    f"[green]✓[/green] COVID narratives downloaded to {source}"
+                )
             except Exception as e:
                 raise click.ClickException(f"COVID download failed: {e}")
 
@@ -232,7 +256,9 @@ def main(
             for src in sources:
                 console.print(f"Reading data from source: {src}")
                 try:
-                    read_data.read_source(src, comma_separated_ignore_words=ignore if ignore else None)
+                    read_data.read_source(
+                        src, comma_separated_ignore_words=ignore if ignore else None
+                    )
                     loaded_any = True
                 except Exception as e:
                     logger.error(f"Failed to read source {src}: {e}")
@@ -243,7 +269,9 @@ def main(
                     name="Corpus from multiple sources",
                     description=f"Data loaded from {len(sources)} sources",
                 )
-                console.print(f"[green]✓[/green] Successfully loaded {len(corpus.documents)} document(s) from {len(sources)} sources")
+                console.print(
+                    f"[green]✓[/green] Successfully loaded {len(corpus.documents)} document(s) from {len(sources)} sources"
+                )
                 # Filters are not applied for --sources in bulk mode
 
         # Load csv from corpus.df if available via helper
@@ -257,25 +285,43 @@ def main(
                     filters=filters,
                 )
             except Exception as e:
-                console.print(f"[red]✗[/red] Error preparing CSV analyzer: {e}", err=True)
+                console.print(
+                    f"[red]✗[/red] Error preparing CSV analyzer: {e}", err=True
+                )
                 logger.error(f"Failed to create CSV analyzer: {e}")
                 return
 
         # Load CSV data (deprecated)
         if csv:
-            console.print("--csv option has been deprecated. Put csv file in --source folder instead.")
+            console.print(
+                "--csv option has been deprecated. Put csv file in --source folder instead."
+            )
 
         # Initialize ML analyzer if available and ML functions are requested
-        if ML_AVAILABLE and (nnet or cls or knn or kmeans or cart or pca or regression or lstm or ml) and csv_analyzer:
+        if (
+            ML_AVAILABLE
+            and (
+                nnet or cls or knn or kmeans or cart or pca or regression or lstm or ml
+            )
+            and csv_analyzer
+        ):
             if include:
                 csv_analyzer.comma_separated_include_columns(include)
             ml_analyzer = ML(csv=csv_analyzer)  # type: ignore
         else:
-            if (nnet or cls or knn or kmeans or cart or pca or regression or lstm or ml) and not ML_AVAILABLE:
-                console.print("Machine learning features require additional dependencies.")
+            if (
+                nnet or cls or knn or kmeans or cart or pca or regression or lstm or ml
+            ) and not ML_AVAILABLE:
+                console.print(
+                    "Machine learning features require additional dependencies."
+                )
                 console.print("Install with: pip install crisp-t[ml]")
-            if (nnet or cls or knn or kmeans or cart or pca or regression or lstm or ml) and not csv_analyzer:
-                console.print("ML analysis requires CSV data. Use --csv to provide a data file.")
+            if (
+                nnet or cls or knn or kmeans or cart or pca or regression or lstm or ml
+            ) and not csv_analyzer:
+                console.print(
+                    "ML analysis requires CSV data. Use --csv to provide a data file."
+                )
 
         # Initialize Text analyzer and apply filters using helper if we have a corpus
         if corpus and not text_analyzer:
@@ -289,7 +335,7 @@ def main(
         # Text Analysis Operations
         if text_analyzer:
             if nlp or codedict:
-                console.print("\n=== Generating Coding Dictionary ===[/bold cyan]")
+                console.print("\n=== Generating Coding Dictionary ===")
                 console.print(
                     """
                 Coding Dictionary Format:
@@ -305,14 +351,16 @@ def main(
                 )
                 try:
                     text_analyzer.make_spacy_doc()
-                    coding_dict = text_analyzer.print_coding_dictionary(num=num, top_n=rec)
+                    coding_dict = text_analyzer.print_coding_dictionary(
+                        num=num, top_n=rec
+                    )
                     if out:
                         _save_output(coding_dict, out, "coding_dictionary")
                 except Exception as e:
                     console.print(f"Error generating coding dictionary: {e}")
 
             if nlp or topics:
-                console.print("\n=== Topic Modeling ===[/bold cyan]")
+                console.print("\n=== Topic Modeling ===")
                 console.print(
                     """
                 Topic Modeling Output Format:
@@ -328,14 +376,16 @@ def main(
                     cluster_analyzer = Cluster(corpus=corpus)
                     cluster_analyzer.build_lda_model(topics=num)
                     topics_result = cluster_analyzer.print_topics(num_words=rec)
-                    console.print(f"Generated {len(topics_result)} topics as above with the weights in brackets.")
+                    console.print(
+                        f"Generated {len(topics_result)} topics as above with the weights in brackets."
+                    )
                     if out:
                         _save_output(topics_result, out, "topics")
                 except Exception as e:
                     console.print(f"Error generating topics: {e}")
 
             if nlp or assign:
-                console.print("\n=== Document-Topic Assignments ===[/bold cyan]")
+                console.print("\n=== Document-Topic Assignments ===")
                 console.print(
                     """
                 Document-Topic Assignment Format:
@@ -347,7 +397,9 @@ def main(
                     if "cluster_analyzer" not in locals():
                         cluster_analyzer = Cluster(corpus=corpus)
                         cluster_analyzer.build_lda_model(topics=num)
-                    assignments = cluster_analyzer.format_topics_sentences(visualize=visualize)
+                    assignments = cluster_analyzer.format_topics_sentences(
+                        visualize=visualize
+                    )
                     document_assignments = cluster_analyzer.print_clusters()
                     console.print(f"Assigned {len(assignments)} documents to topics")
                     if out:
@@ -356,7 +408,7 @@ def main(
                     console.print(f"Error assigning topics: {e}")
 
             if nlp or cat:
-                console.print("\n=== Category Analysis ===[/bold cyan]")
+                console.print("\n=== Category Analysis ===")
                 console.print(
                     """
                 Category Analysis Output Format:
@@ -374,7 +426,7 @@ def main(
                     console.print(f"Error generating categories: {e}")
 
             if nlp or summary:
-                console.print("\n=== Text Summarization ===[/bold cyan]")
+                console.print("\n=== Text Summarization ===")
                 console.print(
                     """
                 Text Summarization Output Format: A list of important sentences representing the main points of the text.
@@ -392,7 +444,7 @@ def main(
                     console.print(f"Error generating summary: {e}")
 
             if nlp or sentiment:
-                console.print("\n=== Sentiment Analysis ===[/bold cyan]")
+                console.print("\n=== Sentiment Analysis ===")
                 console.print(
                     """
                 Sentiment Analysis Output Format:
@@ -403,7 +455,9 @@ def main(
                 )
                 try:
                     sentiment_analyzer = Sentiment(corpus=corpus)  # type: ignore
-                    sentiment_results = sentiment_analyzer.get_sentiment(documents=sentence, verbose=verbose)
+                    sentiment_results = sentiment_analyzer.get_sentiment(
+                        documents=sentence, verbose=verbose
+                    )
                     console.print(sentiment_results)
                     if out:
                         _save_output(sentiment_results, out, "sentiment")
@@ -415,7 +469,7 @@ def main(
             target_col = outcome
 
             if kmeans or ml:
-                console.print("\n=== K-Means Clustering ===[/bold cyan]")
+                console.print("\n=== K-Means Clustering ===")
                 console.print(
                     """
                            K-Means clustering removes non-numeric columns.
@@ -427,13 +481,17 @@ def main(
                 csv_analyzer.retain_numeric_columns_only()
                 csv_analyzer.drop_na()
                 _ml_analyzer = ML(csv=csv_analyzer)
-                clusters, members = _ml_analyzer.get_kmeans(number_of_clusters=num, verbose=verbose)
+                clusters, members = _ml_analyzer.get_kmeans(
+                    number_of_clusters=num, verbose=verbose
+                )
                 _ml_analyzer.profile(members, number_of_clusters=num)
                 if out:
-                    _save_output({"clusters": clusters, "members": members}, out, "kmeans")
+                    _save_output(
+                        {"clusters": clusters, "members": members}, out, "kmeans"
+                    )
 
             if (cls or ml) and target_col:
-                console.print("\n=== Classifier Evaluation ===[/bold cyan]")
+                console.print("\n=== Classifier Evaluation ===")
                 console.print(
                     """
                            Classifier
@@ -445,27 +503,39 @@ def main(
                 """
                 )
                 if not target_col:
-                    raise click.ClickException("--outcome is required for classification tasks")
-                console.print("\n=== SVM ===[/bold cyan]")
+                    raise click.ClickException(
+                        "--outcome is required for classification tasks"
+                    )
+                console.print("\n=== SVM ===")
                 try:
-                    confusion_matrix = ml_analyzer.svm_confusion_matrix(y=target_col, test_size=0.25)
-                    console.print(ml_analyzer.format_confusion_matrix_to_human_readable(confusion_matrix))
+                    confusion_matrix = ml_analyzer.svm_confusion_matrix(
+                        y=target_col, test_size=0.25
+                    )
+                    console.print(
+                        ml_analyzer.format_confusion_matrix_to_human_readable(
+                            confusion_matrix
+                        )
+                    )
                     if out:
                         _save_output(confusion_matrix, out, "svm_results")
                 except Exception as e:
                     console.print(f"Error performing SVM classification: {e}")
-                console.print("\n=== Decision Tree Classification ===[/bold cyan]")
+                console.print("\n=== Decision Tree Classification ===")
                 try:
-                    cm, importance = ml_analyzer.get_decision_tree_classes(y=target_col, top_n=rec)
-                    console.print("\n=== Feature Importance ===[/bold cyan]")
-                    console.print(ml_analyzer.format_confusion_matrix_to_human_readable(cm))
+                    cm, importance = ml_analyzer.get_decision_tree_classes(
+                        y=target_col, top_n=rec
+                    )
+                    console.print("\n=== Feature Importance ===")
+                    console.print(
+                        ml_analyzer.format_confusion_matrix_to_human_readable(cm)
+                    )
                     if out:
                         _save_output(cm, out, "decision_tree_results")
                 except Exception as e:
                     console.print(f"Error performing Decision Tree classification: {e}")
 
             if (nnet or ml) and target_col:
-                console.print("\n=== Neural Network Classification Accuracy ===[/bold cyan]")
+                console.print("\n=== Neural Network Classification Accuracy ===")
                 console.print(
                     """
                             Neural Network classifier with accuracy output.
@@ -474,16 +544,20 @@ def main(
                 """
                 )
                 if not target_col:
-                    raise click.ClickException("--outcome is required for neural network tasks")
+                    raise click.ClickException(
+                        "--outcome is required for neural network tasks"
+                    )
                 try:
                     predictions = ml_analyzer.get_nnet_predictions(y=target_col)
                     if out:
                         _save_output(predictions, out, "nnet_results")
                 except Exception as e:
-                    console.print(f"Error performing Neural Network classification: {e}")
+                    console.print(
+                        f"Error performing Neural Network classification: {e}"
+                    )
 
             if (knn or ml) and target_col:
-                console.print("\n=== K-Nearest Neighbors ===[/bold cyan]")
+                console.print("\n=== K-Nearest Neighbors ===")
                 console.print(
                     """
                            K-Nearest Neighbors search results.
@@ -494,9 +568,13 @@ def main(
                 """
                 )
                 if not target_col:
-                    raise click.ClickException("--outcome is required for KNN search tasks")
+                    raise click.ClickException(
+                        "--outcome is required for KNN search tasks"
+                    )
                 if rec < 1:
-                    raise click.ClickException("--rec must be a positive integer (1-based index)")
+                    raise click.ClickException(
+                        "--rec must be a positive integer (1-based index)"
+                    )
                 try:
                     knn_results = ml_analyzer.knn_search(y=target_col, n=num, r=rec)
                     if out:
@@ -505,7 +583,7 @@ def main(
                     console.print(f"Error performing K-Nearest Neighbors search: {e}")
 
             if (cart or ml) and target_col:
-                console.print("\n=== Association Rules (CART) ===[/bold cyan]")
+                console.print("\n=== Association Rules (CART) ===")
                 console.print(
                     """
                            Association Rules using the Apriori algorithm.
@@ -516,14 +594,22 @@ def main(
                 """
                 )
                 if not target_col:
-                    raise click.ClickException("--outcome is required for association rules tasks")
+                    raise click.ClickException(
+                        "--outcome is required for association rules tasks"
+                    )
                 if not (1 <= num <= 99):
-                    raise click.ClickException("--num must be between 1 and 99 for min_support")
+                    raise click.ClickException(
+                        "--num must be between 1 and 99 for min_support"
+                    )
                 if not (1 <= rec <= 99):
-                    raise click.ClickException("--rec must be between 1 and 99 for min_threshold")
+                    raise click.ClickException(
+                        "--rec must be between 1 and 99 for min_threshold"
+                    )
                 _min_support = float(num / 100)
                 _min_threshold = float(rec / 100)
-                console.print(f"Using min_support={_min_support:.2f} and min_threshold={_min_threshold:.2f}")
+                console.print(
+                    f"Using min_support={_min_support:.2f} and min_threshold={_min_threshold:.2f}"
+                )
                 try:
                     apriori_results = ml_analyzer.get_apriori(
                         y=target_col,
@@ -537,7 +623,7 @@ def main(
                     console.print(f"Error generating association rules: {e}")
 
             if (pca or ml) and target_col:
-                console.print("\n=== Principal Component Analysis ===[/bold cyan]")
+                console.print("\n=== Principal Component Analysis ===")
                 console.print(
                     """
                            Principal Component Analysis (PCA) results.
@@ -554,7 +640,7 @@ def main(
                     console.print(f"Error performing Principal Component Analysis: {e}")
 
             if (regression or ml) and target_col:
-                console.print("\n=== Regression Analysis ===[/bold cyan]")
+                console.print("\n=== Regression Analysis ===")
                 console.print(
                     """
                            Regression Analysis (Linear or Logistic Regression).
@@ -572,7 +658,7 @@ def main(
                     console.print(f"Error performing regression analysis: {e}")
 
             if (lstm or ml) and target_col:
-                console.print("\n=== LSTM Text Classification ===[/bold cyan]")
+                console.print("\n=== LSTM Text Classification ===")
                 console.print(
                     """
                            LSTM (Long Short-Term Memory) model for text-based prediction.
@@ -584,7 +670,9 @@ def main(
                 """
                 )
                 if not target_col:
-                    raise click.ClickException("--outcome is required for LSTM prediction tasks")
+                    raise click.ClickException(
+                        "--outcome is required for LSTM prediction tasks"
+                    )
                 try:
                     lstm_results = ml_analyzer.get_lstm_predictions(y=target_col)
                     if out:
@@ -592,7 +680,9 @@ def main(
                 except Exception as e:
                     console.print(f"Error performing LSTM prediction: {e}")
 
-        elif (nnet or cls or knn or kmeans or cart or pca or regression or lstm or ml) and not ML_AVAILABLE:
+        elif (
+            nnet or cls or knn or kmeans or cart or pca or regression or lstm or ml
+        ) and not ML_AVAILABLE:
             console.print("Machine learning features require additional dependencies.")
             console.print("Install with: pip install crisp-t[ml]")
 
@@ -603,7 +693,9 @@ def main(
                     "--out cannot be the same as --inp when using --filters. Please specify a different output folder to avoid overwriting input data."
                 )
             if filters and ((not inp) or (not out)):
-                raise click.ClickException("Both --inp and --out must be specified when using --filters.")
+                raise click.ClickException(
+                    "Both --inp and --out must be specified when using --filters."
+                )
             output_path = pathlib.Path(out)
             # Allow both directory and a file path '.../corpus.json'
             if output_path.suffix:
@@ -617,13 +709,13 @@ def main(
             console.print(f"[green]✓[/green] Corpus and csv saved to {save_base}")
 
         if print_args and corpus:
-            console.print("\n=== Corpus Details ===[/bold cyan]")
+            console.print("\n=== Corpus Details ===")
             # Join the print arguments into a single string
             print_command = " ".join(print_args) if print_args else None
             if print_command:
                 console.print(corpus.pretty_print(show=print_command))
 
-        console.print("\n=== Analysis Complete ===[/bold cyan]")
+        console.print("\n=== Analysis Complete ===")
 
     except click.ClickException:
         # Let Click handle and set non-zero exit code
@@ -695,10 +787,14 @@ def _process_csv(csv_analyzer, unstructured, ignore, filters):
                 else:
                     raise ValueError("Filter must be in key=value or key:value format")
                 csv_analyzer.filter_rows_by_column_value(key.strip(), value.strip())
-            console.print(f"Applied filters {list(filters)}; remaining rows: {csv_analyzer.get_shape()[0]}")
+            console.print(
+                f"Applied filters {list(filters)}; remaining rows: {csv_analyzer.get_shape()[0]}"
+            )
         except Exception as e:
             # Surface as CLI error with non-zero exit code
-            console.print(f"Probably no numeric metadata to filter, but let me check document metadata: {e}")
+            console.print(
+                f"Probably no numeric metadata to filter, but let me check document metadata: {e}"
+            )
     return text_columns, ignore_columns
 
 

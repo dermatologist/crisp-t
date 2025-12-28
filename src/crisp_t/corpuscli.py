@@ -12,15 +12,17 @@ from rich.panel import Panel
 console = Console()
 
 from . import __version__
+from .helpers.initializer import initialize_corpus
 from .model.corpus import Corpus
 from .model.document import Document
-from .helpers.initializer import initialize_corpus
 from .tdabm import Tdabm
 
 
 def _parse_kv(value: str) -> tuple[str, str]:
     if "=" not in value:
-        console.print(f"[red]Error:[/red] Invalid metadata '{value}'. Use key=value format.")
+        console.print(
+            f"[red]Error:[/red] Invalid metadata '{value}'. Use key=value format."
+        )
         raise typer.Exit(code=1)
     key, val = value.split("=", 1)
     return key.strip(), val.strip()
@@ -35,7 +37,9 @@ def _parse_doc(value: str) -> tuple[str, Optional[str], str]:
     elif len(parts) == 3:
         doc_id, name, text = parts
     else:
-        console.print("[red]Error:[/red] Invalid --doc value. Use 'id|name|text' or 'id|text'.")
+        console.print(
+            "[red]Error:[/red] Invalid --doc value. Use 'id|name|text' or 'id|text'."
+        )
         raise typer.Exit(code=1)
     return doc_id.strip(), (name.strip() if name else None), text
 
@@ -44,60 +48,145 @@ def _parse_relationship(value: str) -> tuple[str, str, str]:
     # first|second|relation
     parts = value.split("|", 2)
     if len(parts) != 3:
-        console.print("[red]Error:[/red] Invalid relationship. Use 'first|second|relation'.")
+        console.print(
+            "[red]Error:[/red] Invalid relationship. Use 'first|second|relation'."
+        )
         raise typer.Exit(code=1)
     return parts[0].strip(), parts[1].strip(), parts[2].strip()
 
 
 app = typer.Typer(add_completion=False, rich_markup_mode="rich")
 
+
 @app.command()
 def main(
-    verbose: bool = typer.Option(False, "--verbose", "-v", help="Enable detailed logging for debugging"),
-    id: Optional[str] = typer.Option(None, "--id", help="Unique identifier for the corpus (required when creating new corpus)"),
-    name: Optional[str] = typer.Option(None, "--name", help="Human-readable name for the corpus"),
-    description: Optional[str] = typer.Option(None, "--description", help="Brief description of the corpus and its contents"),
-    docs: List[str] = typer.Option([], "--doc", help="Add document as 'id|name|text' or 'id|text'. Use multiple times for multiple documents"),
-    remove_docs: List[str] = typer.Option([], "--remove-doc", help="Remove document by ID. Use multiple times to remove multiple documents"),
-    metas: List[str] = typer.Option([], "--meta", help="Add/update metadata as key=value pairs. Use multiple times for multiple entries"),
-    relationships: List[str] = typer.Option([], "--add-rel", help="Add relationship as 'first|second|relation' (e.g., text:term|numb:col|correlates)"),
-    clear_rel: bool = typer.Option(False, "--clear-rel", help="Clear all relationships from corpus metadata"),
-    print_corpus: bool = typer.Option(False, "--print", help="Display the complete corpus in a formatted view"),
-    out: Optional[str] = typer.Option(None, "--out", help="Save corpus to folder or file (corpus.json)"),
-    inp: Optional[str] = typer.Option(None, "--inp", help="Load existing corpus from folder or file (corpus.json)"),
-    df_cols: bool = typer.Option(False, "--df-cols", help="Display all DataFrame column names"),
-    df_row_count: bool = typer.Option(False, "--df-row-count", help="Display total number of rows in DataFrame"),
-    df_row: Optional[int] = typer.Option(None, "--df-row", help="Display specific DataFrame row by index number"),
-    doc_ids: bool = typer.Option(False, "--doc-ids", help="List all document IDs in the corpus"),
-    doc_id: Optional[str] = typer.Option(None, "--doc-id", help="Display specific document by its ID"),
-    print_relationships: bool = typer.Option(False, "--relationships", help="Display all relationships in the corpus"),
-    relationships_for_keyword: Optional[str] = typer.Option(None, "--relationships-for-keyword", help="Find all relationships involving a specific keyword"),
-    semantic: Optional[str] = typer.Option(None, "--semantic", help="Perform semantic search with query string to find similar documents"),
-    similar_docs: Optional[str] = typer.Option(None, "--similar-docs", help="Find documents similar to comma-separated document IDs (useful for literature reviews)"),
-    num: int = typer.Option(5, "--num", help="Number of results to return for searches (default: 5)"),
-    semantic_chunks: Optional[str] = typer.Option(None, "--semantic-chunks", help="Search document chunks semantically. Requires --doc-id and --rec (threshold)"),
-    rec: float = typer.Option(0.4, "--rec", help="Similarity threshold for semantic search (0-1 range, default: 0.4)"),
-    metadata_df: bool = typer.Option(False, "--metadata-df", help="Export collection metadata as DataFrame"),
-    metadata_keys: Optional[str] = typer.Option(None, "--metadata-keys", help="Comma-separated metadata keys to include in DataFrame export"),
-    tdabm: Optional[str] = typer.Option(None, "--tdabm", help="Perform TDABM analysis: 'y_variable:x_variables:radius' (e.g., 'satisfaction:age,income:0.3')"),
-    graph: bool = typer.Option(False, "--graph", help="Generate graph representation (documents must have keywords assigned first)"),
+    verbose: bool = typer.Option(
+        False, "--verbose", "-v", help="Enable detailed logging for debugging"
+    ),
+    id: Optional[str] = typer.Option(
+        None,
+        "--id",
+        help="Unique identifier for the corpus (required when creating new corpus)",
+    ),
+    name: Optional[str] = typer.Option(
+        None, "--name", help="Human-readable name for the corpus"
+    ),
+    description: Optional[str] = typer.Option(
+        None, "--description", help="Brief description of the corpus and its contents"
+    ),
+    docs: List[str] = typer.Option(
+        [],
+        "--doc",
+        help="Add document as 'id|name|text' or 'id|text'. Use multiple times for multiple documents",
+    ),
+    remove_docs: List[str] = typer.Option(
+        [],
+        "--remove-doc",
+        help="Remove document by ID. Use multiple times to remove multiple documents",
+    ),
+    metas: List[str] = typer.Option(
+        [],
+        "--meta",
+        help="Add/update metadata as key=value pairs. Use multiple times for multiple entries",
+    ),
+    relationships: List[str] = typer.Option(
+        [],
+        "--add-rel",
+        help="Add relationship as 'first|second|relation' (e.g., text:term|numb:col|correlates)",
+    ),
+    clear_rel: bool = typer.Option(
+        False, "--clear-rel", help="Clear all relationships from corpus metadata"
+    ),
+    print_corpus: bool = typer.Option(
+        False, "--print", help="Display the complete corpus in a formatted view"
+    ),
+    out: Optional[str] = typer.Option(
+        None, "--out", help="Save corpus to folder or file (corpus.json)"
+    ),
+    inp: Optional[str] = typer.Option(
+        None, "--inp", help="Load existing corpus from folder or file (corpus.json)"
+    ),
+    df_cols: bool = typer.Option(
+        False, "--df-cols", help="Display all DataFrame column names"
+    ),
+    df_row_count: bool = typer.Option(
+        False, "--df-row-count", help="Display total number of rows in DataFrame"
+    ),
+    df_row: Optional[int] = typer.Option(
+        None, "--df-row", help="Display specific DataFrame row by index number"
+    ),
+    doc_ids: bool = typer.Option(
+        False, "--doc-ids", help="List all document IDs in the corpus"
+    ),
+    doc_id: Optional[str] = typer.Option(
+        None, "--doc-id", help="Display specific document by its ID"
+    ),
+    print_relationships: bool = typer.Option(
+        False, "--relationships", help="Display all relationships in the corpus"
+    ),
+    relationships_for_keyword: Optional[str] = typer.Option(
+        None,
+        "--relationships-for-keyword",
+        help="Find all relationships involving a specific keyword",
+    ),
+    semantic: Optional[str] = typer.Option(
+        None,
+        "--semantic",
+        help="Perform semantic search with query string to find similar documents",
+    ),
+    similar_docs: Optional[str] = typer.Option(
+        None,
+        "--similar-docs",
+        help="Find documents similar to comma-separated document IDs (useful for literature reviews)",
+    ),
+    num: int = typer.Option(
+        5, "--num", help="Number of results to return for searches (default: 5)"
+    ),
+    semantic_chunks: Optional[str] = typer.Option(
+        None,
+        "--semantic-chunks",
+        help="Search document chunks semantically. Requires --doc-id and --rec (threshold)",
+    ),
+    rec: float = typer.Option(
+        0.4,
+        "--rec",
+        help="Similarity threshold for semantic search (0-1 range, default: 0.4)",
+    ),
+    metadata_df: bool = typer.Option(
+        False, "--metadata-df", help="Export collection metadata as DataFrame"
+    ),
+    metadata_keys: Optional[str] = typer.Option(
+        None,
+        "--metadata-keys",
+        help="Comma-separated metadata keys to include in DataFrame export",
+    ),
+    tdabm: Optional[str] = typer.Option(
+        None,
+        "--tdabm",
+        help="Perform TDABM analysis: 'y_variable:x_variables:radius' (e.g., 'satisfaction:age,income:0.3')",
+    ),
+    graph: bool = typer.Option(
+        False,
+        "--graph",
+        help="Generate graph representation (documents must have keywords assigned first)",
+    ),
 ):
     """
     [bold cyan]CRISP-T Corpus CLI[/bold cyan]
-    
+
     Create, manipulate, and query corpus data quickly from the command line.
     Manage documents, metadata, relationships, and perform semantic searches.
-    
+
     [bold]Quick Start Examples:[/bold]
       [dim]# Create new corpus[/dim]
       crispt --id my_corpus --name "My Research" --doc "1|First doc|Text here"
-      
+
       [dim]# Load and inspect corpus[/dim]
       crispt --inp data/ --print
-      
+
       [dim]# Semantic search[/dim]
       crispt --inp data/ --semantic "healthcare policy" --num 10
-      
+
       [dim]# Add relationships[/dim]
       crispt --inp data/ --add-rel "text:theme|num:score|correlates" --out data/
     """
@@ -108,11 +197,13 @@ def main(
         console.print("[dim]Verbose mode enabled[/dim]")
 
     console.print()
-    console.print(Panel.fit(
-        "[bold cyan]CRISP-T[/bold cyan]: Corpus CLI\n"
-        f"Version: [yellow]{__version__}[/yellow]",
-        border_style="cyan"
-    ))
+    console.print(
+        Panel.fit(
+            "[bold cyan]CRISP-T[/bold cyan]: Corpus CLI\n"
+            f"Version: [yellow]{__version__}[/yellow]",
+            border_style="cyan",
+        )
+    )
     console.print()
 
     # Load corpus from --inp if provided
@@ -120,8 +211,13 @@ def main(
     if not corpus:
         # Build initial corpus from CLI args
         if not id:
-            console.print("[red]Error:[/red] Corpus ID is required when creating a new corpus", style="bold red")
-            console.print("[yellow]Hint:[/yellow] Use --id <corpus_id> to specify an ID, or --inp <directory> to load an existing corpus")
+            console.print(
+                "[red]Error:[/red] Corpus ID is required when creating a new corpus",
+                style="bold red",
+            )
+            console.print(
+                "[yellow]Hint:[/yellow] Use --id <corpus_id> to specify an ID, or --inp <directory> to load an existing corpus"
+            )
             raise typer.Exit(code=1)
         corpus = Corpus(
             id=id,
@@ -207,12 +303,14 @@ def main(
     # Print relationships
     if print_relationships:
         rels = corpus.get_relationships()
-        console.print(f"Relationships: {rels}")
+        print(f"Relationships: {rels}")
 
     # Print relationships for keyword
     if relationships_for_keyword:
         rels = corpus.get_all_relationships_for_keyword(relationships_for_keyword)
-        console.print(f"Relationships for keyword '{relationships_for_keyword}': {rels}")
+        console.print(
+            f"Relationships for keyword '{relationships_for_keyword}': {rels}"
+        )
 
     # Semantic search
     if semantic:
@@ -225,13 +323,18 @@ def main(
                 semantic_analyzer = Semantic(corpus)
             except Exception as network_error:
                 # If network error or download fails, try simple embeddings
-                if "address" in str(network_error).lower() or "download" in str(network_error).lower():
+                if (
+                    "address" in str(network_error).lower()
+                    or "download" in str(network_error).lower()
+                ):
                     console.print("Note: Using simple embeddings (network unavailable)")
                     semantic_analyzer = Semantic(corpus, use_simple_embeddings=True)
                 else:
                     raise
             corpus = semantic_analyzer.get_similar(semantic, n_results=num)
-            console.print(f"[green]✓[/green] Found {len(corpus.documents)} similar documents")
+            console.print(
+                f"[green]✓[/green] Found {len(corpus.documents)} similar documents"
+            )
             console.print(
                 f"Hint: Use --out to save the filtered corpus, or --print to view results"
             )
@@ -257,7 +360,10 @@ def main(
                 semantic_analyzer = Semantic(corpus)
             except Exception as network_error:
                 # If network error or download fails, try simple embeddings
-                if "address" in str(network_error).lower() or "download" in str(network_error).lower():
+                if (
+                    "address" in str(network_error).lower()
+                    or "download" in str(network_error).lower()
+                ):
                     console.print("Note: Using simple embeddings (network unavailable)")
                     semantic_analyzer = Semantic(corpus, use_simple_embeddings=True)
                 else:
@@ -265,12 +371,12 @@ def main(
 
             # Get similar document IDs
             similar_doc_ids = semantic_analyzer.get_similar_documents(
-                document_ids=similar_docs,
-                n_results=num,
-                threshold=threshold
+                document_ids=similar_docs, n_results=num, threshold=threshold
             )
 
-            console.print(f"[green]✓[/green] Found {len(similar_doc_ids)} similar documents")
+            console.print(
+                f"[green]✓[/green] Found {len(similar_doc_ids)} similar documents"
+            )
             if similar_doc_ids:
                 console.print("\nSimilar Document IDs:")
                 for doc_id in similar_doc_ids:
@@ -278,7 +384,9 @@ def main(
                     doc_name = f" ({doc.name})" if doc and doc.name else ""
                     console.print(f"  - {doc_id}{doc_name}")
                 console.print("\nHint: Use --doc-id to view individual documents")
-                console.print("Hint: This feature is useful for literature reviews to find similar documents")
+                console.print(
+                    "Hint: This feature is useful for literature reviews to find similar documents"
+                )
             else:
                 console.print("No similar documents found above the threshold.")
                 console.print("Hint: Try lowering the threshold with --rec")
@@ -289,7 +397,6 @@ def main(
         except Exception as e:
             console.print(f"Error finding similar documents: {e}")
 
-
     # Semantic chunk search
     if semantic_chunks:
         if not doc_id:
@@ -298,7 +405,9 @@ def main(
             try:
                 from .semantic import Semantic
 
-                console.print(f"\nPerforming semantic chunk search for: '{semantic_chunks}'")
+                console.print(
+                    f"\nPerforming semantic chunk search for: '{semantic_chunks}'"
+                )
                 console.print(f"Document ID: {doc_id}")
                 console.print(f"Threshold: {rec}")
 
@@ -307,8 +416,13 @@ def main(
                     semantic_analyzer = Semantic(corpus)
                 except Exception as network_error:
                     # If network error or download fails, try simple embeddings
-                    if "address" in str(network_error).lower() or "download" in str(network_error).lower():
-                        console.print("Note: Using simple embeddings (network unavailable)")
+                    if (
+                        "address" in str(network_error).lower()
+                        or "download" in str(network_error).lower()
+                    ):
+                        console.print(
+                            "Note: Using simple embeddings (network unavailable)"
+                        )
                         semantic_analyzer = Semantic(corpus, use_simple_embeddings=True)
                     else:
                         raise
@@ -318,7 +432,7 @@ def main(
                     query=semantic_chunks,
                     doc_id=doc_id,
                     threshold=rec,
-                    n_results=20  # Get more chunks to filter by threshold
+                    n_results=20,  # Get more chunks to filter by threshold
                 )
 
                 console.print(f"[green]✓[/green] Found {len(chunks)} matching chunks")
@@ -331,10 +445,16 @@ def main(
 
                 if len(chunks) == 0:
                     console.print("No chunks matched the query above the threshold.")
-                    console.print("Hint: Try lowering the threshold with --rec or use a different query.")
+                    console.print(
+                        "Hint: Try lowering the threshold with --rec or use a different query."
+                    )
                 else:
-                    console.print(f"\nHint: These {len(chunks)} chunks can be used for coding/annotating the document.")
-                    console.print("Hint: Adjust --rec threshold to get more or fewer results.")
+                    console.print(
+                        f"\nHint: These {len(chunks)} chunks can be used for coding/annotating the document."
+                    )
+                    console.print(
+                        "Hint: Adjust --rec threshold to get more or fewer results."
+                    )
 
             except ImportError as e:
                 console.print(f"Error: {e}")
@@ -353,7 +473,10 @@ def main(
                 semantic_analyzer = Semantic(corpus)
             except Exception as network_error:
                 # If network error or download fails, try simple embeddings
-                if "address" in str(network_error).lower() or "download" in str(network_error).lower():
+                if (
+                    "address" in str(network_error).lower()
+                    or "download" in str(network_error).lower()
+                ):
                     console.print("Note: Using simple embeddings (network unavailable)")
                     semantic_analyzer = Semantic(corpus, use_simple_embeddings=True)
                 else:
@@ -367,7 +490,9 @@ def main(
             if corpus.df is not None:
                 console.print(f"DataFrame shape: {corpus.df.shape}")
                 console.print(f"Columns: {list(corpus.df.columns)}")
-            console.print("Hint: Use --out to save the corpus with the updated DataFrame")
+            console.print(
+                "Hint: Use --out to save the corpus with the updated DataFrame"
+            )
         except ImportError as e:
             console.print(f"Error: {e}")
             console.print("Install chromadb with: pip install chromadb")
@@ -393,7 +518,9 @@ def main(
                 try:
                     radius = float(parts[2].strip())
                 except ValueError:
-                    console.print(f"[red]Error:[/red] Invalid radius value: '{parts[2]}'. Must be a number.")
+                    console.print(
+                        f"[red]Error:[/red] Invalid radius value: '{parts[2]}'. Must be a number."
+                    )
                     raise typer.Exit(code=1)
 
             console.print(f"\nPerforming TDABM analysis...")
@@ -402,7 +529,9 @@ def main(
             console.print(f"  Radius: {radius}")
 
             tdabm_analyzer = Tdabm(corpus)
-            result = tdabm_analyzer.generate_tdabm(y=y_var, x_variables=x_vars, radius=radius)
+            result = tdabm_analyzer.generate_tdabm(
+                y=y_var, x_variables=x_vars, radius=radius
+            )
 
             console.print("\n" + result)
             console.print("\nHint: TDABM results stored in corpus metadata['tdabm']")
@@ -411,7 +540,9 @@ def main(
 
         except ValueError as e:
             console.print(f"Error: {e}")
-            console.print("Hint: Ensure your corpus has a DataFrame with the specified variables")
+            console.print(
+                "Hint: Ensure your corpus has a DataFrame with the specified variables"
+            )
             console.print("Hint: Y variable must be continuous (not binary)")
             console.print("Hint: X variables must be numeric/ordinal")
         except Exception as e:
