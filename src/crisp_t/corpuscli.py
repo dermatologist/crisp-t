@@ -1,12 +1,17 @@
 import json
 import logging
 import warnings
-from typing import Optional
+from typing import List, Optional
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
-import click
+import typer
+from rich.console import Console
+from rich.panel import Panel
 
+console = Console()
+
+from . import __version__
 from .model.corpus import Corpus
 from .model.document import Document
 from .helpers.initializer import initialize_corpus
@@ -15,7 +20,8 @@ from .tdabm import Tdabm
 
 def _parse_kv(value: str) -> tuple[str, str]:
     if "=" not in value:
-        raise click.ClickException(f"Invalid metadata '{value}'. Use key=value format.")
+        console.print(f"[red]Error:[/red] Invalid metadata '{value}'. Use key=value format.")
+        raise typer.Exit(code=1)
     key, val = value.split("=", 1)
     return key.strip(), val.strip()
 
@@ -29,9 +35,8 @@ def _parse_doc(value: str) -> tuple[str, Optional[str], str]:
     elif len(parts) == 3:
         doc_id, name, text = parts
     else:
-        raise click.ClickException(
-            "Invalid --doc value. Use 'id|name|text' or 'id|text'."
-        )
+        console.print("[red]Error:[/red] Invalid --doc value. Use 'id|name|text' or 'id|text'.")
+        raise typer.Exit(code=1)
     return doc_id.strip(), (name.strip() if name else None), text
 
 
@@ -39,171 +44,85 @@ def _parse_relationship(value: str) -> tuple[str, str, str]:
     # first|second|relation
     parts = value.split("|", 2)
     if len(parts) != 3:
-        raise click.ClickException("Invalid relationship. Use 'first|second|relation'.")
+        console.print("[red]Error:[/red] Invalid relationship. Use 'first|second|relation'.")
+        raise typer.Exit(code=1)
     return parts[0].strip(), parts[1].strip(), parts[2].strip()
 
 
-@click.command()
-@click.option("--verbose", "-v", is_flag=True, help="Print verbose messages.")
-@click.option("--id", help="Unique identifier for the corpus.")
-@click.option("--name", default=None, help="Name of the corpus.")
-@click.option("--description", default=None, help="Description of the corpus.")
-@click.option(
-    "--doc",
-    "docs",
-    multiple=True,
-    help=(
-        "Add a document as 'id|name|text' (or 'id|text' if name omitted). "
-        "Can be used multiple times."
-    ),
-)
-@click.option(
-    "--remove-doc",
-    "remove_docs",
-    multiple=True,
-    help="Remove a document by its ID (can be used multiple times).",
-)
-@click.option(
-    "--meta",
-    "metas",
-    multiple=True,
-    help="Add or update corpus metadata as key=value (can be used multiple times).",
-)
-@click.option(
-    "--add-rel",
-    "relationships",
-    multiple=True,
-    help=(
-        "Add a relationship as 'first|second|relation' (e.g., text:term|numb:col|correlates)."
-    ),
-)
-@click.option(
-    "--clear-rel",
-    is_flag=True,
-    help="Clear all relationships in the corpus metadata.",
-)
-@click.option("--print", "print_corpus", is_flag=True, help="Pretty print the corpus")
-@click.option(
-    "--out", default=None, help="Write corpus to a folder or file as corpus.json (save)"
-)
-@click.option(
-    "--inp",
-    default=None,
-    help="Load corpus from a folder or file containing corpus.json (load)",
-)
-# New options for Corpus methods
-@click.option("--df-cols", is_flag=True, help="Print all DataFrame column names.")
-@click.option("--df-row-count", is_flag=True, help="Print number of rows in DataFrame.")
-@click.option("--df-row", default=None, type=int, help="Print DataFrame row by index.")
-@click.option("--doc-ids", is_flag=True, help="Print all document IDs in the corpus.")
-@click.option("--doc-id", default=None, help="Print document by ID.")
-@click.option(
-    "--relationships",
-    "print_relationships",
-    is_flag=True,
-    help="Print all relationships in the corpus.",
-)
-@click.option(
-    "--relationships-for-keyword",
-    default=None,
-    help="Print all relationships involving a specific keyword.",
-)
-@click.option(
-    "--semantic",
-    default=None,
-    help="Perform semantic search with the given query string. Returns similar documents.",
-)
-@click.option(
-    "--similar-docs",
-    default=None,
-    help="Find documents similar to a comma-separated list of document IDs. Use with --num and --rec. Useful for literature reviews.",
-)
-@click.option(
-    "--num",
-    default=5,
-    type=int,
-    help="Number of results to return (default: 5). Used for semantic search and similar documents search.",
-)
-@click.option(
-    "--semantic-chunks",
-    default=None,
-    help="Perform semantic search on document chunks. Returns matching chunks for a specific document. Use with --doc-id and --rec (threshold).",
-)
-@click.option(
-    "--rec",
-    default=0.4,
-    type=float,
-    help="Threshold for semantic search (0-1, default: 0.4). Only chunks with similarity above this value are returned.",
-)
-@click.option(
-    "--metadata-df",
-    is_flag=True,
-    help="Export collection metadata as DataFrame. Requires semantic search to be initialized first.",
-)
-@click.option(
-    "--metadata-keys",
-    default=None,
-    help="Comma-separated list of metadata keys to include in DataFrame export.",
-)
-@click.option(
-    "--tdabm",
-    default=None,
-    help="Perform TDABM analysis. Format: 'y_variable:x_variables:radius' (e.g., 'satisfaction:age,income:0.3'). Radius defaults to 0.3 if omitted.",
-)
-@click.option(
-    "--graph",
-    is_flag=True,
-    help="Generate graph representation of the corpus. Requires documents to have keywords assigned (run with --assign first).",
-)
+app = typer.Typer(add_completion=False, rich_markup_mode="rich")
+
+@app.command()
 def main(
-    verbose: bool,
-    id: Optional[str],
-    name: Optional[str],
-    description: Optional[str],
-    docs: tuple[str, ...],
-    remove_docs: tuple[str, ...],
-    metas: tuple[str, ...],
-    relationships: tuple[str, ...],
-    clear_rel: bool,
-    print_corpus: bool,
-    out: Optional[str],
-    inp: Optional[str],
-    df_cols: bool,
-    df_row_count: bool,
-    df_row: Optional[int],
-    doc_ids: bool,
-    doc_id: Optional[str],
-    print_relationships: bool,
-    relationships_for_keyword: Optional[str],
-    semantic: Optional[str],
-    similar_docs: Optional[str],
-    num: int,
-    semantic_chunks: Optional[str],
-    rec: float,
-    metadata_df: bool,
-    metadata_keys: Optional[str],
-    tdabm: Optional[str],
-    graph: bool,
+    verbose: bool = typer.Option(False, "--verbose", "-v", help="Enable detailed logging for debugging"),
+    id: Optional[str] = typer.Option(None, "--id", help="Unique identifier for the corpus (required when creating new corpus)"),
+    name: Optional[str] = typer.Option(None, "--name", help="Human-readable name for the corpus"),
+    description: Optional[str] = typer.Option(None, "--description", help="Brief description of the corpus and its contents"),
+    docs: List[str] = typer.Option([], "--doc", help="Add document as 'id|name|text' or 'id|text'. Use multiple times for multiple documents"),
+    remove_docs: List[str] = typer.Option([], "--remove-doc", help="Remove document by ID. Use multiple times to remove multiple documents"),
+    metas: List[str] = typer.Option([], "--meta", help="Add/update metadata as key=value pairs. Use multiple times for multiple entries"),
+    relationships: List[str] = typer.Option([], "--add-rel", help="Add relationship as 'first|second|relation' (e.g., text:term|numb:col|correlates)"),
+    clear_rel: bool = typer.Option(False, "--clear-rel", help="Clear all relationships from corpus metadata"),
+    print_corpus: bool = typer.Option(False, "--print", help="Display the complete corpus in a formatted view"),
+    out: Optional[str] = typer.Option(None, "--out", help="Save corpus to folder or file (corpus.json)"),
+    inp: Optional[str] = typer.Option(None, "--inp", help="Load existing corpus from folder or file (corpus.json)"),
+    df_cols: bool = typer.Option(False, "--df-cols", help="Display all DataFrame column names"),
+    df_row_count: bool = typer.Option(False, "--df-row-count", help="Display total number of rows in DataFrame"),
+    df_row: Optional[int] = typer.Option(None, "--df-row", help="Display specific DataFrame row by index number"),
+    doc_ids: bool = typer.Option(False, "--doc-ids", help="List all document IDs in the corpus"),
+    doc_id: Optional[str] = typer.Option(None, "--doc-id", help="Display specific document by its ID"),
+    print_relationships: bool = typer.Option(False, "--relationships", help="Display all relationships in the corpus"),
+    relationships_for_keyword: Optional[str] = typer.Option(None, "--relationships-for-keyword", help="Find all relationships involving a specific keyword"),
+    semantic: Optional[str] = typer.Option(None, "--semantic", help="Perform semantic search with query string to find similar documents"),
+    similar_docs: Optional[str] = typer.Option(None, "--similar-docs", help="Find documents similar to comma-separated document IDs (useful for literature reviews)"),
+    num: int = typer.Option(5, "--num", help="Number of results to return for searches (default: 5)"),
+    semantic_chunks: Optional[str] = typer.Option(None, "--semantic-chunks", help="Search document chunks semantically. Requires --doc-id and --rec (threshold)"),
+    rec: float = typer.Option(0.4, "--rec", help="Similarity threshold for semantic search (0-1 range, default: 0.4)"),
+    metadata_df: bool = typer.Option(False, "--metadata-df", help="Export collection metadata as DataFrame"),
+    metadata_keys: Optional[str] = typer.Option(None, "--metadata-keys", help="Comma-separated metadata keys to include in DataFrame export"),
+    tdabm: Optional[str] = typer.Option(None, "--tdabm", help="Perform TDABM analysis: 'y_variable:x_variables:radius' (e.g., 'satisfaction:age,income:0.3')"),
+    graph: bool = typer.Option(False, "--graph", help="Generate graph representation (documents must have keywords assigned first)"),
 ):
     """
-    CRISP-T Corpus CLI: create and manipulate a corpus quickly from the command line.
+    [bold cyan]CRISP-T Corpus CLI[/bold cyan]
+    
+    Create, manipulate, and query corpus data quickly from the command line.
+    Manage documents, metadata, relationships, and perform semantic searches.
+    
+    [bold]Quick Start Examples:[/bold]
+      [dim]# Create new corpus[/dim]
+      crispt --id my_corpus --name "My Research" --doc "1|First doc|Text here"
+      
+      [dim]# Load and inspect corpus[/dim]
+      crispt --inp data/ --print
+      
+      [dim]# Semantic search[/dim]
+      crispt --inp data/ --semantic "healthcare policy" --num 10
+      
+      [dim]# Add relationships[/dim]
+      crispt --inp data/ --add-rel "text:theme|num:score|correlates" --out data/
     """
     logging.basicConfig(level=(logging.DEBUG if verbose else logging.WARNING))
     logger = logging.getLogger(__name__)
 
     if verbose:
-        click.echo("Verbose mode enabled")
+        console.print("[dim]Verbose mode enabled[/dim]")
 
-    click.echo("_________________________________________")
-    click.echo("CRISP-T: Corpus CLI")
-    click.echo("_________________________________________")
+    console.print()
+    console.print(Panel.fit(
+        "[bold cyan]CRISP-T[/bold cyan]: Corpus CLI\n"
+        f"Version: [yellow]{__version__}[/yellow]",
+        border_style="cyan"
+    ))
+    console.print()
 
     # Load corpus from --inp if provided
     corpus = initialize_corpus(inp=inp)
     if not corpus:
         # Build initial corpus from CLI args
         if not id:
-            raise click.ClickException("--id is required when not using --inp.")
+            console.print("[red]Error:[/red] Corpus ID is required when creating a new corpus", style="bold red")
+            console.print("[yellow]Hint:[/yellow] Use --id <corpus_id> to specify an ID, or --inp <directory> to load an existing corpus")
+            raise typer.Exit(code=1)
         corpus = Corpus(
             id=id,
             name=name,
@@ -228,110 +147,110 @@ def main(
         )
         corpus.add_document(document)
     if docs:
-        click.echo(f"✓ Added {len(docs)} document(s)")
+        console.print(f"[green]✓[/green] Added {len(docs)} document(s)")
 
     # Remove documents
     for rid in remove_docs:
         corpus.remove_document_by_id(rid)
     if remove_docs:
-        click.echo(f"✓ Removed {len(remove_docs)} document(s)")
+        console.print(f"[green]✓[/green] Removed {len(remove_docs)} document(s)")
 
     # Update metadata
     for m in metas:
         k, v = _parse_kv(m)
         corpus.update_metadata(k, v)
     if metas:
-        click.echo(f"✓ Updated metadata entries: {len(metas)}")
+        console.print(f"[green]✓[/green] Updated metadata entries: {len(metas)}")
 
     # Relationships
     for r in relationships:
         first, second, relation = _parse_relationship(r)
         corpus.add_relationship(first, second, relation)
     if relationships:
-        click.echo(f"✓ Added {len(relationships)} relationship(s)")
+        console.print(f"[green]✓[/green] Added {len(relationships)} relationship(s)")
     if clear_rel:
         corpus.clear_relationships()
-        click.echo("✓ Cleared relationships")
+        console.print("[green]✓[/green] Cleared relationships")
 
     # Print DataFrame column names
     if df_cols:
         cols = corpus.get_all_df_column_names()
-        click.echo(f"DataFrame columns: {cols}")
+        console.print(f"DataFrame columns: {cols}")
 
     # Print DataFrame row count
     if df_row_count:
         count = corpus.get_row_count()
-        click.echo(f"DataFrame row count: {count}")
+        console.print(f"DataFrame row count: {count}")
 
     # Print DataFrame row by index
     if df_row is not None:
         row = corpus.get_row_by_index(df_row)
         if row is not None:
-            click.echo(f"DataFrame row {df_row}: {row.to_dict()}")
+            console.print(f"DataFrame row {df_row}: {row.to_dict()}")
         else:
-            click.echo(f"No row at index {df_row}")
+            console.print(f"No row at index {df_row}")
 
     # Print all document IDs
     if doc_ids:
         ids = corpus.get_all_document_ids()
-        click.echo(f"Document IDs: {ids}")
+        console.print(f"Document IDs: {ids}")
 
     # Print document by ID
     if doc_id:
         doc = corpus.get_document_by_id(doc_id)
         if doc:
-            click.echo(f"Document {doc_id}: {doc.model_dump()}")
+            console.print(f"Document {doc_id}: {doc.model_dump()}")
         else:
-            click.echo(f"No document found with ID {doc_id}")
+            console.print(f"No document found with ID {doc_id}")
             exit(0)
 
     # Print relationships
     if print_relationships:
         rels = corpus.get_relationships()
-        click.echo(f"Relationships: {rels}")
+        console.print(f"Relationships: {rels}")
 
     # Print relationships for keyword
     if relationships_for_keyword:
         rels = corpus.get_all_relationships_for_keyword(relationships_for_keyword)
-        click.echo(f"Relationships for keyword '{relationships_for_keyword}': {rels}")
+        console.print(f"Relationships for keyword '{relationships_for_keyword}': {rels}")
 
     # Semantic search
     if semantic:
         try:
             from .semantic import Semantic
 
-            click.echo(f"\nPerforming semantic search for: '{semantic}'")
+            console.print(f"\nPerforming semantic search for: '{semantic}'")
             # Try with default embeddings first, fall back to simple embeddings
             try:
                 semantic_analyzer = Semantic(corpus)
             except Exception as network_error:
                 # If network error or download fails, try simple embeddings
                 if "address" in str(network_error).lower() or "download" in str(network_error).lower():
-                    click.echo("Note: Using simple embeddings (network unavailable)")
+                    console.print("Note: Using simple embeddings (network unavailable)")
                     semantic_analyzer = Semantic(corpus, use_simple_embeddings=True)
                 else:
                     raise
             corpus = semantic_analyzer.get_similar(semantic, n_results=num)
-            click.echo(f"✓ Found {len(corpus.documents)} similar documents")
-            click.echo(
+            console.print(f"[green]✓[/green] Found {len(corpus.documents)} similar documents")
+            console.print(
                 f"Hint: Use --out to save the filtered corpus, or --print to view results"
             )
         except ImportError as e:
-            click.echo(f"Error: {e}")
-            click.echo("Install chromadb with: pip install chromadb")
+            console.print(f"Error: {e}")
+            console.print("Install chromadb with: pip install chromadb")
         except Exception as e:
-            click.echo(f"Error during semantic search: {e}")
+            console.print(f"Error during semantic search: {e}")
 
     # Find similar documents
     if similar_docs:
         try:
             from .semantic import Semantic
 
-            click.echo(f"\nFinding documents similar to: '{similar_docs}'")
-            click.echo(f"Number of results: {num}")
+            console.print(f"\nFinding documents similar to: '{similar_docs}'")
+            console.print(f"Number of results: {num}")
             # Convert rec to 0-1 range if needed (for similar_docs, threshold is 0-1)
             threshold = rec / 10.0 if rec > 1.0 else rec
-            click.echo(f"Similarity threshold: {threshold}")
+            console.print(f"Similarity threshold: {threshold}")
 
             # Try with default embeddings first, fall back to simple embeddings
             try:
@@ -339,7 +258,7 @@ def main(
             except Exception as network_error:
                 # If network error or download fails, try simple embeddings
                 if "address" in str(network_error).lower() or "download" in str(network_error).lower():
-                    click.echo("Note: Using simple embeddings (network unavailable)")
+                    console.print("Note: Using simple embeddings (network unavailable)")
                     semantic_analyzer = Semantic(corpus, use_simple_embeddings=True)
                 else:
                     raise
@@ -351,37 +270,37 @@ def main(
                 threshold=threshold
             )
 
-            click.echo(f"✓ Found {len(similar_doc_ids)} similar documents")
+            console.print(f"[green]✓[/green] Found {len(similar_doc_ids)} similar documents")
             if similar_doc_ids:
-                click.echo("\nSimilar Document IDs:")
+                console.print("\nSimilar Document IDs:")
                 for doc_id in similar_doc_ids:
                     doc = corpus.get_document_by_id(doc_id)
                     doc_name = f" ({doc.name})" if doc and doc.name else ""
-                    click.echo(f"  - {doc_id}{doc_name}")
-                click.echo("\nHint: Use --doc-id to view individual documents")
-                click.echo("Hint: This feature is useful for literature reviews to find similar documents")
+                    console.print(f"  - {doc_id}{doc_name}")
+                console.print("\nHint: Use --doc-id to view individual documents")
+                console.print("Hint: This feature is useful for literature reviews to find similar documents")
             else:
-                click.echo("No similar documents found above the threshold.")
-                click.echo("Hint: Try lowering the threshold with --rec")
+                console.print("No similar documents found above the threshold.")
+                console.print("Hint: Try lowering the threshold with --rec")
 
         except ImportError as e:
-            click.echo(f"Error: {e}")
-            click.echo("Install chromadb with: pip install chromadb")
+            console.print(f"Error: {e}")
+            console.print("Install chromadb with: pip install chromadb")
         except Exception as e:
-            click.echo(f"Error finding similar documents: {e}")
+            console.print(f"Error finding similar documents: {e}")
 
 
     # Semantic chunk search
     if semantic_chunks:
         if not doc_id:
-            click.echo("Error: --doc-id is required when using --semantic-chunks")
+            console.print("Error: --doc-id is required when using --semantic-chunks")
         else:
             try:
                 from .semantic import Semantic
 
-                click.echo(f"\nPerforming semantic chunk search for: '{semantic_chunks}'")
-                click.echo(f"Document ID: {doc_id}")
-                click.echo(f"Threshold: {rec}")
+                console.print(f"\nPerforming semantic chunk search for: '{semantic_chunks}'")
+                console.print(f"Document ID: {doc_id}")
+                console.print(f"Threshold: {rec}")
 
                 # Try with default embeddings first, fall back to simple embeddings
                 try:
@@ -389,7 +308,7 @@ def main(
                 except Exception as network_error:
                     # If network error or download fails, try simple embeddings
                     if "address" in str(network_error).lower() or "download" in str(network_error).lower():
-                        click.echo("Note: Using simple embeddings (network unavailable)")
+                        console.print("Note: Using simple embeddings (network unavailable)")
                         semantic_analyzer = Semantic(corpus, use_simple_embeddings=True)
                     else:
                         raise
@@ -402,40 +321,40 @@ def main(
                     n_results=20  # Get more chunks to filter by threshold
                 )
 
-                click.echo(f"✓ Found {len(chunks)} matching chunks")
-                click.echo("\nMatching chunks:")
-                click.echo("=" * 60)
+                console.print(f"[green]✓[/green] Found {len(chunks)} matching chunks")
+                console.print("\nMatching chunks:")
+                console.print("=" * 60)
                 for i, chunk in enumerate(chunks, 1):
-                    click.echo(f"\nChunk {i}:")
-                    click.echo(chunk)
-                    click.echo("-" * 60)
+                    console.print(f"\nChunk {i}:")
+                    console.print(chunk)
+                    console.print("-" * 60)
 
                 if len(chunks) == 0:
-                    click.echo("No chunks matched the query above the threshold.")
-                    click.echo("Hint: Try lowering the threshold with --rec or use a different query.")
+                    console.print("No chunks matched the query above the threshold.")
+                    console.print("Hint: Try lowering the threshold with --rec or use a different query.")
                 else:
-                    click.echo(f"\nHint: These {len(chunks)} chunks can be used for coding/annotating the document.")
-                    click.echo("Hint: Adjust --rec threshold to get more or fewer results.")
+                    console.print(f"\nHint: These {len(chunks)} chunks can be used for coding/annotating the document.")
+                    console.print("Hint: Adjust --rec threshold to get more or fewer results.")
 
             except ImportError as e:
-                click.echo(f"Error: {e}")
-                click.echo("Install chromadb with: pip install chromadb")
+                console.print(f"Error: {e}")
+                console.print("Install chromadb with: pip install chromadb")
             except Exception as e:
-                click.echo(f"Error during semantic chunk search: {e}")
+                console.print(f"Error during semantic chunk search: {e}")
 
     # Export metadata as DataFrame
     if metadata_df:
         try:
             from .semantic import Semantic
 
-            click.echo("\nExporting metadata as DataFrame...")
+            console.print("\nExporting metadata as DataFrame...")
             # Try with default embeddings first, fall back to simple embeddings
             try:
                 semantic_analyzer = Semantic(corpus)
             except Exception as network_error:
                 # If network error or download fails, try simple embeddings
                 if "address" in str(network_error).lower() or "download" in str(network_error).lower():
-                    click.echo("Note: Using simple embeddings (network unavailable)")
+                    console.print("Note: Using simple embeddings (network unavailable)")
                     semantic_analyzer = Semantic(corpus, use_simple_embeddings=True)
                 else:
                     raise
@@ -444,16 +363,16 @@ def main(
             if metadata_keys:
                 keys_list = [k.strip() for k in metadata_keys.split(",")]
             corpus = semantic_analyzer.get_df(metadata_keys=keys_list)
-            click.echo("✓ Metadata exported to DataFrame")
+            console.print("[green]✓[/green] Metadata exported to DataFrame")
             if corpus.df is not None:
-                click.echo(f"DataFrame shape: {corpus.df.shape}")
-                click.echo(f"Columns: {list(corpus.df.columns)}")
-            click.echo("Hint: Use --out to save the corpus with the updated DataFrame")
+                console.print(f"DataFrame shape: {corpus.df.shape}")
+                console.print(f"Columns: {list(corpus.df.columns)}")
+            console.print("Hint: Use --out to save the corpus with the updated DataFrame")
         except ImportError as e:
-            click.echo(f"Error: {e}")
-            click.echo("Install chromadb with: pip install chromadb")
+            console.print(f"Error: {e}")
+            console.print("Install chromadb with: pip install chromadb")
         except Exception as e:
-            click.echo(f"Error exporting metadata: {e}")
+            console.print(f"Error exporting metadata: {e}")
 
     # TDABM analysis
     if tdabm:
@@ -474,56 +393,57 @@ def main(
                 try:
                     radius = float(parts[2].strip())
                 except ValueError:
-                    raise click.ClickException(f"Invalid radius value: '{parts[2]}'. Must be a number.")
+                    console.print(f"[red]Error:[/red] Invalid radius value: '{parts[2]}'. Must be a number.")
+                    raise typer.Exit(code=1)
 
-            click.echo(f"\nPerforming TDABM analysis...")
-            click.echo(f"  Y variable: {y_var}")
-            click.echo(f"  X variables: {x_vars}")
-            click.echo(f"  Radius: {radius}")
+            console.print(f"\nPerforming TDABM analysis...")
+            console.print(f"  Y variable: {y_var}")
+            console.print(f"  X variables: {x_vars}")
+            console.print(f"  Radius: {radius}")
 
             tdabm_analyzer = Tdabm(corpus)
             result = tdabm_analyzer.generate_tdabm(y=y_var, x_variables=x_vars, radius=radius)
 
-            click.echo("\n" + result)
-            click.echo("\nHint: TDABM results stored in corpus metadata['tdabm']")
-            click.echo("Hint: Use --out to save the corpus with TDABM metadata")
-            click.echo("Hint: Use 'crispviz --tdabm' to visualize the results")
+            console.print("\n" + result)
+            console.print("\nHint: TDABM results stored in corpus metadata['tdabm']")
+            console.print("Hint: Use --out to save the corpus with TDABM metadata")
+            console.print("Hint: Use 'crispviz --tdabm' to visualize the results")
 
         except ValueError as e:
-            click.echo(f"Error: {e}")
-            click.echo("Hint: Ensure your corpus has a DataFrame with the specified variables")
-            click.echo("Hint: Y variable must be continuous (not binary)")
-            click.echo("Hint: X variables must be numeric/ordinal")
+            console.print(f"Error: {e}")
+            console.print("Hint: Ensure your corpus has a DataFrame with the specified variables")
+            console.print("Hint: Y variable must be continuous (not binary)")
+            console.print("Hint: X variables must be numeric/ordinal")
         except Exception as e:
-            click.echo(f"Error during TDABM analysis: {e}")
+            console.print(f"Error during TDABM analysis: {e}")
 
     # Graph generation
     if graph:
         try:
             from .graph import CrispGraph
 
-            click.echo("\nGenerating graph representation...")
+            console.print("\nGenerating graph representation...")
             graph_gen = CrispGraph(corpus)
             graph_data = graph_gen.create_graph()
 
-            click.echo(f"✓ Graph created successfully")
-            click.echo(f"  Nodes: {graph_data['num_nodes']}")
-            click.echo(f"  Edges: {graph_data['num_edges']}")
-            click.echo(f"  Documents: {graph_data['num_documents']}")
-            click.echo(f"  Has keywords: {graph_data['has_keywords']}")
-            click.echo(f"  Has clusters: {graph_data['has_clusters']}")
-            click.echo(f"  Has metadata: {graph_data['has_metadata']}")
+            console.print(f"[green]✓[/green] Graph created successfully")
+            console.print(f"  Nodes: {graph_data['num_nodes']}")
+            console.print(f"  Edges: {graph_data['num_edges']}")
+            console.print(f"  Documents: {graph_data['num_documents']}")
+            console.print(f"  Has keywords: {graph_data['has_keywords']}")
+            console.print(f"  Has clusters: {graph_data['has_clusters']}")
+            console.print(f"  Has metadata: {graph_data['has_metadata']}")
 
-            click.echo("\nHint: Graph data stored in corpus metadata['graph']")
-            click.echo("Hint: Use --out to save the corpus with graph metadata")
-            click.echo("Hint: Use 'crispviz --graph' to visualize the graph")
+            console.print("\nHint: Graph data stored in corpus metadata['graph']")
+            console.print("Hint: Use --out to save the corpus with graph metadata")
+            console.print("Hint: Use 'crispviz --graph' to visualize the graph")
 
         except ValueError as e:
-            click.echo(f"Error: {e}")
-            click.echo("Hint: Make sure documents have keywords assigned first")
-            click.echo("Hint: You can assign keywords using text analysis features")
+            console.print(f"Error: {e}")
+            console.print("Hint: Make sure documents have keywords assigned first")
+            console.print("Hint: You can assign keywords using text analysis features")
         except Exception as e:
-            click.echo(f"Error generating graph: {e}")
+            console.print(f"Error generating graph: {e}")
             logger.error(f"Graph generation error: {e}", exc_info=True)
 
     # Save corpus to --out if provided
@@ -532,10 +452,14 @@ def main(
 
         rd = ReadData(corpus=corpus)
         rd.write_corpus_to_json(out, corpus=corpus)
-        click.echo(f"✓ Corpus saved to {out}")
+        console.print(f"[green]✓[/green] Corpus saved to {out}")
 
     if print_corpus:
-        click.echo("\n=== Corpus Details ===")
+        console.print("\n=== Corpus Details ===")
         corpus.pretty_print()
 
     logger.info("Corpus CLI finished")
+
+
+if __name__ == "__main__":
+    app()
