@@ -93,13 +93,13 @@ def test_df_row_by_index(tmp_path):
 
     rd = ReadData(corpus=corpus)
     rd.write_corpus_to_json(out_dir, corpus=corpus)
-    # Valid index - now includes emoji icon
+    # Valid index - test checks for key content (emoji format may vary between terminals)
     result = run_cli(["--inp", str(out_dir), "--df-row", "1"], tmp_path=tmp_path)
     assert result.exit_code == 0, result.output
     # Check for the key content, emoji may vary
     assert "DataFrame row 1:" in result.output
     assert "{'A': 20, 'B': 40}" in result.output
-    # Invalid index - text changed
+    # Invalid index - use partial text matching for robustness
     result2 = run_cli(["--inp", str(out_dir), "--df-row", "5"], tmp_path=tmp_path)
     assert result2.exit_code == 0, result2.output
     assert "No row" in result2.output and "index 5" in result2.output

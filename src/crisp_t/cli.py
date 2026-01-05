@@ -720,8 +720,13 @@ def _save_output(data, base_path: str, suffix: str):
             with open(save_path, "w", encoding="utf-8") as f:
                 json.dump(data, f, indent=2, default=str)
         else:
+            # For other types, try JSON serialization first, fall back to string
             with open(save_path, "w", encoding="utf-8") as f:
-                f.write(str(data))
+                try:
+                    json.dump(data, f, indent=2, default=str)
+                except (TypeError, ValueError):
+                    # If JSON fails, write as string
+                    f.write(str(data))
 
         click.echo(click.style(f"   ✓ Results saved to: ", fg="green") + 
                   click.style(str(save_path), fg="cyan"))

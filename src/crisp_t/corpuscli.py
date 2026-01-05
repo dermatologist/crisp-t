@@ -277,7 +277,9 @@ def main(
         k, v = _parse_kv(m)
         corpus.update_metadata(k, v)
     if metas:
-        click.echo(click.style(f"✓ Updated {len(metas)} metadata entr{'y' if len(metas) == 1 else 'ies'}", fg="green"))
+        count = len(metas)
+        entry_word = "entry" if count == 1 else "entries"
+        click.echo(click.style(f"✓ Updated {count} metadata {entry_word}", fg="green"))
 
     # Relationships
     for r in relationships:
