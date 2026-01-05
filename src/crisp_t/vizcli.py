@@ -21,78 +21,78 @@ logger = logging.getLogger(__name__)
 
 
 @click.command()
-@click.option("--verbose", "-v", is_flag=True, help="Print verbose messages.")
-@click.option("--inp", "-i", help="Load corpus from a folder containing corpus.json")
+@click.option("--verbose", "-v", is_flag=True, help="Show detailed progress and debugging information.")
+@click.option("--inp", "-i", help="Load an existing corpus from a folder containing corpus.json.")
 @click.option(
     "--out",
     "-o",
-    help="Output directory where PNG images will be written",
+    help="Output directory where visualization images (PNG/HTML) will be saved.",
 )
 @click.option(
-    "--bins", default=100, show_default=True, help="Number of bins for distributions"
+    "--bins", default=100, show_default=True, help="Number of bins for frequency distribution charts."
 )
 @click.option(
     "--topics-num",
     default=8,
     show_default=True,
-    help="Number of topics for LDA when required (default 8 as per Mettler et al. 2025)",
+    help="Number of topics for LDA analysis when required (Mettler et al. 2025 recommends 8).",
 )
 @click.option(
     "--top-n",
     default=20,
     show_default=True,
-    help="Top N terms to show in top-terms chart",
+    help="Number of top terms to display in the top-terms bar chart.",
 )
 @click.option(
     "--corr-columns",
     default="",
-    help="Comma separated numeric columns for correlation heatmap; if empty, auto-select",
+    help="Comma-separated list of numeric columns for correlation heatmap. Auto-selected if empty.",
 )
-@click.option("--freq", is_flag=True, help="Export: word frequency distribution")
+@click.option("--freq", is_flag=True, help="Generate word frequency distribution visualization.")
 @click.option(
     "--by-topic",
     is_flag=True,
-    help="Export: distribution by dominant topic (requires LDA)",
+    help="Generate distribution by dominant topic (requires LDA topic modeling first).",
 )
 @click.option(
-    "--wordcloud", is_flag=True, help="Export: topic wordcloud (requires LDA)"
+    "--wordcloud", is_flag=True, help="Generate topic word cloud visualization (requires LDA first)."
 )
 @click.option(
     "--ldavis",
     is_flag=True,
-    help="Export: interactive LDA visualization HTML (requires LDA)",
+    help="Generate interactive LDA visualization as HTML (requires LDA and pyLDAvis).",
 )
 @click.option(
-    "--top-terms", is_flag=True, help="Export: top terms bar chart (computed from text)"
+    "--top-terms", is_flag=True, help="Generate top terms bar chart based on word frequencies."
 )
 @click.option(
     "--corr-heatmap",
     is_flag=True,
-    help="Export: correlation heatmap (from CSV numeric columns)",
+    help="Generate correlation heatmap from numeric columns in your CSV data.",
 )
 @click.option(
     "--tdabm",
     is_flag=True,
-    help="Export: TDABM visualization (requires TDABM analysis in corpus metadata)",
+    help="Generate TDABM visualization (requires TDABM analysis in corpus metadata). Run 'crispt --tdabm' first.",
 )
 @click.option(
     "--graph",
     is_flag=True,
-    help="Export: graph visualization (requires graph data in corpus metadata)",
+    help="Generate graph visualization (requires graph data in corpus metadata). Run 'crispt --graph' first.",
 )
 @click.option(
     "--graph-nodes",
     default="",
     help=(
-        "Comma separated node types to include for graph: document,keyword,cluster,metadata. "
-        "Example: --graph-nodes document,keyword. If empty or 'all', include all."
+        "Comma-separated node types to include: document,keyword,cluster,metadata. "
+        "Example: --graph-nodes document,keyword. Leave empty or use 'all' for all types."
     ),
 )
 @click.option(
     "--graph-layout",
     default="spring",
     show_default=True,
-    help="Layout algorithm for graph visualization: spring, circular, kamada_kawai, or spectral",
+    help="Layout algorithm for graph: spring (default), circular, kamada_kawai, or spectral.",
 )
 def main(
     verbose: bool,
@@ -115,36 +115,69 @@ def main(
 ):
     """CRISP-T: Visualization CLI
 
-    Build corpus (source preferred over inp), optionally handle multiple sources,
-    and export selected visualizations as PNG files into the output directory.
+    Generate publication-quality visualizations from your corpus data.
+    Supports word clouds, topic distributions, correlation heatmaps, and more.
+
+    \b
+    📊 GETTING STARTED:
+    
+    Step 1: Ensure you have an analyzed corpus (created with 'crisp' or 'crispt')
+    
+    Step 2: Create an output directory for your visualizations:
+       mkdir visualizations
+    
+    Step 3: Generate visualizations:
+       crispviz --inp crisp_input --out visualizations --freq --wordcloud --topics-num 8
+    
+    \b
+    💡 TIPS:
+    • Some visualizations require prior analysis (e.g., --wordcloud needs topics)
+    • Use --ldavis for interactive HTML visualization
+    • Combine multiple flags to generate several visualizations at once
+    • Results are saved as PNG images (or HTML for --ldavis)
+    
+    \b
+    📖 For examples and detailed usage, see: notes/DEMO.md
     """
 
     if verbose:
         logging.getLogger().setLevel(logging.DEBUG)
-        click.echo("Verbose mode enabled")
+        click.echo(click.style("✓ Verbose mode enabled", fg="cyan"))
 
-    click.echo("_________________________________________")
-    click.echo("CRISP-T: Visualizations")
-    click.echo(f"Version: {__version__}")
-    click.echo("_________________________________________")
+    # Display banner with colors
+    click.echo(click.style("\n" + "=" * 60, fg="blue", bold=True))
+    click.echo(click.style("CRISP-T Visualizations", fg="green", bold=True))
+    click.echo(click.style(f"Version: {__version__}", fg="cyan"))
+    click.echo(click.style("=" * 60 + "\n", fg="blue", bold=True))
 
     try:
         out_dir = Path(out)
     except TypeError:
-        click.echo(
-            f"No output directory specified. Visualizations need an output folder."
-        )
+        click.echo(click.style("❌ Error: ", fg="red", bold=True) + 
+                  "No output directory specified.")
+        click.echo(click.style("\n💡 Tip: ", fg="cyan") + 
+                  "Use " + click.style("--out <directory>", fg="green") + 
+                  " to specify where visualizations should be saved")
         raise click.Abort()
     out_dir.mkdir(parents=True, exist_ok=True)
+    click.echo(click.style(f"✓ Output directory: ", fg="green") + 
+              click.style(str(out_dir), fg="cyan"))
 
     # Initialize components
     read_data = ReadData()
     corpus = None
 
+    click.echo(click.style("\n📂 Loading corpus...", fg="yellow"))
     corpus = initialize_corpus(inp=inp)
 
     if not corpus:
-        raise click.ClickException("No input provided. Use --source/--sources or --inp")
+        raise click.ClickException(
+            click.style("❌ Error: ", fg="red", bold=True) +
+            "No input provided. Use " + click.style("--inp <corpus_folder>", fg="green")
+        )
+
+    click.echo(click.style(f"✓ Corpus loaded: ", fg="green") + 
+              f"{len(corpus.documents)} document(s)")
 
     viz = QRVisualize(corpus=corpus)
 
@@ -154,14 +187,21 @@ def main(
     def ensure_topics():
         nonlocal cluster_instance
         if cluster_instance is None:
+            click.echo(click.style("\n⚙️  Building topic model...", fg="yellow"))
             cluster_instance = Cluster(corpus=corpus)
             cluster_instance.build_lda_model(topics=topics_num)
             # Populate visualization structures used by QRVisualize
             cluster_instance.format_topics_sentences(visualize=True)
+            click.echo(click.style(f"✓ Topic model ready ({topics_num} topics)", fg="green"))
         return cluster_instance
+
+    click.echo(click.style("\n╔═══════════════════════════════════════════════╗", fg="blue", bold=True))
+    click.echo(click.style("║  🎨 GENERATING VISUALIZATIONS                ║", fg="blue", bold=True))
+    click.echo(click.style("╚═══════════════════════════════════════════════╝\n", fg="blue", bold=True))
 
     # 1) Word frequency distribution
     if freq:
+        click.echo(click.style("▸ Creating word frequency distribution...", fg="yellow"))
         df_text = pd.DataFrame(
             {"Text": [getattr(doc, "text", "") or "" for doc in corpus.documents]}
         )
@@ -169,26 +209,32 @@ def main(
         viz.plot_frequency_distribution_of_words(
             df=df_text, folder_path=str(out_path), bins=bins, show=False
         )
-        click.echo(f"Saved: {out_path}")
+        click.echo(click.style(f"  ✓ Saved: ", fg="green") + 
+                  click.style(str(out_path), fg="cyan"))
 
     # 2) Distribution by topic (requires topics)
     if by_topic:
+        click.echo(click.style("▸ Creating distribution by topic...", fg="yellow"))
         ensure_topics()
         out_path = out_dir / "by_topic.png"
         viz.plot_distribution_by_topic(
             df=None, folder_path=str(out_path), bins=bins, show=False
         )
-        click.echo(f"Saved: {out_path}")
+        click.echo(click.style(f"  ✓ Saved: ", fg="green") + 
+                  click.style(str(out_path), fg="cyan"))
 
     # 3) Topic wordcloud (requires topics)
     if wordcloud:
+        click.echo(click.style("▸ Creating topic word cloud...", fg="yellow"))
         ensure_topics()
         out_path = out_dir / "wordcloud.png"
         viz.plot_wordcloud(topics=None, folder_path=str(out_path), show=False)
-        click.echo(f"Saved: {out_path}")
+        click.echo(click.style(f"  ✓ Saved: ", fg="green") + 
+                  click.style(str(out_path), fg="cyan"))
 
     # 3.5) LDA visualization (requires topics)
     if ldavis:
+        click.echo(click.style("▸ Creating interactive LDA visualization...", fg="yellow"))
         cluster = ensure_topics()
         out_path = out_dir / "lda_visualization.html"
         try:
@@ -199,21 +245,23 @@ def main(
                 folder_path=str(out_path),
                 show=False,
             )
-            click.echo(f"Saved: {out_path}")
+            click.echo(click.style(f"  ✓ Saved: ", fg="green") + 
+                      click.style(str(out_path), fg="cyan"))
         except ImportError as e:
-            click.echo(f"Warning: {e}")
+            click.echo(click.style(f"  ⚠️  Warning: {e}", fg="yellow"))
         except Exception as e:
-            click.echo(f"Error generating LDA visualization: {e}")
+            click.echo(click.style(f"  ❌ Error: ", fg="red") + str(e))
 
     # 4) Top terms (compute from text directly)
     if top_terms:
+        click.echo(click.style("▸ Creating top terms bar chart...", fg="yellow"))
         texts = [getattr(doc, "text", "") or "" for doc in corpus.documents]
         tokens = []
         for t in texts:
             tokens.extend((t or "").lower().split())
         freq_map = Counter(tokens)
         if not freq_map:
-            click.echo("No tokens found to plot top terms.")
+            click.echo(click.style("  ⚠️  No tokens found to plot", fg="yellow"))
         else:
             df_terms = pd.DataFrame(
                 {
@@ -226,12 +274,14 @@ def main(
             viz.plot_top_terms(
                 df=df_terms, top_n=top_n, folder_path=str(out_path), show=False
             )
-            click.echo(f"Saved: {out_path}")
+            click.echo(click.style(f"  ✓ Saved: ", fg="green") + 
+                      click.style(str(out_path), fg="cyan"))
 
     # 5) Correlation heatmap
     if corr_heatmap:
+        click.echo(click.style("▸ Creating correlation heatmap...", fg="yellow"))
         if getattr(corpus, "df", None) is None or corpus.df.empty:
-            click.echo("No CSV data available for correlation heatmap; skipping.")
+            click.echo(click.style("  ⚠️  No CSV data available for correlation heatmap; skipping.", fg="yellow"))
         else:
             df0 = corpus.df.copy()
             # If user specified columns, attempt to use them; else let visualize auto-select
@@ -253,31 +303,35 @@ def main(
                 viz.plot_correlation_heatmap(
                     df=df0, columns=None, folder_path=str(out_path), show=False
                 )
-            click.echo(f"Saved: {out_path}")
+            click.echo(click.style(f"  ✓ Saved: ", fg="green") + 
+                      click.style(str(out_path), fg="cyan"))
 
     # TDABM visualization
     if tdabm:
+        click.echo(click.style("▸ Creating TDABM visualization...", fg="yellow"))
         if "tdabm" not in corpus.metadata:
-            click.echo("Warning: No TDABM data found in corpus metadata.")
-            click.echo(
-                "Hint: Run TDABM analysis first with: crispt --tdabm y_var:x_vars:radius --inp <corpus_dir>"
-            )
+            click.echo(click.style("  ⚠️  No TDABM data found in corpus metadata.", fg="yellow"))
+            click.echo(click.style("  💡 Tip: ", fg="cyan") + 
+                      "Run TDABM analysis first with: " + 
+                      click.style("crispt --tdabm y_var:x_vars:radius --inp <corpus_dir>", fg="green"))
         else:
             out_path = out_dir / "tdabm.png"
             try:
                 viz.draw_tdabm(corpus=corpus, folder_path=str(out_path), show=False)
-                click.echo(f"Saved: {out_path}")
+                click.echo(click.style(f"  ✓ Saved: ", fg="green") + 
+                          click.style(str(out_path), fg="cyan"))
             except Exception as e:
-                click.echo(f"Error generating TDABM visualization: {e}")
+                click.echo(click.style(f"  ❌ Error: ", fg="red") + str(e))
                 logger.error(f"TDABM visualization error: {e}", exc_info=True)
 
     # Graph visualization (filtered by node types if provided)
     if graph or graph_nodes:
+        click.echo(click.style("▸ Creating graph visualization...", fg="yellow"))
         if "graph" not in corpus.metadata:
-            click.echo("Warning: No graph data found in corpus metadata.")
-            click.echo(
-                "Hint: Run graph generation first with: crispt --graph --inp <corpus_dir>"
-            )
+            click.echo(click.style("  ⚠️  No graph data found in corpus metadata.", fg="yellow"))
+            click.echo(click.style("  💡 Tip: ", fg="cyan") + 
+                      "Run graph generation first with: " + 
+                      click.style("crispt --graph --inp <corpus_dir>", fg="green"))
         else:
             raw_types = (graph_nodes or "").strip().lower()
             include_all = raw_types in ("", "all", "*")
@@ -291,11 +345,12 @@ def main(
                     if p in allowed_types:
                         requested_types.add(p)
                     else:
-                        click.echo(
-                            f"Warning: Unknown node type '{p}' ignored. Allowed: {', '.join(sorted(allowed_types))}"
+                        click.echo(click.style(
+                            f"  ⚠️  Unknown node type '{p}' ignored. ", fg="yellow") +
+                            f"Allowed: {', '.join(sorted(allowed_types))}"
                         )
                 if not requested_types:
-                    click.echo("No valid node types specified; defaulting to all.")
+                    click.echo(click.style("  ℹ️  No valid node types specified; defaulting to all.", fg="blue"))
                     include_all = True
 
             graph_data = corpus.metadata.get("graph", {})
@@ -336,19 +391,25 @@ def main(
                     show=False,
                     layout=graph_layout,
                 )
-                click.echo(f"Saved: {out_path}")
+                click.echo(click.style(f"  ✓ Saved: ", fg="green") + 
+                          click.style(str(out_path), fg="cyan"))
                 if not include_all:
-                    click.echo(
-                        f"Graph filtered to node types: {', '.join(sorted(requested_types))}"
-                    )
+                    click.echo(click.style(
+                        f"  ℹ️  Filtered to node types: {', '.join(sorted(requested_types))}",
+                        fg="blue"
+                    ))
             except Exception as e:
-                click.echo(f"Error generating graph visualization: {e}")
+                click.echo(click.style(f"  ❌ Error: ", fg="red") + str(e))
                 logger.error(f"Graph visualization error: {e}", exc_info=True)
             finally:
                 # Restore original metadata (avoid side-effects)
                 corpus.metadata["graph"] = original_graph_meta
 
-    click.echo("\n=== Visualization Complete ===")
+    click.echo(click.style("\n" + "=" * 60, fg="green", bold=True))
+    click.echo(click.style("✓ Visualization Complete!", fg="green", bold=True))
+    click.echo(click.style(f"✓ All visualizations saved to: ", fg="green") + 
+              click.style(str(out_dir), fg="cyan"))
+    click.echo(click.style("=" * 60 + "\n", fg="green", bold=True))
 
 
 if __name__ == "__main__":

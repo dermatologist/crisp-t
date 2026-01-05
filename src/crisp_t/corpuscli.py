@@ -44,106 +44,108 @@ def _parse_relationship(value: str) -> tuple[str, str, str]:
 
 
 @click.command()
-@click.option("--verbose", "-v", is_flag=True, help="Print verbose messages.")
-@click.option("--id", help="Unique identifier for the corpus.")
-@click.option("--name", default=None, help="Name of the corpus.")
-@click.option("--description", default=None, help="Description of the corpus.")
+@click.option("--verbose", "-v", is_flag=True, help="Show detailed progress and debugging information.")
+@click.option("--id", help="Unique identifier for the corpus (required when creating new corpus).")
+@click.option("--name", default=None, help="Descriptive name for the corpus.")
+@click.option("--description", default=None, help="Detailed description of the corpus content and purpose.")
 @click.option(
     "--doc",
     "docs",
     multiple=True,
     help=(
-        "Add a document as 'id|name|text' (or 'id|text' if name omitted). "
-        "Can be used multiple times."
+        "Add a document to the corpus. Format: 'id|name|text' or 'id|text' (name optional). "
+        "Can be used multiple times to add several documents."
     ),
 )
 @click.option(
     "--remove-doc",
     "remove_docs",
     multiple=True,
-    help="Remove a document by its ID (can be used multiple times).",
+    help="Remove a document from the corpus by its ID. Can be used multiple times.",
 )
 @click.option(
     "--meta",
     "metas",
     multiple=True,
-    help="Add or update corpus metadata as key=value (can be used multiple times).",
+    help="Add or update corpus metadata. Format: key=value. Can be used multiple times.",
 )
 @click.option(
     "--add-rel",
     "relationships",
     multiple=True,
     help=(
-        "Add a relationship as 'first|second|relation' (e.g., text:term|numb:col|correlates)."
+        "Add a relationship between textual and numerical data. "
+        "Format: 'first|second|relation' (e.g., text:term|num:column|correlates). "
+        "Can be used multiple times."
     ),
 )
 @click.option(
     "--clear-rel",
     is_flag=True,
-    help="Clear all relationships in the corpus metadata.",
+    help="Remove all relationships from the corpus metadata.",
 )
-@click.option("--print", "print_corpus", is_flag=True, help="Pretty print the corpus")
+@click.option("--print", "print_corpus", is_flag=True, help="Display the corpus in a formatted view.")
 @click.option(
-    "--out", default=None, help="Write corpus to a folder or file as corpus.json (save)"
+    "--out", default=None, help="Save the corpus to a folder or file as corpus.json."
 )
 @click.option(
     "--inp",
     default=None,
-    help="Load corpus from a folder or file containing corpus.json (load)",
+    help="Load an existing corpus from a folder or file containing corpus.json.",
 )
 # New options for Corpus methods
-@click.option("--df-cols", is_flag=True, help="Print all DataFrame column names.")
-@click.option("--df-row-count", is_flag=True, help="Print number of rows in DataFrame.")
-@click.option("--df-row", default=None, type=int, help="Print DataFrame row by index.")
-@click.option("--doc-ids", is_flag=True, help="Print all document IDs in the corpus.")
-@click.option("--doc-id", default=None, help="Print document by ID.")
+@click.option("--df-cols", is_flag=True, help="Display all column names in the DataFrame.")
+@click.option("--df-row-count", is_flag=True, help="Display the number of rows in the DataFrame.")
+@click.option("--df-row", default=None, type=int, help="Display a specific DataFrame row by its index.")
+@click.option("--doc-ids", is_flag=True, help="Display all document IDs in the corpus.")
+@click.option("--doc-id", default=None, help="Display details of a specific document by its ID.")
 @click.option(
     "--relationships",
     "print_relationships",
     is_flag=True,
-    help="Print all relationships in the corpus.",
+    help="Display all relationships defined in the corpus.",
 )
 @click.option(
     "--relationships-for-keyword",
     default=None,
-    help="Print all relationships involving a specific keyword.",
+    help="Display all relationships involving a specific keyword.",
 )
 @click.option(
     "--semantic",
     default=None,
-    help="Perform semantic search with the given query string. Returns similar documents.",
+    help="Perform semantic search using a query string. Returns documents similar to the query.",
 )
 @click.option(
     "--similar-docs",
     default=None,
-    help="Find documents similar to a comma-separated list of document IDs. Use with --num and --rec. Useful for literature reviews.",
+    help="Find documents similar to a comma-separated list of document IDs. Useful for literature reviews. Use with --num and --rec.",
 )
 @click.option(
     "--num",
     default=5,
     type=int,
-    help="Number of results to return (default: 5). Used for semantic search and similar documents search.",
+    help="Number of results to return for search operations (default: 5).",
 )
 @click.option(
     "--semantic-chunks",
     default=None,
-    help="Perform semantic search on document chunks. Returns matching chunks for a specific document. Use with --doc-id and --rec (threshold).",
+    help="Perform semantic search on document chunks within a specific document. Use with --doc-id and --rec for threshold.",
 )
 @click.option(
     "--rec",
     default=0.4,
     type=float,
-    help="Threshold for semantic search (0-1, default: 0.4). Only chunks with similarity above this value are returned.",
+    help="Similarity threshold for semantic operations (0-1, default: 0.4). Higher values = more similar results only.",
 )
 @click.option(
     "--metadata-df",
     is_flag=True,
-    help="Export collection metadata as DataFrame. Requires semantic search to be initialized first.",
+    help="Export semantic search collection metadata as a DataFrame. Requires semantic search initialization.",
 )
 @click.option(
     "--metadata-keys",
     default=None,
-    help="Comma-separated list of metadata keys to include in DataFrame export.",
+    help="Comma-separated list of metadata keys to include when exporting to DataFrame.",
 )
 @click.option(
     "--tdabm",
@@ -153,7 +155,7 @@ def _parse_relationship(value: str) -> tuple[str, str, str]:
 @click.option(
     "--graph",
     is_flag=True,
-    help="Generate graph representation of the corpus. Requires documents to have keywords assigned (run with --assign first).",
+    help="Generate a graph representation of the corpus. Requires documents to have keywords assigned (run text analysis first).",
 )
 def main(
     verbose: bool,
@@ -186,24 +188,57 @@ def main(
     graph: bool,
 ):
     """
-    CRISP-T Corpus CLI: create and manipulate a corpus quickly from the command line.
+    CRISP-T Corpus CLI: Create and manipulate corpus data from the command line.
+
+    This tool allows you to create, modify, query, and manage corpus objects
+    without writing any Python code. Perfect for quick data exploration and
+    corpus management tasks.
+
+    \b
+    📚 COMMON TASKS:
+    
+    Create a new corpus:
+       crispt --id my_corpus --name "My Research" --doc "1|Doc1|Hello world"
+    
+    Load and modify an existing corpus:
+       crispt --inp crisp_input --doc "2|Doc2|More text" --out crisp_input
+    
+    Query corpus information:
+       crispt --inp crisp_input --doc-ids --df-cols
+    
+    Perform semantic search:
+       crispt --inp crisp_input --semantic "find this topic" --num 10
+    
+    \b
+    💡 TIPS:
+    • Use --print to view the full corpus structure
+    • Combine multiple operations in a single command
+    • Use --out to save changes after modifications
+    • TDABM and graph features require prior analysis
+    
+    \b
+    📖 For more examples, see: notes/DEMO.md
     """
     logging.basicConfig(level=(logging.DEBUG if verbose else logging.WARNING))
     logger = logging.getLogger(__name__)
 
     if verbose:
-        click.echo("Verbose mode enabled")
+        click.echo(click.style("✓ Verbose mode enabled", fg="cyan"))
 
-    click.echo("_________________________________________")
-    click.echo("CRISP-T: Corpus CLI")
-    click.echo("_________________________________________")
+    # Display banner
+    click.echo(click.style("\n" + "=" * 60, fg="blue", bold=True))
+    click.echo(click.style("CRISP-T Corpus CLI", fg="green", bold=True))
+    click.echo(click.style("=" * 60 + "\n", fg="blue", bold=True))
 
     # Load corpus from --inp if provided
     corpus = initialize_corpus(inp=inp)
     if not corpus:
         # Build initial corpus from CLI args
         if not id:
-            raise click.ClickException("--id is required when not using --inp.")
+            raise click.ClickException(
+                click.style("❌ Error: ", fg="red", bold=True) +
+                "--id is required when creating a new corpus (not using --inp)."
+            )
         corpus = Corpus(
             id=id,
             name=name,
@@ -214,6 +249,7 @@ def main(
             visualization={},
             metadata={},
         )
+        click.echo(click.style("✓ New corpus created", fg="green"))
 
     # Add documents
     for d in docs:
@@ -228,99 +264,104 @@ def main(
         )
         corpus.add_document(document)
     if docs:
-        click.echo(f"✓ Added {len(docs)} document(s)")
+        click.echo(click.style(f"✓ Added {len(docs)} document(s)", fg="green"))
 
     # Remove documents
     for rid in remove_docs:
         corpus.remove_document_by_id(rid)
     if remove_docs:
-        click.echo(f"✓ Removed {len(remove_docs)} document(s)")
+        click.echo(click.style(f"✓ Removed {len(remove_docs)} document(s)", fg="green"))
 
     # Update metadata
     for m in metas:
         k, v = _parse_kv(m)
         corpus.update_metadata(k, v)
     if metas:
-        click.echo(f"✓ Updated metadata entries: {len(metas)}")
+        click.echo(click.style(f"✓ Updated {len(metas)} metadata entr{'y' if len(metas) == 1 else 'ies'}", fg="green"))
 
     # Relationships
     for r in relationships:
         first, second, relation = _parse_relationship(r)
         corpus.add_relationship(first, second, relation)
     if relationships:
-        click.echo(f"✓ Added {len(relationships)} relationship(s)")
+        click.echo(click.style(f"✓ Added {len(relationships)} relationship(s)", fg="green"))
     if clear_rel:
         corpus.clear_relationships()
-        click.echo("✓ Cleared relationships")
+        click.echo(click.style("✓ Cleared all relationships", fg="green"))
 
     # Print DataFrame column names
     if df_cols:
         cols = corpus.get_all_df_column_names()
-        click.echo(f"DataFrame columns: {cols}")
+        click.echo(click.style("📊 DataFrame columns: ", fg="cyan", bold=True) + str(cols))
 
     # Print DataFrame row count
     if df_row_count:
         count = corpus.get_row_count()
-        click.echo(f"DataFrame row count: {count}")
+        click.echo(click.style("📊 DataFrame row count: ", fg="cyan", bold=True) + str(count))
 
     # Print DataFrame row by index
     if df_row is not None:
         row = corpus.get_row_by_index(df_row)
         if row is not None:
-            click.echo(f"DataFrame row {df_row}: {row.to_dict()}")
+            click.echo(click.style(f"📊 DataFrame row {df_row}:", fg="cyan", bold=True))
+            click.echo(row.to_dict())
         else:
-            click.echo(f"No row at index {df_row}")
+            click.echo(click.style(f"⚠️  No row found at index {df_row}", fg="yellow"))
 
     # Print all document IDs
     if doc_ids:
         ids = corpus.get_all_document_ids()
-        click.echo(f"Document IDs: {ids}")
+        click.echo(click.style("📄 Document IDs: ", fg="cyan", bold=True) + str(ids))
 
     # Print document by ID
     if doc_id:
         doc = corpus.get_document_by_id(doc_id)
         if doc:
-            click.echo(f"Document {doc_id}: {doc.model_dump()}")
+            click.echo(click.style(f"📄 Document {doc_id}:", fg="cyan", bold=True))
+            click.echo(doc.model_dump())
         else:
-            click.echo(f"No document found with ID {doc_id}")
+            click.echo(click.style(f"⚠️  No document found with ID {doc_id}", fg="yellow"))
             exit(0)
 
     # Print relationships
     if print_relationships:
         rels = corpus.get_relationships()
-        click.echo(f"Relationships: {rels}")
+        click.echo(click.style("🔗 Relationships: ", fg="cyan", bold=True) + str(rels))
 
     # Print relationships for keyword
     if relationships_for_keyword:
         rels = corpus.get_all_relationships_for_keyword(relationships_for_keyword)
-        click.echo(f"Relationships for keyword '{relationships_for_keyword}': {rels}")
+        click.echo(click.style(f"🔗 Relationships for keyword '{relationships_for_keyword}': ", 
+                             fg="cyan", bold=True) + str(rels))
 
     # Semantic search
     if semantic:
         try:
             from .semantic import Semantic
 
-            click.echo(f"\nPerforming semantic search for: '{semantic}'")
+            click.echo(click.style(f"\n🔍 Performing semantic search for: ", fg="yellow") + 
+                      click.style(f"'{semantic}'", fg="cyan", bold=True))
             # Try with default embeddings first, fall back to simple embeddings
             try:
                 semantic_analyzer = Semantic(corpus)
             except Exception as network_error:
                 # If network error or download fails, try simple embeddings
                 if "address" in str(network_error).lower() or "download" in str(network_error).lower():
-                    click.echo("Note: Using simple embeddings (network unavailable)")
+                    click.echo(click.style("ℹ️  Note: Using simple embeddings (network unavailable)", fg="blue"))
                     semantic_analyzer = Semantic(corpus, use_simple_embeddings=True)
                 else:
                     raise
             corpus = semantic_analyzer.get_similar(semantic, n_results=num)
-            click.echo(f"✓ Found {len(corpus.documents)} similar documents")
-            click.echo(
-                f"Hint: Use --out to save the filtered corpus, or --print to view results"
-            )
+            click.echo(click.style(f"✓ Found {len(corpus.documents)} similar document(s)", fg="green"))
+            click.echo(click.style("\n💡 Tips:", fg="cyan", bold=True))
+            click.echo(f"   • Use {click.style('--out <folder>', fg='green')} to save the filtered corpus")
+            click.echo(f"   • Use {click.style('--print', fg='green')} to view results")
         except ImportError as e:
-            click.echo(f"Error: {e}")
-            click.echo("Install chromadb with: pip install chromadb")
+            click.echo(click.style(f"❌ Error: {e}", fg="red"))
+            click.echo(click.style("   Install with: ", fg="white") + 
+                      click.style("pip install chromadb", fg="cyan", bold=True))
         except Exception as e:
-            click.echo(f"Error during semantic search: {e}")
+            click.echo(click.style(f"❌ Error during semantic search: ", fg="red", bold=True) + str(e))
 
     # Find similar documents
     if similar_docs:
@@ -462,7 +503,8 @@ def main(
             parts = tdabm.split(":")
             if len(parts) < 2:
                 raise click.ClickException(
-                    "Invalid --tdabm format. Use 'y_variable:x_variables:radius' "
+                    click.style("❌ Invalid format. ", fg="red", bold=True) +
+                    "Use 'y_variable:x_variables:radius' " +
                     "(e.g., 'satisfaction:age,income:0.3'). Radius defaults to 0.3 if omitted."
                 )
 
@@ -474,56 +516,64 @@ def main(
                 try:
                     radius = float(parts[2].strip())
                 except ValueError:
-                    raise click.ClickException(f"Invalid radius value: '{parts[2]}'. Must be a number.")
+                    raise click.ClickException(
+                        click.style(f"❌ Invalid radius: ", fg="red", bold=True) +
+                        f"'{parts[2]}'. Must be a number."
+                    )
 
-            click.echo(f"\nPerforming TDABM analysis...")
-            click.echo(f"  Y variable: {y_var}")
-            click.echo(f"  X variables: {x_vars}")
-            click.echo(f"  Radius: {radius}")
+            click.echo(click.style("\n📊 Performing TDABM analysis...", fg="yellow"))
+            click.echo(f"   Y variable: {click.style(y_var, fg='cyan')}")
+            click.echo(f"   X variables: {click.style(x_vars, fg='cyan')}")
+            click.echo(f"   Radius: {click.style(str(radius), fg='cyan')}")
 
             tdabm_analyzer = Tdabm(corpus)
             result = tdabm_analyzer.generate_tdabm(y=y_var, x_variables=x_vars, radius=radius)
 
             click.echo("\n" + result)
-            click.echo("\nHint: TDABM results stored in corpus metadata['tdabm']")
-            click.echo("Hint: Use --out to save the corpus with TDABM metadata")
-            click.echo("Hint: Use 'crispviz --tdabm' to visualize the results")
+            click.echo(click.style("\n✓ TDABM analysis complete", fg="green"))
+            click.echo(click.style("\n💡 Next steps:", fg="cyan", bold=True))
+            click.echo("   • Results stored in corpus metadata['tdabm']")
+            click.echo(f"   • Use {click.style('--out <folder>', fg='green')} to save the corpus")
+            click.echo(f"   • Use {click.style('crispviz --tdabm', fg='green')} to visualize results")
 
         except ValueError as e:
-            click.echo(f"Error: {e}")
-            click.echo("Hint: Ensure your corpus has a DataFrame with the specified variables")
-            click.echo("Hint: Y variable must be continuous (not binary)")
-            click.echo("Hint: X variables must be numeric/ordinal")
+            click.echo(click.style(f"\n❌ Error: {e}", fg="red", bold=True))
+            click.echo(click.style("\n💡 Troubleshooting:", fg="cyan", bold=True))
+            click.echo("   • Ensure your corpus has a DataFrame with the specified variables")
+            click.echo("   • Y variable must be continuous (not binary)")
+            click.echo("   • X variables must be numeric or ordinal")
         except Exception as e:
-            click.echo(f"Error during TDABM analysis: {e}")
+            click.echo(click.style(f"\n❌ Error during TDABM analysis: ", fg="red", bold=True) + str(e))
 
     # Graph generation
     if graph:
         try:
             from .graph import CrispGraph
 
-            click.echo("\nGenerating graph representation...")
+            click.echo(click.style("\n🕸️  Generating graph representation...", fg="yellow"))
             graph_gen = CrispGraph(corpus)
             graph_data = graph_gen.create_graph()
 
-            click.echo(f"✓ Graph created successfully")
-            click.echo(f"  Nodes: {graph_data['num_nodes']}")
-            click.echo(f"  Edges: {graph_data['num_edges']}")
-            click.echo(f"  Documents: {graph_data['num_documents']}")
-            click.echo(f"  Has keywords: {graph_data['has_keywords']}")
-            click.echo(f"  Has clusters: {graph_data['has_clusters']}")
-            click.echo(f"  Has metadata: {graph_data['has_metadata']}")
+            click.echo(click.style("\n✓ Graph created successfully", fg="green"))
+            click.echo(f"   • Nodes: {click.style(str(graph_data['num_nodes']), fg='cyan')}")
+            click.echo(f"   • Edges: {click.style(str(graph_data['num_edges']), fg='cyan')}")
+            click.echo(f"   • Documents: {click.style(str(graph_data['num_documents']), fg='cyan')}")
+            click.echo(f"   • Has keywords: {click.style(str(graph_data['has_keywords']), fg='cyan')}")
+            click.echo(f"   • Has clusters: {click.style(str(graph_data['has_clusters']), fg='cyan')}")
+            click.echo(f"   • Has metadata: {click.style(str(graph_data['has_metadata']), fg='cyan')}")
 
-            click.echo("\nHint: Graph data stored in corpus metadata['graph']")
-            click.echo("Hint: Use --out to save the corpus with graph metadata")
-            click.echo("Hint: Use 'crispviz --graph' to visualize the graph")
+            click.echo(click.style("\n💡 Next steps:", fg="cyan", bold=True))
+            click.echo("   • Graph data stored in corpus metadata['graph']")
+            click.echo(f"   • Use {click.style('--out <folder>', fg='green')} to save the corpus")
+            click.echo(f"   • Use {click.style('crispviz --graph', fg='green')} to visualize the graph")
 
         except ValueError as e:
-            click.echo(f"Error: {e}")
-            click.echo("Hint: Make sure documents have keywords assigned first")
-            click.echo("Hint: You can assign keywords using text analysis features")
+            click.echo(click.style(f"\n❌ Error: {e}", fg="red", bold=True))
+            click.echo(click.style("\n💡 Tip:", fg="cyan", bold=True))
+            click.echo("   Documents need keywords assigned first")
+            click.echo(f"   Run text analysis with: {click.style('crisp --inp <folder> --assign', fg='green')}")
         except Exception as e:
-            click.echo(f"Error generating graph: {e}")
+            click.echo(click.style(f"\n❌ Error generating graph: ", fg="red", bold=True) + str(e))
             logger.error(f"Graph generation error: {e}", exc_info=True)
 
     # Save corpus to --out if provided
@@ -532,10 +582,13 @@ def main(
 
         rd = ReadData(corpus=corpus)
         rd.write_corpus_to_json(out, corpus=corpus)
-        click.echo(f"✓ Corpus saved to {out}")
+        click.echo(click.style(f"\n✓ Corpus saved to: ", fg="green", bold=True) + 
+                  click.style(str(out), fg="cyan"))
 
     if print_corpus:
-        click.echo("\n=== Corpus Details ===")
+        click.echo(click.style("\n╔═══════════════════════════════════════════════╗", fg="blue", bold=True))
+        click.echo(click.style("║  📊 CORPUS DETAILS                           ║", fg="blue", bold=True))
+        click.echo(click.style("╚═══════════════════════════════════════════════╝\n", fg="blue", bold=True))
         corpus.pretty_print()
 
     logger.info("Corpus CLI finished")
