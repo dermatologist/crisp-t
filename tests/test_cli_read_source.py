@@ -140,11 +140,11 @@ def test_help_contains_data_preparation_steps():
     result = runner.invoke(main, ["--help"])
 
     assert result.exit_code == 0
-    assert "DATA PREPARATION STEPS:" in result.output
-    assert "Create a subdirectory" in result.output
-    assert "crisp --source crisp_source --out crisp_input" in result.output
-    assert "--import instead of --source" in result.output
-    assert "both are equivalent" in result.output
+    assert "TIPS" in result.output
+    assert "GETTING STARTED" in result.output
+    assert "Create a source directory" in result.output
+    assert "Add your data files to this directory:" in result.output
+    assert "Import your data to create a corpus" in result.output
 
 
 def test_help_shows_import_flag():

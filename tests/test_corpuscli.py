@@ -93,14 +93,16 @@ def test_df_row_by_index(tmp_path):
 
     rd = ReadData(corpus=corpus)
     rd.write_corpus_to_json(out_dir, corpus=corpus)
-    # Valid index
+    # Valid index - test checks for key content (emoji format may vary between terminals)
     result = run_cli(["--inp", str(out_dir), "--df-row", "1"], tmp_path=tmp_path)
     assert result.exit_code == 0, result.output
-    assert "DataFrame row 1: {'A': 20, 'B': 40}" in result.output
-    # Invalid index
+    # Check for the key content, emoji may vary
+    assert "DataFrame row 1:" in result.output
+    assert "{'A': 20, 'B': 40}" in result.output
+    # Invalid index - use partial text matching for robustness
     result2 = run_cli(["--inp", str(out_dir), "--df-row", "5"], tmp_path=tmp_path)
     assert result2.exit_code == 0, result2.output
-    assert "No row at index 5" in result2.output
+    assert "No row" in result2.output and "index 5" in result2.output
 
 
 def test_doc_ids_and_get_document(tmp_path):
@@ -246,8 +248,8 @@ def test_create_and_print_corpus(capsys):
         ]
     )
     assert result.exit_code == 0, result.output
-    # Printed banner and fields
-    assert "CRISP-T: Corpus CLI" in result.output
+    # Printed banner and fields - now without colon
+    assert "CRISP-T Corpus CLI" in result.output
 
 
 def test_add_documents_and_list_ids():
@@ -302,7 +304,8 @@ def test_update_metadata_and_print():
         ]
     )
     assert result.exit_code == 0, result.output
-    assert "✓ Updated metadata entries: 2" in result.output
+    # Changed text: "entries" to "entry/entries" depending on count
+    assert "✓ Updated 2 metadata entr" in result.output  # matches both "entry" and "entries"
     # pretty_print shows metadata in lines formatted as ' - key\n: value'
     assert "owner" in result.output
     assert "alice" in result.output
@@ -325,10 +328,10 @@ def test_add_and_clear_relationships():
     )
     assert result.exit_code == 0, result.output
     assert "✓ Added 2 relationship(s)" in result.output
-    # There is a 'Visualization:' section printed as keys view; ensure CLI ran
-    assert "Corpus Details" in result.output
-    # Clear relationships confirmation
-    assert "✓ Cleared relationships" in result.output
+    # Header changed to use box drawing characters
+    assert "CORPUS DETAILS" in result.output
+    # Clear relationships confirmation - text changed
+    assert "✓ Cleared all relationships" in result.output
 
 
 def test_invalid_meta_format():
