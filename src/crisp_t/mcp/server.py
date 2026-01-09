@@ -1900,5 +1900,13 @@ After topic modeling:
 
 async def main():
     """Main entry point for the MCP server."""
+    # Print startup message to stderr so it doesn't interfere with MCP protocol
+    import sys
+    print("=" * 60, file=sys.stderr)
+    print("🚀 CRISP-T MCP Server Starting...", file=sys.stderr)
+    print("   Model Context Protocol (MCP) Server for Qualitative Research", file=sys.stderr)
+    print("   Ready to accept connections from MCP clients", file=sys.stderr)
+    print("=" * 60, file=sys.stderr)
+    
     async with stdio_server() as (read_stream, write_stream):
         await app.run(read_stream, write_stream, app.create_initialization_options())

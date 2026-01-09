@@ -195,7 +195,7 @@ class Text:
         if cache_file.exists():
             with open(cache_file, "rb") as f:
                 spacy_docs, ids = pickle.load(f)
-            logger.info("Loaded cached spacy docs and ids.")
+            # logger.info("Loaded cached spacy docs and ids.")
             return spacy_docs, ids
 
         spacy_docs = []
@@ -249,7 +249,7 @@ class Text:
         if cache_file.exists():
             with open(cache_file, "rb") as f:
                 spacy_doc, results = pickle.load(f)
-            logger.info("Loaded cached spacy doc and results.")
+            # logger.info("Loaded cached spacy doc and results.")
             return spacy_doc, results
 
         spacy_doc = self.make_spacy_doc()
