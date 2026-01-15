@@ -11,7 +11,7 @@
 [![Wiki](https://img.shields.io/badge/CRISP-wiki-demo)](https://github.com/dermatologist/crisp-t/wiki)
 [![Documentation](https://badgen.net/badge/icon/documentation?icon=libraries&label)](https://dermatologist.github.io/crisp-t/)
 
-**TL;DR** 🚀 *CRISP-T is a qualitative research method and a toolkit to perform textual (e.g. topic modelling) and numeric (e.g. decision trees) analysis of mixed datasets for computational triangulation and sense-making (optionally) using large language models.* 👉 [See Demo](/notes/DEMO.md). Give us a star ⭐️ if you find this useful!
+**TL;DR** 🚀 *CRISP-T is a qualitative research method and a toolkit to perform textual (e.g. topic modelling) and numeric (e.g. decision trees) analysis of mixed datasets for computational triangulation and sense-making (optionally) using large language models.* 👉 [See Demo](/notes/DEMO.md) and [download cheatsheet](https://nuchange.ca/wp-content/uploads/2026/01/CRISP-T_Cheatsheet.pdf). Give us a star ⭐️ if you find this useful!
 
 <p align="center">
   <img src="https://github.com/dermatologist/crisp-t/blob/develop/notes/crisp-logo.jpg" />
@@ -86,7 +86,7 @@ pip install crisp-t[xg]
 ```
 * Mac users need to install libomp: `brew install libomp` for XGBoost to work. (Needed only if you want to use XGBoost)
 
-## Command Line Scripts
+## Command Line Scripts [[cheatsheet](https://nuchange.ca/wp-content/uploads/2026/01/CRISP-T_Cheatsheet.pdf)]
 
 CRISP-T now provides four main command-line scripts:
 
