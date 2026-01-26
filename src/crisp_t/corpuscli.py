@@ -157,6 +157,36 @@ def _parse_relationship(value: str) -> tuple[str, str, str]:
     is_flag=True,
     help="Generate a graph representation of the corpus. Requires documents to have keywords assigned (run text analysis first).",
 )
+@click.option(
+    "--temporal-link",
+    default=None,
+    help="Link documents to dataframe rows by time. Format: 'method:column:param' where method is 'nearest', 'window', or 'sequence'. Examples: 'nearest:timestamp', 'window:timestamp:300' (±300 seconds), 'sequence:timestamp:W' (weekly).",
+)
+@click.option(
+    "--temporal-filter",
+    default=None,
+    help="Filter corpus by time range. Format: 'start:end' where start and end are ISO 8601 timestamps. Either can be omitted. Examples: '2025-01-01:', ':2025-12-31', '2025-01-01:2025-06-30'.",
+)
+@click.option(
+    "--temporal-summary",
+    default=None,
+    help="Generate temporal summary. Format: 'period' where period is 'D' (day), 'W' (week), 'M' (month), or 'Y' (year). Example: 'W' for weekly summary.",
+)
+@click.option(
+    "--temporal-sentiment",
+    default=None,
+    help="Analyze sentiment trends over time. Format: 'period:aggregation' where period is 'D'/'W'/'M' and aggregation is 'mean'/'median'. Example: 'W:mean' for weekly average sentiment.",
+)
+@click.option(
+    "--temporal-topics",
+    default=None,
+    help="Extract topics over time periods. Format: 'period:top_n' where period is 'D'/'W'/'M' and top_n is number of topics. Example: 'W:5' for top 5 topics per week.",
+)
+@click.option(
+    "--temporal-subgraphs",
+    default=None,
+    help="Create time-sliced subgraphs. Format: 'period' where period is 'D'/'W'/'M'. Example: 'W' for weekly subgraphs.",
+)
 def main(
     verbose: bool,
     id: Optional[str],
@@ -186,6 +216,12 @@ def main(
     metadata_keys: Optional[str],
     tdabm: Optional[str],
     graph: bool,
+    temporal_link: Optional[str],
+    temporal_filter: Optional[str],
+    temporal_summary: Optional[str],
+    temporal_sentiment: Optional[str],
+    temporal_topics: Optional[str],
+    temporal_subgraphs: Optional[str],
 ):
     """
     CRISP-T Corpus CLI: Create and manipulate corpus data from the command line.
@@ -546,6 +582,189 @@ def main(
             click.echo("   • X variables must be numeric or ordinal")
         except Exception as e:
             click.echo(click.style(f"\n❌ Error during TDABM analysis: ", fg="red", bold=True) + str(e))
+
+    # Temporal analysis operations
+    if temporal_link:
+        try:
+            from .temporal import TemporalAnalyzer
+            from datetime import timedelta
+
+            click.echo(click.style("\n⏰ Performing temporal linking...", fg="yellow"))
+
+            # Parse temporal_link parameter
+            parts = temporal_link.split(":")
+            if len(parts) < 2:
+                raise click.ClickException(
+                    "Invalid format. Use 'method:column:param' (e.g., 'nearest:timestamp', 'window:timestamp:300')"
+                )
+
+            method = parts[0].strip()
+            time_column = parts[1].strip()
+            analyzer = TemporalAnalyzer(corpus)
+
+            if method == "nearest":
+                max_gap = None
+                if len(parts) >= 3:
+                    max_gap = timedelta(seconds=float(parts[2]))
+                corpus = analyzer.link_by_nearest_time(time_column=time_column, max_gap=max_gap)
+                click.echo(click.style("✓ Documents linked to nearest dataframe rows", fg="green"))
+
+            elif method == "window":
+                window_seconds = 300  # Default ±5 minutes
+                if len(parts) >= 3:
+                    window_seconds = float(parts[2])
+                window = timedelta(seconds=window_seconds)
+                corpus = analyzer.link_by_time_window(
+                    time_column=time_column,
+                    window_before=window,
+                    window_after=window
+                )
+                click.echo(click.style(f"✓ Documents linked within ±{window_seconds}s window", fg="green"))
+
+            elif method == "sequence":
+                period = "W"  # Default to weekly
+                if len(parts) >= 3:
+                    period = parts[2].strip()
+                corpus = analyzer.link_by_sequence(time_column=time_column, period=period)
+                click.echo(click.style(f"✓ Documents linked by {period} sequences", fg="green"))
+
+            else:
+                raise click.ClickException(f"Unknown method: {method}. Use 'nearest', 'window', or 'sequence'")
+
+            click.echo(click.style("\n💡 Tip:", fg="cyan", bold=True))
+            click.echo("   • Temporal links stored in document metadata['temporal_links']")
+            click.echo(f"   • Use {click.style('--out <folder>', fg='green')} to save the corpus")
+
+        except Exception as e:
+            click.echo(click.style(f"\n❌ Error in temporal linking: ", fg="red", bold=True) + str(e))
+
+    if temporal_filter:
+        try:
+            from .temporal import TemporalAnalyzer
+
+            click.echo(click.style("\n⏰ Filtering by time range...", fg="yellow"))
+
+            # Parse temporal_filter parameter
+            parts = temporal_filter.split(":")
+            if len(parts) != 2:
+                raise click.ClickException(
+                    "Invalid format. Use 'start:end' (e.g., '2025-01-01:2025-12-31')"
+                )
+
+            start_time = parts[0].strip() if parts[0].strip() else None
+            end_time = parts[1].strip() if parts[1].strip() else None
+
+            analyzer = TemporalAnalyzer(corpus)
+            corpus = analyzer.filter_by_time_range(start_time=start_time, end_time=end_time)
+
+            click.echo(click.style(f"✓ Corpus filtered to {len(corpus.documents)} documents", fg="green"))
+            if corpus.df is not None:
+                click.echo(f"   • DataFrame rows: {len(corpus.df)}")
+
+        except Exception as e:
+            click.echo(click.style(f"\n❌ Error in temporal filtering: ", fg="red", bold=True) + str(e))
+
+    if temporal_summary:
+        try:
+            from .temporal import TemporalAnalyzer
+
+            click.echo(click.style("\n⏰ Generating temporal summary...", fg="yellow"))
+
+            period = temporal_summary.strip()
+            analyzer = TemporalAnalyzer(corpus)
+            summary = analyzer.get_temporal_summary(period=period)
+
+            if not summary.empty:
+                click.echo(click.style("\n✓ Temporal summary:", fg="green"))
+                click.echo(summary)
+                click.echo(click.style("\n💡 Tip:", fg="cyan", bold=True))
+                click.echo("   • Summary stored in corpus metadata")
+            else:
+                click.echo(click.style("⚠ No temporal data available for summary", fg="yellow"))
+
+        except Exception as e:
+            click.echo(click.style(f"\n❌ Error in temporal summary: ", fg="red", bold=True) + str(e))
+
+    if temporal_sentiment:
+        try:
+            from .temporal import TemporalAnalyzer
+
+            click.echo(click.style("\n⏰ Analyzing sentiment trends...", fg="yellow"))
+
+            # Parse temporal_sentiment parameter
+            parts = temporal_sentiment.split(":")
+            period = parts[0].strip() if len(parts) > 0 else "W"
+            aggregation = parts[1].strip() if len(parts) > 1 else "mean"
+
+            analyzer = TemporalAnalyzer(corpus)
+            trend = analyzer.get_temporal_sentiment_trend(period=period, aggregation=aggregation)
+
+            if not trend.empty:
+                click.echo(click.style("\n✓ Sentiment trend:", fg="green"))
+                click.echo(trend)
+                click.echo(click.style("\n💡 Tip:", fg="cyan", bold=True))
+                click.echo("   • Sentiment trend stored in corpus metadata")
+                click.echo(f"   • Use {click.style('crispviz --temporal-sentiment', fg='green')} to visualize")
+            else:
+                click.echo(click.style("⚠ No sentiment data available for trend analysis", fg="yellow"))
+                click.echo("   • Run sentiment analysis first with: crisp --inp <folder> --sentiment")
+
+        except Exception as e:
+            click.echo(click.style(f"\n❌ Error in temporal sentiment: ", fg="red", bold=True) + str(e))
+
+    if temporal_topics:
+        try:
+            from .temporal import TemporalAnalyzer
+
+            click.echo(click.style("\n⏰ Extracting temporal topics...", fg="yellow"))
+
+            # Parse temporal_topics parameter
+            parts = temporal_topics.split(":")
+            period = parts[0].strip() if len(parts) > 0 else "W"
+            top_n = int(parts[1].strip()) if len(parts) > 1 else 5
+
+            analyzer = TemporalAnalyzer(corpus)
+            topics = analyzer.get_temporal_topics(period=period, top_n=top_n)
+
+            if topics:
+                click.echo(click.style(f"\n✓ Topics over time (top {top_n}):", fg="green"))
+                for period_key, topic_list in topics.items():
+                    click.echo(f"\n{click.style(period_key, fg='cyan')}: {', '.join(topic_list)}")
+                click.echo(click.style("\n💡 Tip:", fg="cyan", bold=True))
+                click.echo("   • Temporal topics stored in corpus metadata")
+            else:
+                click.echo(click.style("⚠ No temporal data available for topic extraction", fg="yellow"))
+
+        except Exception as e:
+            click.echo(click.style(f"\n❌ Error in temporal topics: ", fg="red", bold=True) + str(e))
+
+    if temporal_subgraphs:
+        try:
+            from .graph import CrispGraph
+
+            click.echo(click.style("\n⏰ Creating temporal subgraphs...", fg="yellow"))
+
+            period = temporal_subgraphs.strip()
+
+            # Ensure graph exists
+            if "graph" not in corpus.metadata:
+                click.echo(click.style("⚠ Creating base graph first...", fg="yellow"))
+                graph_gen = CrispGraph(corpus)
+                graph_gen.create_graph()
+
+            graph_gen = CrispGraph(corpus)
+            subgraphs = graph_gen.create_temporal_subgraphs(period=period)
+
+            click.echo(click.style(f"\n✓ Created {len(subgraphs)} temporal subgraphs", fg="green"))
+            for period_key, subgraph in subgraphs.items():
+                click.echo(f"   • {period_key}: {subgraph.number_of_nodes()} nodes, {subgraph.number_of_edges()} edges")
+
+            click.echo(click.style("\n💡 Tip:", fg="cyan", bold=True))
+            click.echo("   • Temporal subgraphs stored in corpus metadata")
+            click.echo(f"   • Use {click.style('--out <folder>', fg='green')} to save the corpus")
+
+        except Exception as e:
+            click.echo(click.style(f"\n❌ Error creating temporal subgraphs: ", fg="red", bold=True) + str(e))
 
     # Graph generation
     if graph:

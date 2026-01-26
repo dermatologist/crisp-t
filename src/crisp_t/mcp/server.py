@@ -946,6 +946,138 @@ async def list_tools() -> list[Tool]:
         )
     )
 
+    # Temporal analysis tools
+    tools.extend([
+        Tool(
+            name="temporal_link_by_time",
+            description="""
+            Link documents to dataframe rows based on timestamps. Three methods available:
+            - 'nearest': Link to nearest row in time
+            - 'window': Link to all rows within a time window
+            - 'sequence': Link by time periods (day, week, month)
+            
+            Requires documents and dataframe rows to have timestamps.
+            """,
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "method": {
+                        "type": "string",
+                        "description": "Linking method: 'nearest', 'window', or 'sequence'",
+                        "enum": ["nearest", "window", "sequence"],
+                    },
+                    "time_column": {
+                        "type": "string",
+                        "description": "Name of timestamp column in dataframe (default: 'timestamp')",
+                        "default": "timestamp",
+                    },
+                    "window_seconds": {
+                        "type": "number",
+                        "description": "Time window in seconds for 'window' method (default: 300)",
+                        "default": 300,
+                    },
+                    "period": {
+                        "type": "string",
+                        "description": "Period for 'sequence' method: 'D' (day), 'W' (week), 'M' (month)",
+                        "default": "W",
+                    },
+                },
+                "required": ["method"],
+            },
+        ),
+        Tool(
+            name="temporal_filter",
+            description="""
+            Filter corpus by time range. Documents and dataframe rows outside the range are removed.
+            Returns a new filtered corpus.
+            """,
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "start_time": {
+                        "type": "string",
+                        "description": "Start time in ISO 8601 format (e.g., '2025-01-01T00:00:00')",
+                    },
+                    "end_time": {
+                        "type": "string",
+                        "description": "End time in ISO 8601 format",
+                    },
+                    "time_column": {
+                        "type": "string",
+                        "description": "Timestamp column in dataframe (default: 'timestamp')",
+                        "default": "timestamp",
+                    },
+                },
+            },
+        ),
+        Tool(
+            name="temporal_summary",
+            description="""
+            Generate temporal summary of numeric and text data over time periods.
+            Shows aggregated statistics and document counts per period.
+            """,
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "period": {
+                        "type": "string",
+                        "description": "Time period: 'D' (day), 'W' (week), 'M' (month), 'Y' (year)",
+                        "default": "W",
+                    },
+                    "time_column": {
+                        "type": "string",
+                        "description": "Timestamp column in dataframe",
+                        "default": "timestamp",
+                    },
+                },
+            },
+        ),
+        Tool(
+            name="temporal_sentiment_trend",
+            description="""
+            Analyze sentiment trends over time. Requires documents to have sentiment metadata.
+            Returns aggregated sentiment scores per time period.
+            """,
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "period": {
+                        "type": "string",
+                        "description": "Time period: 'D' (day), 'W' (week), 'M' (month)",
+                        "default": "W",
+                    },
+                    "aggregation": {
+                        "type": "string",
+                        "description": "Aggregation method: 'mean', 'median', 'max', 'min'",
+                        "default": "mean",
+                    },
+                },
+            },
+        ),
+        Tool(
+            name="temporal_topics",
+            description="""
+            Extract topics over time periods. Shows how topics evolve and change over time.
+            Works best with documents that have topic metadata from topic modeling.
+            """,
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "period": {
+                        "type": "string",
+                        "description": "Time period: 'D', 'W', 'M'",
+                        "default": "W",
+                    },
+                    "top_n": {
+                        "type": "integer",
+                        "description": "Number of top topics per period",
+                        "default": 5,
+                    },
+                },
+            },
+        ),
+    ])
+
     return tools
 
 
@@ -1703,6 +1835,145 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                 ]
             except Exception as e:
                 return [TextContent(type="text", text=f"Error during TDABM analysis: {e}")]
+
+        # Temporal Analysis Tools
+        elif name == "temporal_link_by_time":
+            if not _corpus:
+                return [TextContent(type="text", text="No corpus loaded. Use load_corpus first.")]
+
+            try:
+                from ..temporal import TemporalAnalyzer
+                from datetime import timedelta
+
+                method = arguments.get("method", "nearest")
+                time_column = arguments.get("time_column", "timestamp")
+                analyzer = TemporalAnalyzer(_corpus)
+
+                if method == "nearest":
+                    _corpus = analyzer.link_by_nearest_time(time_column=time_column)
+                    return [TextContent(type="text", text="Documents linked to nearest dataframe rows by time")]
+
+                elif method == "window":
+                    window_seconds = arguments.get("window_seconds", 300)
+                    window = timedelta(seconds=window_seconds)
+                    _corpus = analyzer.link_by_time_window(
+                        time_column=time_column,
+                        window_before=window,
+                        window_after=window
+                    )
+                    return [TextContent(type="text", text=f"Documents linked within ±{window_seconds}s time window")]
+
+                elif method == "sequence":
+                    period = arguments.get("period", "W")
+                    _corpus = analyzer.link_by_sequence(time_column=time_column, period=period)
+                    return [TextContent(type="text", text=f"Documents linked by {period} sequences")]
+
+                else:
+                    return [TextContent(type="text", text=f"Unknown method: {method}")]
+
+            except Exception as e:
+                return [TextContent(type="text", text=f"Error in temporal linking: {e}")]
+
+        elif name == "temporal_filter":
+            if not _corpus:
+                return [TextContent(type="text", text="No corpus loaded. Use load_corpus first.")]
+
+            try:
+                from ..temporal import TemporalAnalyzer
+
+                start_time = arguments.get("start_time")
+                end_time = arguments.get("end_time")
+                time_column = arguments.get("time_column", "timestamp")
+
+                analyzer = TemporalAnalyzer(_corpus)
+                _corpus = analyzer.filter_by_time_range(
+                    start_time=start_time,
+                    end_time=end_time,
+                    time_column=time_column
+                )
+
+                doc_count = len(_corpus.documents)
+                df_count = len(_corpus.df) if _corpus.df is not None else 0
+                return [TextContent(
+                    type="text",
+                    text=f"Corpus filtered by time range: {doc_count} documents, {df_count} dataframe rows"
+                )]
+
+            except Exception as e:
+                return [TextContent(type="text", text=f"Error in temporal filtering: {e}")]
+
+        elif name == "temporal_summary":
+            if not _corpus:
+                return [TextContent(type="text", text="No corpus loaded. Use load_corpus first.")]
+
+            try:
+                from ..temporal import TemporalAnalyzer
+
+                period = arguments.get("period", "W")
+                time_column = arguments.get("time_column", "timestamp")
+
+                analyzer = TemporalAnalyzer(_corpus)
+                summary = analyzer.get_temporal_summary(time_column=time_column, period=period)
+
+                if not summary.empty:
+                    response_text = f"Temporal Summary ({period} periods):\n\n"
+                    response_text += summary.to_string()
+                    return [TextContent(type="text", text=response_text)]
+                else:
+                    return [TextContent(type="text", text="No temporal data available for summary")]
+
+            except Exception as e:
+                return [TextContent(type="text", text=f"Error in temporal summary: {e}")]
+
+        elif name == "temporal_sentiment_trend":
+            if not _corpus:
+                return [TextContent(type="text", text="No corpus loaded. Use load_corpus first.")]
+
+            try:
+                from ..temporal import TemporalAnalyzer
+
+                period = arguments.get("period", "W")
+                aggregation = arguments.get("aggregation", "mean")
+
+                analyzer = TemporalAnalyzer(_corpus)
+                trend = analyzer.get_temporal_sentiment_trend(period=period, aggregation=aggregation)
+
+                if not trend.empty:
+                    response_text = f"Temporal Sentiment Trend ({period} periods, {aggregation}):\n\n"
+                    response_text += trend.to_string()
+                    return [TextContent(type="text", text=response_text)]
+                else:
+                    return [TextContent(
+                        type="text",
+                        text="No sentiment data available. Run sentiment analysis first."
+                    )]
+
+            except Exception as e:
+                return [TextContent(type="text", text=f"Error in temporal sentiment: {e}")]
+
+        elif name == "temporal_topics":
+            if not _corpus:
+                return [TextContent(type="text", text="No corpus loaded. Use load_corpus first.")]
+
+            try:
+                from ..temporal import TemporalAnalyzer
+
+                period = arguments.get("period", "W")
+                top_n = arguments.get("top_n", 5)
+
+                analyzer = TemporalAnalyzer(_corpus)
+                topics = analyzer.get_temporal_topics(period=period, top_n=top_n)
+
+                if topics:
+                    response_text = f"Temporal Topics (top {top_n} per {period} period):\n\n"
+                    for period_key, topic_list in topics.items():
+                        response_text += f"{period_key}: {', '.join(topic_list)}\n"
+                    return [TextContent(type="text", text=response_text)]
+                else:
+                    return [TextContent(type="text", text="No temporal data available for topic extraction")]
+
+            except Exception as e:
+                return [TextContent(type="text", text=f"Error in temporal topics: {e}")]
 
         else:
             return [TextContent(type="text", text=f"Unknown tool: {name}")]
