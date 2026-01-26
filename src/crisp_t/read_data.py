@@ -290,9 +290,17 @@ class ReadData:
         comma_separated_ignore_words=None,
         comma_separated_text_columns="",
         id_column="",
+        timestamp_column="",
     ):
         """
         Read the corpus from a csv file. Parallelizes document creation for large CSVs.
+        
+        Args:
+            file_name: Path to CSV file
+            comma_separated_ignore_words: Stop words to ignore
+            comma_separated_text_columns: Text columns to extract
+            id_column: Column to use as document ID
+            timestamp_column: Column containing timestamps (auto-detected if not specified)
         """
         from pathlib import Path
 
@@ -301,6 +309,24 @@ class ReadData:
             raise ValueError(f"File not found: {file_name}")
         df = pd.read_csv(file_name)
         original_df = df.copy()
+        
+        # Auto-detect timestamp column if not specified
+        if not timestamp_column:
+            timestamp_candidates = ['timestamp', 'datetime', 'time', 'date', 'created_at', 'updated_at']
+            for candidate in timestamp_candidates:
+                if candidate in df.columns:
+                    timestamp_column = candidate
+                    logger.info(f"Auto-detected timestamp column: {timestamp_column}")
+                    break
+        
+        # Parse timestamp column to datetime if it exists
+        if timestamp_column and timestamp_column in df.columns:
+            try:
+                df[timestamp_column] = pd.to_datetime(df[timestamp_column])
+                logger.info(f"Parsed timestamp column '{timestamp_column}' to datetime")
+            except Exception as e:
+                logger.warning(f"Could not parse timestamp column '{timestamp_column}': {e}")
+        
         if comma_separated_text_columns:
             text_columns = comma_separated_text_columns.split(",")
         else:
@@ -328,8 +354,24 @@ class ReadData:
             # Apply pre-compiled patterns
             for pattern in compiled_patterns:
                 read_from_file = pattern.sub("", read_from_file)
+            
+            # Extract timestamp if available
+            doc_timestamp = None
+            if timestamp_column and timestamp_column in original_df.columns:
+                ts_value = row[timestamp_column]
+                if ts_value is not None and not pd.isna(ts_value):
+                    # Convert to ISO 8601 string
+                    try:
+                        if isinstance(ts_value, pd.Timestamp):
+                            doc_timestamp = ts_value.isoformat()
+                        else:
+                            doc_timestamp = pd.to_datetime(ts_value).isoformat()
+                    except Exception:
+                        pass
+            
             _document = Document(
                 text=read_from_file,
+                timestamp=doc_timestamp,
                 metadata={
                     "source": str(file_name),
                     "file_name": str(file_name),
