@@ -1078,6 +1078,56 @@ async def list_tools() -> list[Tool]:
         ),
     ])
 
+    # Embedding-based linking tools
+    tools.extend([
+        Tool(
+            name="embedding_link",
+            description="""
+            Link documents to dataframe rows using embedding similarity.
+            
+            This provides fuzzy semantic alignment when explicit IDs or timestamps are missing.
+            Uses vector embeddings for both text documents and numeric data rows.
+            
+            Complements existing ID-based, keyword-based, and time-based linking methods.
+            """,
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "similarity_metric": {
+                        "type": "string",
+                        "description": "Similarity metric: 'cosine' or 'euclidean'",
+                        "enum": ["cosine", "euclidean"],
+                        "default": "cosine",
+                    },
+                    "top_k": {
+                        "type": "integer",
+                        "description": "Number of top similar rows to link per document",
+                        "default": 1,
+                    },
+                    "threshold": {
+                        "type": "number",
+                        "description": "Minimum similarity threshold (0-1). If not set, no filtering",
+                    },
+                    "numeric_columns": {
+                        "type": "string",
+                        "description": "Comma-separated list of numeric columns to use for embeddings",
+                    },
+                },
+            },
+        ),
+        Tool(
+            name="embedding_link_stats",
+            description="""
+            Get statistics about embedding-based links in the corpus.
+            Shows how many documents are linked, average similarity scores, etc.
+            """,
+            inputSchema={
+                "type": "object",
+                "properties": {},
+            },
+        ),
+    ])
+
     return tools
 
 
@@ -1974,6 +2024,82 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
 
             except Exception as e:
                 return [TextContent(type="text", text=f"Error in temporal topics: {e}")]
+
+        # Embedding-based linking tools
+        elif name == "embedding_link":
+            if not _corpus:
+                return [TextContent(type="text", text="No corpus loaded. Use load_corpus first.")]
+
+            try:
+                from ..embedding_linker import EmbeddingLinker
+
+                similarity_metric = arguments.get("similarity_metric", "cosine")
+                top_k = arguments.get("top_k", 1)
+                threshold = arguments.get("threshold")
+                numeric_columns_str = arguments.get("numeric_columns")
+
+                numeric_columns = None
+                if numeric_columns_str:
+                    numeric_columns = [c.strip() for c in numeric_columns_str.split(",")]
+
+                linker = EmbeddingLinker(_corpus, similarity_metric=similarity_metric, use_simple_embeddings=True)
+                _corpus = linker.link_by_embedding_similarity(
+                    numeric_columns=numeric_columns,
+                    threshold=threshold,
+                    top_k=top_k
+                )
+
+                stats = linker.get_link_statistics()
+                response_text = f"Embedding-based linking complete\n\n"
+                response_text += f"Linked documents: {stats['linked_documents']}/{stats['total_documents']}\n"
+                response_text += f"Total links: {stats['total_links']}\n"
+                response_text += f"Average similarity: {stats['avg_similarity']:.3f}\n"
+                response_text += f"Similarity metric: {similarity_metric}\n"
+
+                return [TextContent(type="text", text=response_text)]
+
+            except ImportError:
+                return [TextContent(
+                    type="text",
+                    text="ChromaDB is not installed. Install with: pip install chromadb"
+                )]
+            except Exception as e:
+                return [TextContent(type="text", text=f"Error in embedding linking: {e}")]
+
+        elif name == "embedding_link_stats":
+            if not _corpus:
+                return [TextContent(type="text", text="No corpus loaded. Use load_corpus first.")]
+
+            try:
+                from ..embedding_linker import EmbeddingLinker
+
+                # Check if corpus has embedding links
+                has_links = any(
+                    "embedding_links" in doc.metadata and doc.metadata["embedding_links"]
+                    for doc in _corpus.documents
+                )
+
+                if not has_links:
+                    return [TextContent(
+                        type="text",
+                        text="No embedding links found. Run embedding_link first."
+                    )]
+
+                linker = EmbeddingLinker(_corpus, use_simple_embeddings=True)
+                stats = linker.get_link_statistics()
+
+                response_text = "Embedding Link Statistics:\n\n"
+                response_text += f"Total documents: {stats['total_documents']}\n"
+                response_text += f"Linked documents: {stats['linked_documents']}\n"
+                response_text += f"Total links: {stats['total_links']}\n"
+                response_text += f"Average similarity: {stats['avg_similarity']:.3f}\n"
+                response_text += f"Min similarity: {stats['min_similarity']:.3f}\n"
+                response_text += f"Max similarity: {stats['max_similarity']:.3f}\n"
+
+                return [TextContent(type="text", text=response_text)]
+
+            except Exception as e:
+                return [TextContent(type="text", text=f"Error getting embedding statistics: {e}")]
 
         else:
             return [TextContent(type="text", text=f"Unknown tool: {name}")]

@@ -187,6 +187,21 @@ def _parse_relationship(value: str) -> tuple[str, str, str]:
     default=None,
     help="Create time-sliced subgraphs. Format: 'period' where period is 'D'/'W'/'M'. Example: 'W' for weekly subgraphs.",
 )
+@click.option(
+    "--embedding-link",
+    default=None,
+    help="Link documents to dataframe rows by embedding similarity. Format: 'metric:top_k:threshold' where metric is 'cosine' or 'euclidean', top_k is number of links per document, threshold is min similarity (0-1). Example: 'cosine:1:0.7'.",
+)
+@click.option(
+    "--embedding-stats",
+    is_flag=True,
+    help="Display statistics about embedding-based links in the corpus.",
+)
+@click.option(
+    "--embedding-viz",
+    default=None,
+    help="Visualize embedding space using dimensionality reduction. Format: 'method:output_path' where method is 'tsne', 'pca', or 'umap'. Example: 'tsne:embedding_viz.png'.",
+)
 def main(
     verbose: bool,
     id: Optional[str],
@@ -222,6 +237,9 @@ def main(
     temporal_sentiment: Optional[str],
     temporal_topics: Optional[str],
     temporal_subgraphs: Optional[str],
+    embedding_link: Optional[str],
+    embedding_stats: bool,
+    embedding_viz: Optional[str],
 ):
     """
     CRISP-T Corpus CLI: Create and manipulate corpus data from the command line.
@@ -766,6 +784,124 @@ def main(
 
         except Exception as e:
             click.echo(click.style(f"\n❌ Error creating temporal subgraphs: ", fg="red", bold=True) + str(e))
+
+    # Embedding-based linking
+    if embedding_link:
+        try:
+            from .embedding_linker import EmbeddingLinker
+
+            click.echo(click.style("\n🔗 Performing embedding-based cross-modal linking...", fg="yellow"))
+
+            # Parse embedding_link parameter
+            parts = embedding_link.split(":")
+            metric = parts[0].strip() if len(parts) > 0 else "cosine"
+            top_k = int(parts[1].strip()) if len(parts) > 1 else 1
+            threshold = float(parts[2].strip()) if len(parts) > 2 else None
+
+            if metric not in ["cosine", "euclidean"]:
+                raise click.ClickException(f"Unknown metric: {metric}. Use 'cosine' or 'euclidean'")
+
+            click.echo(f"   • Metric: {click.style(metric, fg='cyan')}")
+            click.echo(f"   • Top-k: {click.style(str(top_k), fg='cyan')}")
+            if threshold:
+                click.echo(f"   • Threshold: {click.style(f'{threshold:.2f}', fg='cyan')}")
+
+            linker = EmbeddingLinker(
+                corpus,
+                similarity_metric=metric,
+                use_simple_embeddings=False  # Use default embeddings
+            )
+
+            corpus = linker.link_by_embedding_similarity(
+                threshold=threshold,
+                top_k=top_k
+            )
+
+            stats = linker.get_link_statistics()
+            click.echo(click.style(f"\n✓ Embedding-based linking complete", fg="green"))
+            click.echo(f"   • Linked documents: {click.style(str(stats['linked_documents']), fg='cyan')}/{stats['total_documents']}")
+            click.echo(f"   • Total links: {click.style(str(stats['total_links']), fg='cyan')}")
+            click.echo(f"   • Avg similarity: {click.style(f\"{stats['avg_similarity']:.3f}\", fg='cyan')}")
+
+            click.echo(click.style("\n💡 Tip:", fg="cyan", bold=True))
+            click.echo("   • Embedding links stored in document metadata['embedding_links']")
+            click.echo(f"   • Use {click.style('--out <folder>', fg='green')} to save the corpus")
+            click.echo(f"   • Use {click.style('--embedding-stats', fg='green')} to view detailed statistics")
+
+        except ImportError as e:
+            click.echo(click.style(f"\n❌ Error: {e}", fg="red", bold=True))
+            click.echo(click.style("\n💡 Install ChromaDB:", fg="cyan", bold=True))
+            click.echo(f"   {click.style('pip install chromadb', fg='green')}")
+        except Exception as e:
+            click.echo(click.style(f"\n❌ Error in embedding-based linking: ", fg="red", bold=True) + str(e))
+
+    if embedding_stats:
+        try:
+            from .embedding_linker import EmbeddingLinker
+
+            click.echo(click.style("\n📊 Embedding Link Statistics", fg="yellow"))
+
+            # Check if corpus has embedding links
+            has_links = any(
+                "embedding_links" in doc.metadata and doc.metadata["embedding_links"]
+                for doc in corpus.documents
+            )
+
+            if not has_links:
+                click.echo(click.style("\n⚠ No embedding links found in corpus", fg="yellow"))
+                click.echo(f"   Run {click.style('--embedding-link', fg='green')} first to create links")
+                return
+
+            # Create linker to get stats
+            linker = EmbeddingLinker(corpus, use_simple_embeddings=True)
+            stats = linker.get_link_statistics()
+
+            click.echo(click.style("\n✓ Statistics:", fg="green"))
+            click.echo(f"   • Total documents: {click.style(str(stats['total_documents']), fg='cyan')}")
+            click.echo(f"   • Linked documents: {click.style(str(stats['linked_documents']), fg='cyan')}")
+            click.echo(f"   • Total links: {click.style(str(stats['total_links']), fg='cyan')}")
+            click.echo(f"   • Average similarity: {click.style(f\"{stats['avg_similarity']:.3f}\", fg='cyan')}")
+            click.echo(f"   • Min similarity: {click.style(f\"{stats['min_similarity']:.3f}\", fg='cyan')}")
+            click.echo(f"   • Max similarity: {click.style(f\"{stats['max_similarity']:.3f}\", fg='cyan')}")
+
+        except Exception as e:
+            click.echo(click.style(f"\n❌ Error getting embedding statistics: ", fg="red", bold=True) + str(e))
+
+    if embedding_viz:
+        try:
+            from .embedding_linker import EmbeddingLinker
+
+            click.echo(click.style("\n📈 Visualizing embedding space...", fg="yellow"))
+
+            # Parse embedding_viz parameter
+            parts = embedding_viz.split(":")
+            method = parts[0].strip() if len(parts) > 0 else "tsne"
+            output_path = parts[1].strip() if len(parts) > 1 else "embedding_viz.png"
+
+            if method not in ["tsne", "pca", "umap"]:
+                raise click.ClickException(f"Unknown method: {method}. Use 'tsne', 'pca', or 'umap'")
+
+            click.echo(f"   • Method: {click.style(method, fg='cyan')}")
+            click.echo(f"   • Output: {click.style(output_path, fg='cyan')}")
+
+            linker = EmbeddingLinker(corpus, use_simple_embeddings=True)
+            
+            # Generate embeddings first
+            linker._get_text_embeddings()
+            linker._get_numeric_embeddings()
+            
+            # Create visualization
+            fig = linker.visualize_embedding_space(output_path=output_path, method=method)
+
+            click.echo(click.style(f"\n✓ Visualization saved to {output_path}", fg="green"))
+
+        except ImportError as e:
+            click.echo(click.style(f"\n❌ Error: Missing dependencies", fg="red", bold=True))
+            click.echo(f"   {str(e)}")
+            click.echo(click.style("\n💡 Install required packages:", fg="cyan", bold=True))
+            click.echo(f"   {click.style('pip install matplotlib scikit-learn', fg='green')}")
+        except Exception as e:
+            click.echo(click.style(f"\n❌ Error creating visualization: ", fg="red", bold=True) + str(e))
 
     # Graph generation
     if graph:
