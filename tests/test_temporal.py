@@ -208,3 +208,103 @@ def test_document_timestamp_field():
     )
     
     assert doc2.timestamp is None
+
+
+def test_temporal_sentiment_trend():
+    """Test temporal sentiment trend analysis."""
+    docs = [
+        Document(
+            id="doc1",
+            name="Doc 1",
+            text="Positive text",
+            timestamp="2025-01-15T10:00:00",
+            metadata={"sentiment": "pos"}
+        ),
+        Document(
+            id="doc2",
+            name="Doc 2",
+            text="Negative text",
+            timestamp="2025-01-15T11:00:00",
+            metadata={"sentiment": "neg"}
+        ),
+        Document(
+            id="doc3",
+            name="Doc 3",
+            text="Neutral text",
+            timestamp="2025-01-16T10:00:00",
+            metadata={"sentiment": "neu"}
+        ),
+    ]
+    corpus = Corpus(id="corpus1", name="Sentiment Corpus", documents=docs)
+    analyzer = TemporalAnalyzer(corpus)
+    
+    # Get daily sentiment trend
+    trend = analyzer.get_temporal_sentiment_trend(period="D")
+    
+    assert not trend.empty
+    assert "sentiment_score" in trend.columns
+    assert "document_count" in trend.columns
+
+
+def test_temporal_topics():
+    """Test temporal topic extraction."""
+    docs = [
+        Document(
+            id="doc1",
+            name="Doc 1",
+            text="machine learning artificial intelligence",
+            timestamp="2025-01-15T10:00:00",
+            metadata={"topics": ["machine_learning", "AI"]}
+        ),
+        Document(
+            id="doc2",
+            name="Doc 2",
+            text="deep learning neural networks",
+            timestamp="2025-01-15T11:00:00",
+            metadata={"topics": ["deep_learning", "neural_networks"]}
+        ),
+        Document(
+            id="doc3",
+            name="Doc 3",
+            text="data science analytics",
+            timestamp="2025-01-16T10:00:00",
+            metadata={"topics": ["data_science", "analytics"]}
+        ),
+    ]
+    corpus = Corpus(id="corpus1", name="Topic Corpus", documents=docs)
+    analyzer = TemporalAnalyzer(corpus)
+    
+    # Get weekly topics
+    topics = analyzer.get_temporal_topics(period="W", top_n=3)
+    
+    assert isinstance(topics, dict)
+    assert len(topics) > 0
+    # Each period should have a list of topics
+    for period, topic_list in topics.items():
+        assert isinstance(topic_list, list)
+
+
+def test_temporal_topics_without_metadata():
+    """Test temporal topic extraction without topic metadata."""
+    docs = [
+        Document(
+            id="doc1",
+            name="Doc 1",
+            text="machine learning artificial intelligence technology innovation",
+            timestamp="2025-01-15T10:00:00",
+        ),
+        Document(
+            id="doc2",
+            name="Doc 2",
+            text="deep learning neural networks machine learning",
+            timestamp="2025-01-15T11:00:00",
+        ),
+    ]
+    corpus = Corpus(id="corpus1", name="Topic Corpus", documents=docs)
+    analyzer = TemporalAnalyzer(corpus)
+    
+    # Get weekly topics (should fall back to keyword extraction)
+    topics = analyzer.get_temporal_topics(period="W", top_n=3)
+    
+    assert isinstance(topics, dict)
+    assert len(topics) > 0

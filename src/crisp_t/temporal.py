@@ -423,3 +423,242 @@ class TemporalAnalyzer:
             second=f"numb:{df_column}",
             relation=relation,
         )
+
+    def get_temporal_sentiment_trend(
+        self,
+        period: str = "D",
+        aggregation: str = "mean",
+    ) -> pd.DataFrame:
+        """
+        Analyze sentiment trends over time.
+        Requires documents to have sentiment metadata and timestamps.
+
+        Args:
+            period: Pandas period string ('D' for day, 'W' for week, 'M' for month).
+            aggregation: Aggregation method ('mean', 'median', 'max', 'min').
+
+        Returns:
+            DataFrame with sentiment trends over time.
+        """
+        sentiment_data = []
+
+        for doc in self.corpus.documents:
+            if not doc.timestamp or "sentiment" not in doc.metadata:
+                continue
+
+            doc_time = self.parse_timestamp(doc.timestamp)
+            if not doc_time:
+                continue
+
+            # Convert sentiment to numeric score
+            sentiment = doc.metadata["sentiment"]
+            score_map = {"pos": 1.0, "positive": 1.0, "neg": -1.0, "negative": -1.0, "neu": 0.0, "neutral": 0.0}
+            sentiment_score = score_map.get(sentiment.lower(), 0.0)
+
+            sentiment_data.append({
+                "timestamp": doc_time,
+                "period": pd.Period(doc_time, freq=period),
+                "sentiment_score": sentiment_score,
+            })
+
+        if not sentiment_data:
+            return pd.DataFrame()
+
+        df = pd.DataFrame(sentiment_data)
+
+        # Aggregate by period
+        if aggregation == "mean":
+            result = df.groupby("period")["sentiment_score"].mean()
+        elif aggregation == "median":
+            result = df.groupby("period")["sentiment_score"].median()
+        elif aggregation == "max":
+            result = df.groupby("period")["sentiment_score"].max()
+        elif aggregation == "min":
+            result = df.groupby("period")["sentiment_score"].min()
+        else:
+            result = df.groupby("period")["sentiment_score"].mean()
+
+        result_df = result.to_frame()
+        result_df["document_count"] = df.groupby("period").size()
+
+        return result_df
+
+    def get_temporal_topics(
+        self,
+        period: str = "W",
+        top_n: int = 5,
+    ) -> Dict[str, List[str]]:
+        """
+        Extract topics over time periods.
+        Requires documents to have timestamp and optionally topics metadata.
+
+        Args:
+            period: Pandas period string ('D' for day, 'W' for week, 'M' for month).
+            top_n: Number of top keywords/topics per period.
+
+        Returns:
+            Dictionary mapping period to list of top topics/keywords.
+        """
+        from collections import Counter
+
+        period_topics = {}
+
+        # Group documents by period
+        period_docs = {}
+        for doc in self.corpus.documents:
+            if not doc.timestamp:
+                continue
+
+            doc_time = self.parse_timestamp(doc.timestamp)
+            if not doc_time:
+                continue
+
+            doc_period = str(pd.Period(doc_time, freq=period))
+            if doc_period not in period_docs:
+                period_docs[doc_period] = []
+            period_docs[doc_period].append(doc)
+
+        # Extract topics for each period
+        for period_key, docs in period_docs.items():
+            # If documents have topic metadata, aggregate them
+            if any("topics" in doc.metadata for doc in docs):
+                all_topics = []
+                for doc in docs:
+                    if "topics" in doc.metadata:
+                        topics = doc.metadata["topics"]
+                        if isinstance(topics, list):
+                            all_topics.extend(topics)
+                        elif isinstance(topics, str):
+                            all_topics.append(topics)
+
+                # Count and get top topics
+                topic_counts = Counter(all_topics)
+                period_topics[period_key] = [topic for topic, _ in topic_counts.most_common(top_n)]
+            else:
+                # Simple keyword extraction from text (fallback)
+                all_text = " ".join(doc.text for doc in docs)
+                words = all_text.lower().split()
+                # Filter out common stop words and get most common
+                stop_words = {"the", "a", "an", "and", "or", "but", "in", "on", "at", "to", "for", "of", "with"}
+                filtered_words = [w for w in words if w not in stop_words and len(w) > 3]
+                word_counts = Counter(filtered_words)
+                period_topics[period_key] = [word for word, _ in word_counts.most_common(top_n)]
+
+        return period_topics
+
+    def plot_temporal_sentiment(
+        self,
+        period: str = "D",
+        aggregation: str = "mean",
+        output_path: Optional[str] = None,
+    ):
+        """
+        Plot sentiment trends over time.
+
+        Args:
+            period: Pandas period string ('D' for day, 'W' for week, 'M' for month).
+            aggregation: Aggregation method ('mean', 'median', 'max', 'min').
+            output_path: Optional path to save the plot.
+
+        Returns:
+            Matplotlib figure object.
+        """
+        import matplotlib.pyplot as plt
+
+        trend_df = self.get_temporal_sentiment_trend(period=period, aggregation=aggregation)
+
+        if trend_df.empty:
+            raise ValueError("No temporal sentiment data available")
+
+        fig, ax = plt.subplots(figsize=(12, 6))
+
+        # Convert period index to string for plotting
+        x_labels = [str(p) for p in trend_df.index]
+        x_pos = range(len(x_labels))
+
+        ax.plot(x_pos, trend_df["sentiment_score"], marker="o", linewidth=2, markersize=8)
+        ax.axhline(y=0, color="gray", linestyle="--", alpha=0.5)
+        ax.set_xticks(x_pos)
+        ax.set_xticklabels(x_labels, rotation=45, ha="right")
+        ax.set_xlabel("Time Period")
+        ax.set_ylabel("Sentiment Score")
+        ax.set_title(f"Temporal Sentiment Trend ({period} periods, {aggregation})")
+        ax.grid(True, alpha=0.3)
+
+        plt.tight_layout()
+
+        if output_path:
+            plt.savefig(output_path)
+
+        return fig
+
+    def plot_temporal_summary(
+        self,
+        time_column: str = "timestamp",
+        period: str = "W",
+        numeric_columns: Optional[List[str]] = None,
+        output_path: Optional[str] = None,
+    ):
+        """
+        Plot temporal summary of numeric data.
+
+        Args:
+            time_column: Name of the timestamp column in the dataframe.
+            period: Pandas period string ('D' for day, 'W' for week, 'M' for month).
+            numeric_columns: List of numeric columns to plot.
+            output_path: Optional path to save the plot.
+
+        Returns:
+            Matplotlib figure object.
+        """
+        import matplotlib.pyplot as plt
+
+        summary_df = self.get_temporal_summary(
+            time_column=time_column,
+            period=period,
+            numeric_columns=numeric_columns
+        )
+
+        if summary_df.empty:
+            raise ValueError("No temporal summary data available")
+
+        fig, axes = plt.subplots(2, 1, figsize=(12, 10))
+
+        # Plot document count over time
+        if "document_count" in summary_df.columns:
+            x_labels = [str(p) for p in summary_df.index]
+            x_pos = range(len(x_labels))
+
+            axes[0].bar(x_pos, summary_df["document_count"], alpha=0.7)
+            axes[0].set_xticks(x_pos)
+            axes[0].set_xticklabels(x_labels, rotation=45, ha="right")
+            axes[0].set_xlabel("Time Period")
+            axes[0].set_ylabel("Document Count")
+            axes[0].set_title("Document Count Over Time")
+            axes[0].grid(True, alpha=0.3)
+
+        # Plot numeric data trends
+        if isinstance(summary_df.columns, pd.MultiIndex):
+            # MultiIndex columns from numeric aggregations
+            for col in summary_df.columns.get_level_values(0).unique():
+                if col != "document_count":
+                    mean_col = (col, "mean")
+                    if mean_col in summary_df.columns:
+                        x_labels = [str(p) for p in summary_df.index]
+                        x_pos = range(len(x_labels))
+                        axes[1].plot(x_pos, summary_df[mean_col], marker="o", label=col)
+
+            axes[1].set_xticks(x_pos)
+            axes[1].set_xticklabels(x_labels, rotation=45, ha="right")
+            axes[1].set_xlabel("Time Period")
+            axes[1].set_ylabel("Mean Value")
+            axes[1].set_title("Numeric Data Trends Over Time")
+            axes[1].legend()
+            axes[1].grid(True, alpha=0.3)
+
+        plt.tight_layout()
+
+        if output_path:
+            plt.savefig(output_path)
+
+        return fig

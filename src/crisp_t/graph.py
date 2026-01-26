@@ -486,3 +486,134 @@ class CrispGraph:
         if self.graph is None:
             raise ValueError("Graph not created yet. Call create_graph() first.")
         return self.graph
+
+    def create_temporal_subgraphs(
+        self,
+        period: str = "W",
+        include_temporal_edges: bool = True,
+    ) -> Dict[str, nx.Graph]:
+        """
+        Create time-sliced subgraphs based on document timestamps.
+
+        Args:
+            period: Pandas period string ('D' for day, 'W' for week, 'M' for month).
+            include_temporal_edges: Whether to add temporal relationship edges.
+
+        Returns:
+            Dictionary mapping time periods to NetworkX subgraphs.
+
+        Raises:
+            ValueError: If graph hasn't been created yet or no documents have timestamps.
+        """
+        if self.graph is None:
+            raise ValueError("Graph not created yet. Call create_graph() first.")
+
+        from .temporal import TemporalAnalyzer
+
+        # Group documents by period
+        period_graphs = {}
+        period_docs = {}
+
+        for doc in self.corpus.documents:
+            if not doc.timestamp:
+                continue
+
+            doc_time = TemporalAnalyzer.parse_timestamp(doc.timestamp)
+            if not doc_time:
+                continue
+
+            doc_period = str(pd.Period(doc_time, freq=period))
+            if doc_period not in period_docs:
+                period_docs[doc_period] = []
+            period_docs[doc_period].append(doc.id)
+
+        if not period_docs:
+            raise ValueError("No documents with valid timestamps found")
+
+        # Create subgraph for each period
+        for period_key, doc_ids in period_docs.items():
+            # Create subgraph with nodes related to these documents
+            nodes_to_include = set(doc_ids)
+
+            # Add related nodes (keywords, clusters, metadata)
+            for doc_id in doc_ids:
+                # Add keyword nodes
+                for neighbor in self.graph.neighbors(doc_id):
+                    if neighbor.startswith("keyword:") or neighbor.startswith("cluster:") or neighbor.startswith("metadata:"):
+                        nodes_to_include.add(neighbor)
+
+            # Create subgraph
+            subgraph = self.graph.subgraph(nodes_to_include).copy()
+
+            # Add temporal edges if requested
+            if include_temporal_edges:
+                for doc_id in doc_ids:
+                    doc = self.corpus.get_document_by_id(doc_id)
+                    if doc and "temporal_links" in doc.metadata:
+                        for link in doc.metadata["temporal_links"]:
+                            df_idx = link.get("df_index")
+                            if df_idx is not None:
+                                # Add edge to metadata node if it exists
+                                meta_node = f"metadata:{df_idx}"
+                                if meta_node in subgraph:
+                                    subgraph.add_edge(
+                                        doc_id,
+                                        meta_node,
+                                        label="TEMPORAL_LINK",
+                                        time_gap=link.get("time_gap_seconds", 0),
+                                        link_type=link.get("link_type", "temporal"),
+                                    )
+
+            period_graphs[period_key] = subgraph
+
+        # Store in corpus metadata
+        self.corpus.metadata["temporal_subgraphs"] = {
+            "periods": list(period_graphs.keys()),
+            "period_type": period,
+            "num_periods": len(period_graphs),
+        }
+
+        logger.info(f"Created {len(period_graphs)} temporal subgraphs for period '{period}'")
+
+        return period_graphs
+
+    def add_temporal_edges(self):
+        """
+        Add temporal relationship edges to the existing graph.
+        Uses temporal_links in document metadata to create edges.
+
+        Raises:
+            ValueError: If graph hasn't been created yet.
+        """
+        if self.graph is None:
+            raise ValueError("Graph not created yet. Call create_graph() first.")
+
+        temporal_edges_added = 0
+
+        for doc in self.corpus.documents:
+            if "temporal_links" not in doc.metadata:
+                continue
+
+            for link in doc.metadata["temporal_links"]:
+                df_idx = link.get("df_index")
+                if df_idx is not None:
+                    # Create edge to metadata node
+                    meta_node = f"metadata:{df_idx}"
+                    if meta_node in self.graph:
+                        self.graph.add_edge(
+                            doc.id,
+                            meta_node,
+                            label="TEMPORAL_LINK",
+                            time_gap=link.get("time_gap_seconds", 0),
+                            link_type=link.get("link_type", "temporal"),
+                        )
+                        temporal_edges_added += 1
+
+        logger.info(f"Added {temporal_edges_added} temporal edges to the graph")
+
+        # Update graph metadata
+        if "graph" in self.corpus.metadata:
+            self.corpus.metadata["graph"]["has_temporal_edges"] = temporal_edges_added > 0
+            self.corpus.metadata["graph"]["num_temporal_edges"] = temporal_edges_added
+
+        return temporal_edges_added
