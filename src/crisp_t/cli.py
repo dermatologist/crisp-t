@@ -46,7 +46,10 @@ except ImportError:
     "--filters",
     "-f",
     multiple=True,
-    help="Filter documents based on metadata. Format: key=value. Can be used multiple times to apply multiple filters.",
+    help="Filter documents and dataframe based on linkage metadata. Format: 'method:key=value' or 'method:key=value:threshold'. "
+         "Methods: id (ID-based), keyword (keyword-based), time (temporal links), embedding (embedding links). "
+         "Examples: 'id:Gender=1', 'keyword:healthcare', 'time:timestamp', 'embedding:similarity:0.7'. "
+         "Legacy format 'key=value' defaults to ID-based filtering.",
 )
 @click.option("--codedict", is_flag=True, help="Generate a qualitative coding dictionary from your text data.")
 @click.option("--topics", is_flag=True, help="Perform topic modeling using Latent Dirichlet Allocation (LDA).")
@@ -747,24 +750,134 @@ def _clear_cache():
 
 
 def _process_csv(csv_analyzer, unstructured, ignore, filters):
+    """
+    Process CSV with filtering support for multiple linkage methods.
+    
+    Supports legacy format (key=value) for backward compatibility and
+    new format (method:key=value:threshold) for advanced linkage filtering.
+    """
     text_columns = ",".join(unstructured) if unstructured else ""
     ignore_columns = ignore if ignore else ""
     csv_analyzer.comma_separated_text_columns = text_columns
     csv_analyzer.comma_separated_ignore_columns = ignore_columns
+    
     if filters:
+        from .linkage_filter import LinkageFilter
+        
         try:
+            corpus = csv_analyzer.corpus
+            if corpus is None:
+                raise ValueError("No corpus available for filtering")
+            
+            linker = LinkageFilter(corpus)
+            
             for flt in filters:
-                if "=" in flt:
+                # Parse filter format
+                # New format: method:key=value or method:key=value:threshold
+                # Legacy format: key=value (defaults to ID-based)
+                
+                if flt.count(":") >= 2:
+                    # New format with method and possibly threshold
+                    parts = flt.split(":")
+                    method = parts[0].strip()
+                    
+                    # Find the key=value part
+                    key_value = None
+                    threshold = None
+                    
+                    for i, part in enumerate(parts[1:], 1):
+                        if "=" in part:
+                            key_value = part
+                            # Remaining parts might be threshold
+                            if i + 1 < len(parts):
+                                try:
+                                    threshold = float(parts[i + 1])
+                                except ValueError:
+                                    pass
+                            break
+                    
+                    if key_value:
+                        if "=" in key_value:
+                            key, value = key_value.split("=", 1)
+                        else:
+                            key = key_value
+                            value = ""
+                    else:
+                        # No key=value, use remaining as key
+                        key = parts[1].strip() if len(parts) > 1 else ""
+                        value = ""
+                        if len(parts) > 2:
+                            try:
+                                threshold = float(parts[2])
+                            except ValueError:
+                                pass
+                    
+                elif flt.count(":") == 1:
+                    # Could be method:key or key:value (legacy)
+                    parts = flt.split(":", 1)
+                    first = parts[0].strip()
+                    second = parts[1].strip()
+                    
+                    if first in LinkageFilter.LINKAGE_METHODS:
+                        # New format: method:key
+                        method = first
+                        key = second
+                        value = ""
+                        threshold = None
+                    else:
+                        # Legacy format: key:value (treat as ID-based)
+                        method = "id"
+                        key = first
+                        value = second
+                        threshold = None
+                        
+                elif "=" in flt:
+                    # Legacy format: key=value (ID-based)
+                    method = "id"
                     key, value = flt.split("=", 1)
-                elif ":" in flt:
-                    key, value = flt.split(":", 1)
+                    threshold = None
                 else:
-                    raise ValueError("Filter must be in key=value or key:value format")
-                csv_analyzer.filter_rows_by_column_value(key.strip(), value.strip())
-            click.echo(f"Applied filters {list(filters)}; remaining rows: {csv_analyzer.get_shape()[0]}")
+                    raise ValueError(
+                        f"Invalid filter format: '{flt}'. "
+                        "Use 'method:key=value' or legacy 'key=value'"
+                    )
+                
+                # Apply filter
+                if method == "id":
+                    # Use existing CSV filtering for ID-based
+                    csv_analyzer.filter_rows_by_column_value(key.strip(), value.strip())
+                else:
+                    # Use LinkageFilter for advanced methods
+                    corpus = linker.filter_by_linkage(
+                        method=method,
+                        key=key.strip(),
+                        value=value.strip() if value else "",
+                        min_similarity=threshold
+                    )
+                    # Update csv_analyzer with filtered corpus
+                    csv_analyzer._corpus = corpus
+                    csv_analyzer._df = corpus.df
+            
+            # Show summary
+            final_corpus = csv_analyzer.corpus
+            doc_count = len(final_corpus.documents) if final_corpus else 0
+            row_count = len(final_corpus.df) if final_corpus and final_corpus.df is not None else 0
+            
+            click.echo(
+                f"Applied {len(filters)} filter(s); "
+                f"remaining: {doc_count} documents, {row_count} rows"
+            )
+            
+        except ValueError as e:
+            # Informative error with hints
+            click.echo(click.style(f"\n❌ Filter Error: {e}", fg="red", bold=True))
+            raise click.ClickException(str(e))
         except Exception as e:
-            # Surface as CLI error with non-zero exit code
-            click.echo(f"Probably no numeric metadata to filter, but let me check document metadata: {e}")
+            click.echo(click.style(f"\n❌ Unexpected error in filtering: {e}", fg="red", bold=True))
+            import traceback
+            traceback.print_exc()
+            raise click.ClickException(str(e))
+    
     return text_columns, ignore_columns
 
 
