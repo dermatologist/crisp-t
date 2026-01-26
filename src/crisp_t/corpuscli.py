@@ -595,7 +595,8 @@ def main(
             parts = temporal_link.split(":")
             if len(parts) < 2:
                 raise click.ClickException(
-                    "Invalid format. Use 'method:column:param' (e.g., 'nearest:timestamp', 'window:timestamp:300')"
+                    "Invalid format. Use 'method:column' or 'method:column:param' "
+                    "(e.g., 'nearest:timestamp', 'window:timestamp:300', 'sequence:timestamp:W')"
                 )
 
             method = parts[0].strip()

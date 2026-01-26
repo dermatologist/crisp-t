@@ -20,7 +20,18 @@ along with crisp-t.  If not, see <https://www.gnu.org/licenses/>.
 from datetime import datetime, timedelta
 from typing import Optional, List, Tuple, Dict, Any
 import pandas as pd
+import logging
 from .model import Corpus, Document
+
+logger = logging.getLogger(__name__)
+
+# Common stop words for topic extraction
+COMMON_STOP_WORDS = {
+    "the", "a", "an", "and", "or", "but", "in", "on", "at", "to", "for",
+    "of", "with", "by", "from", "as", "is", "was", "are", "were", "be",
+    "been", "being", "have", "has", "had", "do", "does", "did", "will",
+    "would", "should", "could", "may", "might", "can"
+}
 
 
 class TemporalAnalyzer:
@@ -74,7 +85,8 @@ class TemporalAnalyzer:
         # Try pandas parser as fallback
         try:
             return pd.to_datetime(timestamp_str)
-        except Exception:
+        except (ValueError, TypeError, pd.errors.ParserError):
+            logger.warning(f"Failed to parse timestamp: {timestamp_str}")
             return None
 
     def link_by_nearest_time(
@@ -539,8 +551,7 @@ class TemporalAnalyzer:
                 all_text = " ".join(doc.text for doc in docs)
                 words = all_text.lower().split()
                 # Filter out common stop words and get most common
-                stop_words = {"the", "a", "an", "and", "or", "but", "in", "on", "at", "to", "for", "of", "with"}
-                filtered_words = [w for w in words if w not in stop_words and len(w) > 3]
+                filtered_words = [w for w in words if w not in COMMON_STOP_WORDS and len(w) > 3]
                 word_counts = Counter(filtered_words)
                 period_topics[period_key] = [word for word, _ in word_counts.most_common(top_n)]
 
