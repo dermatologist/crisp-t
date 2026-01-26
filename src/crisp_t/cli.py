@@ -854,9 +854,9 @@ def _process_csv(csv_analyzer, unstructured, ignore, filters):
                         value=value.strip() if value else "",
                         min_similarity=threshold
                     )
-                    # Update csv_analyzer with filtered corpus
-                    csv_analyzer._corpus = corpus
-                    csv_analyzer._df = corpus.df
+                    # Update csv_analyzer with filtered corpus using setters
+                    csv_analyzer.corpus = corpus
+                    csv_analyzer.df = corpus.df
             
             # Show summary
             final_corpus = csv_analyzer.corpus

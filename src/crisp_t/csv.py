@@ -50,12 +50,28 @@ class Csv:
         if self._corpus is not None and self._df is not None:
             self._corpus.df = self._df
         return self._corpus
+    
+    @corpus.setter
+    def corpus(self, value: Optional[Corpus]) -> None:
+        """Set corpus and update internal dataframe."""
+        self._corpus = value
+        if value is not None:
+            self._df = value.df
+        else:
+            self._df = pd.DataFrame()
 
     @property
     def df(self) -> pd.DataFrame:
         if self._df is None:
             return pd.DataFrame()
         return self._df
+    
+    @df.setter
+    def df(self, value: pd.DataFrame) -> None:
+        """Set dataframe and update corpus if present."""
+        self._df = value
+        if self._corpus is not None:
+            self._corpus.df = value
 
     @property
     def comma_separated_text_columns(self) -> str:

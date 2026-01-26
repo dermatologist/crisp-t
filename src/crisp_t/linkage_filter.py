@@ -142,10 +142,20 @@ class LinkageFilter:
         
         # Filter documents by ID
         valid_ids = set(filtered_df[id_col].tolist())
-        filtered_docs = [
-            doc for doc in self.corpus.documents
-            if hasattr(doc, id_col) and getattr(doc, id_col, None) in valid_ids
-        ]
+        filtered_docs = []
+        
+        for doc in self.corpus.documents:
+            # Check if document has the ID attribute
+            doc_id = getattr(doc, "id", None)  # Primary attribute
+            if doc_id is None:
+                # Try other common ID attributes
+                for attr in [id_col, "doc_id", "document_id", "ID"]:
+                    doc_id = getattr(doc, attr, None)
+                    if doc_id is not None:
+                        break
+            
+            if doc_id in valid_ids:
+                filtered_docs.append(doc)
         
         logger.info(
             f"ID filter: {len(filtered_df)} rows, {len(filtered_docs)} documents"
@@ -274,8 +284,9 @@ class LinkageFilter:
         # Filter dataframe by linked indices
         filtered_df = None
         if self.corpus.df is not None and linked_row_indices:
-            # Convert to list and filter
-            valid_indices = [idx for idx in linked_row_indices if idx in self.corpus.df.index]
+            # Convert index to set for O(1) lookup
+            valid_index_set = set(self.corpus.df.index)
+            valid_indices = [idx for idx in linked_row_indices if idx in valid_index_set]
             filtered_df = self.corpus.df.loc[valid_indices]
         
         logger.info(
@@ -349,7 +360,9 @@ class LinkageFilter:
         # Filter dataframe by linked indices
         filtered_df = None
         if self.corpus.df is not None and linked_row_indices:
-            valid_indices = [idx for idx in linked_row_indices if idx in self.corpus.df.index]
+            # Convert index to set for O(1) lookup
+            valid_index_set = set(self.corpus.df.index)
+            valid_indices = [idx for idx in linked_row_indices if idx in valid_index_set]
             filtered_df = self.corpus.df.loc[valid_indices]
         
         logger.info(
