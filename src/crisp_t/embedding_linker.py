@@ -18,11 +18,13 @@ along with crisp-t.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 import logging
-from typing import Optional, List, Dict, Tuple, Any
+from typing import Any, Dict, List, Optional, Tuple
+
 import numpy as np
 import pandas as pd
-from sklearn.preprocessing import StandardScaler
 from sklearn.metrics.pairwise import cosine_similarity, euclidean_distances
+from sklearn.preprocessing import StandardScaler
+
 from .model import Corpus, Document
 
 logger = logging.getLogger(__name__)
@@ -30,6 +32,7 @@ logger = logging.getLogger(__name__)
 try:
     import chromadb
     from chromadb.config import Settings
+
     CHROMADB_AVAILABLE = True
 except ImportError:
     CHROMADB_AVAILABLE = False
@@ -39,11 +42,11 @@ except ImportError:
 class EmbeddingLinker:
     """
     Embedding-based cross-modal linking between text documents and numeric data.
-    
-    This class provides fuzzy semantic alignment when explicit IDs or timestamps 
-    are missing, complementing existing ID-based, keyword-based, and time-based 
+
+    This class provides fuzzy semantic alignment when explicit IDs or timestamps
+    are missing, complementing existing ID-based, keyword-based, and time-based
     linking methods in CRISP-T.
-    
+
     Methods:
     - Text embeddings: Uses sentence transformers or ChromaDB's default embeddings
     - Numeric embeddings: Standardized numeric vectors from dataframe rows
@@ -71,7 +74,7 @@ class EmbeddingLinker:
         self.text_embedding_model = text_embedding_model
         self.similarity_metric = similarity_metric
         self.use_simple_embeddings = use_simple_embeddings
-        
+
         # Cache for embeddings
         self._text_embeddings = None
         self._numeric_embeddings = None
@@ -81,10 +84,10 @@ class EmbeddingLinker:
     def _get_text_embeddings(self) -> np.ndarray:
         """
         Compute or retrieve cached text embeddings for all documents.
-        
+
         Uses ChromaDB with sentence transformers for high-quality embeddings,
         or falls back to simple TF-IDF based embeddings.
-        
+
         Returns:
             Array of shape (n_documents, embedding_dim)
         """
@@ -102,44 +105,45 @@ class EmbeddingLinker:
         # Use Semantic class to generate embeddings
         try:
             semantic = Semantic(
-                self.corpus,
-                use_simple_embeddings=self.use_simple_embeddings
+                self.corpus, use_simple_embeddings=self.use_simple_embeddings
             )
-            
+
             # Get collection to access embeddings
             collection = semantic._collection
-            
+
             # Retrieve all documents with embeddings
             results = collection.get(include=["embeddings"])
-            
+
             if results["embeddings"] is None or len(results["embeddings"]) == 0:
-                raise ValueError("No embeddings found. Ensure documents are added to collection.")
-            
+                raise ValueError(
+                    "No embeddings found. Ensure documents are added to collection."
+                )
+
             self._text_embeddings = np.array(results["embeddings"])
             self._text_ids = results["ids"]
-            
-            logger.info(f"Generated text embeddings: shape {self._text_embeddings.shape}")
-            
+
+            logger.info(
+                f"Generated text embeddings: shape {self._text_embeddings.shape}"
+            )
+
             return self._text_embeddings
-            
+
         except Exception as e:
             logger.error(f"Error generating text embeddings: {e}")
             raise
 
     def _get_numeric_embeddings(
-        self,
-        columns: Optional[List[str]] = None,
-        normalize: bool = True
+        self, columns: Optional[List[str]] = None, normalize: bool = True
     ) -> np.ndarray:
         """
         Compute or retrieve cached numeric embeddings from dataframe.
-        
+
         Each row is encoded as a standardized vector of its numeric features.
-        
+
         Args:
             columns: List of column names to use. If None, uses all numeric columns.
             normalize: Whether to standardize features (recommended)
-            
+
         Returns:
             Array of shape (n_rows, n_features)
         """
@@ -171,10 +175,17 @@ class EmbeddingLinker:
             scaler = StandardScaler()
             numeric_data = scaler.fit_transform(numeric_data)
 
+        # Replace any remaining NaNs with zeros (handles columns that are all NaN)
+        if np.isnan(numeric_data).any():
+            logger.warning("NaNs found in numeric embeddings, replacing with zeros.")
+            numeric_data = np.nan_to_num(numeric_data, nan=0.0)
+
         self._numeric_embeddings = numeric_data
         self._numeric_indices = list(df.index)
 
-        logger.info(f"Generated numeric embeddings: shape {self._numeric_embeddings.shape}")
+        logger.info(
+            f"Generated numeric embeddings: shape {self._numeric_embeddings.shape}"
+        )
 
         return self._numeric_embeddings
 
@@ -184,45 +195,45 @@ class EmbeddingLinker:
     ) -> np.ndarray:
         """
         Compute similarity matrix between text and numeric embeddings.
-        
+        Projects both embeddings to a common lower dimension using PCA.
         Args:
             numeric_columns: Columns to use for numeric embeddings
-            
         Returns:
             Similarity matrix of shape (n_documents, n_rows)
-            Higher values indicate more similar items
         """
         text_emb = self._get_text_embeddings()
         numeric_emb = self._get_numeric_embeddings(columns=numeric_columns)
 
-        # Ensure compatible dimensions
-        if text_emb.shape[1] != numeric_emb.shape[1]:
-            logger.warning(
-                f"Dimension mismatch: text={text_emb.shape[1]}, numeric={numeric_emb.shape[1]}. "
-                "Padding or truncating to match."
+        # Check for NaNs in embeddings
+        if np.isnan(text_emb).any():
+            raise ValueError(
+                "Text embeddings contain NaN values. Cannot compute similarity."
             )
-            max_dim = max(text_emb.shape[1], numeric_emb.shape[1])
-            
-            # Pad shorter embeddings with zeros
-            if text_emb.shape[1] < max_dim:
-                text_emb = np.pad(
-                    text_emb,
-                    ((0, 0), (0, max_dim - text_emb.shape[1])),
-                    mode='constant'
-                )
-            if numeric_emb.shape[1] < max_dim:
-                numeric_emb = np.pad(
-                    numeric_emb,
-                    ((0, 0), (0, max_dim - numeric_emb.shape[1])),
-                    mode='constant'
-                )
+        if np.isnan(numeric_emb).any():
+            raise ValueError(
+                "Numeric embeddings contain NaN values. Cannot compute similarity."
+            )
+
+        # Project both to the same lower dimension using PCA
+        from sklearn.decomposition import PCA
+
+        min_dim = min(text_emb.shape[1], numeric_emb.shape[1])
+        if text_emb.shape[1] != min_dim:
+            pca_text = PCA(n_components=min_dim, random_state=42)
+            text_emb_proj = pca_text.fit_transform(text_emb)
+        else:
+            text_emb_proj = text_emb
+        if numeric_emb.shape[1] != min_dim:
+            pca_num = PCA(n_components=min_dim, random_state=42)
+            numeric_emb_proj = pca_num.fit_transform(numeric_emb)
+        else:
+            numeric_emb_proj = numeric_emb
 
         # Compute similarity
         if self.similarity_metric == "cosine":
-            similarity = cosine_similarity(text_emb, numeric_emb)
+            similarity = cosine_similarity(text_emb_proj, numeric_emb_proj)
         elif self.similarity_metric == "euclidean":
-            # Convert distance to similarity (inverse)
-            distances = euclidean_distances(text_emb, numeric_emb)
+            distances = euclidean_distances(text_emb_proj, numeric_emb_proj)
             similarity = 1.0 / (1.0 + distances)
         else:
             raise ValueError(f"Unknown similarity metric: {self.similarity_metric}")
@@ -237,19 +248,21 @@ class EmbeddingLinker:
     ) -> Corpus:
         """
         Link documents to dataframe rows by embedding similarity.
-        
+
         Args:
             numeric_columns: Columns to use for numeric embeddings
             threshold: Minimum similarity threshold (0-1). If None, no filtering.
             top_k: Number of top similar rows to link per document
-            
+
         Returns:
             Updated corpus with embedding links in document metadata
         """
         logger.info("Computing embedding-based links...")
-        
+
         # Compute similarity matrix
-        similarity_matrix = self.compute_similarity_matrix(numeric_columns=numeric_columns)
+        similarity_matrix = self.compute_similarity_matrix(
+            numeric_columns=numeric_columns
+        )
 
         # For each document, find top-k most similar rows
         for i, doc in enumerate(self.corpus.documents):
@@ -258,7 +271,7 @@ class EmbeddingLinker:
                 continue
 
             similarities = similarity_matrix[i]
-            
+
             # Get top-k indices
             if top_k == 1:
                 top_indices = [np.argmax(similarities)]
@@ -269,27 +282,32 @@ class EmbeddingLinker:
             links = []
             for idx in top_indices:
                 sim_score = similarities[idx]
-                
+
                 if threshold is None or sim_score >= threshold:
                     df_index = self._numeric_indices[idx]
-                    links.append({
-                        "df_index": int(df_index),
-                        "similarity_score": float(sim_score),
-                        "link_type": "embedding",
-                        "similarity_metric": self.similarity_metric,
-                    })
+                    links.append(
+                        {
+                            "df_index": int(df_index),
+                            "similarity_score": float(sim_score),
+                            "link_type": "embedding",
+                            "similarity_metric": self.similarity_metric,
+                        }
+                    )
 
             # Store links in document metadata
             if links:
                 if "embedding_links" not in doc.metadata:
                     doc.metadata["embedding_links"] = []
                 doc.metadata["embedding_links"].extend(links)
+                # write back to corpus
+                self.corpus.documents[i] = doc
 
         linked_count = sum(
-            1 for doc in self.corpus.documents 
+            1
+            for doc in self.corpus.documents
             if "embedding_links" in doc.metadata and doc.metadata["embedding_links"]
         )
-        
+
         logger.info(f"Linked {linked_count} documents using embedding similarity")
 
         return self.corpus
@@ -297,7 +315,7 @@ class EmbeddingLinker:
     def get_link_statistics(self) -> Dict[str, Any]:
         """
         Get statistics about embedding-based links.
-        
+
         Returns:
             Dictionary with statistics
         """
@@ -311,13 +329,13 @@ class EmbeddingLinker:
         }
 
         similarities = []
-        
+
         for doc in self.corpus.documents:
             if "embedding_links" in doc.metadata and doc.metadata["embedding_links"]:
                 stats["linked_documents"] += 1
                 links = doc.metadata["embedding_links"]
                 stats["total_links"] += len(links)
-                
+
                 for link in links:
                     sim = link.get("similarity_score", 0.0)
                     similarities.append(sim)
@@ -336,18 +354,18 @@ class EmbeddingLinker:
     ):
         """
         Visualize text and numeric embeddings in 2D space using dimensionality reduction.
-        
+
         Args:
             output_path: Path to save the plot
             method: 'tsne', 'pca', or 'umap'
-            
+
         Returns:
             Matplotlib figure
         """
         try:
             import matplotlib.pyplot as plt
-            from sklearn.manifold import TSNE
             from sklearn.decomposition import PCA
+            from sklearn.manifold import TSNE
         except ImportError:
             raise ImportError("matplotlib and sklearn required for visualization")
 
@@ -368,8 +386,8 @@ class EmbeddingLinker:
         coords_2d = reducer.fit_transform(all_emb)
 
         # Split back into text and numeric
-        text_coords = coords_2d[:len(text_emb)]
-        numeric_coords = coords_2d[len(text_emb):]
+        text_coords = coords_2d[: len(text_emb)]
+        numeric_coords = coords_2d[len(text_emb) :]
 
         # Create plot
         fig, ax = plt.subplots(figsize=(10, 8))
@@ -377,30 +395,30 @@ class EmbeddingLinker:
         ax.scatter(
             text_coords[:, 0],
             text_coords[:, 1],
-            c='blue',
-            label='Text Documents',
+            c="blue",
+            label="Text Documents",
             alpha=0.6,
-            s=50
+            s=50,
         )
 
         ax.scatter(
             numeric_coords[:, 0],
             numeric_coords[:, 1],
-            c='red',
-            label='Numeric Rows',
+            c="red",
+            label="Numeric Rows",
             alpha=0.6,
             s=50,
-            marker='s'
+            marker="s",
         )
 
-        ax.set_xlabel(f'{method.upper()} Component 1')
-        ax.set_ylabel(f'{method.upper()} Component 2')
-        ax.set_title('Text-Numeric Embedding Space')
+        ax.set_xlabel(f"{method.upper()} Component 1")
+        ax.set_ylabel(f"{method.upper()} Component 2")
+        ax.set_title("Text-Numeric Embedding Space")
         ax.legend()
         ax.grid(True, alpha=0.3)
 
         if output_path:
-            plt.savefig(output_path, dpi=300, bbox_inches='tight')
+            plt.savefig(output_path, dpi=300, bbox_inches="tight")
             logger.info(f"Saved visualization to {output_path}")
 
         return fig
