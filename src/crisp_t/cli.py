@@ -80,7 +80,7 @@ except ImportError:
     "--filters",
     "-f",
     multiple=True,
-    help="Filter documents based on metadata. Format: key=value. Can be used multiple times to apply multiple filters.",
+    help="Filter documents/rows by metadata or links. Format: key=value (regular) or embedding:text/embedding:df/temporal:text/temporal:df (link filters). Can be used multiple times.",
 )
 @click.option(
     "--codedict",

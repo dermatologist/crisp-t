@@ -139,7 +139,7 @@ def test_get_analyzers_with_regular_filters():
 
 
 def test_get_analyzers_with_embedding_filter():
-    """Test get_analyzers with =embedding filter."""
+    """Test get_analyzers with =embedding filter (legacy)."""
     corpus = DummyCorpus()
     # Add embedding_links to documents
     corpus.documents[0].metadata["embedding_links"] = [
@@ -161,8 +161,58 @@ def test_get_analyzers_with_embedding_filter():
     assert 2 in csv_analyzer.df.index
 
 
+def test_get_analyzers_with_embedding_text_filter():
+    """Test get_analyzers with embedding:text filter (explicit text→df direction)."""
+    corpus = DummyCorpus()
+    # Add embedding_links to documents
+    corpus.documents[0].metadata["embedding_links"] = [
+        {"df_index": 0, "similarity": 0.9},
+        {"df_index": 2, "similarity": 0.8},
+    ]
+    corpus.df = pd.DataFrame({"col1": [1, 2, 3], "col2": [4, 5, 6]})
+    analyzer.Text = DummyText
+    analyzer.Csv = DummyCsv
+
+    filters = ["embedding:text"]
+    text_analyzer, csv_analyzer = analyzer.get_analyzers(corpus, filters=filters)
+
+    assert isinstance(text_analyzer, DummyText)
+    assert isinstance(csv_analyzer, DummyCsv)
+    # CSV should be filtered to only rows 0 and 2
+    assert len(csv_analyzer.df) == 2
+    assert 0 in csv_analyzer.df.index
+    assert 2 in csv_analyzer.df.index
+
+
+def test_get_analyzers_with_embedding_df_filter():
+    """Test get_analyzers with embedding:df filter (df→text direction)."""
+    corpus = DummyCorpus()
+    corpus.documents[0].id = "doc1"
+    corpus.documents[1].id = "doc2"
+    # Add embedding_links to documents (reverse: which docs link to which rows)
+    corpus.documents[0].metadata["embedding_links"] = [
+        {"df_index": 0, "similarity": 0.9}
+    ]
+    corpus.documents[1].metadata["embedding_links"] = [
+        {"df_index": 1, "similarity": 0.8}
+    ]
+    corpus.df = pd.DataFrame({"col1": [1, 2, 3], "col2": [4, 5, 6]}, index=[0, 1, 2])
+    analyzer.Text = DummyText
+    analyzer.Csv = DummyCsv
+
+    filters = ["embedding:df"]
+    text_analyzer, csv_analyzer = analyzer.get_analyzers(corpus, filters=filters)
+
+    assert isinstance(text_analyzer, DummyText)
+    assert isinstance(csv_analyzer, DummyCsv)
+    # Documents should be filtered to only those linked from df rows 0 and 1
+    assert len(text_analyzer.corpus.documents) == 2
+    assert text_analyzer.corpus.documents[0].id == "doc1"
+    assert text_analyzer.corpus.documents[1].id == "doc2"
+
+
 def test_get_analyzers_with_temporal_filter():
-    """Test get_analyzers with :temporal filter."""
+    """Test get_analyzers with :temporal filter (legacy)."""
     corpus = DummyCorpus()
     # Add temporal_links to documents
     corpus.documents[1].metadata["temporal_links"] = [
@@ -180,6 +230,54 @@ def test_get_analyzers_with_temporal_filter():
     # CSV should be filtered to only row 1
     assert len(csv_analyzer.df) == 1
     assert 1 in csv_analyzer.df.index
+
+
+def test_get_analyzers_with_temporal_text_filter():
+    """Test get_analyzers with temporal:text filter (explicit text→df direction)."""
+    corpus = DummyCorpus()
+    # Add temporal_links to documents
+    corpus.documents[1].metadata["temporal_links"] = [
+        {"df_index": 1, "time_gap_seconds": 10}
+    ]
+    corpus.df = pd.DataFrame({"col1": [1, 2, 3], "col2": [4, 5, 6]})
+    analyzer.Text = DummyText
+    analyzer.Csv = DummyCsv
+
+    filters = ["temporal:text"]
+    text_analyzer, csv_analyzer = analyzer.get_analyzers(corpus, filters=filters)
+
+    assert isinstance(text_analyzer, DummyText)
+    assert isinstance(csv_analyzer, DummyCsv)
+    # CSV should be filtered to only row 1
+    assert len(csv_analyzer.df) == 1
+    assert 1 in csv_analyzer.df.index
+
+
+def test_get_analyzers_with_temporal_df_filter():
+    """Test get_analyzers with temporal:df filter (df→text direction)."""
+    corpus = DummyCorpus()
+    corpus.documents[0].id = "doc1"
+    corpus.documents[1].id = "doc2"
+    # Add temporal_links to documents
+    corpus.documents[0].metadata["temporal_links"] = [
+        {"df_index": 0, "time_gap_seconds": 5}
+    ]
+    corpus.documents[1].metadata["temporal_links"] = [
+        {"df_index": 2, "time_gap_seconds": 10}
+    ]
+    corpus.df = pd.DataFrame({"col1": [1, 2, 3], "col2": [4, 5, 6]}, index=[0, 1, 2])
+    analyzer.Text = DummyText
+    analyzer.Csv = DummyCsv
+
+    filters = ["temporal:df"]
+    text_analyzer, csv_analyzer = analyzer.get_analyzers(corpus, filters=filters)
+
+    assert isinstance(text_analyzer, DummyText)
+    assert isinstance(csv_analyzer, DummyCsv)
+    # Documents should be filtered to only those linked from df rows 0 and 2
+    assert len(text_analyzer.corpus.documents) == 2
+    assert text_analyzer.corpus.documents[0].id == "doc1"
+    assert text_analyzer.corpus.documents[1].id == "doc2"
 
 
 def test_get_analyzers_with_combined_filters():

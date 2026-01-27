@@ -147,7 +147,14 @@ crisp --source PATH --out PATH
 - `--visualize`: Generate visualizations (word clouds, topic charts, etc.)
 - `--num, -n INTEGER`: Number parameter (clusters, topics, epochs, etc.) - default: 3
 - `--rec, -r INTEGER`: Record parameter (top N results, recommendations) - default: 3
-- `--filters, -f TEXT`: Filters to apply as `key=value` or `key:value` (can be used multiple times). Regular filters keep only documents/rows where `document.metadata[key] == value` or `dataframe[key] == value`. Special filters: `=embedding` or `:embedding` to filter dataframe rows linked via embedding_links; `=temporal` or `:temporal` to filter dataframe rows linked via temporal_links. Multiple filters can be combined.
+- `--filters, -f TEXT`: Filters to apply as `key=value` or `key:value` (can be used multiple times). Regular filters keep only documents/rows where `document.metadata[key] == value` or `dataframe[key] == value`. Special link filters support bidirectional filtering:
+  - `embedding:text` or `embedding=text` - Filter dataframe rows linked via document embedding_links (text→df direction)
+  - `embedding:df` or `embedding=df` - Filter documents linked from dataframe rows via embedding_links (df→text direction)
+  - `temporal:text` or `temporal=text` - Filter dataframe rows linked via document temporal_links (text→df direction)
+  - `temporal:df` or `temporal=df` - Filter documents linked from dataframe rows via temporal_links (df→text direction)
+  - Legacy: `=embedding` or `:embedding` and `=temporal` or `:temporal` (map to text→df direction)
+
+  Multiple filters can be combined.
 - `--verbose, -v`: Print verbose messages for debugging
 
 #### Data Sources
@@ -205,14 +212,20 @@ crisp --print dataframe --print stats
 # Filter by metadata (keeps documents with keywords="healthcare" and matching DataFrame rows)
 crisp --inp corpus_dir --filters keywords=healthcare --out filtered_output
 
-# Filter by embedding links (keeps only DataFrame rows linked to documents via embedding_links)
-crisp --inp corpus_dir --filters =embedding --out filtered_output
+# Filter by embedding links - text→df direction (keeps only DataFrame rows linked from documents via embedding_links)
+crisp --inp corpus_dir --filters embedding:text --out filtered_output
 
-# Filter by temporal links (keeps only DataFrame rows linked to documents via temporal_links)
-crisp --inp corpus_dir --filters :temporal --out filtered_output
+# Filter by embedding links - df→text direction (keeps only documents linked from DataFrame rows via embedding_links)
+crisp --inp corpus_dir --filters embedding:df --out filtered_output
+
+# Filter by temporal links - text→df direction (keeps only DataFrame rows linked from documents via temporal_links)
+crisp --inp corpus_dir --filters temporal:text --out filtered_output
+
+# Filter by temporal links - df→text direction (keeps only documents linked from DataFrame rows via temporal_links)
+crisp --inp corpus_dir --filters temporal:df --out filtered_output
 
 # Combine multiple filters (filter by keywords AND embedding links)
-crisp --inp corpus_dir --filters keywords=mask --filters =embedding --out filtered_output
+crisp --inp corpus_dir --filters keywords=mask --filters embedding:text --out filtered_output
 ```
 
 
