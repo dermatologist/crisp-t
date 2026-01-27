@@ -27,6 +27,7 @@ import tempfile
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from functools import lru_cache
 from pathlib import Path
+from typing import Optional
 
 import pandas as pd
 import requests
@@ -42,6 +43,48 @@ logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(message)s",
 )
 logger = logging.getLogger(__name__)
+
+
+def extract_timestamp_from_text(text: str) -> Optional[str]:
+    """
+    Extract the first occurrence of a timestamp from text.
+    Supports ISO 8601 format and common date formats.
+
+    Args:
+        text: Text to search for timestamps
+
+    Returns:
+        ISO 8601 formatted timestamp string or None if not found
+    """
+    if not text:
+        return None
+
+    # Pattern for ISO 8601: YYYY-MM-DD or YYYY-MM-DDTHH:MM:SS or variants
+    iso_pattern = (
+        r"\d{4}-\d{2}-\d{2}(?:T\d{2}:\d{2}:\d{2}(?:\.\d{3})?(?:Z|[+-]\d{2}:\d{2})?)?"
+    )
+    iso_match = re.search(iso_pattern, text)
+    if iso_match:
+        timestamp_str = iso_match.group(0)
+        try:
+            # Parse and return as ISO 8601 string
+            dt = pd.to_datetime(timestamp_str)
+            return dt.isoformat()
+        except Exception:
+            pass
+
+    # Pattern for common date formats: MM/DD/YYYY or DD/MM/YYYY
+    common_pattern = r"\d{1,2}[/\-]\d{1,2}[/\-]\d{2,4}"
+    common_match = re.search(common_pattern, text)
+    if common_match:
+        timestamp_str = common_match.group(0)
+        try:
+            dt = pd.to_datetime(timestamp_str)
+            return dt.isoformat()
+        except Exception:
+            pass
+
+    return None
 
 
 class ReadData:
@@ -245,14 +288,14 @@ class ReadData:
             self._corpus.df = None
         # Remove ignore words from self._corpus.documents text
         documents = self._corpus.documents
-        
+
         # Pre-compile regex patterns once for efficiency instead of inside loops
         compiled_patterns = []
         if comma_separated_ignore_words:
             for word in comma_separated_ignore_words.split(","):
                 pattern = re.compile(r"\b" + word.strip() + r"\b", flags=re.IGNORECASE)
                 compiled_patterns.append(pattern)
-        
+
         if len(documents) < 10:
             processed_docs = []
             for document in tqdm(documents, desc="Processing documents", disable=True):
@@ -294,7 +337,7 @@ class ReadData:
     ):
         """
         Read the corpus from a csv file. Parallelizes document creation for large CSVs.
-        
+
         Args:
             file_name: Path to CSV file
             comma_separated_ignore_words: Stop words to ignore
@@ -309,24 +352,33 @@ class ReadData:
             raise ValueError(f"File not found: {file_name}")
         df = pd.read_csv(file_name)
         original_df = df.copy()
-        
+
         # Auto-detect timestamp column if not specified
         if not timestamp_column:
-            timestamp_candidates = ['timestamp', 'datetime', 'time', 'date', 'created_at', 'updated_at']
+            timestamp_candidates = [
+                "timestamp",
+                "datetime",
+                "time",
+                "date",
+                "created_at",
+                "updated_at",
+            ]
             for candidate in timestamp_candidates:
                 if candidate in df.columns:
                     timestamp_column = candidate
                     logger.info(f"Auto-detected timestamp column: {timestamp_column}")
                     break
-        
+
         # Parse timestamp column to datetime if it exists
         if timestamp_column and timestamp_column in df.columns:
             try:
                 df[timestamp_column] = pd.to_datetime(df[timestamp_column])
                 logger.info(f"Parsed timestamp column '{timestamp_column}' to datetime")
             except Exception as e:
-                logger.warning(f"Could not parse timestamp column '{timestamp_column}': {e}")
-        
+                logger.warning(
+                    f"Could not parse timestamp column '{timestamp_column}': {e}"
+                )
+
         if comma_separated_text_columns:
             text_columns = comma_separated_text_columns.split(",")
         else:
@@ -349,12 +401,22 @@ class ReadData:
         def create_document(args):
             index, row = args
             # Use list and join for efficient string concatenation, handle None values
-            text_parts = [str(row[column]) if row[column] is not None and not (isinstance(row[column], float) and row[column] != row[column]) else '' for column in text_columns]
+            text_parts = [
+                (
+                    str(row[column])
+                    if row[column] is not None
+                    and not (
+                        isinstance(row[column], float) and row[column] != row[column]
+                    )
+                    else ""
+                )
+                for column in text_columns
+            ]
             read_from_file = " ".join(text_parts)
             # Apply pre-compiled patterns
             for pattern in compiled_patterns:
                 read_from_file = pattern.sub("", read_from_file)
-            
+
             # Extract timestamp if available
             doc_timestamp = None
             if timestamp_column and timestamp_column in original_df.columns:
@@ -368,7 +430,7 @@ class ReadData:
                             doc_timestamp = pd.to_datetime(ts_value).isoformat()
                     except Exception:
                         pass
-            
+
             _document = Document(
                 text=read_from_file,
                 timestamp=doc_timestamp,
@@ -437,29 +499,32 @@ class ReadData:
         self, source, comma_separated_ignore_words=None, comma_separated_text_columns=""
     ):
         _CSV_EXISTS = False
-        
+
         # Pre-compile regex patterns once for efficiency instead of inside loops
         compiled_patterns = []
         if comma_separated_ignore_words:
             for word in comma_separated_ignore_words.split(","):
                 pattern = re.compile(r"\b" + word.strip() + r"\b", flags=re.IGNORECASE)
                 compiled_patterns.append(pattern)
-        
+
         def apply_ignore_patterns(text):
             """Apply pre-compiled ignore patterns to text."""
             for pattern in compiled_patterns:
                 text = pattern.sub("", text)
             return text
-        
+
         # if source is a url
         if source.startswith("http://") or source.startswith("https://"):
             response = requests.get(source)
             if response.status_code == 200:
                 read_from_file = response.text
                 read_from_file = apply_ignore_patterns(read_from_file)
+                # Extract timestamp from content
+                doc_timestamp = extract_timestamp_from_text(read_from_file)
                 # self._content removed
                 _document = Document(
                     text=read_from_file,
+                    timestamp=doc_timestamp,
                     metadata={"source": source},
                     id=source,
                     score=0.0,
@@ -480,9 +545,12 @@ class ReadData:
                     with open(file_path, "r") as f:
                         read_from_file = f.read()
                         read_from_file = apply_ignore_patterns(read_from_file)
+                        # Extract timestamp from content
+                        doc_timestamp = extract_timestamp_from_text(read_from_file)
                         # self._content removed
                         _document = Document(
                             text=read_from_file,
+                            timestamp=doc_timestamp,
                             metadata={
                                 "source": str(file_path),
                                 "file_name": file_name,
@@ -507,9 +575,12 @@ class ReadData:
                             page_texts.append(page.extract_text())
                         read_from_file = "".join(page_texts)
                         read_from_file = apply_ignore_patterns(read_from_file)
+                        # Extract timestamp from content
+                        doc_timestamp = extract_timestamp_from_text(read_from_file)
                         # self._content removed
                         _document = Document(
                             text=read_from_file,
+                            timestamp=doc_timestamp,
                             metadata={
                                 "source": str(file_path),
                                 "file_name": file_name,
