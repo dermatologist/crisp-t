@@ -17,7 +17,7 @@ def print_section_header(title: str, emoji: str = "", color: str = "blue", bold:
     title_with_emoji = f"{emoji}  {title}" if emoji else title
     padding_left = (box_width - len(title_with_emoji) - 4) // 2
     padding_right = box_width - len(title_with_emoji) - 4 - padding_left
-    
+
     click.echo(click.style("\n╔═══════════════════════════════════════╗", fg=color, bold=bold))
     click.echo(click.style(f"║{' ' * padding_left}  {title_with_emoji}  {' ' * padding_right}║", fg=color, bold=bold))
     click.echo(click.style("╚═══════════════════════════════════════╝", fg=color, bold=bold))
@@ -32,7 +32,7 @@ def print_tips(tips: dict[str, str]):
     """
     if not tips:
         return
-    
+
     click.echo(click.style("\n💡 Tips:", fg="cyan", bold=True))
     for param, description in tips.items():
         click.echo(f"Use {click.style(param, fg='green')} {description}")

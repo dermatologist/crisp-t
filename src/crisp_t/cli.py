@@ -8,15 +8,13 @@ import click
 
 from . import __version__
 from .cluster import Cluster
+from .helpers.analyzer import get_analyzers
 from .helpers.cli.ui import (
     format_error,
     format_info,
     format_success,
-    format_warning,
     print_section_header,
-    print_tips,
 )
-from .helpers.analyzer import get_analyzers
 from .helpers.initializer import initialize_corpus
 from .read_data import ReadData
 from .sentiment import Sentiment

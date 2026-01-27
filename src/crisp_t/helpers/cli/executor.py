@@ -1,5 +1,6 @@
 """Execution utilities for CLI analysis operations."""
-from typing import Any, Callable, Optional
+from collections.abc import Callable
+from typing import Any
 
 import click
 
@@ -8,7 +9,7 @@ from .ui import format_error, format_success
 
 def execute_analysis_with_save(
     analysis_func: Callable[[], Any],
-    output_path: Optional[str] = None,
+    output_path: str | None = None,
     suffix: str = "results",
     success_message: str = "Analysis completed successfully",
     error_message_prefix: str = "Error performing analysis",
@@ -28,16 +29,16 @@ def execute_analysis_with_save(
     """
     try:
         result = analysis_func()
-        
+
         if output_path:
             from ..utils import _save_output  # Relative import to avoid circular dependency
             _save_output(result, output_path, suffix)
             click.echo(format_success(f"{success_message} - Saved to {output_path}"))
         else:
             click.echo(format_success(success_message))
-            
+
         return result
-        
+
     except Exception as e:
         click.echo(format_error(f"{error_message_prefix}: {e}"))
         return None
