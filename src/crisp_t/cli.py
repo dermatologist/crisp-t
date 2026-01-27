@@ -10,7 +10,7 @@ import click
 
 from . import __version__
 from .cluster import Cluster
-from .helpers.analyzer import get_analyzers, get_csv_analyzer, get_text_analyzer
+from .helpers.analyzer import get_analyzers
 from .helpers.initializer import initialize_corpus
 from .read_data import ReadData
 from .sentiment import Sentiment
