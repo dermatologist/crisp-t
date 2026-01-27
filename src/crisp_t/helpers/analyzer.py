@@ -18,6 +18,9 @@ def get_analyzers(
     - embedding:df or embedding=df - Filter documents linked via dataframe reverse links (df→text)
     - temporal:text or temporal=text - Filter dataframe rows linked via temporal_links (text→df)
     - temporal:df or temporal=df - Filter documents linked via dataframe reverse links (df→text)
+    - id or id: or id= - Synchronize filtering between documents and DataFrame by ID:
+        - id=<value> - Filter to specific ID
+        - id: or id= (no value) - Sync all remaining documents to matching DataFrame rows by ID
 
     Args:
         corpus (Corpus): The corpus to analyze.
@@ -25,7 +28,8 @@ def get_analyzers(
         comma_separated_ignore_columns (str, optional): Columns to ignore.
         filters (list, optional): List of filters in key=value or key:value format.
             Special filters: embedding:text, embedding=text, embedding:df, embedding=df,
-                           temporal:text, temporal=text, temporal:df, temporal=df
+                           temporal:text, temporal=text, temporal:df, temporal=df,
+                           id, id:, id=, id=<value>, id:<value>
             Legacy filters: =embedding, :embedding, =temporal, :temporal (mapped to :text variants)
 
     Returns:
@@ -92,8 +96,17 @@ def get_analyzers(
 
 
 def _apply_regular_filters(text_analyzer, csv_analyzer, filters):
-    """Apply regular key=value or key:value filters to analyzers."""
+    """Apply regular key=value or key:value filters to analyzers.
+
+    Special handling for 'id' filter: when filtering on id, both documents
+    and DataFrame rows are synchronized by ID for implicit ID linkage.
+    If id filter has no value (id: or id=), syncs after other filters are applied.
+    """
     try:
+        id_filter_value = None
+        has_id_filter = False
+
+        # First pass: apply all non-id filters and detect id filter
         for flt in filters:
             if "=" in flt:
                 key, value = flt.split("=", 1)
@@ -105,19 +118,75 @@ def _apply_regular_filters(text_analyzer, csv_analyzer, filters):
             key = key.strip()
             value = value.strip()
 
-            # Apply to text analyzer
-            if text_analyzer:
-                try:
-                    text_analyzer.filter_documents(key, value)
-                except Exception as e:
-                    click.echo(f"Could not apply text filter {key}={value}: {e}")
+            # Track id filter for later processing
+            if key.lower() == "id":
+                has_id_filter = True
+                id_filter_value = value
+                # Only apply specific id filtering if value is not empty
+                if value:
+                    # Filter documents by ID
+                    if text_analyzer:
+                        try:
+                            text_analyzer.filter_documents(key, value)
+                        except Exception as e:
+                            click.echo(
+                                f"Could not apply text filter {key}={value}: {e}"
+                            )
 
-            # Apply to csv analyzer
-            if csv_analyzer:
+                    # Filter DataFrame by ID column if it exists (implicit ID linkage)
+                    if (
+                        csv_analyzer
+                        and csv_analyzer.df is not None
+                        and "id" in csv_analyzer.df.columns
+                    ):
+                        try:
+                            csv_analyzer.df = csv_analyzer.df[
+                                csv_analyzer.df["id"].astype(str) == str(value)
+                            ]
+                            click.echo(
+                                f"Applied ID linkage: synced DataFrame to {len(csv_analyzer.df)} rows matching id={value}"
+                            )
+                        except Exception as e:
+                            click.echo(f"Could not apply ID filter to DataFrame: {e}")
+            else:
+                # Regular filter: apply independently to both analyzers
+                # Apply to text analyzer
+                if text_analyzer:
+                    try:
+                        text_analyzer.filter_documents(key, value)
+                    except Exception as e:
+                        click.echo(f"Could not apply text filter {key}={value}: {e}")
+
+                # Apply to csv analyzer
+                if csv_analyzer:
+                    try:
+                        csv_analyzer.filter_rows_by_column_value(key, value)
+                    except Exception as e:
+                        click.echo(f"Could not apply CSV filter {key}={value}: {e}")
+
+        # Second pass: if id filter exists with no value, sync after other filters applied
+        if has_id_filter and not id_filter_value:
+            # Sync all remaining documents to DataFrame rows by ID
+            if (
+                text_analyzer
+                and csv_analyzer
+                and csv_analyzer.df is not None
+                and "id" in csv_analyzer.df.columns
+            ):
                 try:
-                    csv_analyzer.filter_rows_by_column_value(key, value)
+                    # Get all current document IDs
+                    doc_ids = {doc.id for doc in text_analyzer.corpus.documents}
+                    # Filter DataFrame to rows where id matches a document ID
+                    csv_analyzer.df = csv_analyzer.df[
+                        csv_analyzer.df["id"]
+                        .astype(str)
+                        .isin([str(did) for did in doc_ids])
+                    ]
+                    click.echo(
+                        f"Applied ID linkage: synced DataFrame to {len(csv_analyzer.df)} rows matching remaining document IDs"
+                    )
                 except Exception as e:
-                    click.echo(f"Could not apply CSV filter {key}={value}: {e}")
+                    click.echo(f"Could not apply ID sync to DataFrame: {e}")
 
         # Report results
         if text_analyzer:

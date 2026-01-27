@@ -335,3 +335,99 @@ def test__process_csv():
     )
     assert text == "t1"
     assert ignore == "i1"
+
+
+def test_get_analyzers_with_id_filter():
+    """Test get_analyzers with id filter for synchronized ID linkage."""
+    corpus = DummyCorpus()
+    corpus.documents[0].id = "doc1"
+    corpus.documents[1].id = "doc2"
+    corpus.df = pd.DataFrame({"id": ["doc1", "doc2", "doc3"], "col1": [1, 2, 3]})
+    analyzer.Text = DummyText
+    analyzer.Csv = DummyCsv
+
+    filters = ["id=doc1"]
+    text_analyzer, csv_analyzer = analyzer.get_analyzers(corpus, filters=filters)
+
+    assert isinstance(text_analyzer, DummyText)
+    assert isinstance(csv_analyzer, DummyCsv)
+    # DataFrame should be filtered to only rows where id="doc1"
+    assert len(csv_analyzer.df) == 1
+    assert csv_analyzer.df.iloc[0]["id"] == "doc1"
+
+
+def test_get_analyzers_with_id_filter_colon_separator():
+    """Test get_analyzers with id filter using colon separator."""
+    corpus = DummyCorpus()
+    corpus.documents[0].id = "doc1"
+    corpus.documents[1].id = "doc2"
+    corpus.df = pd.DataFrame({"id": ["doc1", "doc2", "doc3"], "col1": [1, 2, 3]})
+    analyzer.Text = DummyText
+    analyzer.Csv = DummyCsv
+
+    filters = ["id:doc2"]
+    text_analyzer, csv_analyzer = analyzer.get_analyzers(corpus, filters=filters)
+
+    assert isinstance(text_analyzer, DummyText)
+    assert isinstance(csv_analyzer, DummyCsv)
+    # DataFrame should be filtered to only rows where id="doc2"
+    assert len(csv_analyzer.df) == 1
+    assert csv_analyzer.df.iloc[0]["id"] == "doc2"
+
+
+def test_get_analyzers_with_id_filter_no_id_column():
+    """Test get_analyzers with id filter when DataFrame has no id column."""
+    corpus = DummyCorpus()
+    corpus.documents[0].id = "doc1"
+    corpus.documents[1].id = "doc2"
+    corpus.df = pd.DataFrame({"col1": [1, 2, 3], "col2": [4, 5, 6]})
+    analyzer.Text = DummyText
+    analyzer.Csv = DummyCsv
+
+    filters = ["id=doc1"]
+    text_analyzer, csv_analyzer = analyzer.get_analyzers(corpus, filters=filters)
+
+    assert isinstance(text_analyzer, DummyText)
+    assert isinstance(csv_analyzer, DummyCsv)
+    # DataFrame should remain unchanged since there's no id column
+    assert len(csv_analyzer.df) == 3
+
+
+def test_get_analyzers_with_id_filter_no_value_colon():
+    """Test get_analyzers with id: filter (no value) - should sync after other filters."""
+    corpus = DummyCorpus()
+    corpus.documents[0].id = "doc1"
+    corpus.documents[1].id = "doc2"
+    corpus.df = pd.DataFrame({"id": ["doc1", "doc2", "doc3"], "col1": [1, 2, 3]})
+    analyzer.Text = DummyText
+    analyzer.Csv = DummyCsv
+
+    # Apply id: with no value (syncs documents to df)
+    filters = ["id:"]
+    text_analyzer, csv_analyzer = analyzer.get_analyzers(corpus, filters=filters)
+
+    # After id: sync, only df rows with ids matching document IDs are kept
+    assert isinstance(text_analyzer, DummyText)
+    assert isinstance(csv_analyzer, DummyCsv)
+    # DataFrame should have only 2 rows (doc1 and doc2 match the df ids)
+    assert len(csv_analyzer.df) == 2
+
+
+def test_get_analyzers_with_id_filter_no_value_equals():
+    """Test get_analyzers with id= filter (no value) - should sync after other filters."""
+    corpus = DummyCorpus()
+    corpus.documents[0].id = "doc1"
+    corpus.documents[1].id = "doc2"
+    corpus.df = pd.DataFrame({"id": ["doc1", "doc2", "doc3"], "col1": [1, 2, 3]})
+    analyzer.Text = DummyText
+    analyzer.Csv = DummyCsv
+
+    # Apply id= with no value (syncs documents to df)
+    filters = ["id="]
+    text_analyzer, csv_analyzer = analyzer.get_analyzers(corpus, filters=filters)
+
+    # After id= sync, only df rows with ids matching document IDs are kept
+    assert isinstance(text_analyzer, DummyText)
+    assert isinstance(csv_analyzer, DummyCsv)
+    # DataFrame should have only 2 rows (doc1 and doc2 match the df ids)
+    assert len(csv_analyzer.df) == 2
