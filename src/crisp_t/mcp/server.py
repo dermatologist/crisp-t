@@ -947,11 +947,10 @@ async def list_tools() -> list[Tool]:
     )
 
     # Temporal analysis tools
-    tools.extend(
-        [
-            Tool(
-                name="temporal_link_by_time",
-                description="""
+    tools.extend([
+        Tool(
+            name="temporal_link_by_time",
+            description="""
             Link documents to dataframe rows based on timestamps. Three methods available:
             - 'nearest': Link to nearest row in time
             - 'window': Link to all rows within a time window
@@ -959,133 +958,131 @@ async def list_tools() -> list[Tool]:
 
             Requires documents and dataframe rows to have timestamps.
             """,
-                inputSchema={
-                    "type": "object",
-                    "properties": {
-                        "method": {
-                            "type": "string",
-                            "description": "Linking method: 'nearest', 'window', or 'sequence'",
-                            "enum": ["nearest", "window", "sequence"],
-                        },
-                        "time_column": {
-                            "type": "string",
-                            "description": "Name of timestamp column in dataframe (default: 'timestamp')",
-                            "default": "timestamp",
-                        },
-                        "window_seconds": {
-                            "type": "number",
-                            "description": "Time window in seconds for 'window' method (default: 300)",
-                            "default": 300,
-                        },
-                        "period": {
-                            "type": "string",
-                            "description": "Period for 'sequence' method: 'D' (day), 'W' (week), 'M' (month)",
-                            "default": "W",
-                        },
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "method": {
+                        "type": "string",
+                        "description": "Linking method: 'nearest', 'window', or 'sequence'",
+                        "enum": ["nearest", "window", "sequence"],
                     },
-                    "required": ["method"],
+                    "time_column": {
+                        "type": "string",
+                        "description": "Name of timestamp column in dataframe (default: 'timestamp')",
+                        "default": "timestamp",
+                    },
+                    "window_seconds": {
+                        "type": "number",
+                        "description": "Time window in seconds for 'window' method (default: 300)",
+                        "default": 300,
+                    },
+                    "period": {
+                        "type": "string",
+                        "description": "Period for 'sequence' method: 'D' (day), 'W' (week), 'M' (month)",
+                        "default": "W",
+                    },
                 },
-            ),
-            Tool(
-                name="temporal_filter",
-                description="""
+                "required": ["method"],
+            },
+        ),
+        Tool(
+            name="temporal_filter",
+            description="""
             Filter corpus by time range. Documents and dataframe rows outside the range are removed.
             Returns a new filtered corpus.
             """,
-                inputSchema={
-                    "type": "object",
-                    "properties": {
-                        "start_time": {
-                            "type": "string",
-                            "description": "Start time in ISO 8601 format (e.g., '2025-01-01T00:00:00')",
-                        },
-                        "end_time": {
-                            "type": "string",
-                            "description": "End time in ISO 8601 format",
-                        },
-                        "time_column": {
-                            "type": "string",
-                            "description": "Timestamp column in dataframe (default: 'timestamp')",
-                            "default": "timestamp",
-                        },
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "start_time": {
+                        "type": "string",
+                        "description": "Start time in ISO 8601 format (e.g., '2025-01-01T00:00:00')",
+                    },
+                    "end_time": {
+                        "type": "string",
+                        "description": "End time in ISO 8601 format",
+                    },
+                    "time_column": {
+                        "type": "string",
+                        "description": "Timestamp column in dataframe (default: 'timestamp')",
+                        "default": "timestamp",
                     },
                 },
-            ),
-            Tool(
-                name="temporal_summary",
-                description="""
+            },
+        ),
+        Tool(
+            name="temporal_summary",
+            description="""
             Generate temporal summary of numeric and text data over time periods.
             Shows aggregated statistics and document counts per period.
             """,
-                inputSchema={
-                    "type": "object",
-                    "properties": {
-                        "period": {
-                            "type": "string",
-                            "description": "Time period: 'D' (day), 'W' (week), 'M' (month), 'Y' (year)",
-                            "default": "W",
-                        },
-                        "time_column": {
-                            "type": "string",
-                            "description": "Timestamp column in dataframe",
-                            "default": "timestamp",
-                        },
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "period": {
+                        "type": "string",
+                        "description": "Time period: 'D' (day), 'W' (week), 'M' (month), 'Y' (year)",
+                        "default": "W",
+                    },
+                    "time_column": {
+                        "type": "string",
+                        "description": "Timestamp column in dataframe",
+                        "default": "timestamp",
                     },
                 },
-            ),
-            Tool(
-                name="temporal_sentiment_trend",
-                description="""
+            },
+        ),
+        Tool(
+            name="temporal_sentiment_trend",
+            description="""
             Analyze sentiment trends over time. Requires documents to have sentiment metadata.
             Returns aggregated sentiment scores per time period.
             """,
-                inputSchema={
-                    "type": "object",
-                    "properties": {
-                        "period": {
-                            "type": "string",
-                            "description": "Time period: 'D' (day), 'W' (week), 'M' (month)",
-                            "default": "W",
-                        },
-                        "aggregation": {
-                            "type": "string",
-                            "description": "Aggregation method: 'mean', 'median', 'max', 'min'",
-                            "default": "mean",
-                        },
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "period": {
+                        "type": "string",
+                        "description": "Time period: 'D' (day), 'W' (week), 'M' (month)",
+                        "default": "W",
+                    },
+                    "aggregation": {
+                        "type": "string",
+                        "description": "Aggregation method: 'mean', 'median', 'max', 'min'",
+                        "default": "mean",
                     },
                 },
-            ),
-            Tool(
-                name="temporal_topics",
-                description="""
+            },
+        ),
+        Tool(
+            name="temporal_topics",
+            description="""
             Extract topics over time periods. Shows how topics evolve and change over time.
             Works best with documents that have topic metadata from topic modeling.
             """,
-                inputSchema={
-                    "type": "object",
-                    "properties": {
-                        "period": {
-                            "type": "string",
-                            "description": "Time period: 'D', 'W', 'M'",
-                            "default": "W",
-                        },
-                        "top_n": {
-                            "type": "integer",
-                            "description": "Number of top topics per period",
-                            "default": 5,
-                        },
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "period": {
+                        "type": "string",
+                        "description": "Time period: 'D', 'W', 'M'",
+                        "default": "W",
+                    },
+                    "top_n": {
+                        "type": "integer",
+                        "description": "Number of top topics per period",
+                        "default": 5,
                     },
                 },
-            ),
-        ]
-    )
+            },
+        ),
+    ])
 
     # Embedding-based linking tools
-    tools.extend(
-        [
-            Tool(
-                name="embedding_link",
-                description="""
+    tools.extend([
+        Tool(
+            name="embedding_link",
+            description="""
             Link documents to dataframe rows using embedding similarity.
 
             This provides fuzzy semantic alignment when explicit IDs or timestamps are missing.
@@ -1093,44 +1090,43 @@ async def list_tools() -> list[Tool]:
 
             Complements existing ID-based, keyword-based, and time-based linking methods.
             """,
-                inputSchema={
-                    "type": "object",
-                    "properties": {
-                        "similarity_metric": {
-                            "type": "string",
-                            "description": "Similarity metric: 'cosine' or 'euclidean'",
-                            "enum": ["cosine", "euclidean"],
-                            "default": "cosine",
-                        },
-                        "top_k": {
-                            "type": "integer",
-                            "description": "Number of top similar rows to link per document",
-                            "default": 1,
-                        },
-                        "threshold": {
-                            "type": "number",
-                            "description": "Minimum similarity threshold (0-1). If not set, no filtering",
-                        },
-                        "numeric_columns": {
-                            "type": "string",
-                            "description": "Comma-separated list of numeric columns to use for embeddings",
-                        },
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "similarity_metric": {
+                        "type": "string",
+                        "description": "Similarity metric: 'cosine' or 'euclidean'",
+                        "enum": ["cosine", "euclidean"],
+                        "default": "cosine",
+                    },
+                    "top_k": {
+                        "type": "integer",
+                        "description": "Number of top similar rows to link per document",
+                        "default": 1,
+                    },
+                    "threshold": {
+                        "type": "number",
+                        "description": "Minimum similarity threshold (0-1). If not set, no filtering",
+                    },
+                    "numeric_columns": {
+                        "type": "string",
+                        "description": "Comma-separated list of numeric columns to use for embeddings",
                     },
                 },
-            ),
-            Tool(
-                name="embedding_link_stats",
-                description="""
+            },
+        ),
+        Tool(
+            name="embedding_link_stats",
+            description="""
             Get statistics about embedding-based links in the corpus.
             Shows how many documents are linked, average similarity scores, etc.
             """,
-                inputSchema={
-                    "type": "object",
-                    "properties": {},
-                },
-            ),
-        ]
-    )
+            inputSchema={
+                "type": "object",
+                "properties": {},
+            },
+        ),
+    ])
 
     return tools
 
@@ -1689,7 +1685,9 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
 
                 semantic_analyzer = Semantic(_corpus)
                 similar_doc_ids = semantic_analyzer.get_similar_documents(
-                    document_ids=document_ids, n_results=n_results, threshold=threshold
+                    document_ids=document_ids,
+                    n_results=n_results,
+                    threshold=threshold
                 )
 
                 # Prepare response
@@ -1706,13 +1704,9 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                         response_text += f"  • {doc_id}{doc_name}\n"
 
                     response_text += "\nThis feature is useful for:\n"
-                    response_text += (
-                        "- Literature reviews: Find additional relevant papers\n"
-                    )
+                    response_text += "- Literature reviews: Find additional relevant papers\n"
                     response_text += "- Qualitative research: Identify documents with similar themes\n"
-                    response_text += (
-                        "- Content grouping: Group similar documents for analysis\n"
-                    )
+                    response_text += "- Content grouping: Group similar documents for analysis\n"
                 else:
                     response_text += "No similar documents found above the threshold.\n"
                     response_text += "Try lowering the threshold or using different reference documents.\n"
@@ -1728,9 +1722,7 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                 ]
             except Exception as e:
                 return [
-                    TextContent(
-                        type="text", text=f"Error finding similar documents: {e}"
-                    )
+                    TextContent(type="text", text=f"Error finding similar documents: {e}")
                 ]
 
         elif name == "semantic_chunk_search":
@@ -1757,13 +1749,14 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
 
                 semantic_analyzer = Semantic(_corpus)
                 chunks = semantic_analyzer.get_similar_chunks(
-                    query=query, doc_id=doc_id, threshold=threshold, n_results=n_results
+                    query=query,
+                    doc_id=doc_id,
+                    threshold=threshold,
+                    n_results=n_results
                 )
 
                 # Prepare response
-                response_text = (
-                    f"Semantic chunk search completed for query: '{query}'\n"
-                )
+                response_text = f"Semantic chunk search completed for query: '{query}'\n"
                 response_text += f"Document ID: {doc_id}\n"
                 response_text += f"Threshold: {threshold}\n"
                 response_text += f"Found {len(chunks)} matching chunks\n\n"
@@ -1777,16 +1770,10 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                         response_text += "-" * 60 + "\n\n"
 
                     response_text += f"\nThese {len(chunks)} chunks can be used for coding/annotating the document.\n"
-                    response_text += (
-                        "You can adjust the threshold to get more or fewer results.\n"
-                    )
+                    response_text += "You can adjust the threshold to get more or fewer results.\n"
                 else:
-                    response_text += (
-                        "No chunks matched the query above the threshold.\n"
-                    )
-                    response_text += (
-                        "Try lowering the threshold or use a different query.\n"
-                    )
+                    response_text += "No chunks matched the query above the threshold.\n"
+                    response_text += "Try lowering the threshold or use a different query.\n"
 
                 return [TextContent(type="text", text=response_text)]
 
@@ -1799,9 +1786,7 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                 ]
             except Exception as e:
                 return [
-                    TextContent(
-                        type="text", text=f"Error during semantic chunk search: {e}"
-                    )
+                    TextContent(type="text", text=f"Error during semantic chunk search: {e}")
                 ]
 
         elif name == "export_metadata_df":
@@ -1899,23 +1884,16 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                     )
                 ]
             except Exception as e:
-                return [
-                    TextContent(type="text", text=f"Error during TDABM analysis: {e}")
-                ]
+                return [TextContent(type="text", text=f"Error during TDABM analysis: {e}")]
 
         # Temporal Analysis Tools
         elif name == "temporal_link_by_time":
             if not _corpus:
-                return [
-                    TextContent(
-                        type="text", text="No corpus loaded. Use load_corpus first."
-                    )
-                ]
+                return [TextContent(type="text", text="No corpus loaded. Use load_corpus first.")]
 
             try:
-                from datetime import timedelta
-
                 from ..temporal import TemporalAnalyzer
+                from datetime import timedelta
 
                 method = arguments.get("method", "nearest")
                 time_column = arguments.get("time_column", "timestamp")
@@ -1923,12 +1901,7 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
 
                 if method == "nearest":
                     _corpus = analyzer.link_by_nearest_time(time_column=time_column)
-                    return [
-                        TextContent(
-                            type="text",
-                            text="Documents linked to nearest dataframe rows by time",
-                        )
-                    ]
+                    return [TextContent(type="text", text="Documents linked to nearest dataframe rows by time")]
 
                 elif method == "window":
                     window_seconds = arguments.get("window_seconds", 300)
@@ -1936,53 +1909,24 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                     _corpus = analyzer.link_by_time_window(
                         time_column=time_column,
                         window_before=window,
-                        window_after=window,
+                        window_after=window
                     )
-                    linked_count = sum(
-                        bool(doc.metadata.get("temporal_links"))
-                        for doc in _corpus.documents
-                    )
-                    if linked_count == 0:
-                        return [
-                            TextContent(
-                                type="text",
-                                text="No documents were linked: no valid timestamps found in any document.",
-                            )
-                        ]
-                    else:
-                        return [
-                            TextContent(
-                                type="text",
-                                text=f"Documents linked within ±{window_seconds}s time window ({linked_count} linked)",
-                            )
-                        ]
+                    return [TextContent(type="text", text=f"Documents linked within ±{window_seconds}s time window")]
 
                 elif method == "sequence":
                     period = arguments.get("period", "W")
-                    _corpus = analyzer.link_by_sequence(
-                        time_column=time_column, period=period
-                    )
-                    return [
-                        TextContent(
-                            type="text", text=f"Documents linked by {period} sequences"
-                        )
-                    ]
+                    _corpus = analyzer.link_by_sequence(time_column=time_column, period=period)
+                    return [TextContent(type="text", text=f"Documents linked by {period} sequences")]
 
                 else:
                     return [TextContent(type="text", text=f"Unknown method: {method}")]
 
             except Exception as e:
-                return [
-                    TextContent(type="text", text=f"Error in temporal linking: {e}")
-                ]
+                return [TextContent(type="text", text=f"Error in temporal linking: {e}")]
 
         elif name == "temporal_filter":
             if not _corpus:
-                return [
-                    TextContent(
-                        type="text", text="No corpus loaded. Use load_corpus first."
-                    )
-                ]
+                return [TextContent(type="text", text="No corpus loaded. Use load_corpus first.")]
 
             try:
                 from ..temporal import TemporalAnalyzer
@@ -1993,30 +1937,24 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
 
                 analyzer = TemporalAnalyzer(_corpus)
                 _corpus = analyzer.filter_by_time_range(
-                    start_time=start_time, end_time=end_time, time_column=time_column
+                    start_time=start_time,
+                    end_time=end_time,
+                    time_column=time_column
                 )
 
                 doc_count = len(_corpus.documents)
                 df_count = len(_corpus.df) if _corpus.df is not None else 0
-                return [
-                    TextContent(
-                        type="text",
-                        text=f"Corpus filtered by time range: {doc_count} documents, {df_count} dataframe rows",
-                    )
-                ]
+                return [TextContent(
+                    type="text",
+                    text=f"Corpus filtered by time range: {doc_count} documents, {df_count} dataframe rows"
+                )]
 
             except Exception as e:
-                return [
-                    TextContent(type="text", text=f"Error in temporal filtering: {e}")
-                ]
+                return [TextContent(type="text", text=f"Error in temporal filtering: {e}")]
 
         elif name == "temporal_summary":
             if not _corpus:
-                return [
-                    TextContent(
-                        type="text", text="No corpus loaded. Use load_corpus first."
-                    )
-                ]
+                return [TextContent(type="text", text="No corpus loaded. Use load_corpus first.")]
 
             try:
                 from ..temporal import TemporalAnalyzer
@@ -2025,33 +1963,21 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                 time_column = arguments.get("time_column", "timestamp")
 
                 analyzer = TemporalAnalyzer(_corpus)
-                summary = analyzer.get_temporal_summary(
-                    time_column=time_column, period=period
-                )
+                summary = analyzer.get_temporal_summary(time_column=time_column, period=period)
 
                 if not summary.empty:
                     response_text = f"Temporal Summary ({period} periods):\n\n"
                     response_text += summary.to_string()
                     return [TextContent(type="text", text=response_text)]
                 else:
-                    return [
-                        TextContent(
-                            type="text", text="No temporal data available for summary"
-                        )
-                    ]
+                    return [TextContent(type="text", text="No temporal data available for summary")]
 
             except Exception as e:
-                return [
-                    TextContent(type="text", text=f"Error in temporal summary: {e}")
-                ]
+                return [TextContent(type="text", text=f"Error in temporal summary: {e}")]
 
         elif name == "temporal_sentiment_trend":
             if not _corpus:
-                return [
-                    TextContent(
-                        type="text", text="No corpus loaded. Use load_corpus first."
-                    )
-                ]
+                return [TextContent(type="text", text="No corpus loaded. Use load_corpus first.")]
 
             try:
                 from ..temporal import TemporalAnalyzer
@@ -2060,34 +1986,24 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                 aggregation = arguments.get("aggregation", "mean")
 
                 analyzer = TemporalAnalyzer(_corpus)
-                trend = analyzer.get_temporal_sentiment_trend(
-                    period=period, aggregation=aggregation
-                )
+                trend = analyzer.get_temporal_sentiment_trend(period=period, aggregation=aggregation)
 
                 if not trend.empty:
                     response_text = f"Temporal Sentiment Trend ({period} periods, {aggregation}):\n\n"
                     response_text += trend.to_string()
                     return [TextContent(type="text", text=response_text)]
                 else:
-                    return [
-                        TextContent(
-                            type="text",
-                            text="No sentiment data available. Run sentiment analysis first.",
-                        )
-                    ]
+                    return [TextContent(
+                        type="text",
+                        text="No sentiment data available. Run sentiment analysis first."
+                    )]
 
             except Exception as e:
-                return [
-                    TextContent(type="text", text=f"Error in temporal sentiment: {e}")
-                ]
+                return [TextContent(type="text", text=f"Error in temporal sentiment: {e}")]
 
         elif name == "temporal_topics":
             if not _corpus:
-                return [
-                    TextContent(
-                        type="text", text="No corpus loaded. Use load_corpus first."
-                    )
-                ]
+                return [TextContent(type="text", text="No corpus loaded. Use load_corpus first.")]
 
             try:
                 from ..temporal import TemporalAnalyzer
@@ -2099,19 +2015,12 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                 topics = analyzer.get_temporal_topics(period=period, top_n=top_n)
 
                 if topics:
-                    response_text = (
-                        f"Temporal Topics (top {top_n} per {period} period):\n\n"
-                    )
+                    response_text = f"Temporal Topics (top {top_n} per {period} period):\n\n"
                     for period_key, topic_list in topics.items():
                         response_text += f"{period_key}: {', '.join(topic_list)}\n"
                     return [TextContent(type="text", text=response_text)]
                 else:
-                    return [
-                        TextContent(
-                            type="text",
-                            text="No temporal data available for topic extraction",
-                        )
-                    ]
+                    return [TextContent(type="text", text="No temporal data available for topic extraction")]
 
             except Exception as e:
                 return [TextContent(type="text", text=f"Error in temporal topics: {e}")]
@@ -2119,11 +2028,7 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
         # Embedding-based linking tools
         elif name == "embedding_link":
             if not _corpus:
-                return [
-                    TextContent(
-                        type="text", text="No corpus loaded. Use load_corpus first."
-                    )
-                ]
+                return [TextContent(type="text", text="No corpus loaded. Use load_corpus first.")]
 
             try:
                 from ..embedding_linker import EmbeddingLinker
@@ -2135,17 +2040,13 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
 
                 numeric_columns = None
                 if numeric_columns_str:
-                    numeric_columns = [
-                        c.strip() for c in numeric_columns_str.split(",")
-                    ]
+                    numeric_columns = [c.strip() for c in numeric_columns_str.split(",")]
 
-                linker = EmbeddingLinker(
-                    _corpus,
-                    similarity_metric=similarity_metric,
-                    use_simple_embeddings=True,
-                )
+                linker = EmbeddingLinker(_corpus, similarity_metric=similarity_metric, use_simple_embeddings=True)
                 _corpus = linker.link_by_embedding_similarity(
-                    numeric_columns=numeric_columns, threshold=threshold, top_k=top_k
+                    numeric_columns=numeric_columns,
+                    threshold=threshold,
+                    top_k=top_k
                 )
 
                 stats = linker.get_link_statistics()
@@ -2158,42 +2059,31 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                 return [TextContent(type="text", text=response_text)]
 
             except ImportError:
-                return [
-                    TextContent(
-                        type="text",
-                        text="ChromaDB is not installed. Install with: pip install chromadb",
-                    )
-                ]
+                return [TextContent(
+                    type="text",
+                    text="ChromaDB is not installed. Install with: pip install chromadb"
+                )]
             except Exception as e:
-                return [
-                    TextContent(type="text", text=f"Error in embedding linking: {e}")
-                ]
+                return [TextContent(type="text", text=f"Error in embedding linking: {e}")]
 
         elif name == "embedding_link_stats":
             if not _corpus:
-                return [
-                    TextContent(
-                        type="text", text="No corpus loaded. Use load_corpus first."
-                    )
-                ]
+                return [TextContent(type="text", text="No corpus loaded. Use load_corpus first.")]
 
             try:
                 from ..embedding_linker import EmbeddingLinker
 
                 # Check if corpus has embedding links
                 has_links = any(
-                    "embedding_links" in doc.metadata
-                    and doc.metadata["embedding_links"]
+                    "embedding_links" in doc.metadata and doc.metadata["embedding_links"]
                     for doc in _corpus.documents
                 )
 
                 if not has_links:
-                    return [
-                        TextContent(
-                            type="text",
-                            text="No embedding links found. Run embedding_link first.",
-                        )
-                    ]
+                    return [TextContent(
+                        type="text",
+                        text="No embedding links found. Run embedding_link first."
+                    )]
 
                 linker = EmbeddingLinker(_corpus, use_simple_embeddings=True)
                 stats = linker.get_link_statistics()
@@ -2209,11 +2099,7 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                 return [TextContent(type="text", text=response_text)]
 
             except Exception as e:
-                return [
-                    TextContent(
-                        type="text", text=f"Error getting embedding statistics: {e}"
-                    )
-                ]
+                return [TextContent(type="text", text=f"Error getting embedding statistics: {e}")]
 
         else:
             return [TextContent(type="text", text=f"Unknown tool: {name}")]
@@ -2413,13 +2299,9 @@ async def main():
     """Main entry point for the MCP server."""
     # Print startup message to stderr so it doesn't interfere with MCP protocol
     import sys
-
     print("=" * 60, file=sys.stderr)
     print("🚀 CRISP-T MCP Server Starting...", file=sys.stderr)
-    print(
-        "   Model Context Protocol (MCP) Server for Qualitative Research",
-        file=sys.stderr,
-    )
+    print("   Model Context Protocol (MCP) Server for Qualitative Research", file=sys.stderr)
     print("   Ready to accept connections from MCP clients", file=sys.stderr)
     print("=" * 60, file=sys.stderr)
 

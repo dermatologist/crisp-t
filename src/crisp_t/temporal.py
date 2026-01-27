@@ -123,8 +123,6 @@ class TemporalAnalyzer:
 
         # Update documents in corpus if metadata is changed
         updated_documents = []
-        linked_count = 0
-        total_docs = len(self.corpus.documents)
         for doc in self.corpus.documents:
             if not getattr(doc, "timestamp", None):
                 updated_documents.append(doc)
@@ -149,14 +147,9 @@ class TemporalAnalyzer:
                     "link_type": "nearest_time",
                 }
             )
-            linked_count += 1
             updated_documents.append(doc)
 
         self.corpus.documents = updated_documents
-        if linked_count == 0:
-            logger.warning("No documents were linked: no valid timestamps found in any document.")
-        else:
-            logger.info(f"Documents linked: {linked_count} of {total_docs}")
         return self.corpus
 
     def link_by_time_window(
@@ -184,8 +177,6 @@ class TemporalAnalyzer:
         valid_df_indices = df_times.notna()
 
         updated_documents = []
-        linked_count = 0
-        total_docs = len(self.corpus.documents)
         for doc in self.corpus.documents:
             if not getattr(doc, "timestamp", None):
                 updated_documents.append(doc)
@@ -210,14 +201,9 @@ class TemporalAnalyzer:
                         "link_type": "time_window",
                     }
                 )
-            linked_count += 1
             updated_documents.append(doc)
 
         self.corpus.documents = updated_documents
-        if linked_count == 0:
-            logger.warning("No documents were linked: no valid timestamps found in any document.")
-        else:
-            logger.info(f"Documents linked: {linked_count} of {total_docs}")
         return self.corpus
 
     def link_by_sequence(
@@ -247,8 +233,6 @@ class TemporalAnalyzer:
         df_periods = df_times_valid.dt.to_period(period)  # type: ignore[attr-defined]
 
         updated_documents = []
-        linked_count = 0
-        total_docs = len(self.corpus.documents)
         for doc in self.corpus.documents:
             if not getattr(doc, "timestamp", None):
                 updated_documents.append(doc)
@@ -270,14 +254,9 @@ class TemporalAnalyzer:
                         "link_type": "sequence",
                     }
                 )
-            linked_count += 1
             updated_documents.append(doc)
 
         self.corpus.documents = updated_documents
-        if linked_count == 0:
-            logger.warning("No documents were linked: no valid timestamps found in any document.")
-        else:
-            logger.info(f"Documents linked: {linked_count} of {total_docs}")
         return self.corpus
 
     def filter_by_time_range(

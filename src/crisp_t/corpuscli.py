@@ -734,24 +734,12 @@ def main(
                 corpus = analyzer.link_by_time_window(
                     time_column=time_column, window_before=window, window_after=window
                 )
-                # Check if any documents were linked
-                linked_count = sum(
-                    bool(doc.metadata.get("temporal_links")) for doc in corpus.documents
+                click.echo(
+                    click.style(
+                        f"✓ Documents linked within ±{window_seconds}s window",
+                        fg="green",
+                    )
                 )
-                if linked_count == 0:
-                    click.echo(
-                        click.style(
-                            "⚠ No documents were linked: no valid timestamps found in any document.",
-                            fg="yellow",
-                        )
-                    )
-                else:
-                    click.echo(
-                        click.style(
-                            f"✓ Documents linked within ±{window_seconds}s window ({linked_count} linked)",
-                            fg="green",
-                        )
-                    )
 
             elif method == "sequence":
                 period = "W"  # Default to weekly
