@@ -322,7 +322,7 @@ def main(
                     + "--source (output folder) is required when using --covid."
                 )
             click.echo(
-                click.style(f"\n📥 Downloading COVID narratives...", fg="yellow")
+                click.style("\n📥 Downloading COVID narratives...", fg="yellow")
             )
             click.echo(f"   From: {click.style(covid, fg='cyan')}")
             click.echo(f"   To: {click.style(source, fg='cyan')}")
@@ -557,13 +557,13 @@ def main(
                         _save_output(coding_dict, out, "coding_dictionary")
                         click.echo(
                             click.style(
-                                f"\n✓ Coding dictionary saved successfully", fg="green"
+                                "\n✓ Coding dictionary saved successfully", fg="green"
                             )
                         )
                 except Exception as e:
                     click.echo(
                         click.style(
-                            f"\n❌ Error generating coding dictionary: ",
+                            "\n❌ Error generating coding dictionary: ",
                             fg="red",
                             bold=True,
                         )
@@ -627,12 +627,12 @@ def main(
                     if out:
                         _save_output(topics_result, out, "topics")
                         click.echo(
-                            click.style(f"✓ Topics saved successfully", fg="green")
+                            click.style("✓ Topics saved successfully", fg="green")
                         )
                 except Exception as e:
                     click.echo(
                         click.style(
-                            f"\n❌ Error generating topics: ", fg="red", bold=True
+                            "\n❌ Error generating topics: ", fg="red", bold=True
                         )
                         + str(e)
                     )
@@ -685,12 +685,12 @@ def main(
                     if out:
                         _save_output(assignments, out, "topic_assignments")
                         click.echo(
-                            click.style(f"✓ Assignments saved successfully", fg="green")
+                            click.style("✓ Assignments saved successfully", fg="green")
                         )
                 except Exception as e:
                     click.echo(
                         click.style(
-                            f"\n❌ Error assigning topics: ", fg="red", bold=True
+                            "\n❌ Error assigning topics: ", fg="red", bold=True
                         )
                         + str(e)
                     )
@@ -738,13 +738,13 @@ def main(
                         _save_output(categories, out, "categories")
                         click.echo(
                             click.style(
-                                f"\n✓ Categories saved successfully", fg="green"
+                                "\n✓ Categories saved successfully", fg="green"
                             )
                         )
                 except Exception as e:
                     click.echo(
                         click.style(
-                            f"\n❌ Error generating categories: ", fg="red", bold=True
+                            "\n❌ Error generating categories: ", fg="red", bold=True
                         )
                         + str(e)
                     )
@@ -792,12 +792,12 @@ def main(
                     if out:
                         _save_output(summary_result, out, "summary")
                         click.echo(
-                            click.style(f"\n✓ Summary saved successfully", fg="green")
+                            click.style("\n✓ Summary saved successfully", fg="green")
                         )
                 except Exception as e:
                     click.echo(
                         click.style(
-                            f"\n❌ Error generating summary: ", fg="red", bold=True
+                            "\n❌ Error generating summary: ", fg="red", bold=True
                         )
                         + str(e)
                     )
@@ -863,13 +863,13 @@ def main(
                         _save_output(sentiment_results, out, "sentiment")
                         click.echo(
                             click.style(
-                                f"\n✓ Sentiment analysis saved successfully", fg="green"
+                                "\n✓ Sentiment analysis saved successfully", fg="green"
                             )
                         )
                 except Exception as e:
                     click.echo(
                         click.style(
-                            f"\n❌ Error generating sentiment analysis: ",
+                            "\n❌ Error generating sentiment analysis: ",
                             fg="red",
                             bold=True,
                         )
@@ -935,7 +935,7 @@ def main(
                     _save_output(
                         {"clusters": clusters, "members": members}, out, "kmeans"
                     )
-                    click.echo(click.style(f"✓ Results saved successfully", fg="green"))
+                    click.echo(click.style("✓ Results saved successfully", fg="green"))
 
             if (cls or ml) and target_col:
                 click.echo(
@@ -1009,7 +1009,7 @@ def main(
                         _save_output(confusion_matrix, out, "svm_results")
                 except Exception as e:
                     click.echo(
-                        click.style(f"  ❌ Error in SVM: ", fg="red", bold=True)
+                        click.style("  ❌ Error in SVM: ", fg="red", bold=True)
                         + str(e)
                     )
                 click.echo(
@@ -1037,7 +1037,7 @@ def main(
                 except Exception as e:
                     click.echo(
                         click.style(
-                            f"  ❌ Error in Decision Tree: ", fg="red", bold=True
+                            "  ❌ Error in Decision Tree: ", fg="red", bold=True
                         )
                         + str(e)
                     )
@@ -1225,7 +1225,7 @@ def main(
                 save_base = output_path / "corpus.json"
             read_data.write_corpus_to_json(str(save_base), corpus=corpus)
             click.echo(
-                click.style(f"\n✓ Corpus saved to: ", fg="green", bold=True)
+                click.style("\n✓ Corpus saved to: ", fg="green", bold=True)
                 + click.style(str(save_base), fg="cyan")
             )
 
@@ -1305,7 +1305,7 @@ def _save_output(data, base_path: str, suffix: str):
                     f.write(str(data))
 
         click.echo(
-            click.style(f"   ✓ Results saved to: ", fg="green")
+            click.style("   ✓ Results saved to: ", fg="green")
             + click.style(str(save_path), fg="cyan")
         )
 
