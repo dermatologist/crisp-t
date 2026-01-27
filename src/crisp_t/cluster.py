@@ -18,14 +18,13 @@ along with crisp-t.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 import logging
-from typing import Any, Dict, List, Optional
 
 import numpy as np
 import pandas as pd
 from gensim import corpora
 from gensim.models import Word2Vec
-from gensim.models.ldamodel import LdaModel
 from gensim.models.coherencemodel import CoherenceModel
+from gensim.models.ldamodel import LdaModel
 from sklearn.cluster import KMeans
 from sklearn.manifold import TSNE
 from tabulate import tabulate
@@ -44,7 +43,7 @@ class Cluster:
     def __init__(self, corpus: Corpus):
         self._corpus = corpus
         self._ids = []
-        self._lda_model: Optional[LdaModel] = None
+        self._lda_model: LdaModel | None = None
         self._word2vec_model = None
         self._clusters = None
         self._clustered_data = None
@@ -62,7 +61,7 @@ class Cluster:
         self.process()
 
     @property
-    def processed_docs(self) -> List[List[str]]:
+    def processed_docs(self) -> list[list[str]]:
         """
         Get the processed documents.
 

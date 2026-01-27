@@ -127,7 +127,7 @@ class EmbeddingLinker:
             return self._text_embeddings
 
         except Exception as e:
-            logger.error(f"Error generating text embeddings: {e}")
+            logger.exception(f"Error generating text embeddings: {e}")
             raise
 
     def _get_numeric_embeddings(
@@ -374,7 +374,7 @@ class EmbeddingLinker:
             from sklearn.decomposition import PCA
             from sklearn.manifold import TSNE
         except ImportError:
-            raise ImportError("matplotlib and sklearn required for visualization")
+            raise ImportError("matplotlib and sklearn required for visualization") from None
 
         text_emb = self._get_text_embeddings()
         numeric_emb = self._get_numeric_embeddings()

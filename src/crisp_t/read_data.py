@@ -25,9 +25,7 @@ import os
 import re
 import tempfile
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from functools import lru_cache
 from pathlib import Path
-from typing import Optional
 
 import pandas as pd
 import requests
@@ -45,7 +43,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-def extract_timestamp_from_text(text: str) -> Optional[str]:
+def extract_timestamp_from_text(text: str) -> str | None:
     """
     Extract the first occurrence of a timestamp from text.
     Supports ISO 8601 format and common date formats.
@@ -259,9 +257,8 @@ class ReadData:
         file_name.parent.mkdir(parents=True, exist_ok=True)
         with open(file_name, "w") as f:
             json.dump(corp.model_dump(exclude={"df", "visualization"}), f, indent=4)
-        if corp.df is not None and isinstance(corp.df, pd.DataFrame):
-            if not corp.df.empty:
-                corp.df.to_csv(df_name, index=False)
+        if corp.df is not None and isinstance(corp.df, pd.DataFrame) and not corp.df.empty:
+            corp.df.to_csv(df_name, index=False)
         logger.info("Corpus written to %s", file_name)
 
     # @lru_cache(maxsize=3)
@@ -278,7 +275,7 @@ class ReadData:
             file_name = Path(self._source) / file_name
         if not file_name.exists():
             raise ValueError(f"File not found: {file_name}")
-        with open(file_name, "r") as f:
+        with open(file_name) as f:
             data = json.load(f)
             self._corpus = Corpus.model_validate(data)
             logger.info(f"Corpus read from {file_name}")
@@ -549,7 +546,7 @@ class ReadData:
             ):
                 file_path = source_path / file_name
                 if file_name.endswith(".txt"):
-                    with open(file_path, "r") as f:
+                    with open(file_path) as f:
                         read_from_file = f.read()
                         read_from_file = apply_ignore_patterns(read_from_file)
                         # Extract timestamp from content

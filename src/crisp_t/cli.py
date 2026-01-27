@@ -4,8 +4,6 @@ import shutil
 import warnings
 from pathlib import Path
 
-warnings.filterwarnings("ignore", category=DeprecationWarning)
-
 import click
 
 from . import __version__
@@ -14,6 +12,8 @@ from .helpers.analyzer import get_analyzers
 from .helpers.initializer import initialize_corpus
 from .read_data import ReadData
 from .sentiment import Sentiment
+
+warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -339,7 +339,7 @@ def main(
             except Exception as e:
                 raise click.ClickException(
                     click.style("❌ Download failed: ", fg="red", bold=True) + str(e)
-                )
+                ) from e
 
         # Build corpus using helpers (source preferred over inp)
         # if not source or inp, use default folders or env vars
@@ -352,12 +352,11 @@ def main(
                 comma_separated_ignore_words=(ignore if ignore else None),
             )
             # If filters were provided with ':' while using --source, emit guidance message
-            if source and filters:
-                if any(":" in flt and "=" not in flt for flt in filters):
-                    click.echo(
-                        click.style("ℹ️  Note: ", fg="blue")
-                        + "Filters are not supported when using --source"
-                    )
+            if source and filters and any(":" in flt and "=" not in flt for flt in filters):
+                click.echo(
+                    click.style("ℹ️  Note: ", fg="blue")
+                    + "Filters are not supported when using --source"
+                )
         except click.ClickException:
             raise
         except Exception as e:
@@ -366,7 +365,7 @@ def main(
                 + str(e),
                 err=True,
             )
-            logger.error(f"Failed to initialize corpus: {e}")
+            logger.exception(f"Failed to initialize corpus: {e}")
             return
 
         # Handle multiple sources (unchanged behavior, but no filters applied here)
@@ -384,11 +383,11 @@ def main(
                     loaded_any = True
                     click.echo(click.style("     ✓ Loaded successfully", fg="green"))
                 except Exception as e:
-                    logger.error(f"Failed to read source {src}: {e}")
+                    logger.exception(f"Failed to read source {src}: {e}")
                     raise click.ClickException(
                         click.style("❌ Failed to load source: ", fg="red", bold=True)
                         + str(e)
-                    )
+                    ) from e
 
             if loaded_any:
                 corpus = read_data.create_corpus(
@@ -422,7 +421,7 @@ def main(
                     + str(e),
                     err=True,
                 )
-                logger.error(f"Failed to initialize analyzers: {e}")
+                logger.exception(f"Failed to initialize analyzers: {e}")
                 return
 
         # Load CSV data (deprecated)
@@ -1269,7 +1268,7 @@ def main(
             import traceback
 
             traceback.print_exc()
-        raise click.ClickException(str(e))
+        raise click.ClickException(str(e)) from e
 
 
 def _save_output(data, base_path: str, suffix: str):

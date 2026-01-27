@@ -1,9 +1,10 @@
-import re
-import requests
 import os
+import re
+
+import requests
 
 
-class QRUtils(object):
+class QRUtils:
     def __init__(self):
         pass
 

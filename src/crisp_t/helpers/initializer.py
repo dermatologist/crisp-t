@@ -1,7 +1,8 @@
 import logging
 import os
-from typing import Text
+
 import click
+
 from ..read_data import ReadData
 
 logger = logging.getLogger(__name__)
@@ -53,11 +54,11 @@ def initialize_corpus(
             )
 
         except click.ClickException as e:
-            logger.error(f"Failed to read source {source}: {e}")
+            logger.exception(f"Failed to read source {source}: {e}")
             raise
         except Exception as e:
             click.echo(f"✗ Error reading from source: {e}", err=True)
-            logger.error(f"Failed to read source {source}: {e}")
+            logger.exception(f"Failed to read source {source}: {e}")
             return
         return corpus
 

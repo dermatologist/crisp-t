@@ -17,9 +17,11 @@ You should have received a copy of the GNU General Public License
 along with crisp-t.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from typing import Dict, Optional, Any
+from typing import Any
+
 import pandas as pd
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
+
 from .document import Document
 
 
@@ -29,18 +31,18 @@ class Corpus(BaseModel):
     """
 
     id: str = Field(..., description="Unique identifier for the corpus.")
-    name: Optional[str] = Field(None, description="Name of the corpus.")
-    description: Optional[str] = Field(None, description="Description of the corpus.")
-    score: Optional[float] = Field(
+    name: str | None = Field(None, description="Name of the corpus.")
+    description: str | None = Field(None, description="Description of the corpus.")
+    score: float | None = Field(
         None, description="Score associated with the corpus."
     )
     documents: list[Document] = Field(
         default_factory=list, description="List of documents in the corpus."
     )
-    df: Optional[pd.DataFrame] = Field(
+    df: pd.DataFrame | None = Field(
         None, description="Numeric data associated with the corpus."
     )
-    visualization: Dict[str, Any] = Field(
+    visualization: dict[str, Any] = Field(
         default_factory=dict, description="Visualization data associated with the corpus."
     )
     model_config = ConfigDict(
@@ -53,7 +55,7 @@ class Corpus(BaseModel):
     def pretty_print(self, show="all"):
         """
         Print the corpus information in a human-readable format.
-        
+
         Args:
             show: Display option. Can be:
                 - "all": Show all corpus information
@@ -76,18 +78,18 @@ class Corpus(BaseModel):
         RED = "\033[91m"
         RESET = "\033[0m"
         BOLD = "\033[1m"
-        
+
         # Parse the show parameter to support subcommands
         parts = show.split(maxsplit=1)
         main_command = parts[0]
         sub_command = parts[1] if len(parts) > 1 else None
-        
+
         # Print basic corpus info for most commands
         if main_command in ["all", "documents", "dataframe", "metadata"]:
             print(f"{BOLD}{BLUE}Corpus ID:{RESET} {self.id}")
             print(f"{BOLD}{BLUE}Name:{RESET} {self.name}")
             print(f"{BOLD}{BLUE}Description:{RESET} {self.description}")
-        
+
         # Handle documents command
         if main_command in ["all", "documents"]:
             if sub_command == "metadata":
@@ -118,11 +120,11 @@ class Corpus(BaseModel):
                         num_docs = int(sub_command)
                     except ValueError:
                         print(f"{RED}Invalid number for documents: {sub_command}. Using default (5).{RESET}")
-                
+
                 print(f"\n{BOLD}{GREEN}=== Documents ==={RESET}")
                 print(f"Total documents: {len(self.documents)}")
                 print(f"Showing first {min(num_docs, len(self.documents))} document(s):\n")
-                
+
                 for i, doc in enumerate(self.documents[:num_docs], 1):
                     print(f"{CYAN}Document {i}:{RESET}")
                     print(f"  {BOLD}Name:{RESET} {doc.name}")
@@ -132,7 +134,7 @@ class Corpus(BaseModel):
                         text_snippet = doc.text[:200] + "..." if len(doc.text) > 200 else doc.text
                         print(f"  {BOLD}Text:{RESET} {text_snippet}")
                     print()
-        
+
         # Handle dataframe command
         if main_command in ["all", "dataframe"]:
             if self.df is not None:
@@ -168,7 +170,7 @@ class Corpus(BaseModel):
             else:
                 if main_command == "dataframe":
                     print(f"\n{BOLD}{RED}No DataFrame available{RESET}")
-        
+
         # Handle metadata command
         if main_command in ["all", "metadata"]:
             if sub_command:
@@ -203,7 +205,7 @@ class Corpus(BaseModel):
                         if len(val_str) > 500:
                             val_str = val_str[:497] + "..."
                         print(f"  {val_str}")
-        
+
         # Handle stats command (deprecated, redirect to dataframe stats)
         if main_command == "stats":
             print(f"{YELLOW}Note: 'stats' is deprecated. Use 'dataframe stats' instead.{RESET}")
@@ -211,16 +213,16 @@ class Corpus(BaseModel):
                 self._print_dataframe_stats()
             else:
                 print(f"{RED}No DataFrame available{RESET}")
-        
+
         print(f"\n{BOLD}Display completed for '{show}'{RESET}")
-    
+
     def _print_dataframe_stats(self):
         """Helper method to print DataFrame statistics."""
         YELLOW = "\033[93m"
         BOLD = "\033[1m"
         RESET = "\033[0m"
         GREEN = "\033[92m"
-        
+
         print(f"\n{BOLD}{GREEN}=== DataFrame Statistics ==={RESET}")
         print(self.df.describe())
         print(f"\n{BOLD}Distinct values per column:{RESET}")
@@ -229,7 +231,7 @@ class Corpus(BaseModel):
             print(f"  {YELLOW}{col}:{RESET} {nunique} distinct value(s)")
             # If distinct values < 10, show value counts
             if nunique <= 10:
-                print(f"    Value counts:")
+                print("    Value counts:")
                 for val, count in self.df[col].value_counts().items():
                     print(f"      {val}: {count}")
                 print()
@@ -266,7 +268,7 @@ class Corpus(BaseModel):
             return len(self.df)
         return 0
 
-    def get_row_by_index(self, index: int) -> Optional[pd.Series]:
+    def get_row_by_index(self, index: int) -> pd.Series | None:
         """
         Get a row from the DataFrame by its index.
 
@@ -288,7 +290,7 @@ class Corpus(BaseModel):
         """
         return [doc.id for doc in self.documents]
 
-    def get_document_by_id(self, document_id: str) -> Optional[Document]:
+    def get_document_by_id(self, document_id: str) -> Document | None:
         """
         Get a document by its ID.
 

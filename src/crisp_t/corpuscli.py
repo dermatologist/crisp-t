@@ -1,8 +1,5 @@
 import logging
 import warnings
-from typing import Optional
-
-warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 import click
 
@@ -10,6 +7,8 @@ from .helpers.initializer import initialize_corpus
 from .model.corpus import Corpus
 from .model.document import Document
 from .tdabm import Tdabm
+
+warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 
 def _parse_kv(value: str) -> tuple[str, str]:
@@ -19,7 +18,7 @@ def _parse_kv(value: str) -> tuple[str, str]:
     return key.strip(), val.strip()
 
 
-def _parse_doc(value: str) -> tuple[str, Optional[str], str]:
+def _parse_doc(value: str) -> tuple[str, str | None, str]:
     # id|name|text (name optional -> id||text)
     parts = value.split("|", 2)
     if len(parts) == 2:
@@ -230,42 +229,42 @@ def _parse_relationship(value: str) -> tuple[str, str, str]:
 )
 def main(
     verbose: bool,
-    id: Optional[str],
-    name: Optional[str],
-    description: Optional[str],
+    id: str | None,
+    name: str | None,
+    description: str | None,
     docs: tuple[str, ...],
     remove_docs: tuple[str, ...],
     metas: tuple[str, ...],
     relationships: tuple[str, ...],
     clear_rel: bool,
     print_corpus: bool,
-    out: Optional[str],
-    inp: Optional[str],
+    out: str | None,
+    inp: str | None,
     df_cols: bool,
     df_row_count: bool,
-    df_row: Optional[int],
+    df_row: int | None,
     doc_ids: bool,
-    doc_id: Optional[str],
+    doc_id: str | None,
     print_relationships: bool,
-    relationships_for_keyword: Optional[str],
-    semantic: Optional[str],
-    similar_docs: Optional[str],
+    relationships_for_keyword: str | None,
+    semantic: str | None,
+    similar_docs: str | None,
     num: int,
-    semantic_chunks: Optional[str],
+    semantic_chunks: str | None,
     rec: float,
     metadata_df: bool,
-    metadata_keys: Optional[str],
-    tdabm: Optional[str],
+    metadata_keys: str | None,
+    tdabm: str | None,
     graph: bool,
-    temporal_link: Optional[str],
-    temporal_filter: Optional[str],
-    temporal_summary: Optional[str],
-    temporal_sentiment: Optional[str],
-    temporal_topics: Optional[str],
-    temporal_subgraphs: Optional[str],
-    embedding_link: Optional[str],
+    temporal_link: str | None,
+    temporal_filter: str | None,
+    temporal_summary: str | None,
+    temporal_sentiment: str | None,
+    temporal_topics: str | None,
+    temporal_subgraphs: str | None,
+    embedding_link: str | None,
     embedding_stats: bool,
-    embedding_viz: Optional[str],
+    embedding_viz: str | None,
 ):
     """
     CRISP-T Corpus CLI: Create and manipulate corpus data from the command line.
@@ -436,7 +435,7 @@ def main(
             from .semantic import Semantic
 
             click.echo(
-                click.style(f"\n🔍 Performing semantic search for: ", fg="yellow")
+                click.style("\n🔍 Performing semantic search for: ", fg="yellow")
                 + click.style(f"'{semantic}'", fg="cyan", bold=True)
             )
             # Try with default embeddings first, fall back to simple embeddings
@@ -476,7 +475,7 @@ def main(
             )
         except Exception as e:
             click.echo(
-                click.style(f"❌ Error during semantic search: ", fg="red", bold=True)
+                click.style("❌ Error during semantic search: ", fg="red", bold=True)
                 + str(e)
             )
 
@@ -652,8 +651,9 @@ def main(
                     radius = float(parts[2].strip())
                 except ValueError:
                     raise click.ClickException(
-                        click.style(f"❌ Invalid radius: ", fg="red", bold=True)
+                        click.style("❌ Invalid radius: ", fg="red", bold=True)
                         + f"'{parts[2]}'. Must be a number."
+                    ) from None
                     )
 
             click.echo(click.style("\n📊 Performing TDABM analysis...", fg="yellow"))
@@ -687,7 +687,7 @@ def main(
             click.echo("   • X variables must be numeric or ordinal")
         except Exception as e:
             click.echo(
-                click.style(f"\n❌ Error during TDABM analysis: ", fg="red", bold=True)
+                click.style("\n❌ Error during TDABM analysis: ", fg="red", bold=True)
                 + str(e)
             )
 
@@ -766,7 +766,7 @@ def main(
 
         except Exception as e:
             click.echo(
-                click.style(f"\n❌ Error in temporal linking: ", fg="red", bold=True)
+                click.style("\n❌ Error in temporal linking: ", fg="red", bold=True)
                 + str(e)
             )
 
@@ -802,7 +802,7 @@ def main(
 
         except Exception as e:
             click.echo(
-                click.style(f"\n❌ Error in temporal filtering: ", fg="red", bold=True)
+                click.style("\n❌ Error in temporal filtering: ", fg="red", bold=True)
                 + str(e)
             )
 
@@ -828,7 +828,7 @@ def main(
 
         except Exception as e:
             click.echo(
-                click.style(f"\n❌ Error in temporal summary: ", fg="red", bold=True)
+                click.style("\n❌ Error in temporal summary: ", fg="red", bold=True)
                 + str(e)
             )
 
@@ -868,7 +868,7 @@ def main(
 
         except Exception as e:
             click.echo(
-                click.style(f"\n❌ Error in temporal sentiment: ", fg="red", bold=True)
+                click.style("\n❌ Error in temporal sentiment: ", fg="red", bold=True)
                 + str(e)
             )
 
@@ -905,7 +905,7 @@ def main(
 
         except Exception as e:
             click.echo(
-                click.style(f"\n❌ Error in temporal topics: ", fg="red", bold=True)
+                click.style("\n❌ Error in temporal topics: ", fg="red", bold=True)
                 + str(e)
             )
 
@@ -945,7 +945,7 @@ def main(
         except Exception as e:
             click.echo(
                 click.style(
-                    f"\n❌ Error creating temporal subgraphs: ", fg="red", bold=True
+                    "\n❌ Error creating temporal subgraphs: ", fg="red", bold=True
                 )
                 + str(e)
             )
@@ -991,7 +991,7 @@ def main(
             )
 
             stats = linker.get_link_statistics()
-            click.echo(click.style(f"\n✓ Embedding-based linking complete", fg="green"))
+            click.echo(click.style("\n✓ Embedding-based linking complete", fg="green"))
             click.echo(
                 f"   • Linked documents: {click.style(str(stats['linked_documents']), fg='cyan')}/{stats['total_documents']}"
             )
@@ -1020,7 +1020,7 @@ def main(
         except Exception as e:
             click.echo(
                 click.style(
-                    f"\n❌ Error in embedding-based linking: ", fg="red", bold=True
+                    "\n❌ Error in embedding-based linking: ", fg="red", bold=True
                 )
                 + str(e)
             )
@@ -1073,7 +1073,7 @@ def main(
         except Exception as e:
             click.echo(
                 click.style(
-                    f"\n❌ Error getting embedding statistics: ", fg="red", bold=True
+                    "\n❌ Error getting embedding statistics: ", fg="red", bold=True
                 )
                 + str(e)
             )
@@ -1112,9 +1112,9 @@ def main(
 
         except ImportError as e:
             click.echo(
-                click.style(f"\n❌ Error: Missing dependencies", fg="red", bold=True)
+                click.style("\n❌ Error: Missing dependencies", fg="red", bold=True)
             )
-            click.echo(f"   {str(e)}")
+            click.echo(f"   {e!s}")
             click.echo(
                 click.style("\n💡 Install required packages:", fg="cyan", bold=True)
             )
@@ -1123,7 +1123,7 @@ def main(
             )
         except Exception as e:
             click.echo(
-                click.style(f"\n❌ Error creating visualization: ", fg="red", bold=True)
+                click.style("\n❌ Error creating visualization: ", fg="red", bold=True)
                 + str(e)
             )
 
@@ -1176,7 +1176,7 @@ def main(
             )
         except Exception as e:
             click.echo(
-                click.style(f"\n❌ Error generating graph: ", fg="red", bold=True)
+                click.style("\n❌ Error generating graph: ", fg="red", bold=True)
                 + str(e)
             )
             logger.error(f"Graph generation error: {e}", exc_info=True)
@@ -1188,7 +1188,7 @@ def main(
         rd = ReadData(corpus=corpus)
         rd.write_corpus_to_json(out, corpus=corpus)
         click.echo(
-            click.style(f"\n✓ Corpus saved to: ", fg="green", bold=True)
+            click.style("\n✓ Corpus saved to: ", fg="green", bold=True)
             + click.style(str(out), fg="cyan")
         )
 

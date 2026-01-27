@@ -1,24 +1,23 @@
 import logging
-from typing import Optional
+import warnings
 
 import numpy as np
 import pandas as pd
 
 from .model import Corpus
 
+warnings.filterwarnings("ignore", category=DeprecationWarning)
+
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-import warnings
-
-warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 
 class Csv:
 
     def __init__(
         self,
-        corpus: Optional[Corpus] = None,
+        corpus: Corpus | None = None,
         comma_separated_text_columns: str = "",
         comma_separated_ignore_columns: str = "",
         id_column: str = "id",
@@ -46,7 +45,7 @@ class Csv:
         self._id_column = id_column
 
     @property
-    def corpus(self) -> Optional[Corpus]:
+    def corpus(self) -> Corpus | None:
         if self._corpus is not None and self._df is not None:
             self._corpus.df = self._df
         return self._corpus
@@ -142,7 +141,7 @@ class Csv:
             logger.debug(f"DataFrame shape: {self._df.shape}")
             logger.debug(f"DataFrame columns: {self._df.columns.tolist()}")
         except Exception as e:
-            logger.error(f"Error reading CSV file: {e}")
+            logger.exception(f"Error reading CSV file: {e}")
             raise
         return self._process_columns()
 

@@ -2,9 +2,6 @@ import logging
 import warnings
 from collections import Counter
 from pathlib import Path
-from typing import Optional
-
-warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 import click
 import pandas as pd
@@ -12,8 +9,9 @@ import pandas as pd
 from . import __version__
 from .cluster import Cluster
 from .helpers.initializer import initialize_corpus
-from .read_data import ReadData
 from .visualize import QRVisualize
+
+warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -96,7 +94,7 @@ logger = logging.getLogger(__name__)
 )
 def main(
     verbose: bool,
-    inp: Optional[str],
+    inp: str | None,
     out: str,
     bins: int,
     topics_num: int,
@@ -120,22 +118,22 @@ def main(
 
     \b
     📊 GETTING STARTED:
-    
+
     Step 1: Ensure you have an analyzed corpus (created with 'crisp' or 'crispt')
-    
+
     Step 2: Create an output directory for your visualizations:
        mkdir visualizations
-    
+
     Step 3: Generate visualizations:
        crispviz --inp crisp_input --out visualizations --freq --wordcloud --topics-num 8
-    
+
     \b
     💡 TIPS:
     • Some visualizations require prior analysis (e.g., --wordcloud needs topics)
     • Use --ldavis for interactive HTML visualization
     • Combine multiple flags to generate several visualizations at once
     • Results are saved as PNG images (or HTML for --ldavis)
-    
+
     \b
     📖 For examples and detailed usage, see: notes/DEMO.md
     """
@@ -153,18 +151,17 @@ def main(
     try:
         out_dir = Path(out)
     except TypeError:
-        click.echo(click.style("❌ Error: ", fg="red", bold=True) + 
+        click.echo(click.style("❌ Error: ", fg="red", bold=True) +
                   "No output directory specified.")
-        click.echo(click.style("\n💡 Tip: ", fg="cyan") + 
-                  "Use " + click.style("--out <directory>", fg="green") + 
+        click.echo(click.style("\n💡 Tip: ", fg="cyan") +
+                  "Use " + click.style("--out <directory>", fg="green") +
                   " to specify where visualizations should be saved")
-        raise click.Abort()
+        raise click.Abort() from None
     out_dir.mkdir(parents=True, exist_ok=True)
-    click.echo(click.style(f"✓ Output directory: ", fg="green") + 
+    click.echo(click.style("✓ Output directory: ", fg="green") +
               click.style(str(out_dir), fg="cyan"))
 
     # Initialize components
-    read_data = ReadData()
     corpus = None
 
     click.echo(click.style("\n📂 Loading corpus...", fg="yellow"))
@@ -176,7 +173,7 @@ def main(
             "No input provided. Use " + click.style("--inp <corpus_folder>", fg="green")
         )
 
-    click.echo(click.style(f"✓ Corpus loaded: ", fg="green") + 
+    click.echo(click.style("✓ Corpus loaded: ", fg="green") +
               f"{len(corpus.documents)} document(s)")
 
     viz = QRVisualize(corpus=corpus)
@@ -209,7 +206,7 @@ def main(
         viz.plot_frequency_distribution_of_words(
             df=df_text, folder_path=str(out_path), bins=bins, show=False
         )
-        click.echo(click.style(f"  ✓ Saved: ", fg="green") + 
+        click.echo(click.style("  ✓ Saved: ", fg="green") +
                   click.style(str(out_path), fg="cyan"))
 
     # 2) Distribution by topic (requires topics)
@@ -220,7 +217,7 @@ def main(
         viz.plot_distribution_by_topic(
             df=None, folder_path=str(out_path), bins=bins, show=False
         )
-        click.echo(click.style(f"  ✓ Saved: ", fg="green") + 
+        click.echo(click.style("  ✓ Saved: ", fg="green") +
                   click.style(str(out_path), fg="cyan"))
 
     # 3) Topic wordcloud (requires topics)
@@ -229,7 +226,7 @@ def main(
         ensure_topics()
         out_path = out_dir / "wordcloud.png"
         viz.plot_wordcloud(topics=None, folder_path=str(out_path), show=False)
-        click.echo(click.style(f"  ✓ Saved: ", fg="green") + 
+        click.echo(click.style("  ✓ Saved: ", fg="green") +
                   click.style(str(out_path), fg="cyan"))
 
     # 3.5) LDA visualization (requires topics)
@@ -245,12 +242,12 @@ def main(
                 folder_path=str(out_path),
                 show=False,
             )
-            click.echo(click.style(f"  ✓ Saved: ", fg="green") + 
+            click.echo(click.style("  ✓ Saved: ", fg="green") +
                       click.style(str(out_path), fg="cyan"))
         except ImportError as e:
             click.echo(click.style(f"  ⚠️  Warning: {e}", fg="yellow"))
         except Exception as e:
-            click.echo(click.style(f"  ❌ Error: ", fg="red") + str(e))
+            click.echo(click.style("  ❌ Error: ", fg="red") + str(e))
 
     # 4) Top terms (compute from text directly)
     if top_terms:
@@ -274,7 +271,7 @@ def main(
             viz.plot_top_terms(
                 df=df_terms, top_n=top_n, folder_path=str(out_path), show=False
             )
-            click.echo(click.style(f"  ✓ Saved: ", fg="green") + 
+            click.echo(click.style("  ✓ Saved: ", fg="green") +
                       click.style(str(out_path), fg="cyan"))
 
     # 5) Correlation heatmap
@@ -303,7 +300,7 @@ def main(
                 viz.plot_correlation_heatmap(
                     df=df0, columns=None, folder_path=str(out_path), show=False
                 )
-            click.echo(click.style(f"  ✓ Saved: ", fg="green") + 
+            click.echo(click.style("  ✓ Saved: ", fg="green") +
                       click.style(str(out_path), fg="cyan"))
 
     # TDABM visualization
@@ -311,17 +308,17 @@ def main(
         click.echo(click.style("▸ Creating TDABM visualization...", fg="yellow"))
         if "tdabm" not in corpus.metadata:
             click.echo(click.style("  ⚠️  No TDABM data found in corpus metadata.", fg="yellow"))
-            click.echo(click.style("  💡 Tip: ", fg="cyan") + 
-                      "Run TDABM analysis first with: " + 
+            click.echo(click.style("  💡 Tip: ", fg="cyan") +
+                      "Run TDABM analysis first with: " +
                       click.style("crispt --tdabm y_var:x_vars:radius --inp <corpus_dir>", fg="green"))
         else:
             out_path = out_dir / "tdabm.png"
             try:
                 viz.draw_tdabm(corpus=corpus, folder_path=str(out_path), show=False)
-                click.echo(click.style(f"  ✓ Saved: ", fg="green") + 
+                click.echo(click.style("  ✓ Saved: ", fg="green") +
                           click.style(str(out_path), fg="cyan"))
             except Exception as e:
-                click.echo(click.style(f"  ❌ Error: ", fg="red") + str(e))
+                click.echo(click.style("  ❌ Error: ", fg="red") + str(e))
                 logger.error(f"TDABM visualization error: {e}", exc_info=True)
 
     # Graph visualization (filtered by node types if provided)
@@ -329,8 +326,8 @@ def main(
         click.echo(click.style("▸ Creating graph visualization...", fg="yellow"))
         if "graph" not in corpus.metadata:
             click.echo(click.style("  ⚠️  No graph data found in corpus metadata.", fg="yellow"))
-            click.echo(click.style("  💡 Tip: ", fg="cyan") + 
-                      "Run graph generation first with: " + 
+            click.echo(click.style("  💡 Tip: ", fg="cyan") +
+                      "Run graph generation first with: " +
                       click.style("crispt --graph --inp <corpus_dir>", fg="green"))
         else:
             raw_types = (graph_nodes or "").strip().lower()
@@ -391,7 +388,7 @@ def main(
                     show=False,
                     layout=graph_layout,
                 )
-                click.echo(click.style(f"  ✓ Saved: ", fg="green") + 
+                click.echo(click.style("  ✓ Saved: ", fg="green") +
                           click.style(str(out_path), fg="cyan"))
                 if not include_all:
                     click.echo(click.style(
@@ -399,7 +396,7 @@ def main(
                         fg="blue"
                     ))
             except Exception as e:
-                click.echo(click.style(f"  ❌ Error: ", fg="red") + str(e))
+                click.echo(click.style("  ❌ Error: ", fg="red") + str(e))
                 logger.error(f"Graph visualization error: {e}", exc_info=True)
             finally:
                 # Restore original metadata (avoid side-effects)
@@ -407,7 +404,7 @@ def main(
 
     click.echo(click.style("\n" + "=" * 60, fg="green", bold=True))
     click.echo(click.style("✓ Visualization Complete!", fg="green", bold=True))
-    click.echo(click.style(f"✓ All visualizations saved to: ", fg="green") + 
+    click.echo(click.style("✓ All visualizations saved to: ", fg="green") +
               click.style(str(out_dir), fg="cyan"))
     click.echo(click.style("=" * 60 + "\n", fg="green", bold=True))
 

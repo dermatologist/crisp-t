@@ -8,7 +8,7 @@ as tools, resources, and prompts.
 
 import json
 import logging
-from typing import Any, Optional, cast
+from typing import Any, cast
 
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
@@ -22,12 +22,10 @@ from mcp.types import (
 )
 
 from ..cluster import Cluster
-from ..csv import Csv
 from ..helpers.analyzer import get_csv_analyzer, get_text_analyzer
 from ..helpers.initializer import initialize_corpus
 from ..read_data import ReadData
 from ..sentiment import Sentiment
-from ..text import Text
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -52,8 +50,8 @@ _ml_analyzer = None
 
 
 def _init_corpus(
-    inp: Optional[str] = None,
-    source: Optional[str] = None,
+    inp: str | None = None,
+    source: str | None = None,
     text_columns: str = "",
     ignore_words: str = "",
 ):
@@ -82,7 +80,7 @@ def _init_corpus(
 
         return True
     except Exception as e:
-        logger.error(f"Failed to initialize corpus: {e}")
+        logger.exception(f"Failed to initialize corpus: {e}")
         return False
 
 
@@ -1571,7 +1569,7 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
 
             linkage_method = arguments.get("linkage_method")
             aggregation = arguments.get("aggregation", "majority")
-            
+
             result = _ml_analyzer.svm_confusion_matrix(
                 y=arguments["outcome"], test_size=0.25, mcp=True, linkage_method=linkage_method, aggregation=aggregation
             )
@@ -1594,7 +1592,7 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
 
             linkage_method = arguments.get("linkage_method")
             aggregation = arguments.get("aggregation", "majority")
-            
+
             result = _ml_analyzer.get_nnet_predictions(y=arguments["outcome"], mcp=True, linkage_method=linkage_method, aggregation=aggregation)
             return [TextContent(type="text", text=str(result))]
 
@@ -1615,7 +1613,7 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
 
             linkage_method = arguments.get("linkage_method")
             aggregation = arguments.get("aggregation", "mean")  # Default to mean for regression
-            
+
             result = _ml_analyzer.get_regression(y=arguments["outcome"], mcp=True, linkage_method=linkage_method, aggregation=aggregation)
             return [TextContent(type="text", text=str(result))]
 
@@ -2235,7 +2233,7 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                 )
 
                 stats = linker.get_link_statistics()
-                response_text = f"Embedding-based linking complete\n\n"
+                response_text = "Embedding-based linking complete\n\n"
                 response_text += f"Linked documents: {stats['linked_documents']}/{stats['total_documents']}\n"
                 response_text += f"Total links: {stats['total_links']}\n"
                 response_text += f"Average similarity: {stats['avg_similarity']:.3f}\n"
@@ -2306,7 +2304,7 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
 
     except Exception as e:
         logger.error(f"Error executing tool {name}: {e}", exc_info=True)
-        return [TextContent(type="text", text=f"Error: {str(e)}")]
+        return [TextContent(type="text", text=f"Error: {e!s}")]
 
 
 @app.list_prompts()

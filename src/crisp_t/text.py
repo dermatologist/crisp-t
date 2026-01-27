@@ -17,30 +17,28 @@ You should have received a copy of the GNU General Public License
 along with crisp-t.  If not, see <https://www.gnu.org/licenses/>.
 """
 
+import logging
+import multiprocessing
 import operator
-from typing import Optional
-from pathlib import Path
 import pickle
+import warnings
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from pathlib import Path
+
 import pandas as pd
-import spacy
 import textacy
-from mlxtend.frequent_patterns import apriori, association_rules
+from mlxtend.frequent_patterns import apriori
 from mlxtend.preprocessing import TransactionEncoder
 from spacy.tokens import Doc
 from textacy import preprocessing
 from tqdm import tqdm
-from functools import lru_cache
-import multiprocessing
-from concurrent.futures import ThreadPoolExecutor, as_completed
+
 from .model import Corpus, SpacyManager
 from .utils import QRUtils
 
-textacy.set_doc_extensions("extract.bags")  # type: ignore
-
-import warnings
-
 warnings.filterwarnings("ignore", category=DeprecationWarning)
-import logging
+
+textacy.set_doc_extensions("extract.bags")  # type: ignore
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -49,7 +47,7 @@ logger = logging.getLogger(__name__)
 class Text:
 
     def __init__(
-        self, corpus: Optional[Corpus] = None, lang="en_core_web_sm", max_length=1100000
+        self, corpus: Corpus | None = None, lang="en_core_web_sm", max_length=1100000
     ):
         self._corpus = corpus
         self._lang = lang
@@ -480,9 +478,8 @@ class Text:
         ):
             meta_val = document.metadata.get(metadata_key)
             # Check meta_val is not None and is iterable (str, list, tuple, set)
-            if meta_val is not None and isinstance(meta_val, (str, list, tuple, set)):
-                if metadata_value in meta_val:
-                    filtered_documents.append(document)
+            if meta_val is not None and isinstance(meta_val, (str, list, tuple, set)) and metadata_value in meta_val:
+                filtered_documents.append(document)
             # Check document.id and document.text are not None and are str
             if isinstance(document.id, str) and metadata_value in document.id:
                 filtered_documents.append(document)

@@ -164,15 +164,15 @@ def _apply_regular_filters(text_analyzer, csv_analyzer, filters):
                         click.echo(f"Could not apply CSV filter {key}={value}: {e}")
 
         # Second pass: if id filter exists with no value, sync after other filters applied
-        if has_id_filter and not id_filter_value:
-            # Sync all remaining documents to DataFrame rows by ID
-            if (
-                text_analyzer
-                and csv_analyzer
-                and csv_analyzer.df is not None
-                and "id" in csv_analyzer.df.columns
-            ):
-                try:
+        if (
+            has_id_filter
+            and not id_filter_value
+            and text_analyzer
+            and csv_analyzer
+            and csv_analyzer.df is not None
+            and "id" in csv_analyzer.df.columns
+        ):
+            try:
                     # Get all current document IDs
                     doc_ids = {doc.id for doc in text_analyzer.corpus.documents}
                     # Filter DataFrame to rows where id matches a document ID
@@ -217,13 +217,9 @@ def _apply_link_filters(corpus, text_analyzer, csv_analyzer, link_filters):
 
     for flt in link_filters:
         # Map legacy filters to new explicit format
-        if flt == "=embedding":
+        if flt == "=embedding" or flt == ":embedding":
             flt = "embedding:text"
-        elif flt == ":embedding":
-            flt = "embedding:text"
-        elif flt == "=temporal":
-            flt = "temporal:text"
-        elif flt == ":temporal":
+        elif flt == "=temporal" or flt == ":temporal":
             flt = "temporal:text"
 
         # Parse filter to determine direction and link type

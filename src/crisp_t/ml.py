@@ -1,10 +1,9 @@
 import logging
+import warnings
 from collections import Counter
-from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
-from matplotlib.pyplot import clf
 from sklearn.cluster import KMeans
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.inspection import permutation_importance
@@ -19,19 +18,14 @@ from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KDTree
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
-from sklearn.tree import DecisionTreeClassifier
 from tabulate import tabulate
 from tqdm import tqdm
 
-from crisp_t import model
-
 from .csv import Csv
 
-logger = logging.getLogger(__name__)
-
-import warnings
-
 warnings.filterwarnings("ignore", category=DeprecationWarning)
+
+logger = logging.getLogger(__name__)
 
 ML_INSTALLED = False
 torch = None
@@ -224,11 +218,11 @@ class ML:
             self._csv.corpus = _corpus
         return members
 
-    def get_nnet_predictions(self, y: str, mcp=False, linkage_method: Optional[str] = None, aggregation: str = "majority"):
+    def get_nnet_predictions(self, y: str, mcp=False, linkage_method: str | None = None, aggregation: str = "majority"):
         """
         Extended: Handles binary (BCELoss) and multi-class (CrossEntropyLoss).
         Returns list of predicted original class labels.
-        
+
         Args:
             y (str): Target column name OR text metadata field name (when linkage_method is specified).
             mcp (bool): Whether to return MCP-formatted string.
@@ -283,7 +277,7 @@ class ML:
                 dataset = TensorDataset(X_tensor, y_tensor)  # type: ignore
                 dataloader = DataLoader(dataset, batch_size=32, shuffle=True)  # type: ignore
             except Exception as e:
-                logger.error(f"Error occurred while creating DataLoader: {e}")
+                logger.exception(f"Error occurred while creating DataLoader: {e}")
                 return None
 
             for _ in range(self._epochs):
@@ -382,7 +376,7 @@ class ML:
         print(f"Converted target variable to binary using mapping: {mapping}")
         return Y_binary
 
-    def svm_confusion_matrix(self, y: str, test_size=0.25, random_state=0, mcp=False, linkage_method: Optional[str] = None, aggregation: str = "majority"):
+    def svm_confusion_matrix(self, y: str, test_size=0.25, random_state=0, mcp=False, linkage_method: str | None = None, aggregation: str = "majority"):
         """Generate confusion matrix for SVM
 
         Args:
@@ -447,10 +441,10 @@ class ML:
         )
 
     # https://stackoverflow.com/questions/45419203/python-numpy-extracting-a-row-from-an-array
-    def knn_search(self, y: str, n=3, r=3, mcp=False, linkage_method: Optional[str] = None, aggregation: str = "majority"):
+    def knn_search(self, y: str, n=3, r=3, mcp=False, linkage_method: str | None = None, aggregation: str = "majority"):
         """
         Perform K-Nearest Neighbors search.
-        
+
         Args:
             y (str): Target column name OR text metadata field name (when linkage_method is specified).
             n (int): Number of nearest neighbors to find.
@@ -481,10 +475,10 @@ class ML:
         metadata_field: str,
         linkage_method: str,
         aggregation: str = "majority"
-    ) -> Tuple[pd.Series, List[int]]:
+    ) -> tuple[pd.Series, list[int]]:
         """
         Extract outcome values from text document metadata using specified linkage method.
-        
+
         Args:
             metadata_field (str): Name of the metadata field in documents containing outcome values
             linkage_method (str): Linkage method to use ('id', 'embedding', 'temporal', 'keyword')
@@ -493,7 +487,7 @@ class ML:
                               - 'mean': Mean value for regression
                               - 'first': Use first document's value
                               - 'mode': Mode (most common) value
-        
+
         Returns:
             Tuple[pd.Series, List[int]]: (outcome_series, valid_indices)
                 - outcome_series: Series with outcome values aligned to DataFrame rows
@@ -501,24 +495,24 @@ class ML:
         """
         if not self._csv.corpus or not self._csv.corpus.documents:
             raise ValueError("Corpus documents not available. Cannot extract text metadata outcomes.")
-        
+
         if self._csv.df is None:
             raise ValueError("DataFrame not available.")
-        
+
         # Build mapping from DataFrame index to document metadata values
-        df_index_to_values: Dict[int, List] = {}
-        
+        df_index_to_values: dict[int, list] = {}
+
         if linkage_method == "id":
             # ID linkage: Match document.id with df['id'] column
             if "id" not in self._csv.df.columns:
                 raise ValueError("ID linkage requires 'id' column in DataFrame")
-            
+
             # Create a mapping from id to df index
             id_to_df_index = {
-                str(row_id): idx 
+                str(row_id): idx
                 for idx, row_id in self._csv.df['id'].items()
             }
-            
+
             for doc in self._csv.corpus.documents:
                 if metadata_field in doc.metadata:
                     doc_id = str(doc.id)
@@ -527,11 +521,11 @@ class ML:
                         if df_idx not in df_index_to_values:
                             df_index_to_values[df_idx] = []
                         df_index_to_values[df_idx].append(doc.metadata[metadata_field])
-        
+
         elif linkage_method in ["embedding", "temporal"]:
             # Embedding or temporal linkage: Use links stored in document metadata
             link_key = f"{linkage_method}_links"
-            
+
             for doc in self._csv.corpus.documents:
                 if metadata_field in doc.metadata and link_key in doc.metadata:
                     links = doc.metadata[link_key]
@@ -542,7 +536,7 @@ class ML:
                                 if df_idx not in df_index_to_values:
                                     df_index_to_values[df_idx] = []
                                 df_index_to_values[df_idx].append(doc.metadata[metadata_field])
-        
+
         elif linkage_method == "keyword":
             # Keyword linkage: Use keyword_links stored in document metadata
             for doc in self._csv.corpus.documents:
@@ -555,19 +549,19 @@ class ML:
                                 if df_idx not in df_index_to_values:
                                     df_index_to_values[df_idx] = []
                                 df_index_to_values[df_idx].append(doc.metadata[metadata_field])
-        
+
         else:
             raise ValueError(
                 f"Unsupported linkage method: {linkage_method}. "
                 f"Supported methods: 'id', 'embedding', 'temporal', 'keyword'"
             )
-        
+
         if not df_index_to_values:
             raise ValueError(
                 f"No documents with '{metadata_field}' metadata field are linked to DataFrame rows "
                 f"using '{linkage_method}' linkage method."
             )
-        
+
         # Aggregate values for each DataFrame row
         aggregated_values = {}
         for df_idx, values in df_index_to_values.items():
@@ -599,7 +593,7 @@ class ML:
                     f"Unsupported aggregation method: {aggregation}. "
                     f"Supported methods: 'majority', 'mean', 'first', 'mode'"
                 )
-        
+
         # Create Series aligned with DataFrame
         valid_indices = sorted(aggregated_values.keys())
         outcome_series = pd.Series(
@@ -607,26 +601,26 @@ class ML:
             index=valid_indices,
             name=metadata_field
         )
-        
+
         logger.info(
             f"Extracted outcome from text metadata field '{metadata_field}' "
             f"using '{linkage_method}' linkage and '{aggregation}' aggregation. "
             f"Linked {len(valid_indices)} out of {len(self._csv.df)} DataFrame rows."
         )
-        
+
         return outcome_series, valid_indices
 
-    def _process_xy(self, y: str, oversample=False, one_hot_encode_all=False, linkage_method: Optional[str] = None, aggregation: str = "majority"):
+    def _process_xy(self, y: str, oversample=False, one_hot_encode_all=False, linkage_method: str | None = None, aggregation: str = "majority"):
         """
         Process features and outcome data for ML models.
-        
+
         Args:
             y (str): Either a DataFrame column name OR a text metadata field name (when linkage_method is specified)
             oversample (bool): Whether to oversample minority classes
             one_hot_encode_all (bool): Whether to one-hot encode all columns
             linkage_method (str, optional): Linkage method for text metadata outcomes ('id', 'embedding', 'temporal', 'keyword')
             aggregation (str): Aggregation strategy when multiple documents link to one row ('majority', 'mean', 'first', 'mode')
-        
+
         Returns:
             Tuple: (X_np, Y_raw, X, Y) - Feature matrix, outcome array, original DataFrames
         """
@@ -638,29 +632,29 @@ class ML:
                 linkage_method=linkage_method,
                 aggregation=aggregation
             )
-            
+
             # Filter DataFrame to only include rows with linked documents
             filtered_df = self._csv.df.loc[valid_indices].copy()
-            
+
             # Add the outcome column to the filtered DataFrame
             filtered_df[f"_text_outcome_{y}"] = outcome_series
-            
+
             # Temporarily swap the DataFrame
             original_df = self._csv.df
             self._csv.df = filtered_df
-            
+
             try:
                 # Prepare data using the temporary outcome column
                 X, Y = self._csv.prepare_data(
-                    y=f"_text_outcome_{y}", 
-                    oversample=oversample, 
+                    y=f"_text_outcome_{y}",
+                    oversample=oversample,
                     one_hot_encode_all=one_hot_encode_all
                 )
             finally:
                 # Restore original DataFrame and remove temporary column
                 filtered_df.drop(columns=[f"_text_outcome_{y}"], inplace=True)
                 self._csv.df = original_df
-            
+
             # Rename Y back to the original metadata field name
             if hasattr(Y, 'name'):
                 Y.name = y
@@ -669,7 +663,7 @@ class ML:
             X, Y = self._csv.prepare_data(
                 y=y, oversample=oversample, one_hot_encode_all=one_hot_encode_all
             )
-        
+
         if X is None or Y is None:
             raise ValueError("prepare_data returned None for X or Y.")
 
@@ -690,7 +684,7 @@ class ML:
         return X_np, Y_raw, X, Y
 
     def get_decision_tree_classes(
-        self, y: str, top_n=5, test_size=0.5, random_state=1, mcp=False, linkage_method: Optional[str] = None, aggregation: str = "majority"
+        self, y: str, top_n=5, test_size=0.5, random_state=1, mcp=False, linkage_method: str | None = None, aggregation: str = "majority"
     ):
         """
         Train a Decision Tree classifier and return feature importances.
@@ -768,7 +762,7 @@ class ML:
         return _confusion_matrix, importance
 
     def get_xgb_classes(
-        self, y: str, oversample=False, test_size=0.25, random_state=0, mcp=False, linkage_method: Optional[str] = None, aggregation: str = "majority"
+        self, y: str, oversample=False, test_size=0.25, random_state=0, mcp=False, linkage_method: str | None = None, aggregation: str = "majority"
     ):
         """
         Train an XGBoost classifier and return feature importances.
@@ -790,7 +784,7 @@ class ML:
         except ImportError:
             raise ImportError(
                 "XGBoost is not installed. Please install it via `pip install crisp-t[xg]`."
-            )
+            ) from None
         X_np, Y_raw, X, Y = self._process_xy(y=y, linkage_method=linkage_method, aggregation=aggregation)
         if ML_INSTALLED:
             # ValueError: Invalid classes inferred from unique values of `y`.  Expected: [0 1], got [1 2]
@@ -837,7 +831,7 @@ class ML:
         else:
             raise ImportError("ML dependencies are not installed.")
 
-    def get_pca(self, y: str, n: int = 3, mcp=False, linkage_method: Optional[str] = None, aggregation: str = "majority"):
+    def get_pca(self, y: str, n: int = 3, mcp=False, linkage_method: str | None = None, aggregation: str = "majority"):
         """
         Perform a manual PCA (no sklearn PCA) on the feature matrix for target y.
 
@@ -913,7 +907,7 @@ class ML:
             )
         return result
 
-    def get_regression(self, y: str, mcp=False, linkage_method: Optional[str] = None, aggregation: str = "mean"):
+    def get_regression(self, y: str, mcp=False, linkage_method: str | None = None, aggregation: str = "mean"):
         """
         Perform linear or logistic regression based on the outcome variable type.
 
@@ -966,7 +960,7 @@ class ML:
             print(f"\nAccuracy: {accuracy*100:.2f}%")
 
             # Coefficients and Intercept
-            print(f"\nCoefficients:")
+            print("\nCoefficients:")
             for i, coef in enumerate(model.coef_[0]):
                 feature_name = X.columns[i] if hasattr(X, "columns") else f"Feature_{i}"
                 print(f"  {feature_name}: {coef:.5f}")
@@ -1024,7 +1018,7 @@ class ML:
             print(f"R² Score: {r2:.5f}")
 
             # Coefficients and Intercept
-            print(f"\nCoefficients:")
+            print("\nCoefficients:")
             for i, coef in enumerate(model.coef_):
                 feature_name = X.columns[i] if hasattr(X, "columns") else f"Feature_{i}"
                 print(f"  {feature_name}: {coef:.5f}")
@@ -1327,7 +1321,7 @@ class ML:
             }
 
         except Exception as e:
-            logger.error(f"Error in LSTM prediction: {e}")
+            logger.exception(f"Error in LSTM prediction: {e}")
             if mcp:
                 return f"Error in LSTM prediction: {e}"
             return None
