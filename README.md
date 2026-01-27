@@ -147,7 +147,7 @@ crisp --source PATH --out PATH
 - `--visualize`: Generate visualizations (word clouds, topic charts, etc.)
 - `--num, -n INTEGER`: Number parameter (clusters, topics, epochs, etc.) - default: 3
 - `--rec, -r INTEGER`: Record parameter (top N results, recommendations) - default: 3
-- `--filters, -f TEXT`: Filters to apply as `key=value` (can be used multiple times); keeps only documents where `document.metadata[key] == value`. Invalid formats raise an error.
+- `--filters, -f TEXT`: Filters to apply as `key=value` or `key:value` (can be used multiple times). Regular filters keep only documents/rows where `document.metadata[key] == value` or `dataframe[key] == value`. Special filters: `=embedding` or `:embedding` to filter dataframe rows linked via embedding_links; `=temporal` or `:temporal` to filter dataframe rows linked via temporal_links. Multiple filters can be combined.
 - `--verbose, -v`: Print verbose messages for debugging
 
 #### Data Sources
@@ -201,6 +201,18 @@ crisp --print metadata --print pca
 
 # View DataFrame statistics (unquoted)
 crisp --print dataframe --print stats
+
+# Filter by metadata (keeps documents with keywords="healthcare" and matching DataFrame rows)
+crisp --inp corpus_dir --filters keywords=healthcare --out filtered_output
+
+# Filter by embedding links (keeps only DataFrame rows linked to documents via embedding_links)
+crisp --inp corpus_dir --filters =embedding --out filtered_output
+
+# Filter by temporal links (keeps only DataFrame rows linked to documents via temporal_links)
+crisp --inp corpus_dir --filters :temporal --out filtered_output
+
+# Combine multiple filters (filter by keywords AND embedding links)
+crisp --inp corpus_dir --filters keywords=mask --filters =embedding --out filtered_output
 ```
 
 

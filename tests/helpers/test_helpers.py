@@ -1,13 +1,18 @@
 import types
 
+import pandas as pd
 import pytest
 
 from src.crisp_t.helpers import analyzer, initializer
+from src.crisp_t.model import Document
 
 
 class DummyCorpus:
     def __init__(self):
-        self.documents = ["doc1", "doc2"]
+        self.documents = [
+            Document(id="doc1", text="test document 1", metadata={}),
+            Document(id="doc2", text="test document 2", metadata={}),
+        ]
         self.df = None
 
 
@@ -19,6 +24,8 @@ class DummyCsv:
         self.df = None
 
     def get_shape(self):
+        if self.df is not None:
+            return self.df.shape
         return (2, 2)
 
     def filter_rows_by_column_value(self, key, value):
@@ -33,6 +40,8 @@ class DummyText:
         return None
 
     def document_count(self):
+        if self.corpus and hasattr(self.corpus, "documents"):
+            return len(self.corpus.documents)
         return 2
 
 
@@ -88,7 +97,7 @@ def test_get_text_analyzer_filters():
 
 def test_get_csv_analyzer(monkeypatch):
     corpus = DummyCorpus()
-    corpus.df = True
+    corpus.df = pd.DataFrame({"col1": [1, 2, 3], "col2": [4, 5, 6]})
     analyzer.Csv = DummyCsv
     csv_analyzer = analyzer.get_csv_analyzer(
         corpus, "text_col", "ignore_col", filters=["a=b"]
@@ -96,6 +105,129 @@ def test_get_csv_analyzer(monkeypatch):
     assert isinstance(csv_analyzer, DummyCsv)
     assert csv_analyzer.comma_separated_text_columns == "text_col"
     assert csv_analyzer.comma_separated_ignore_columns == "ignore_col"
+
+
+def test_get_analyzers_basic():
+    """Test get_analyzers returns both analyzers."""
+    corpus = DummyCorpus()
+    corpus.df = pd.DataFrame({"col1": [1, 2, 3], "col2": [4, 5, 6]})
+    analyzer.Text = DummyText
+    analyzer.Csv = DummyCsv
+
+    text_analyzer, csv_analyzer = analyzer.get_analyzers(corpus)
+
+    assert isinstance(text_analyzer, DummyText)
+    assert isinstance(csv_analyzer, DummyCsv)
+    assert text_analyzer.corpus == corpus
+    assert csv_analyzer.corpus == corpus
+
+
+def test_get_analyzers_with_regular_filters():
+    """Test get_analyzers with regular key=value filters."""
+    corpus = DummyCorpus()
+    corpus.df = pd.DataFrame(
+        {"keywords": ["mask", "vaccine", "mask"], "value": [1, 2, 3]}
+    )
+    analyzer.Text = DummyText
+    analyzer.Csv = DummyCsv
+
+    filters = ["keywords=mask"]
+    text_analyzer, csv_analyzer = analyzer.get_analyzers(corpus, filters=filters)
+
+    assert isinstance(text_analyzer, DummyText)
+    assert isinstance(csv_analyzer, DummyCsv)
+
+
+def test_get_analyzers_with_embedding_filter():
+    """Test get_analyzers with =embedding filter."""
+    corpus = DummyCorpus()
+    # Add embedding_links to documents
+    corpus.documents[0].metadata["embedding_links"] = [
+        {"df_index": 0, "similarity": 0.9},
+        {"df_index": 2, "similarity": 0.8},
+    ]
+    corpus.df = pd.DataFrame({"col1": [1, 2, 3], "col2": [4, 5, 6]})
+    analyzer.Text = DummyText
+    analyzer.Csv = DummyCsv
+
+    filters = ["=embedding"]
+    text_analyzer, csv_analyzer = analyzer.get_analyzers(corpus, filters=filters)
+
+    assert isinstance(text_analyzer, DummyText)
+    assert isinstance(csv_analyzer, DummyCsv)
+    # CSV should be filtered to only rows 0 and 2
+    assert len(csv_analyzer.df) == 2
+    assert 0 in csv_analyzer.df.index
+    assert 2 in csv_analyzer.df.index
+
+
+def test_get_analyzers_with_temporal_filter():
+    """Test get_analyzers with :temporal filter."""
+    corpus = DummyCorpus()
+    # Add temporal_links to documents
+    corpus.documents[1].metadata["temporal_links"] = [
+        {"df_index": 1, "time_gap_seconds": 10}
+    ]
+    corpus.df = pd.DataFrame({"col1": [1, 2, 3], "col2": [4, 5, 6]})
+    analyzer.Text = DummyText
+    analyzer.Csv = DummyCsv
+
+    filters = [":temporal"]
+    text_analyzer, csv_analyzer = analyzer.get_analyzers(corpus, filters=filters)
+
+    assert isinstance(text_analyzer, DummyText)
+    assert isinstance(csv_analyzer, DummyCsv)
+    # CSV should be filtered to only row 1
+    assert len(csv_analyzer.df) == 1
+    assert 1 in csv_analyzer.df.index
+
+
+def test_get_analyzers_with_combined_filters():
+    """Test get_analyzers with both regular and link filters."""
+    corpus = DummyCorpus()
+    corpus.documents[0].metadata["embedding_links"] = [
+        {"df_index": 0, "similarity": 0.9}
+    ]
+    corpus.documents[0].metadata["keywords"] = "mask"
+    corpus.df = pd.DataFrame(
+        {"keywords": ["mask", "vaccine", "mask"], "value": [1, 2, 3]}
+    )
+    analyzer.Text = DummyText
+    analyzer.Csv = DummyCsv
+
+    filters = ["keywords=mask", "=embedding"]
+    text_analyzer, csv_analyzer = analyzer.get_analyzers(corpus, filters=filters)
+
+    assert isinstance(text_analyzer, DummyText)
+    assert isinstance(csv_analyzer, DummyCsv)
+
+
+def test_get_analyzers_no_dataframe():
+    """Test get_analyzers when corpus has no dataframe."""
+    corpus = DummyCorpus()
+    corpus.df = None
+    analyzer.Text = DummyText
+    analyzer.Csv = DummyCsv
+
+    text_analyzer, csv_analyzer = analyzer.get_analyzers(corpus)
+
+    assert isinstance(text_analyzer, DummyText)
+    assert csv_analyzer is None
+
+
+def test_get_analyzers_no_documents():
+    """Test get_analyzers when corpus has no documents."""
+    corpus = DummyCorpus()
+    corpus.documents = []
+    corpus.df = pd.DataFrame({"col1": [1, 2, 3]})
+    analyzer.Text = DummyText
+    analyzer.Csv = DummyCsv
+
+    text_analyzer, csv_analyzer = analyzer.get_analyzers(corpus)
+
+    # Text analyzer should be None when there are no documents
+    assert text_analyzer is None
+    assert isinstance(csv_analyzer, DummyCsv)
 
 
 def test__process_csv():
