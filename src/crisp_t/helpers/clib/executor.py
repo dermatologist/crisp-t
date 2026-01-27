@@ -31,7 +31,8 @@ def execute_analysis_with_save(
         result = analysis_func()
 
         if output_path:
-            from ..utils import _save_output  # Relative import to avoid circular dependency
+            # Import from cli module where _save_output is defined
+            from ...cli import _save_output
             _save_output(result, output_path, suffix)
             click.echo(format_success(f"{success_message} - Saved to {output_path}"))
         else:

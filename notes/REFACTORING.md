@@ -85,19 +85,7 @@ The refactoring was initiated to address several code quality issues identified 
 
 #### Created CLI Utility Modules
 
-**src/crisp_t/cli/helpers/ui.py**
-- `print_section_header()`: Styled section headers with box borders
-- `print_tips()`: Formatted parameter tips
-- `format_success()`, `format_error()`, `format_info()`, `format_warning()`: Message formatters
-- **Impact**: Reduced ~153 lines of repeated UI code to 9 function calls
-
-**src/crisp_t/cli/helpers/executor.py**
-- `execute_analysis_with_save()`: Unified try-catch-save pattern
-- **Impact**: Reduced ~96 lines of repeated error handling code
-
-#### Created ML Configuration Module
-
-**src/crisp_t/ml/config.py**
+**src/crisp_t/helpers/clib/ui.py** (renamed from helpers/cli/ui.py)
 - Centralized hyperparameters: NNET_BATCH_SIZE, LSTM_VOCAB_SIZE, etc.
 - Defined metadata key constants: METADATA_KEY_KMEANS, etc.
 - Documented aggregation and linkage methods
