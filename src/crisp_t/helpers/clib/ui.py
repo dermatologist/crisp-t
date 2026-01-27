@@ -5,7 +5,7 @@ import click
 def print_section_header(title: str, emoji: str = "", color: str = "blue", bold: bool = True):
     """
     Print a styled section header with a box border.
-    
+
     Args:
         title: The title text to display
         emoji: Optional emoji to prefix the title
@@ -26,7 +26,7 @@ def print_section_header(title: str, emoji: str = "", color: str = "blue", bold:
 def print_tips(tips: dict[str, str]):
     """
     Print formatted tips with styled parameter names.
-    
+
     Args:
         tips: Dictionary mapping parameter names to descriptions
     """

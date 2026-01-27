@@ -16,14 +16,14 @@ def execute_analysis_with_save(
 ) -> Any:
     """
     Execute an analysis function with automatic error handling and optional output saving.
-    
+
     Args:
         analysis_func: The analysis function to execute (no arguments)
         output_path: Optional path to save results
         suffix: Suffix for the output filename
         success_message: Message to display on success
         error_message_prefix: Prefix for error messages
-        
+
     Returns:
         The result of the analysis function, or None if an error occurred
     """
