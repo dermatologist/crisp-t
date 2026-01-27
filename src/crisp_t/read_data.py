@@ -547,8 +547,7 @@ class ReadData:
                         read_from_file = apply_ignore_patterns(read_from_file)
                         # Extract timestamp from content
                         doc_timestamp = extract_timestamp_from_text(read_from_file)
-                        # Assign id as filename without extension
-                        doc_id = os.path.splitext(file_name)[0]
+                        # self._content removed
                         _document = Document(
                             text=read_from_file,
                             timestamp=doc_timestamp,
@@ -556,7 +555,7 @@ class ReadData:
                                 "source": str(file_path),
                                 "file_name": file_name,
                             },
-                            id=doc_id,
+                            id=file_name,
                             score=0.0,
                             name="",
                             description="",
@@ -578,8 +577,7 @@ class ReadData:
                         read_from_file = apply_ignore_patterns(read_from_file)
                         # Extract timestamp from content
                         doc_timestamp = extract_timestamp_from_text(read_from_file)
-                        # Assign id as filename without extension
-                        doc_id = os.path.splitext(file_name)[0]
+                        # self._content removed
                         _document = Document(
                             text=read_from_file,
                             timestamp=doc_timestamp,
@@ -587,7 +585,7 @@ class ReadData:
                                 "source": str(file_path),
                                 "file_name": file_name,
                             },
-                            id=doc_id,
+                            id=file_name,
                             score=0.0,
                             name="",
                             description="",
