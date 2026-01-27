@@ -17,20 +17,54 @@ You should have received a copy of the GNU General Public License
 along with crisp-t.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from datetime import datetime, timedelta
-from typing import Optional, List, Tuple, Dict, Any
-import pandas as pd
 import logging
-from .model import Corpus, Document
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
+
+import pandas as pd
+
+from .model import Corpus
 
 logger = logging.getLogger(__name__)
 
 # Common stop words for topic extraction
 COMMON_STOP_WORDS = {
-    "the", "a", "an", "and", "or", "but", "in", "on", "at", "to", "for",
-    "of", "with", "by", "from", "as", "is", "was", "are", "were", "be",
-    "been", "being", "have", "has", "had", "do", "does", "did", "will",
-    "would", "should", "could", "may", "might", "can"
+    "the",
+    "a",
+    "an",
+    "and",
+    "or",
+    "but",
+    "in",
+    "on",
+    "at",
+    "to",
+    "for",
+    "of",
+    "with",
+    "by",
+    "from",
+    "as",
+    "is",
+    "was",
+    "are",
+    "were",
+    "be",
+    "been",
+    "being",
+    "have",
+    "has",
+    "had",
+    "do",
+    "does",
+    "did",
+    "will",
+    "would",
+    "should",
+    "could",
+    "may",
+    "might",
+    "can",
 }
 
 
@@ -50,42 +84,20 @@ class TemporalAnalyzer:
         self.corpus = corpus
 
     @staticmethod
-    def parse_timestamp(timestamp_str: str) -> Optional[datetime]:
+    def parse_timestamp(timestamp_str: Optional[str]) -> Optional[datetime]:
         """
         Parse a timestamp string in various formats to datetime object.
-
-        Args:
-            timestamp_str: Timestamp string to parse.
-
-        Returns:
-            datetime object if parsing succeeds, None otherwise.
+        Returns None if parsing fails.
         """
         if not timestamp_str or pd.isna(timestamp_str):
             return None
-
-        # Common timestamp formats
-        formats = [
-            "%Y-%m-%dT%H:%M:%S.%fZ",  # ISO 8601 with milliseconds
-            "%Y-%m-%dT%H:%M:%SZ",     # ISO 8601
-            "%Y-%m-%dT%H:%M:%S",      # ISO 8601 without Z
-            "%Y-%m-%d %H:%M:%S",      # Common format
-            "%Y-%m-%d",               # Date only
-            "%m/%d/%Y %H:%M:%S",      # US format with time
-            "%m/%d/%Y",               # US date only
-            "%d/%m/%Y %H:%M:%S",      # European format with time
-            "%d/%m/%Y",               # European date only
-        ]
-
-        for fmt in formats:
-            try:
-                return datetime.strptime(str(timestamp_str), fmt)
-            except ValueError:
-                continue
-
-        # Try pandas parser as fallback
         try:
-            return pd.to_datetime(timestamp_str)
-        except (ValueError, TypeError, pd.errors.ParserError):
+            dt = pd.to_datetime(timestamp_str, errors="coerce")
+            if pd.isna(dt):
+                logger.warning(f"Failed to parse timestamp: {timestamp_str}")
+                return None
+            return dt.to_pydatetime() if hasattr(dt, "to_pydatetime") else dt
+        except Exception:
             logger.warning(f"Failed to parse timestamp: {timestamp_str}")
             return None
 
@@ -109,38 +121,35 @@ class TemporalAnalyzer:
         df_times = self.corpus.df[time_column].apply(self.parse_timestamp)
         valid_df_indices = df_times.notna()
 
+        # Update documents in corpus if metadata is changed
+        updated_documents = []
         for doc in self.corpus.documents:
-            if not doc.timestamp:
+            if not getattr(doc, "timestamp", None):
+                updated_documents.append(doc)
                 continue
-
-            doc_time = self.parse_timestamp(doc.timestamp)
+            doc_time = self.parse_timestamp(getattr(doc, "timestamp", None))
             if not doc_time:
+                updated_documents.append(doc)
                 continue
-
-            # Find nearest row
             time_diffs = (df_times[valid_df_indices] - doc_time).abs()
-            if len(time_diffs) == 0:
+            if time_diffs.empty:
+                updated_documents.append(doc)
                 continue
-
             nearest_idx = time_diffs.idxmin()
             min_gap = time_diffs.min()
-
-            # Check max gap if specified
             if max_gap and min_gap > max_gap:
+                updated_documents.append(doc)
                 continue
-
-            # Store link in document metadata
-            if "temporal_links" not in doc.metadata:
-                doc.metadata["temporal_links"] = []
-
-            doc.metadata["temporal_links"].append(
+            doc.metadata.setdefault("temporal_links", []).append(
                 {
                     "df_index": int(nearest_idx),
                     "time_gap_seconds": min_gap.total_seconds(),
                     "link_type": "nearest_time",
                 }
             )
+            updated_documents.append(doc)
 
+        self.corpus.documents = updated_documents
         return self.corpus
 
     def link_by_time_window(
@@ -167,39 +176,34 @@ class TemporalAnalyzer:
         df_times = self.corpus.df[time_column].apply(self.parse_timestamp)
         valid_df_indices = df_times.notna()
 
+        updated_documents = []
         for doc in self.corpus.documents:
-            if not doc.timestamp:
+            if not getattr(doc, "timestamp", None):
+                updated_documents.append(doc)
                 continue
-
-            doc_time = self.parse_timestamp(doc.timestamp)
+            doc_time = self.parse_timestamp(getattr(doc, "timestamp", None))
             if not doc_time:
+                updated_documents.append(doc)
                 continue
-
-            # Find all rows within window
-            within_window = (
-                (df_times[valid_df_indices] >= doc_time - window_before)
-                & (df_times[valid_df_indices] <= doc_time + window_after)
+            within_window = (df_times[valid_df_indices] >= doc_time - window_before) & (
+                df_times[valid_df_indices] <= doc_time + window_after
             )
-
             matching_indices = df_times[valid_df_indices][within_window].index.tolist()
-
             if not matching_indices:
+                updated_documents.append(doc)
                 continue
-
-            # Store links in document metadata
-            if "temporal_links" not in doc.metadata:
-                doc.metadata["temporal_links"] = []
-
             for idx in matching_indices:
                 time_gap = (df_times[idx] - doc_time).total_seconds()
-                doc.metadata["temporal_links"].append(
+                doc.metadata.setdefault("temporal_links", []).append(
                     {
                         "df_index": int(idx),
                         "time_gap_seconds": time_gap,
                         "link_type": "time_window",
                     }
                 )
+            updated_documents.append(doc)
 
+        self.corpus.documents = updated_documents
         return self.corpus
 
     def link_by_sequence(
@@ -226,37 +230,33 @@ class TemporalAnalyzer:
         df_times_valid = df_times[valid_df_indices]
 
         # Group dataframe rows by period
-        df_periods = df_times_valid.dt.to_period(period)
+        df_periods = df_times_valid.dt.to_period(period)  # type: ignore[attr-defined]
 
+        updated_documents = []
         for doc in self.corpus.documents:
-            if not doc.timestamp:
+            if not getattr(doc, "timestamp", None):
+                updated_documents.append(doc)
                 continue
-
-            doc_time = self.parse_timestamp(doc.timestamp)
+            doc_time = self.parse_timestamp(getattr(doc, "timestamp", None))
             if not doc_time:
+                updated_documents.append(doc)
                 continue
-
             doc_period = pd.Period(doc_time, freq=period)
-
-            # Find all rows in the same period
             matching_indices = df_periods[df_periods == doc_period].index.tolist()
-
             if not matching_indices:
+                updated_documents.append(doc)
                 continue
-
-            # Store links in document metadata
-            if "temporal_links" not in doc.metadata:
-                doc.metadata["temporal_links"] = []
-
             for idx in matching_indices:
-                doc.metadata["temporal_links"].append(
+                doc.metadata.setdefault("temporal_links", []).append(
                     {
                         "df_index": int(idx),
                         "period": str(doc_period),
                         "link_type": "sequence",
                     }
                 )
+            updated_documents.append(doc)
 
+        self.corpus.documents = updated_documents
         return self.corpus
 
     def filter_by_time_range(
@@ -286,22 +286,14 @@ class TemporalAnalyzer:
         filtered_documents = []
         if filter_documents:
             for doc in self.corpus.documents:
-                if not doc.timestamp:
-                    # Include documents without timestamps
+                doc_time = self.parse_timestamp(getattr(doc, "timestamp", None))
+                if not getattr(doc, "timestamp", None) or not doc_time:
                     filtered_documents.append(doc)
                     continue
-
-                doc_time = self.parse_timestamp(doc.timestamp)
-                if not doc_time:
-                    filtered_documents.append(doc)
-                    continue
-
-                # Check time range
                 if start_dt and doc_time < start_dt:
                     continue
                 if end_dt and doc_time > end_dt:
                     continue
-
                 filtered_documents.append(doc)
         else:
             filtered_documents = self.corpus.documents
@@ -312,7 +304,9 @@ class TemporalAnalyzer:
                 df_times = self.corpus.df[time_column].apply(self.parse_timestamp)
 
                 # Create filter mask
-                mask = pd.Series([True] * len(self.corpus.df), index=self.corpus.df.index)
+                mask = pd.Series(
+                    [True] * len(self.corpus.df), index=self.corpus.df.index
+                )
 
                 if start_dt:
                     mask &= (df_times >= start_dt) | df_times.isna()
@@ -365,11 +359,13 @@ class TemporalAnalyzer:
 
             if valid_mask.any():
                 df_with_times = self.corpus.df[valid_mask].copy()
-                df_with_times["_period"] = df_times[valid_mask].dt.to_period(period)
+                df_with_times["_period"] = df_times[valid_mask].dt.to_period(period)  # type: ignore[attr-defined]
 
                 # Select numeric columns
                 if numeric_columns is None:
-                    numeric_columns = df_with_times.select_dtypes(include=["number"]).columns.tolist()
+                    numeric_columns = df_with_times.select_dtypes(
+                        include=["number"]
+                    ).columns.tolist()
 
                 # Group by period and aggregate
                 if numeric_columns:
@@ -464,14 +460,23 @@ class TemporalAnalyzer:
 
             # Convert sentiment to numeric score
             sentiment = doc.metadata["sentiment"]
-            score_map = {"pos": 1.0, "positive": 1.0, "neg": -1.0, "negative": -1.0, "neu": 0.0, "neutral": 0.0}
+            score_map = {
+                "pos": 1.0,
+                "positive": 1.0,
+                "neg": -1.0,
+                "negative": -1.0,
+                "neu": 0.0,
+                "neutral": 0.0,
+            }
             sentiment_score = score_map.get(sentiment.lower(), 0.0)
 
-            sentiment_data.append({
-                "timestamp": doc_time,
-                "period": pd.Period(doc_time, freq=period),
-                "sentiment_score": sentiment_score,
-            })
+            sentiment_data.append(
+                {
+                    "timestamp": doc_time,
+                    "period": pd.Period(doc_time, freq=period),
+                    "sentiment_score": sentiment_score,
+                }
+            )
 
         if not sentiment_data:
             return pd.DataFrame()
@@ -545,15 +550,21 @@ class TemporalAnalyzer:
 
                 # Count and get top topics
                 topic_counts = Counter(all_topics)
-                period_topics[period_key] = [topic for topic, _ in topic_counts.most_common(top_n)]
+                period_topics[period_key] = [
+                    topic for topic, _ in topic_counts.most_common(top_n)
+                ]
             else:
                 # Simple keyword extraction from text (fallback)
                 all_text = " ".join(doc.text for doc in docs)
                 words = all_text.lower().split()
                 # Filter out common stop words and get most common
-                filtered_words = [w for w in words if w not in COMMON_STOP_WORDS and len(w) > 3]
+                filtered_words = [
+                    w for w in words if w not in COMMON_STOP_WORDS and len(w) > 3
+                ]
                 word_counts = Counter(filtered_words)
-                period_topics[period_key] = [word for word, _ in word_counts.most_common(top_n)]
+                period_topics[period_key] = [
+                    word for word, _ in word_counts.most_common(top_n)
+                ]
 
         return period_topics
 
@@ -576,7 +587,9 @@ class TemporalAnalyzer:
         """
         import matplotlib.pyplot as plt
 
-        trend_df = self.get_temporal_sentiment_trend(period=period, aggregation=aggregation)
+        trend_df = self.get_temporal_sentiment_trend(
+            period=period, aggregation=aggregation
+        )
 
         if trend_df.empty:
             raise ValueError("No temporal sentiment data available")
@@ -587,7 +600,9 @@ class TemporalAnalyzer:
         x_labels = [str(p) for p in trend_df.index]
         x_pos = range(len(x_labels))
 
-        ax.plot(x_pos, trend_df["sentiment_score"], marker="o", linewidth=2, markersize=8)
+        ax.plot(
+            x_pos, trend_df["sentiment_score"], marker="o", linewidth=2, markersize=8
+        )
         ax.axhline(y=0, color="gray", linestyle="--", alpha=0.5)
         ax.set_xticks(x_pos)
         ax.set_xticklabels(x_labels, rotation=45, ha="right")
@@ -625,21 +640,18 @@ class TemporalAnalyzer:
         import matplotlib.pyplot as plt
 
         summary_df = self.get_temporal_summary(
-            time_column=time_column,
-            period=period,
-            numeric_columns=numeric_columns
+            time_column=time_column, period=period, numeric_columns=numeric_columns
         )
 
         if summary_df.empty:
             raise ValueError("No temporal summary data available")
 
         fig, axes = plt.subplots(2, 1, figsize=(12, 10))
+        x_labels = [str(p) for p in summary_df.index]
+        x_pos = range(len(x_labels))
 
         # Plot document count over time
         if "document_count" in summary_df.columns:
-            x_labels = [str(p) for p in summary_df.index]
-            x_pos = range(len(x_labels))
-
             axes[0].bar(x_pos, summary_df["document_count"], alpha=0.7)
             axes[0].set_xticks(x_pos)
             axes[0].set_xticklabels(x_labels, rotation=45, ha="right")
@@ -655,8 +667,6 @@ class TemporalAnalyzer:
                 if col != "document_count":
                     mean_col = (col, "mean")
                     if mean_col in summary_df.columns:
-                        x_labels = [str(p) for p in summary_df.index]
-                        x_pos = range(len(x_labels))
                         axes[1].plot(x_pos, summary_df[mean_col], marker="o", label=col)
 
             axes[1].set_xticks(x_pos)
