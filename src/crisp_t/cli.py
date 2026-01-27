@@ -182,7 +182,19 @@ except ImportError:
 @click.option(
     "--outcome",
     default="",
-    help="Specify the target variable (outcome) for machine learning tasks.",
+    help="Specify the target variable (outcome) for machine learning tasks. Can be a DataFrame column name OR a text metadata field name (when --linkage is specified).",
+)
+@click.option(
+    "--linkage",
+    type=click.Choice(["id", "embedding", "temporal", "keyword"], case_sensitive=False),
+    default=None,
+    help="Linkage method to use when outcome is a text metadata field. Choices: id, embedding, temporal, keyword.",
+)
+@click.option(
+    "--aggregation",
+    type=click.Choice(["majority", "mean", "first", "mode"], case_sensitive=False),
+    default="majority",
+    help="Aggregation strategy when multiple documents link to one row. Default: majority (for classification) or mean (for regression).",
 )
 @click.option(
     "--source",
@@ -238,6 +250,8 @@ def main(
     ignore,
     include,
     outcome,
+    linkage,
+    aggregation,
     source,
     sources,
     print_args,
@@ -981,7 +995,7 @@ def main(
                 )
                 try:
                     confusion_matrix = ml_analyzer.svm_confusion_matrix(
-                        y=target_col, test_size=0.25
+                        y=target_col, test_size=0.25, linkage_method=linkage, aggregation=aggregation
                     )
                     click.echo(
                         ml_analyzer.format_confusion_matrix_to_human_readable(
@@ -1005,7 +1019,7 @@ def main(
                 )
                 try:
                     cm, importance = ml_analyzer.get_decision_tree_classes(
-                        y=target_col, top_n=rec
+                        y=target_col, top_n=rec, linkage_method=linkage, aggregation=aggregation
                     )
                     click.echo(
                         "\n" + click.style("Feature Importance:", fg="cyan", bold=True)
@@ -1042,7 +1056,7 @@ def main(
                         "--outcome is required for neural network tasks"
                     )
                 try:
-                    predictions = ml_analyzer.get_nnet_predictions(y=target_col)
+                    predictions = ml_analyzer.get_nnet_predictions(y=target_col, linkage_method=linkage, aggregation=aggregation)
                     if out:
                         _save_output(predictions, out, "nnet_results")
                 except Exception as e:
@@ -1068,7 +1082,7 @@ def main(
                         "--rec must be a positive integer (1-based index)"
                     )
                 try:
-                    knn_results = ml_analyzer.knn_search(y=target_col, n=num, r=rec)
+                    knn_results = ml_analyzer.knn_search(y=target_col, n=num, r=rec, linkage_method=linkage, aggregation=aggregation)
                     if out:
                         _save_output(knn_results, out, "knn_results")
                 except Exception as e:
@@ -1125,7 +1139,7 @@ def main(
                 """
                 )
                 try:
-                    pca_results = ml_analyzer.get_pca(y=target_col, n=num)
+                    pca_results = ml_analyzer.get_pca(y=target_col, n=num, linkage_method=linkage, aggregation=aggregation)
                     if out:
                         _save_output(pca_results, out, "pca_results")
                 except Exception as e:
@@ -1143,7 +1157,7 @@ def main(
                 """
                 )
                 try:
-                    regression_results = ml_analyzer.get_regression(y=target_col)
+                    regression_results = ml_analyzer.get_regression(y=target_col, linkage_method=linkage, aggregation=aggregation)
                     if out:
                         _save_output(regression_results, out, "regression_results")
                 except Exception as e:
