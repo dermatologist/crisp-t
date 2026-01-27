@@ -428,8 +428,15 @@ class ReadData:
                             doc_timestamp = ts_value.isoformat()
                         else:
                             doc_timestamp = pd.to_datetime(ts_value).isoformat()
-                    except Exception:
-                        pass
+                    except Exception as exc:
+                        # Intentionally ignore timestamp parsing errors and fall back to no timestamp,
+                        # but log them for diagnostic purposes.
+                        logging.debug(
+                            "Failed to parse timestamp value %r in column %r: %s",
+                            ts_value,
+                            timestamp_column,
+                            exc,
+                        )
 
             _document = Document(
                 text=read_from_file,
