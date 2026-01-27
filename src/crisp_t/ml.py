@@ -22,6 +22,7 @@ from tabulate import tabulate
 from tqdm import tqdm
 
 from .csv import Csv
+from .ml import config as ml_config
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
@@ -73,8 +74,8 @@ try:
         def __init__(
             self,
             vocab_size,
-            embedding_dim=128,
-            hidden_dim=256,
+            embedding_dim=ml_config.LSTM_EMBEDDING_DIM,
+            hidden_dim=ml_config.LSTM_HIDDEN_DIM,
             output_dim=1,
             num_layers=2,
             bidirectional=True,
@@ -164,7 +165,7 @@ class ML:
                 kmeans.inertia_,
             )
             if self._csv.corpus is not None:
-                self._csv.corpus.metadata["kmeans"] = (
+                self._csv.corpus.metadata[ml_config.METADATA_KEY_KMEANS] = (
                     f"KMeans clustering with {number_of_clusters} clusters. Inertia: {kmeans.inertia_}"
                 )
         # Add members info to corpus metadata
@@ -269,13 +270,13 @@ class ML:
             model = NeuralNet(vnum)
             try:
                 criterion = nn.BCELoss()  # type: ignore
-                optimizer = optim.Adam(model.parameters(), lr=0.001)  # type: ignore
+                optimizer = optim.Adam(model.parameters(), lr=ml_config.NNET_LEARNING_RATE)  # type: ignore
 
                 X_tensor = torch.from_numpy(X_np)  # type: ignore
                 y_tensor = torch.from_numpy(Y_mapped.astype(np.float32)).view(-1, 1)  # type: ignore
 
                 dataset = TensorDataset(X_tensor, y_tensor)  # type: ignore
-                dataloader = DataLoader(dataset, batch_size=32, shuffle=True)  # type: ignore
+                dataloader = DataLoader(dataset, batch_size=ml_config.NNET_BATCH_SIZE, shuffle=True)  # type: ignore
             except Exception as e:
                 logger.exception(f"Error occurred while creating DataLoader: {e}")
                 return None
@@ -311,7 +312,7 @@ class ML:
                 f"\nPredicting {y} with {X.shape[1]} features for {self._epochs} epochs gave an accuracy (convergence): {accuracy*100:.2f}%\n"
             )
             if _corpus is not None:
-                _corpus.metadata["nnet_predictions"] = (
+                _corpus.metadata[ml_config.METADATA_KEY_NNET] = (
                     f"Predicting {y} with {X.shape[1]} features for {self._epochs} epochs gave an accuracy (convergence): {accuracy*100:.2f}%"
                 )
             if mcp:
@@ -327,13 +328,13 @@ class ML:
 
         model = MultiClassNet(vnum, num_classes)
         criterion = nn.CrossEntropyLoss()  # type: ignore
-        optimizer = optim.Adam(model.parameters(), lr=0.001)  # type: ignore
+        optimizer = optim.Adam(model.parameters(), lr=ml_config.NNET_LEARNING_RATE)  # type: ignore
 
         X_tensor = torch.from_numpy(X_np)  # type: ignore
         y_tensor = torch.from_numpy(Y_idx)  # type: ignore
 
         dataset = TensorDataset(X_tensor, y_tensor)  # type: ignore
-        dataloader = DataLoader(dataset, batch_size=32, shuffle=True)  # type: ignore
+        dataloader = DataLoader(dataset, batch_size=ml_config.NNET_BATCH_SIZE, shuffle=True)  # type: ignore
 
         for _ in range(self._epochs):
             for batch_X, batch_y in dataloader:
@@ -355,7 +356,7 @@ class ML:
             f"\nPredicting {y} with {X.shape[1]} features for {self._epochs} gave an accuracy (convergence): {accuracy*100:.2f}%\n"
         )
         if _corpus is not None:
-            _corpus.metadata["nnet_predictions"] = (
+            _corpus.metadata[ml_config.METADATA_KEY_NNET] = (
                 f"Predicting {y} with {X.shape[1]} features for {self._epochs} gave an accuracy (convergence): {accuracy*100:.2f}%"
             )
         if mcp:
@@ -376,7 +377,7 @@ class ML:
         print(f"Converted target variable to binary using mapping: {mapping}")
         return Y_binary
 
-    def svm_confusion_matrix(self, y: str, test_size=0.25, random_state=0, mcp=False, linkage_method: str | None = None, aggregation: str = "majority"):
+    def svm_confusion_matrix(self, y: str, test_size=ml_config.CLASSIFIER_TEST_SIZE, random_state=ml_config.KMEANS_RANDOM_STATE, mcp=False, linkage_method: str | None = None, aggregation: str = "majority"):
         """Generate confusion matrix for SVM
 
         Args:
@@ -401,7 +402,7 @@ class ML:
         y_train = y_train.astype("int")
         X_train = sc.fit_transform(X_train)
         X_test = sc.transform(X_test)
-        classifier = SVC(kernel="linear", random_state=0)
+        classifier = SVC(kernel="linear", random_state=ml_config.KMEANS_RANDOM_STATE)
         classifier.fit(X_train, y_train)
         y_pred = classifier.predict(X_test)
         # Issue #22
@@ -412,7 +413,7 @@ class ML:
         # [[2 0]
         #  [2 0]]
         if self._csv.corpus is not None:
-            self._csv.corpus.metadata["svm_confusion_matrix"] = (
+            self._csv.corpus.metadata[ml_config.METADATA_KEY_SVM_CONFUSION] = (
                 f"Confusion Matrix for SVM predicting {y}:\n{self.format_confusion_matrix_to_human_readable(_confusion_matrix)}"
             )
 
@@ -711,12 +712,12 @@ class ML:
         # print(f"X_test shape: {X_test.shape}, y_test shape: {y_test.shape}")
 
         # Train a RandomForestClassifier
-        clf = RandomForestClassifier(n_estimators=100, random_state=42)
+        clf = RandomForestClassifier(n_estimators=100, random_state=ml_config.CLASSIFIER_RANDOM_STATE)
         clf.fit(X_train, y_train)
 
         # Compute permutation importance
         results = permutation_importance(
-            clf, X_test, y_test, n_repeats=10, random_state=42
+            clf, X_test, y_test, n_repeats=10, random_state=ml_config.CLASSIFIER_RANDOM_STATE
         )
 
         # classifier = DecisionTreeClassifier(random_state=random_state) # type: ignore
@@ -762,7 +763,7 @@ class ML:
         return _confusion_matrix, importance
 
     def get_xgb_classes(
-        self, y: str, oversample=False, test_size=0.25, random_state=0, mcp=False, linkage_method: str | None = None, aggregation: str = "majority"
+        self, y: str, oversample=False, test_size=ml_config.CLASSIFIER_TEST_SIZE, random_state=ml_config.KMEANS_RANDOM_STATE, mcp=False, linkage_method: str | None = None, aggregation: str = "majority"
     ):
         """
         Train an XGBoost classifier and return feature importances.
@@ -897,7 +898,7 @@ class ML:
         }
 
         if self._csv.corpus is not None:
-            self._csv.corpus.metadata["pca"] = (
+            self._csv.corpus.metadata[ml_config.METADATA_KEY_PCA] = (
                 f"PCA kept {n} components explaining "
                 f"{cum_var_exp[n-1]:.2f}% variance."
             )
@@ -949,7 +950,7 @@ class ML:
             print(f"\n=== Logistic Regression for {y} ===")
             print(f"Binary outcome detected with values: {unique_values}")
 
-            model = LogisticRegression(max_iter=1000, random_state=42)
+            model = LogisticRegression(max_iter=1000, random_state=ml_config.CLASSIFIER_RANDOM_STATE)
             model.fit(X_np, Y_raw)
 
             # Predictions
@@ -1135,14 +1136,14 @@ class ML:
                 word_counts.update(tokens)
 
             # Create vocabulary with most common words (limit to 10000)
-            vocab_size = min(10000, len(word_counts)) + 1  # +1 for padding
+            vocab_size = min(ml_config.LSTM_VOCAB_SIZE, len(word_counts)) + 1  # +1 for padding
             most_common = word_counts.most_common(vocab_size - 1)
             word_to_idx = {
                 word: idx + 1 for idx, (word, _) in enumerate(most_common)
             }  # 0 reserved for padding
 
             # Convert documents to sequences of indices
-            max_length = 100  # Maximum sequence length
+            max_length = ml_config.LSTM_MAX_LENGTH  # Maximum sequence length
             sequences = []
             doc_ids = []
 
@@ -1218,7 +1219,7 @@ class ML:
 
             indices = list(range(len(X_tensor)))
             train_idx, test_idx = train_test_split(
-                indices, test_size=0.2, random_state=42
+                indices, test_size=ml_config.CLASSIFIER_TEST_SIZE, random_state=ml_config.CLASSIFIER_RANDOM_STATE
             )
 
             X_train = X_tensor[train_idx]
@@ -1229,14 +1230,14 @@ class ML:
             # Create model
             model = SimpleLSTM(vocab_size=vocab_size)  # type: ignore
             criterion = nn.BCELoss()  # type: ignore
-            optimizer = optim.Adam(model.parameters(), lr=0.001)  # type: ignore
+            optimizer = optim.Adam(model.parameters(), lr=ml_config.LSTM_LEARNING_RATE)  # type: ignore
 
             # Create data loaders
             train_dataset = TensorDataset(X_train, y_train)  # type: ignore
-            train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)  # type: ignore
+            train_loader = DataLoader(train_dataset, batch_size=ml_config.LSTM_BATCH_SIZE, shuffle=True)  # type: ignore
 
             # Training
-            epochs = max(self._epochs, 3)  # Use at least 3 epochs for LSTM
+            epochs = max(self._epochs, ml_config.LSTM_EPOCHS)  # Use at least configured epochs for LSTM
             model.train()
             for epoch in range(epochs):
                 total_loss = 0
@@ -1299,7 +1300,7 @@ class ML:
 
             # Store in corpus metadata
             if _corpus is not None:
-                _corpus.metadata["lstm_predictions"] = result_msg
+                _corpus.metadata[ml_config.METADATA_KEY_LSTM] = result_msg
 
             if mcp:
                 return result_msg
