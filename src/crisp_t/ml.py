@@ -22,7 +22,7 @@ from tabulate import tabulate
 from tqdm import tqdm
 
 from .csv import Csv
-from .ml import config as ml_config
+from .mlib import config as ml_config
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 

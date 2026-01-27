@@ -56,6 +56,35 @@ The refactoring was initiated to address several code quality issues identified 
 
 #### Created CLI Utility Modules
 
+**src/crisp_t/helpers/clib/ui.py** (renamed from helpers/cli/ui.py)
+- `print_section_header()`: Styled section headers with box borders
+- `print_tips()`: Formatted parameter tips
+- `format_success()`, `format_error()`, `format_info()`, `format_warning()`: Message formatters
+- **Impact**: Reduced ~153 lines of repeated UI code to 9 function calls
+- **Note**: Renamed from `helpers/cli` to `helpers/clib` to avoid conflict with `cli.py` file
+
+**src/crisp_t/helpers/clib/executor.py** (renamed from helpers/cli/executor.py)
+- `execute_analysis_with_save()`: Unified try-catch-save pattern
+- **Impact**: Reduced ~96 lines of repeated error handling code
+- **Note**: Renamed from `helpers/cli` to `helpers/clib` to avoid conflict with `cli.py` file
+
+#### Created ML Configuration Module
+
+**src/crisp_t/mlib/config.py** (renamed from ml/config.py)
+- Centralized hyperparameters: NNET_BATCH_SIZE, LSTM_VOCAB_SIZE, etc.
+- Defined metadata key constants: METADATA_KEY_KMEANS, etc.
+- Documented aggregation and linkage methods
+- **Impact**: Eliminated hardcoded values, improved configurability
+- **Note**: Renamed from `ml/` to `mlib/` to avoid conflict with `ml.py` file
+
+**src/crisp_t/mcp/utils/validators.py**
+- `@require_corpus`: Decorator to ensure corpus is loaded
+- `@require_csv_analyzer`: Decorator to ensure CSV analyzer available
+- `@require_text_analyzer`: Decorator to ensure text analyzer available
+- **Impact**: Eliminated 50+ repeated null checks, improved handler readability
+
+#### Created CLI Utility Modules
+
 **src/crisp_t/cli/helpers/ui.py**
 - `print_section_header()`: Styled section headers with box borders
 - `print_tips()`: Formatted parameter tips
@@ -158,6 +187,39 @@ The refactoring was initiated to address several code quality issues identified 
 5. Use ml/config.py constants throughout
 
 **Expected Impact**: Reduce duplication by 30-40%, improve maintainability
+
+### Phase 6: Naming Conflict Resolution (Completed)
+
+#### Problem
+Python module naming conflicts were causing import confusion:
+1. **ml.py file vs ml/ directory**: Both existed at the same level, causing ambiguity in `from .ml import`
+2. **cli.py file vs helpers/cli/ directory**: Similarly confusing module structure
+
+#### Solution
+**Renamed ml/ → mlib/**
+- Old: `src/crisp_t/ml/` (contained config.py)
+- New: `src/crisp_t/mlib/` (contains config.py)
+- Updated import in ml.py: `from .ml import config` → `from .mlib import config`
+- **Rationale**: "mlib" clearly indicates "ML library/configuration" and doesn't conflict with the main ML class file
+
+**Renamed helpers/cli/ → helpers/clib/**
+- Old: `src/crisp_t/helpers/cli/` (contained ui.py, executor.py)
+- New: `src/crisp_t/helpers/clib/` (contains ui.py, executor.py)  
+- Updated import in cli.py: `from .helpers.cli.ui` → `from .helpers.clib.ui`
+- **Rationale**: "clib" clearly indicates "CLI library/utilities" and doesn't conflict with the main cli.py file
+
+#### Files Updated
+- `src/crisp_t/ml.py`: Updated import statement
+- `src/crisp_t/cli.py`: Updated import statement
+- `src/crisp_t/helpers/clib/executor.py`: Relative imports unchanged (uses `.ui`)
+- Documentation updated to reflect new structure
+
+#### Impact
+- ✅ Eliminated all file/module naming conflicts
+- ✅ Clearer module structure and intent
+- ✅ No more import ambiguity
+- ✅ Better separation between main files and utility modules
+- ✅ All code compiles successfully after rename
 
 ## Benefits Achieved
 

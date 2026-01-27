@@ -9,7 +9,7 @@ import click
 from . import __version__
 from .cluster import Cluster
 from .helpers.analyzer import get_analyzers
-from .helpers.cli.ui import (
+from .helpers.clib.ui import (
     format_error,
     format_info,
     format_success,
