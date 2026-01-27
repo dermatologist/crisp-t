@@ -217,14 +217,23 @@ class EmbeddingLinker:
         # Project both to the same lower dimension using PCA
         from sklearn.decomposition import PCA
 
-        min_dim = min(text_emb.shape[1], numeric_emb.shape[1])
-        if text_emb.shape[1] != min_dim:
-            pca_text = PCA(n_components=min_dim, random_state=42)
+        # Determine the maximum allowed n_components for PCA
+        n_text_samples, n_text_features = text_emb.shape
+        n_num_samples, n_num_features = numeric_emb.shape
+        max_pca_dim = min(
+            n_text_samples, n_num_samples, n_text_features, n_num_features
+        )
+        if max_pca_dim < 1:
+            raise ValueError("Cannot perform PCA: insufficient samples or features.")
+
+        # Only project if dimensions differ
+        if text_emb.shape[1] != max_pca_dim:
+            pca_text = PCA(n_components=max_pca_dim, random_state=42)
             text_emb_proj = pca_text.fit_transform(text_emb)
         else:
             text_emb_proj = text_emb
-        if numeric_emb.shape[1] != min_dim:
-            pca_num = PCA(n_components=min_dim, random_state=42)
+        if numeric_emb.shape[1] != max_pca_dim:
+            pca_num = PCA(n_components=max_pca_dim, random_state=42)
             numeric_emb_proj = pca_num.fit_transform(numeric_emb)
         else:
             numeric_emb_proj = numeric_emb
