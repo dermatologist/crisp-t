@@ -654,7 +654,6 @@ def main(
                         click.style("❌ Invalid radius: ", fg="red", bold=True)
                         + f"'{parts[2]}'. Must be a number."
                     ) from None
-                    )
 
             click.echo(click.style("\n📊 Performing TDABM analysis...", fg="yellow"))
             click.echo(f"   Y variable: {click.style(y_var, fg='cyan')}")

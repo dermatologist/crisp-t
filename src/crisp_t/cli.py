@@ -8,7 +8,7 @@ import click
 
 from . import __version__
 from .cluster import Cluster
-from .cli.helpers.ui import (
+from .helpers.cli.ui import (
     format_error,
     format_info,
     format_success,

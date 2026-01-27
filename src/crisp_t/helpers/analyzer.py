@@ -173,19 +173,19 @@ def _apply_regular_filters(text_analyzer, csv_analyzer, filters):
             and "id" in csv_analyzer.df.columns
         ):
             try:
-                    # Get all current document IDs
-                    doc_ids = {doc.id for doc in text_analyzer.corpus.documents}
-                    # Filter DataFrame to rows where id matches a document ID
-                    csv_analyzer.df = csv_analyzer.df[
-                        csv_analyzer.df["id"]
-                        .astype(str)
-                        .isin([str(did) for did in doc_ids])
-                    ]
-                    click.echo(
-                        f"Applied ID linkage: synced DataFrame to {len(csv_analyzer.df)} rows matching remaining document IDs"
-                    )
-                except Exception as e:
-                    click.echo(f"Could not apply ID sync to DataFrame: {e}")
+                # Get all current document IDs
+                doc_ids = {doc.id for doc in text_analyzer.corpus.documents}
+                # Filter DataFrame to rows where id matches a document ID
+                csv_analyzer.df = csv_analyzer.df[
+                    csv_analyzer.df["id"]
+                    .astype(str)
+                    .isin([str(did) for did in doc_ids])
+                ]
+                click.echo(
+                    f"Applied ID linkage: synced DataFrame to {len(csv_analyzer.df)} rows matching remaining document IDs"
+                )
+            except Exception as e:
+                click.echo(f"Could not apply ID sync to DataFrame: {e}")
 
         # Report results
         if text_analyzer:
