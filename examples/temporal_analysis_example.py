@@ -11,12 +11,10 @@ This example demonstrates how to:
 """
 
 import pandas as pd
-from datetime import datetime, timedelta
 from crisp_t.model import Corpus, Document
 from crisp_t.read_data import ReadData
 from crisp_t.temporal import TemporalAnalyzer
 from crisp_t.sentiment import Sentiment
-from crisp_t.text import Text
 
 # Step 1: Create sample data with timestamps
 print("Creating sample temporal data...")

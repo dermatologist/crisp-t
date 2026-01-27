@@ -19,7 +19,7 @@ along with crisp-t.  If not, see <https://www.gnu.org/licenses/>.
 
 import logging
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional
 
 import pandas as pd
 

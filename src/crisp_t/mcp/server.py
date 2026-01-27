@@ -585,9 +585,11 @@ async def list_tools() -> list[Tool]:
                 Required: specify columns to include in the classification as a comma-separated list (include).
 
                     Args:
-                        outcome (str): The target variable for classification.
+                        outcome (str): The target variable for classification. Can be a DataFrame column OR text metadata field (when linkage_method is specified).
                         top_n (int): The number of top features to return.
                         include (str): Comma-separated list of columns to include.
+                        linkage_method (str, optional): Linkage method when outcome is a text metadata field. Options: id, embedding, temporal, keyword.
+                        aggregation (str, optional): Aggregation strategy for multiple documents per row. Options: majority, mean, first, mode.
                 """,
                     inputSchema={
                         "type": "object",
@@ -605,6 +607,17 @@ async def list_tools() -> list[Tool]:
                                 "type": "string",
                                 "description": "Comma-separated columns to include",
                             },
+                            "linkage_method": {
+                                "type": "string",
+                                "description": "Linkage method for text metadata outcomes",
+                                "enum": ["id", "embedding", "temporal", "keyword"],
+                            },
+                            "aggregation": {
+                                "type": "string",
+                                "description": "Aggregation strategy",
+                                "enum": ["majority", "mean", "first", "mode"],
+                                "default": "majority",
+                            },
                         },
                         "required": ["outcome", "include"],
                     },
@@ -616,8 +629,10 @@ async def list_tools() -> list[Tool]:
                 Required: specify columns to include in the classification as a comma-separated list (include).
 
                 Args:
-                    outcome (str): The target variable for classification.
+                    outcome (str): The target variable for classification. Can be a DataFrame column OR text metadata field (when linkage_method is specified).
                     include (str): Comma-separated list of columns to include.
+                    linkage_method (str, optional): Linkage method when outcome is a text metadata field. Options: id, embedding, temporal, keyword.
+                    aggregation (str, optional): Aggregation strategy for multiple documents per row. Options: majority, mean, first, mode.
                 """,
                     inputSchema={
                         "type": "object",
@@ -629,6 +644,17 @@ async def list_tools() -> list[Tool]:
                             "include": {
                                 "type": "string",
                                 "description": "Comma-separated columns to include",
+                            },
+                            "linkage_method": {
+                                "type": "string",
+                                "description": "Linkage method for text metadata outcomes",
+                                "enum": ["id", "embedding", "temporal", "keyword"],
+                            },
+                            "aggregation": {
+                                "type": "string",
+                                "description": "Aggregation strategy",
+                                "enum": ["majority", "mean", "first", "mode"],
+                                "default": "majority",
                             },
                         },
                         "required": ["outcome", "include"],
@@ -641,8 +667,10 @@ async def list_tools() -> list[Tool]:
                 Required: specify columns to include in the classification as a comma-separated list (include).
 
                 Args:
-                    outcome (str): The target variable for classification.
+                    outcome (str): The target variable for classification. Can be a DataFrame column OR text metadata field (when linkage_method is specified).
                     include (str): Comma-separated list of columns to include.
+                    linkage_method (str, optional): Linkage method when outcome is a text metadata field. Options: id, embedding, temporal, keyword.
+                    aggregation (str, optional): Aggregation strategy for multiple documents per row. Options: majority, mean, first, mode.
                 """,
                     inputSchema={
                         "type": "object",
@@ -654,6 +682,17 @@ async def list_tools() -> list[Tool]:
                             "include": {
                                 "type": "string",
                                 "description": "Comma-separated columns to include",
+                            },
+                            "linkage_method": {
+                                "type": "string",
+                                "description": "Linkage method for text metadata outcomes",
+                                "enum": ["id", "embedding", "temporal", "keyword"],
+                            },
+                            "aggregation": {
+                                "type": "string",
+                                "description": "Aggregation strategy",
+                                "enum": ["majority", "mean", "first", "mode"],
+                                "default": "majority",
                             },
                         },
                         "required": ["outcome", "include"],
@@ -666,8 +705,10 @@ async def list_tools() -> list[Tool]:
                 Required: specify columns to include in the regression as a comma-separated list (include).
 
                 Args:
-                    outcome (str): The target variable for regression.
+                    outcome (str): The target variable for regression. Can be a DataFrame column OR text metadata field (when linkage_method is specified).
                     include (str): Comma-separated list of columns to include.
+                    linkage_method (str, optional): Linkage method when outcome is a text metadata field. Options: id, embedding, temporal, keyword.
+                    aggregation (str, optional): Aggregation strategy for multiple documents per row. Options: majority, mean, first, mode. Default: mean for regression.
                 """,
                     inputSchema={
                         "type": "object",
@@ -680,6 +721,17 @@ async def list_tools() -> list[Tool]:
                                 "type": "string",
                                 "description": "Comma-separated columns to include",
                             },
+                            "linkage_method": {
+                                "type": "string",
+                                "description": "Linkage method for text metadata outcomes",
+                                "enum": ["id", "embedding", "temporal", "keyword"],
+                            },
+                            "aggregation": {
+                                "type": "string",
+                                "description": "Aggregation strategy",
+                                "enum": ["majority", "mean", "first", "mode"],
+                                "default": "mean",
+                            },
                         },
                         "required": ["outcome", "include"],
                     },
@@ -691,9 +743,11 @@ async def list_tools() -> list[Tool]:
                 Required: specify columns to include in the PCA as a comma-separated list (include).
 
                 Args:
-                    outcome (str): The variable to exclude from PCA.
+                    outcome (str): The variable to exclude from PCA. Can be a DataFrame column OR text metadata field (when linkage_method is specified).
                     n_components (int): The number of components to keep.
                     include (str): Comma-separated list of columns to include.
+                    linkage_method (str, optional): Linkage method when outcome is a text metadata field. Options: id, embedding, temporal, keyword.
+                    aggregation (str, optional): Aggregation strategy for multiple documents per row. Options: majority, mean, first, mode.
 
                 """,
                     inputSchema={
@@ -711,6 +765,17 @@ async def list_tools() -> list[Tool]:
                             "include": {
                                 "type": "string",
                                 "description": "Comma-separated columns to include",
+                            },
+                            "linkage_method": {
+                                "type": "string",
+                                "description": "Linkage method for text metadata outcomes",
+                                "enum": ["id", "embedding", "temporal", "keyword"],
+                            },
+                            "aggregation": {
+                                "type": "string",
+                                "description": "Aggregation strategy",
+                                "enum": ["majority", "mean", "first", "mode"],
+                                "default": "majority",
                             },
                         },
                         "required": ["outcome", "include"],
@@ -760,10 +825,12 @@ async def list_tools() -> list[Tool]:
                 Required: specify columns to include in the search as a comma-separated list (include).
 
                 Args:
-                    outcome (str): The target variable (excluded from features).
+                    outcome (str): The target variable (excluded from features). Can be a DataFrame column OR text metadata field (when linkage_method is specified).
                     n (int): The number of neighbors to find.
                     record (int): The record index (1-based) to find neighbors for.
                     include (str): Comma-separated columns to include.
+                    linkage_method (str, optional): Linkage method when outcome is a text metadata field. Options: id, embedding, temporal, keyword.
+                    aggregation (str, optional): Aggregation strategy for multiple documents per row. Options: majority, mean, first, mode.
                 """,
                     inputSchema={
                         "type": "object",
@@ -785,6 +852,17 @@ async def list_tools() -> list[Tool]:
                             "include": {
                                 "type": "string",
                                 "description": "Comma-separated columns to include",
+                            },
+                            "linkage_method": {
+                                "type": "string",
+                                "description": "Linkage method for text metadata outcomes",
+                                "enum": ["id", "embedding", "temporal", "keyword"],
+                            },
+                            "aggregation": {
+                                "type": "string",
+                                "description": "Aggregation strategy",
+                                "enum": ["majority", "mean", "first", "mode"],
+                                "default": "majority",
                             },
                         },
                         "required": ["outcome", "include"],
@@ -1470,7 +1548,9 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                 _ml_analyzer = ML(csv=_csv_analyzer)
 
             result = _ml_analyzer.get_decision_tree_classes(
-                y=arguments["outcome"], top_n=arguments.get("top_n", 10), mcp=True
+                y=arguments["outcome"], top_n=arguments.get("top_n", 10), mcp=True,
+                linkage_method=arguments.get("linkage_method"),
+                aggregation=arguments.get("aggregation", "majority"),
             )
             return [TextContent(type="text", text=str(result))]
 
@@ -1489,8 +1569,11 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
             if not _ml_analyzer:
                 _ml_analyzer = ML(csv=_csv_analyzer)
 
+            linkage_method = arguments.get("linkage_method")
+            aggregation = arguments.get("aggregation", "majority")
+            
             result = _ml_analyzer.svm_confusion_matrix(
-                y=arguments["outcome"], test_size=0.25, mcp=True
+                y=arguments["outcome"], test_size=0.25, mcp=True, linkage_method=linkage_method, aggregation=aggregation
             )
             return [TextContent(type="text", text=str(result))]
 
@@ -1509,7 +1592,10 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
             if not _ml_analyzer:
                 _ml_analyzer = ML(csv=_csv_analyzer)
 
-            result = _ml_analyzer.get_nnet_predictions(y=arguments["outcome"], mcp=True)
+            linkage_method = arguments.get("linkage_method")
+            aggregation = arguments.get("aggregation", "majority")
+            
+            result = _ml_analyzer.get_nnet_predictions(y=arguments["outcome"], mcp=True, linkage_method=linkage_method, aggregation=aggregation)
             return [TextContent(type="text", text=str(result))]
 
         elif name == "regression_analysis":
@@ -1527,7 +1613,10 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
             if not _ml_analyzer:
                 _ml_analyzer = ML(csv=_csv_analyzer)
 
-            result = _ml_analyzer.get_regression(y=arguments["outcome"], mcp=True)
+            linkage_method = arguments.get("linkage_method")
+            aggregation = arguments.get("aggregation", "mean")  # Default to mean for regression
+            
+            result = _ml_analyzer.get_regression(y=arguments["outcome"], mcp=True, linkage_method=linkage_method, aggregation=aggregation)
             return [TextContent(type="text", text=str(result))]
 
         elif name == "pca_analysis":
@@ -1546,7 +1635,9 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                 _ml_analyzer = ML(csv=_csv_analyzer)
 
             result = _ml_analyzer.get_pca(
-                y=arguments["outcome"], n=arguments.get("n_components", 3), mcp=True
+                y=arguments["outcome"], n=arguments.get("n_components", 3), mcp=True,
+                linkage_method=arguments.get("linkage_method"),
+                aggregation=arguments.get("aggregation", "majority"),
             )
             return [TextContent(type="text", text=str(result))]
 
@@ -1596,6 +1687,8 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                 n=arguments.get("n", 3),
                 r=arguments.get("record", 1),
                 mcp=True,
+                linkage_method=arguments.get("linkage_method"),
+                aggregation=arguments.get("aggregation", "majority"),
             )
             return [TextContent(type="text", text=str(result))]
 

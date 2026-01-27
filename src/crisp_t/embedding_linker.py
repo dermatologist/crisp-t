@@ -18,24 +18,22 @@ along with crisp-t.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 import logging
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 import numpy as np
-import pandas as pd
 from sklearn.metrics.pairwise import cosine_similarity, euclidean_distances
 from sklearn.preprocessing import StandardScaler
 
-from .model import Corpus, Document
+from .model import Corpus
 
 logger = logging.getLogger(__name__)
 
+CHROMADB_AVAILABLE = False
 try:
-    import chromadb
-    from chromadb.config import Settings
+    import chromadb  # noqa: F401
 
     CHROMADB_AVAILABLE = True
 except ImportError:
-    CHROMADB_AVAILABLE = False
     logger.warning("ChromaDB not available. Install with: pip install chromadb")
 
 
