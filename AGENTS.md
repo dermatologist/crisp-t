@@ -50,16 +50,12 @@ Key files you should familiarize yourself with:
 
 2. **Install dependencies**:
    ```bash
-   pip install -e ".[ml,xg,dev]"
-   # or using uv
    uv pip install -e ".[ml,xg,dev]"
    ```
 
 3. **Run tests**:
    ```bash
-   pytest
-   # or with coverage
-   pytest --cov=src/crisp_t
+   uv run pytest
    ```
 
 ### Code Style and Conventions
@@ -93,7 +89,6 @@ When adding a new MCP tool:
 
 3. **Test the tool**:
    - Run the MCP server: `crisp-mcp`
-   - Test with an MCP client (e.g., Claude Desktop)
 
 ### 2. Adding New CLI Features
 
