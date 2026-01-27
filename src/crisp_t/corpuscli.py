@@ -1105,9 +1105,7 @@ def main(
             linker._get_numeric_embeddings()
 
             # Create visualization
-            fig = linker.visualize_embedding_space(
-                output_path=output_path, method=method
-            )
+            linker.visualize_embedding_space(output_path=output_path, method=method)
 
             click.echo(
                 click.style(f"\n✓ Visualization saved to {output_path}", fg="green")

@@ -1,18 +1,16 @@
 """Tests for embedding-based cross-modal linking."""
+import importlib.util
+
+import numpy as np
 import pandas as pd
 import pytest
-import numpy as np
 
+from src.crisp_t.embedding_linker import EmbeddingLinker
 from src.crisp_t.model.corpus import Corpus
 from src.crisp_t.model.document import Document
-from src.crisp_t.embedding_linker import EmbeddingLinker
 
-# Check if chromadb is available
-try:
-    import chromadb
-    CHROMADB_AVAILABLE = True
-except ImportError:
-    CHROMADB_AVAILABLE = False
+# Check if chromadb is available without importing it
+CHROMADB_AVAILABLE = importlib.util.find_spec("chromadb") is not None
 
 
 def make_embedding_corpus():

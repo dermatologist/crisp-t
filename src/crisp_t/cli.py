@@ -1028,7 +1028,7 @@ def main(
                         + str(e)
                     )
 
-            if (nnet or ml) and target_col:
+            if nnet or ml:
                 click.echo("\n=== Neural Network Classification Accuracy ===")
                 click.echo(
                     """
@@ -1048,7 +1048,7 @@ def main(
                 except Exception as e:
                     click.echo(f"Error performing Neural Network classification: {e}")
 
-            if (knn or ml) and target_col:
+            if knn or ml:
                 click.echo("\n=== K-Nearest Neighbors ===")
                 click.echo(
                     """
@@ -1074,7 +1074,7 @@ def main(
                 except Exception as e:
                     click.echo(f"Error performing K-Nearest Neighbors search: {e}")
 
-            if (cart or ml) and target_col:
+            if cart or ml:
                 click.echo("\n=== Association Rules (CART) ===")
                 click.echo(
                     """
@@ -1149,7 +1149,7 @@ def main(
                 except Exception as e:
                     click.echo(f"Error performing regression analysis: {e}")
 
-            if (lstm or ml) and target_col:
+            if lstm or ml:
                 click.echo("\n=== LSTM Text Classification ===")
                 click.echo(
                     """

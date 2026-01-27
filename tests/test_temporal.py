@@ -1,7 +1,8 @@
 """Tests for temporal analysis functionality."""
+from datetime import timedelta
+
 import pandas as pd
 import pytest
-from datetime import datetime, timedelta
 
 from src.crisp_t.model.corpus import Corpus
 from src.crisp_t.model.document import Document
