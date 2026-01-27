@@ -19,7 +19,6 @@ along with crisp-t.  If not, see <https://www.gnu.org/licenses/>.
 
 import logging
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional
 
 import pandas as pd
 
@@ -84,7 +83,7 @@ class TemporalAnalyzer:
         self.corpus = corpus
 
     @staticmethod
-    def parse_timestamp(timestamp_str: Optional[str]) -> Optional[datetime]:
+    def parse_timestamp(timestamp_str: str | None) -> datetime | None:
         """
         Parse a timestamp string in various formats to datetime object.
         Returns None if parsing fails.
@@ -102,7 +101,7 @@ class TemporalAnalyzer:
             return None
 
     def link_by_nearest_time(
-        self, time_column: str = "timestamp", max_gap: Optional[timedelta] = None
+        self, time_column: str = "timestamp", max_gap: timedelta | None = None
     ) -> Corpus:
         """
         Link documents to dataframe rows by nearest timestamp.
@@ -261,8 +260,8 @@ class TemporalAnalyzer:
 
     def filter_by_time_range(
         self,
-        start_time: Optional[str] = None,
-        end_time: Optional[str] = None,
+        start_time: str | None = None,
+        end_time: str | None = None,
         time_column: str = "timestamp",
         filter_documents: bool = True,
         filter_dataframe: bool = True,
@@ -337,7 +336,7 @@ class TemporalAnalyzer:
         self,
         time_column: str = "timestamp",
         period: str = "W",
-        numeric_columns: Optional[List[str]] = None,
+        numeric_columns: list[str] | None = None,
     ) -> pd.DataFrame:
         """
         Generate temporal summary of numeric and text data.
@@ -504,7 +503,7 @@ class TemporalAnalyzer:
         self,
         period: str = "W",
         top_n: int = 5,
-    ) -> Dict[str, List[str]]:
+    ) -> dict[str, list[str]]:
         """
         Extract topics over time periods.
         Requires documents to have timestamp and optionally topics metadata.
@@ -572,7 +571,7 @@ class TemporalAnalyzer:
         self,
         period: str = "D",
         aggregation: str = "mean",
-        output_path: Optional[str] = None,
+        output_path: str | None = None,
     ):
         """
         Plot sentiment trends over time.
@@ -622,8 +621,8 @@ class TemporalAnalyzer:
         self,
         time_column: str = "timestamp",
         period: str = "W",
-        numeric_columns: Optional[List[str]] = None,
-        output_path: Optional[str] = None,
+        numeric_columns: list[str] | None = None,
+        output_path: str | None = None,
     ):
         """
         Plot temporal summary of numeric data.

@@ -10,11 +10,14 @@ This example demonstrates how to:
 5. Visualize temporal patterns
 """
 
+from datetime import timedelta
+
 import pandas as pd
+
 from crisp_t.model import Corpus, Document
 from crisp_t.read_data import ReadData
-from crisp_t.temporal import TemporalAnalyzer
 from crisp_t.sentiment import Sentiment
+from crisp_t.temporal import TemporalAnalyzer
 
 # Step 1: Create sample data with timestamps
 print("Creating sample temporal data...")

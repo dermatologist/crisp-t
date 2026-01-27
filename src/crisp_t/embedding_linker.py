@@ -18,7 +18,7 @@ along with crisp-t.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity, euclidean_distances
@@ -98,7 +98,7 @@ class EmbeddingLinker:
                 "Install with: pip install chromadb"
             )
 
-        from .semantic import Semantic, SimpleEmbeddingFunction
+        from .semantic import Semantic
 
         # Use Semantic class to generate embeddings
         try:
@@ -131,7 +131,7 @@ class EmbeddingLinker:
             raise
 
     def _get_numeric_embeddings(
-        self, columns: Optional[List[str]] = None, normalize: bool = True
+        self, columns: list[str] | None = None, normalize: bool = True
     ) -> np.ndarray:
         """
         Compute or retrieve cached numeric embeddings from dataframe.
@@ -189,7 +189,7 @@ class EmbeddingLinker:
 
     def compute_similarity_matrix(
         self,
-        numeric_columns: Optional[List[str]] = None,
+        numeric_columns: list[str] | None = None,
     ) -> np.ndarray:
         """
         Compute similarity matrix between text and numeric embeddings.
@@ -249,8 +249,8 @@ class EmbeddingLinker:
 
     def link_by_embedding_similarity(
         self,
-        numeric_columns: Optional[List[str]] = None,
-        threshold: Optional[float] = None,
+        numeric_columns: list[str] | None = None,
+        threshold: float | None = None,
         top_k: int = 1,
     ) -> Corpus:
         """
@@ -312,14 +312,14 @@ class EmbeddingLinker:
         linked_count = sum(
             1
             for doc in self.corpus.documents
-            if "embedding_links" in doc.metadata and doc.metadata["embedding_links"]
+            if doc.metadata.get("embedding_links")
         )
 
         logger.info(f"Linked {linked_count} documents using embedding similarity")
 
         return self.corpus
 
-    def get_link_statistics(self) -> Dict[str, Any]:
+    def get_link_statistics(self) -> dict[str, Any]:
         """
         Get statistics about embedding-based links.
 
@@ -338,7 +338,7 @@ class EmbeddingLinker:
         similarities = []
 
         for doc in self.corpus.documents:
-            if "embedding_links" in doc.metadata and doc.metadata["embedding_links"]:
+            if doc.metadata.get("embedding_links"):
                 stats["linked_documents"] += 1
                 links = doc.metadata["embedding_links"]
                 stats["total_links"] += len(links)
@@ -356,7 +356,7 @@ class EmbeddingLinker:
 
     def visualize_embedding_space(
         self,
-        output_path: Optional[str] = None,
+        output_path: str | None = None,
         method: str = "tsne",
     ):
         """
