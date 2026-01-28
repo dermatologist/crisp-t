@@ -1,5 +1,5 @@
 {
-    "id": "corpus_20251130184444",
+    "id": "corpus_20260128231918",
     "name": "Test Corpus",
     "description": "This is a test corpus",
     "score": 0.0,
@@ -10,6 +10,7 @@
             "description": "",
             "score": 0.0,
             "text": "Glaser\u2019s Classical GT (1) provides guidelines for evaluation of the GT methodology. The evaluation should be based on whether the theory fits the data, whether the theory is understandable to the non-professionals, whether the theory is generalizable to other situations, and whether the theory offers control over the structure and processes.\n",
+            "timestamp": null,
             "metadata": {
                 "source": "/home/runner/work/crisp-t/crisp-t/tests/resources/interview-3.txt",
                 "file_name": "interview-3.txt"
@@ -21,6 +22,7 @@
             "description": "",
             "score": 0.0,
             "text": "Constant comparison is central in Classical Grounded Theory, and it involves incident to incident comparison for identifying categories, incident to category comparison for refining the categories and category to category comparison for the emergence of the theory.\n",
+            "timestamp": null,
             "metadata": {
                 "source": "/home/runner/work/crisp-t/crisp-t/tests/resources/interview-2.txt",
                 "file_name": "interview-2.txt"
@@ -32,6 +34,7 @@
             "description": "",
             "score": 0.0,
             "text": "Open coding is the first step where data is broken down analytically, and conceptually similar chunks are grouped together under categories and subcategories. Once the differences between the categories are established, properties and dimensions of each are dissected. Coding in GT may be overwhelming, and scaling up of categories from open coding may be difficult. This leads to the generation of low-level theories. With natural language processing, information systems can help young researchers to make sense of the of data that they have collected during the stage of open coding. QRMine is a software suite for supporting qualitative researchers using NLP.  QRMine is opensource and is available here. Ideas, comments and pull requests welcome. Below is a jupyter notebook showing some of the features of QRMine.\n",
+            "timestamp": null,
             "metadata": {
                 "source": "/home/runner/work/crisp-t/crisp-t/tests/resources/interview-5.txt",
                 "file_name": "interview-5.txt"
@@ -43,6 +46,7 @@
             "description": "",
             "score": 0.0,
             "text": "Strauss and Corbin (2) recommended a strict coding structure elaborating on how to code and structure data. The seminal article by Strauss and Corbin describes three stages of coding: open coding, axial coding, and selective coding. Classical Grounded Theory offers more flexibility than Straussian GT while the latter may be easier to conduct especially for new researchers.\n",
+            "timestamp": null,
             "metadata": {
                 "source": "/home/runner/work/crisp-t/crisp-t/tests/resources/interview-4.txt",
                 "file_name": "interview-4.txt"
@@ -53,10 +57,23 @@
             "name": "",
             "description": "",
             "score": 0.0,
-            "text": "Grounded theory (GT) emerged as a research methodology from medical sociology following the seminal work by Barney Glaser and Anselm Strauss. However, they later developed different views on their original contribution with their supporters leading to the establishment of a classical Glaserian GT and a pragmatic Straussian Grounded Theory.\n",
+            "text": "Interview conducted on 2026-01-26T10:30:00Z\n\nGrounded theory (GT) emerged as a research methodology from medical sociology following the seminal work by Barney Glaser and Anselm Strauss. However, they later developed different views on their original contribution with their supporters leading to the establishment of a classical Glaserian GT and a pragmatic Straussian Grounded Theory.\n",
+            "timestamp": "2026-01-26T10:30:00+00:00",
             "metadata": {
                 "source": "/home/runner/work/crisp-t/crisp-t/tests/resources/interview-1.txt",
                 "file_name": "interview-1.txt"
+            }
+        },
+        {
+            "id": "interview-with-date.txt",
+            "name": "",
+            "description": "",
+            "score": 0.0,
+            "text": "Interview conducted on 2025-01-15T10:30:00Z\n\nThis is an interview transcript. The participant discussed various topics related to their experience.\n\nThey shared insights about their methodology and approach to problem solving. The conversation was quite informative and covered multiple aspects of their work.\n",
+            "timestamp": "2025-01-15T10:30:00+00:00",
+            "metadata": {
+                "source": "/home/runner/work/crisp-t/crisp-t/tests/resources/interview-with-date.txt",
+                "file_name": "interview-with-date.txt"
             }
         }
     ],

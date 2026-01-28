@@ -113,6 +113,13 @@ crisp --source PATH --out PATH
 ```
 *e.g., `crisp --source crisp_source --out crisp_input`*
 
+**🆕 Partial Import for Testing**: For large datasets, you can limit the import to test your workflow:
+```bash
+# Import only 10 text/PDF files and 100 CSV rows
+crisp --source crisp_source --out test_corpus --num 10 --rec 100
+```
+👉 [See Partial Import Guide](/notes/PARTIAL_IMPORT.md) for more details.
+
 
 ℹ️ `crisp_input` is recommended for `--out` option above. The folder is created in the current directory. 👉 [See Demo](/notes/DEMO.md).
 
@@ -145,8 +152,8 @@ crisp --source PATH --out PATH
   - `--regression`: Perform linear or logistic regression (automatically detects binary outcomes for logistic regression)
   - `--lstm`: Train LSTM model on text data to predict outcome variable (requires binary outcome and 'id' column for alignment)
 - `--visualize`: Generate visualizations (word clouds, topic charts, etc.)
-- `--num, -n INTEGER`: Number parameter (clusters, topics, epochs, etc.) - default: 3
-- `--rec, -r INTEGER`: Record parameter (top N results, recommendations) - default: 3
+- `--num, -n INTEGER`: Number parameter (clusters, topics, epochs, etc.) - default: 3. **When used with `--source`**, limits the maximum number of text/PDF files to import.
+- `--rec, -r INTEGER`: Record parameter (top N results, recommendations) - default: 3. **When used with `--source`**, limits the maximum number of CSV rows to import.
 - `--filters, -f TEXT`: Filters to apply as `key=value` or `key:value` (can be used multiple times). Regular filters keep only documents/rows where `document.metadata[key] == value` or `dataframe[key] == value`. Special link filters support bidirectional filtering:
   - `embedding:text` or `embedding=text` - Filter dataframe rows linked via document embedding_links (text→df direction)
   - `embedding:df` or `embedding=df` - Filter documents linked from dataframe rows via embedding_links (df→text direction)
