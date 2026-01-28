@@ -331,6 +331,7 @@ class ReadData:
         comma_separated_text_columns="",
         id_column="",
         timestamp_column="",
+        max_rows=None,
     ):
         """
         Read the corpus from a csv file. Parallelizes document creation for large CSVs.
@@ -341,13 +342,20 @@ class ReadData:
             comma_separated_text_columns: Text columns to extract
             id_column: Column to use as document ID
             timestamp_column: Column containing timestamps (auto-detected if not specified)
+            max_rows: Maximum number of rows to read from CSV
         """
         from pathlib import Path
 
         file_name = Path(file_name)
         if not file_name.exists():
             raise ValueError(f"File not found: {file_name}")
-        df = pd.read_csv(file_name)
+        
+        # Read CSV with optional row limit
+        if max_rows is not None:
+            df = pd.read_csv(file_name, nrows=max_rows)
+            logger.info(f"Limited CSV reading to first {max_rows} rows")
+        else:
+            df = pd.read_csv(file_name)
         original_df = df.copy()
 
         # Auto-detect timestamp column if not specified
@@ -500,7 +508,8 @@ class ReadData:
         return self._corpus
 
     def read_source(
-        self, source, comma_separated_ignore_words=None, comma_separated_text_columns=""
+        self, source, comma_separated_ignore_words=None, comma_separated_text_columns="",
+        max_text_files=None, max_csv_rows=None
     ):
         _CSV_EXISTS = False
 
@@ -541,71 +550,106 @@ class ReadData:
             self._source = source
             logger.info(f"Reading data from folder: {source}")
             file_list = os.listdir(source)
+            
+            # Separate files by type for limiting
+            text_files = [f for f in file_list if f.endswith('.txt')]
+            pdf_files = [f for f in file_list if f.endswith('.pdf')]
+            csv_files = [f for f in file_list if f.endswith('.csv')]
+            
+            # Apply limits to text and PDF files
+            text_pdf_count = 0
+            text_pdf_limit = max_text_files if max_text_files is not None else float('inf')
+            
+            if max_text_files is not None:
+                logger.info(f"Limiting import to maximum {max_text_files} text/PDF files")
+            
+            # Process text files
             for file_name in tqdm(
-                file_list, desc="Reading files", disable=len(file_list) < 10
+                text_files, desc="Reading text files", disable=len(text_files) < 10
             ):
+                if text_pdf_count >= text_pdf_limit:
+                    break
+                    
                 file_path = source_path / file_name
-                if file_name.endswith(".txt"):
-                    with open(file_path) as f:
-                        read_from_file = f.read()
-                        read_from_file = apply_ignore_patterns(read_from_file)
-                        # Extract timestamp from content
-                        doc_timestamp = extract_timestamp_from_text(read_from_file)
-                        # self._content removed
-                        _document = Document(
-                            text=read_from_file,
-                            timestamp=doc_timestamp,
-                            metadata={
-                                "source": str(file_path),
-                                "file_name": file_name,
-                            },
-                            id=file_name,
-                            score=0.0,
-                            name="",
-                            description="",
-                        )
-                        self._documents.append(_document)
-                if file_name.endswith(".pdf"):
-                    with open(file_path, "rb") as f:
-                        reader = PdfReader(f)
-                        # Use list and join for efficient string concatenation
-                        page_texts = []
-                        for page in tqdm(
-                            reader.pages,
-                            desc=f"Reading PDF {file_name}",
-                            leave=False,
-                            disable=len(reader.pages) < 10,
-                        ):
-                            page_texts.append(page.extract_text())
-                        read_from_file = "".join(page_texts)
-                        read_from_file = apply_ignore_patterns(read_from_file)
-                        # Extract timestamp from content
-                        doc_timestamp = extract_timestamp_from_text(read_from_file)
-                        # self._content removed
-                        _document = Document(
-                            text=read_from_file,
-                            timestamp=doc_timestamp,
-                            metadata={
-                                "source": str(file_path),
-                                "file_name": file_name,
-                            },
-                            id=file_name,
-                            score=0.0,
-                            name="",
-                            description="",
-                        )
-                        self._documents.append(_document)
-                if file_name.endswith(".csv") and comma_separated_text_columns == "":
+                with open(file_path) as f:
+                    read_from_file = f.read()
+                    read_from_file = apply_ignore_patterns(read_from_file)
+                    # Extract timestamp from content
+                    doc_timestamp = extract_timestamp_from_text(read_from_file)
+                    # self._content removed
+                    _document = Document(
+                        text=read_from_file,
+                        timestamp=doc_timestamp,
+                        metadata={
+                            "source": str(file_path),
+                            "file_name": file_name,
+                        },
+                        id=file_name,
+                        score=0.0,
+                        name="",
+                        description="",
+                    )
+                    self._documents.append(_document)
+                    text_pdf_count += 1
+            
+            # Process PDF files
+            for file_name in tqdm(
+                pdf_files, desc="Reading PDF files", disable=len(pdf_files) < 10
+            ):
+                if text_pdf_count >= text_pdf_limit:
+                    break
+                    
+                file_path = source_path / file_name
+                with open(file_path, "rb") as f:
+                    reader = PdfReader(f)
+                    # Use list and join for efficient string concatenation
+                    page_texts = []
+                    for page in tqdm(
+                        reader.pages,
+                        desc=f"Reading PDF {file_name}",
+                        leave=False,
+                        disable=len(reader.pages) < 10,
+                    ):
+                        page_texts.append(page.extract_text())
+                    read_from_file = "".join(page_texts)
+                    read_from_file = apply_ignore_patterns(read_from_file)
+                    # Extract timestamp from content
+                    doc_timestamp = extract_timestamp_from_text(read_from_file)
+                    # self._content removed
+                    _document = Document(
+                        text=read_from_file,
+                        timestamp=doc_timestamp,
+                        metadata={
+                            "source": str(file_path),
+                            "file_name": file_name,
+                        },
+                        id=file_name,
+                        score=0.0,
+                        name="",
+                        description="",
+                    )
+                    self._documents.append(_document)
+                    text_pdf_count += 1
+            
+            # Process CSV files
+            for file_name in csv_files:
+                file_path = source_path / file_name
+                if comma_separated_text_columns == "":
                     logger.info(f"Reading CSV file: {file_path}")
                     self._df = Csv().read_csv(file_path)
+                    # Apply row limit if specified
+                    if max_csv_rows is not None and len(self._df) > max_csv_rows:
+                        logger.info(f"Limiting CSV to first {max_csv_rows} rows")
+                        self._df = self._df.head(max_csv_rows)
                     logger.info(f"CSV file read with shape: {self._df.shape}")
                     _CSV_EXISTS = True
-                if file_name.endswith(".csv") and comma_separated_text_columns != "":
+                if comma_separated_text_columns != "":
                     logger.info(f"Reading CSV file to corpus: {file_path}")
                     self.read_csv_to_corpus(
                         file_path,
                         comma_separated_ignore_words,
                         comma_separated_text_columns,
+                        max_rows=max_csv_rows,
                     )
                     logger.info(
                         f"CSV file read to corpus with documents: {len(self._documents)}"
