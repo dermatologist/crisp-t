@@ -8,7 +8,7 @@ as tools, resources, and prompts.
 
 import json
 import logging
-from typing import Any, Optional, cast
+from typing import Any, cast
 
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
@@ -22,12 +22,16 @@ from mcp.types import (
 )
 
 from ..cluster import Cluster
-from ..csv import Csv
 from ..helpers.analyzer import get_csv_analyzer, get_text_analyzer
 from ..helpers.initializer import initialize_corpus
 from ..read_data import ReadData
 from ..sentiment import Sentiment
-from ..text import Text
+from .utils.responses import (
+    error_response,
+    no_corpus_response,
+    no_csv_analyzer_response,
+    success_response,
+)
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -52,8 +56,8 @@ _ml_analyzer = None
 
 
 def _init_corpus(
-    inp: Optional[str] = None,
-    source: Optional[str] = None,
+    inp: str | None = None,
+    source: str | None = None,
     text_columns: str = "",
     ignore_words: str = "",
 ):
@@ -82,7 +86,7 @@ def _init_corpus(
 
         return True
     except Exception as e:
-        logger.error(f"Failed to initialize corpus: {e}")
+        logger.exception(f"Failed to initialize corpus: {e}")
         return False
 
 
@@ -1233,27 +1237,22 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
 
             if _init_corpus(inp, source, text_columns, ignore_words):
                 doc_count = len(_corpus.documents) if _corpus else 0
-                return [
-                    TextContent(
-                        type="text",
-                        text=f"Corpus loaded successfully with {doc_count} document(s)",
-                    )
-                ]
+                return success_response(f"Corpus loaded successfully with {doc_count} document(s)")
             else:
-                return [TextContent(type="text", text="Failed to load corpus")]
+                return error_response("Failed to load corpus")
 
         elif name == "save_corpus":
             if not _corpus:
-                return [TextContent(type="text", text="No corpus loaded")]
+                return no_corpus_response()
 
             out = arguments["out"]
             read_data = ReadData(corpus=_corpus)
             read_data.write_corpus_to_json(out, corpus=_corpus)
-            return [TextContent(type="text", text=f"Corpus saved to {out}")]
+            return success_response(f"Corpus saved to {out}")
 
         elif name == "add_document":
             if not _corpus:
-                return [TextContent(type="text", text="No corpus loaded")]
+                return no_corpus_response()
 
             from ..model.document import Document
 
@@ -1266,55 +1265,46 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                 metadata={},
             )
             _corpus.add_document(doc)
-            return [
-                TextContent(type="text", text=f"Document {arguments['doc_id']} added")
-            ]
+            return success_response(f"Document {arguments['doc_id']} added")
 
         elif name == "remove_document":
             if not _corpus:
-                return [TextContent(type="text", text="No corpus loaded")]
+                return no_corpus_response()
 
             _corpus.remove_document_by_id(arguments["doc_id"])
-            return [
-                TextContent(type="text", text=f"Document {arguments['doc_id']} removed")
-            ]
+            return success_response(f"Document {arguments['doc_id']} removed")
 
         elif name == "get_document":
             if not _corpus:
-                return [TextContent(type="text", text="No corpus loaded")]
+                return no_corpus_response()
 
             doc = _corpus.get_document_by_id(arguments["doc_id"])
             if doc:
-                return [
-                    TextContent(
-                        type="text",
-                        text=json.dumps(doc.model_dump(), indent=2, default=str),
-                    )
-                ]
-            return [TextContent(type="text", text="Document not found")]
+                return success_response(json.dumps(doc.model_dump(), indent=2, default=str))
+            return error_response("Document not found")
 
         elif name == "list_documents":
             if not _corpus:
-                return [TextContent(type="text", text="No corpus loaded")]
+                return no_corpus_response()
 
             doc_ids = _corpus.get_all_document_ids()
-            return [TextContent(type="text", text=json.dumps(doc_ids, indent=2))]
+            return success_response(json.dumps(doc_ids, indent=2))
 
         elif name == "add_relationship":
             if not _corpus:
-                return [TextContent(type="text", text="No corpus loaded")]
+                return no_corpus_response()
 
             _corpus.add_relationship(
                 arguments["first"], arguments["second"], arguments["relation"]
             )
-            return [TextContent(type="text", text="Relationship added")]
+            return success_response("Relationship added")
 
         elif name == "get_relationships":
             if not _corpus:
-                return [TextContent(type="text", text="No corpus loaded")]
+                return no_corpus_response()
 
             rels = _corpus.get_relationships()
-            return [TextContent(type="text", text=json.dumps(rels, indent=2))]
+            return success_response(json.dumps(rels, indent=2))
 
         elif name == "get_relationships_for_keyword":
             if not _corpus:
@@ -1326,192 +1316,175 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
         # NLP/Text Analysis Tools
         elif name == "generate_coding_dictionary":
             if not _text_analyzer:
-                return [TextContent(type="text", text="No corpus loaded")]
+                return no_corpus_response()
 
             _text_analyzer.make_spacy_doc()
             result = _text_analyzer.print_coding_dictionary(
                 num=arguments.get("num", 3), top_n=arguments.get("top_n", 3)
             )
-            return [
-                TextContent(type="text", text=json.dumps(result, indent=2, default=str))
-            ]
+            return success_response(json.dumps(result, indent=2, default=str))
 
         elif name == "topic_modeling":
             if not _corpus:
-                return [TextContent(type="text", text="No corpus loaded")]
+                return no_corpus_response()
 
             cluster = Cluster(corpus=_corpus)
             cluster.build_lda_model(topics=arguments.get("num_topics", 3))
             result = cluster.print_topics(num_words=arguments.get("num_words", 5))
-            return [
-                TextContent(type="text", text=json.dumps(result, indent=2, default=str))
-            ]
+            return success_response(json.dumps(result, indent=2, default=str))
 
         elif name == "assign_topics":
             if not _corpus:
-                return [TextContent(type="text", text="No corpus loaded")]
+                return no_corpus_response()
 
             cluster = Cluster(corpus=_corpus)
             cluster.build_lda_model(topics=arguments.get("num_topics", 3))
             result = cluster.format_topics_sentences(visualize=False)
-            return [
-                TextContent(type="text", text=json.dumps(result, indent=2, default=str))
-            ]
+            return success_response(json.dumps(result, indent=2, default=str))
 
         elif name == "extract_categories":
             if not _text_analyzer:
-                return [TextContent(type="text", text="No corpus loaded")]
+                return no_corpus_response()
 
             _text_analyzer.make_spacy_doc()
             result = _text_analyzer.print_categories(num=arguments.get("num", 10))
-            return [
-                TextContent(type="text", text=json.dumps(result, indent=2, default=str))
-            ]
+            return success_response(json.dumps(result, indent=2, default=str))
 
         elif name == "generate_summary":
             if not _text_analyzer:
-                return [TextContent(type="text", text="No corpus loaded")]
+                return no_corpus_response()
 
             _text_analyzer.make_spacy_doc()
             result = _text_analyzer.generate_summary(weight=arguments.get("weight", 10))
-            return [TextContent(type="text", text=str(result))]
+            return success_response(str(result))
 
         elif name == "sentiment_analysis":
             if not _corpus:
-                return [TextContent(type="text", text="No corpus loaded")]
+                return no_corpus_response()
 
             sentiment = Sentiment(corpus=_corpus)
             result = sentiment.get_sentiment(
                 documents=arguments.get("documents", False),
                 verbose=arguments.get("verbose", True),
             )
-            return [TextContent(type="text", text=str(result))]
+            return success_response(str(result))
 
         # Text/Corpus filtering tools
         elif name == "filter_documents":
             if not _text_analyzer:
-                return [TextContent(type="text", text="No corpus loaded")]
+                return no_corpus_response()
 
             metadata_key = arguments.get("metadata_key", "keywords")
             metadata_value = arguments.get("metadata_value")
             if not metadata_value:
-                return [TextContent(type="text", text="metadata_value is required")]
+                return error_response("metadata_value is required")
 
             msg = _text_analyzer.filter_documents(
                 metadata_key=metadata_key, metadata_value=metadata_value, mcp=True
             )
-            return [TextContent(type="text", text=str(msg))]
+            return success_response(str(msg))
 
         elif name == "document_count":
             if not _text_analyzer:
-                return [TextContent(type="text", text="No corpus loaded")]
+                return no_corpus_response()
 
             try:
                 count = _text_analyzer.document_count()
             except Exception as e:
-                return [TextContent(type="text", text=f"Error: {e}")]
-            return [TextContent(type="text", text=f"Document count: {count}")]
+                return error_response(str(e))
+            return success_response(f"Document count: {count}")
 
         # DataFrame/CSV Tools
         elif name == "get_df_columns":
             if not _corpus:
-                return [TextContent(type="text", text="No corpus loaded")]
+                return no_corpus_response()
 
             cols = _corpus.get_all_df_column_names()
-            return [TextContent(type="text", text=json.dumps(cols, indent=2))]
+            return success_response(json.dumps(cols, indent=2))
 
         elif name == "get_df_row_count":
             if not _corpus:
-                return [TextContent(type="text", text="No corpus loaded")]
+                return no_corpus_response()
 
             count = _corpus.get_row_count()
-            return [TextContent(type="text", text=f"Row count: {count}")]
+            return success_response(f"Row count: {count}")
 
         elif name == "get_df_row":
             if not _corpus:
-                return [TextContent(type="text", text="No corpus loaded")]
+                return no_corpus_response()
 
             row = _corpus.get_row_by_index(arguments["index"])
             if row is not None:
-                return [
-                    TextContent(
-                        type="text",
-                        text=json.dumps(row.to_dict(), indent=2, default=str),
-                    )
-                ]
-            return [TextContent(type="text", text="Row not found")]
+                return success_response(json.dumps(row.to_dict(), indent=2, default=str))
+            return error_response("Row not found")
 
         # CSV Column/DataFrame operations
         elif name == "bin_a_column":
             if not _csv_analyzer:
-                return [TextContent(type="text", text="No CSV data available")]
+                return no_csv_analyzer_response()
 
             msg = _csv_analyzer.bin_a_column(
                 column_name=arguments["column_name"], bins=arguments.get("bins", 2)
             )
-            return [TextContent(type="text", text=str(msg))]
+            return success_response(str(msg))
 
         elif name == "one_hot_encode_column":
             if not _csv_analyzer:
-                return [TextContent(type="text", text="No CSV data available")]
+                return no_csv_analyzer_response()
 
             msg = _csv_analyzer.one_hot_encode_column(
                 column_name=arguments["column_name"]
             )
-            return [TextContent(type="text", text=str(msg))]
+            return success_response(str(msg))
 
         elif name == "filter_rows_by_column_value":
             if not _csv_analyzer:
-                return [TextContent(type="text", text="No CSV data available")]
+                return no_csv_analyzer_response()
 
             msg = _csv_analyzer.filter_rows_by_column_value(
                 column_name=arguments["column_name"], value=arguments["value"], mcp=True
             )
-            return [TextContent(type="text", text=str(msg))]
+            return success_response(str(msg))
 
         elif name == "oversample":
             if not _csv_analyzer:
-                return [TextContent(type="text", text="No CSV data available")]
+                return no_csv_analyzer_response()
 
             result = _csv_analyzer.oversample(mcp=True)
-            return [TextContent(type="text", text=str(result))]
+            return success_response(str(result))
 
         elif name == "restore_oversample":
             if not _csv_analyzer:
-                return [TextContent(type="text", text="No CSV data available")]
+                return no_csv_analyzer_response()
 
             result = _csv_analyzer.restore_oversample(mcp=True)
-            return [TextContent(type="text", text=str(result))]
+            return success_response(str(result))
 
         elif name == "get_column_types":
             if not _csv_analyzer:
-                return [TextContent(type="text", text="No CSV data available")]
+                return no_csv_analyzer_response()
 
             types = _csv_analyzer.get_column_types()
-            return [
-                TextContent(type="text", text=json.dumps(types, indent=2, default=str))
-            ]
+            return success_response(json.dumps(types, indent=2, default=str))
 
         elif name == "get_column_values":
             if not _csv_analyzer:
-                return [TextContent(type="text", text="No CSV data available")]
+                return no_csv_analyzer_response()
 
             values = _csv_analyzer.get_column_values(arguments["column_name"])
-            return [
-                TextContent(type="text", text=json.dumps(values, indent=2, default=str))
-            ]
+            return success_response(json.dumps(values, indent=2, default=str))
 
         elif name == "retain_numeric_columns_only":
             if not _csv_analyzer:
-                return [TextContent(type="text", text="No CSV data available")]
+                return no_csv_analyzer_response()
 
             _csv_analyzer.retain_numeric_columns_only()
-            return [TextContent(type="text", text="Retained numeric columns only.")]
+            return success_response("Retained numeric columns only.")
 
         # ML Tools
         elif name == "kmeans_clustering":
             if not _csv_analyzer:
-                return [TextContent(type="text", text="No CSV data available")]
+                return no_csv_analyzer_response()
             else:
                 if "include" in arguments:
                     _csv_analyzer.comma_separated_include_columns(
@@ -1519,7 +1492,7 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                     )
 
             if not ML_AVAILABLE:
-                return [TextContent(type="text", text="ML dependencies not available")]
+                return error_response("ML dependencies not available")
 
             _csv_analyzer.retain_numeric_columns_only()
 
@@ -1530,11 +1503,11 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                 verbose=False,
                 mcp=True,
             )
-            return [TextContent(type="text", text=str(result))]
+            return success_response(str(result))
 
         elif name == "decision_tree_classification":
             if not _csv_analyzer:
-                return [TextContent(type="text", text="No CSV data available")]
+                return no_csv_analyzer_response()
             else:
                 if "include" in arguments:
                     _csv_analyzer.comma_separated_include_columns(
@@ -1542,7 +1515,7 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                     )
 
             if not ML_AVAILABLE:
-                return [TextContent(type="text", text="ML dependencies not available")]
+                return error_response("ML dependencies not available")
 
             if not _ml_analyzer:
                 _ml_analyzer = ML(csv=_csv_analyzer)
@@ -1552,11 +1525,11 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                 linkage_method=arguments.get("linkage_method"),
                 aggregation=arguments.get("aggregation", "majority"),
             )
-            return [TextContent(type="text", text=str(result))]
+            return success_response(str(result))
 
         elif name == "svm_classification":
             if not _csv_analyzer:
-                return [TextContent(type="text", text="No CSV data available")]
+                return no_csv_analyzer_response()
             else:
                 if "include" in arguments:
                     _csv_analyzer.comma_separated_include_columns(
@@ -1564,22 +1537,22 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                     )
 
             if not ML_AVAILABLE:
-                return [TextContent(type="text", text="ML dependencies not available")]
+                return error_response("ML dependencies not available")
 
             if not _ml_analyzer:
                 _ml_analyzer = ML(csv=_csv_analyzer)
 
             linkage_method = arguments.get("linkage_method")
             aggregation = arguments.get("aggregation", "majority")
-            
+
             result = _ml_analyzer.svm_confusion_matrix(
                 y=arguments["outcome"], test_size=0.25, mcp=True, linkage_method=linkage_method, aggregation=aggregation
             )
-            return [TextContent(type="text", text=str(result))]
+            return success_response(str(result))
 
         elif name == "neural_network_classification":
             if not _csv_analyzer:
-                return [TextContent(type="text", text="No CSV data available")]
+                return no_csv_analyzer_response()
             else:
                 if "include" in arguments:
                     _csv_analyzer.comma_separated_include_columns(
@@ -1587,20 +1560,20 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                     )
 
             if not ML_AVAILABLE:
-                return [TextContent(type="text", text="ML dependencies not available")]
+                return error_response("ML dependencies not available")
 
             if not _ml_analyzer:
                 _ml_analyzer = ML(csv=_csv_analyzer)
 
             linkage_method = arguments.get("linkage_method")
             aggregation = arguments.get("aggregation", "majority")
-            
+
             result = _ml_analyzer.get_nnet_predictions(y=arguments["outcome"], mcp=True, linkage_method=linkage_method, aggregation=aggregation)
-            return [TextContent(type="text", text=str(result))]
+            return success_response(str(result))
 
         elif name == "regression_analysis":
             if not _csv_analyzer:
-                return [TextContent(type="text", text="No CSV data available")]
+                return no_csv_analyzer_response()
             else:
                 if "include" in arguments:
                     _csv_analyzer.comma_separated_include_columns(
@@ -1608,20 +1581,20 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                     )
 
             if not ML_AVAILABLE:
-                return [TextContent(type="text", text="ML dependencies not available")]
+                return error_response("ML dependencies not available")
 
             if not _ml_analyzer:
                 _ml_analyzer = ML(csv=_csv_analyzer)
 
             linkage_method = arguments.get("linkage_method")
             aggregation = arguments.get("aggregation", "mean")  # Default to mean for regression
-            
+
             result = _ml_analyzer.get_regression(y=arguments["outcome"], mcp=True, linkage_method=linkage_method, aggregation=aggregation)
-            return [TextContent(type="text", text=str(result))]
+            return success_response(str(result))
 
         elif name == "pca_analysis":
             if not _csv_analyzer:
-                return [TextContent(type="text", text="No CSV data available")]
+                return no_csv_analyzer_response()
             else:
                 if "include" in arguments:
                     _csv_analyzer.comma_separated_include_columns(
@@ -1629,7 +1602,7 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                     )
 
             if not ML_AVAILABLE:
-                return [TextContent(type="text", text="ML dependencies not available")]
+                return error_response("ML dependencies not available")
 
             if not _ml_analyzer:
                 _ml_analyzer = ML(csv=_csv_analyzer)
@@ -1639,11 +1612,11 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                 linkage_method=arguments.get("linkage_method"),
                 aggregation=arguments.get("aggregation", "majority"),
             )
-            return [TextContent(type="text", text=str(result))]
+            return success_response(str(result))
 
         elif name == "association_rules":
             if not _csv_analyzer:
-                return [TextContent(type="text", text="No CSV data available")]
+                return no_csv_analyzer_response()
             else:
                 if "include" in arguments:
                     _csv_analyzer.comma_separated_include_columns(
@@ -1651,7 +1624,7 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                     )
 
             if not ML_AVAILABLE:
-                return [TextContent(type="text", text="ML dependencies not available")]
+                return error_response("ML dependencies not available")
 
             if not _ml_analyzer:
                 _ml_analyzer = ML(csv=_csv_analyzer)
@@ -1665,11 +1638,11 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                 min_threshold=min_threshold,
                 mcp=True,
             )
-            return [TextContent(type="text", text=str(result))]
+            return success_response(str(result))
 
         elif name == "knn_search":
             if not _csv_analyzer:
-                return [TextContent(type="text", text="No CSV data available")]
+                return no_csv_analyzer_response()
             else:
                 if "include" in arguments:
                     _csv_analyzer.comma_separated_include_columns(
@@ -1677,7 +1650,7 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                     )
 
             if not ML_AVAILABLE:
-                return [TextContent(type="text", text="ML dependencies not available")]
+                return error_response("ML dependencies not available")
 
             if not _ml_analyzer:
                 _ml_analyzer = ML(csv=_csv_analyzer)
@@ -1690,44 +1663,38 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                 linkage_method=arguments.get("linkage_method"),
                 aggregation=arguments.get("aggregation", "majority"),
             )
-            return [TextContent(type="text", text=str(result))]
+            return success_response(str(result))
 
         elif name == "lstm_text_classification":
             if not _csv_analyzer:
-                return [TextContent(type="text", text="No CSV data available")]
+                return no_csv_analyzer_response()
 
             if not ML_AVAILABLE:
-                return [TextContent(type="text", text="ML dependencies not available")]
+                return error_response("ML dependencies not available")
 
             if not _ml_analyzer:
                 _ml_analyzer = ML(csv=_csv_analyzer)
 
             result = _ml_analyzer.get_lstm_predictions(y=arguments["outcome"], mcp=True)
-            return [TextContent(type="text", text=str(result))]
+            return success_response(str(result))
 
         elif name == "reset_corpus_state":
             _corpus = None
             _text_analyzer = None
             _csv_analyzer = None
             _ml_analyzer = None
-            return [
-                TextContent(type="text", text="Global corpus state has been reset.")
-            ]
+            return success_response("Global corpus state has been reset.")
 
         elif name == "semantic_search":
             if not _corpus:
-                return [
-                    TextContent(
-                        type="text", text="No corpus loaded. Use load_corpus first."
-                    )
-                ]
+                return no_corpus_response()
 
             try:
                 from ..semantic import Semantic
 
                 query = arguments.get("query")
                 if not query:
-                    return [TextContent(type="text", text="query is required")]
+                    return error_response("query is required")
 
                 n_results = arguments.get("n_results", 5)
 
@@ -1753,34 +1720,23 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                         f"... and {len(result_corpus.documents) - 10} more\n"
                     )
 
-                return [TextContent(type="text", text=response_text)]
+                return success_response(response_text)
 
             except ImportError:
-                return [
-                    TextContent(
-                        type="text",
-                        text="chromadb is not installed. Install with: pip install chromadb",
-                    )
-                ]
+                return error_response("chromadb is not installed. Install with: pip install chromadb")
             except Exception as e:
-                return [
-                    TextContent(type="text", text=f"Error during semantic search: {e}")
-                ]
+                return error_response(f"Error during semantic search: {e}")
 
         elif name == "find_similar_documents":
             if not _corpus:
-                return [
-                    TextContent(
-                        type="text", text="No corpus loaded. Use load_corpus first."
-                    )
-                ]
+                return no_corpus_response()
 
             try:
                 from ..semantic import Semantic
 
                 document_ids = arguments.get("document_ids")
                 if not document_ids:
-                    return [TextContent(type="text", text="document_ids is required")]
+                    return error_response("document_ids is required")
 
                 n_results = arguments.get("n_results", 5)
                 threshold = arguments.get("threshold", 0.7)
@@ -1815,29 +1771,16 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                     response_text += "No similar documents found above the threshold.\n"
                     response_text += "Try lowering the threshold or using different reference documents.\n"
 
-                return [TextContent(type="text", text=response_text)]
+                return success_response(response_text)
 
             except ImportError:
-                return [
-                    TextContent(
-                        type="text",
-                        text="chromadb is not installed. Install with: pip install chromadb",
-                    )
-                ]
+                return error_response("chromadb is not installed. Install with: pip install chromadb")
             except Exception as e:
-                return [
-                    TextContent(
-                        type="text", text=f"Error finding similar documents: {e}"
-                    )
-                ]
+                return error_response(f"Error finding similar documents: {e}")
 
         elif name == "semantic_chunk_search":
             if not _corpus:
-                return [
-                    TextContent(
-                        type="text", text="No corpus loaded. Use load_corpus first."
-                    )
-                ]
+                return no_corpus_response()
 
             try:
                 from ..semantic import Semantic
@@ -1846,9 +1789,9 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                 doc_id = arguments.get("doc_id")
 
                 if not query:
-                    return [TextContent(type="text", text="query is required")]
+                    return error_response("query is required")
                 if not doc_id:
-                    return [TextContent(type="text", text="doc_id is required")]
+                    return error_response("doc_id is required")
 
                 threshold = arguments.get("threshold", 0.5)
                 n_results = arguments.get("n_results", 10)
@@ -1886,21 +1829,12 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                         "Try lowering the threshold or use a different query.\n"
                     )
 
-                return [TextContent(type="text", text=response_text)]
+                return success_response(response_text)
 
             except ImportError:
-                return [
-                    TextContent(
-                        type="text",
-                        text="chromadb is not installed. Install with: pip install chromadb",
-                    )
-                ]
+                return error_response("chromadb is not installed. Install with: pip install chromadb")
             except Exception as e:
-                return [
-                    TextContent(
-                        type="text", text=f"Error during semantic chunk search: {e}"
-                    )
-                ]
+                return error_response(f"Error during semantic chunk search: {e}")
 
         elif name == "export_metadata_df":
             if not _corpus:
@@ -1932,27 +1866,18 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                     response_text += f"Columns: {list(result_corpus.df.columns)}\n\n"
                     response_text += "First 5 rows:\n"
                     response_text += result_corpus.df.head().to_string()
-                    return [TextContent(type="text", text=response_text)]
+                    return success_response(response_text)
                 else:
-                    return [TextContent(type="text", text="No DataFrame created")]
+                    return error_response("No DataFrame created")
 
             except ImportError:
-                return [
-                    TextContent(
-                        type="text",
-                        text="chromadb is not installed. Install with: pip install chromadb",
-                    )
-                ]
+                return error_response("chromadb is not installed. Install with: pip install chromadb")
             except Exception as e:
-                return [TextContent(type="text", text=f"Error exporting metadata: {e}")]
+                return error_response(f"Error exporting metadata: {e}")
 
         elif name == "tdabm_analysis":
             if not _corpus:
-                return [
-                    TextContent(
-                        type="text", text="No corpus loaded. Use load_corpus first."
-                    )
-                ]
+                return no_corpus_response()
 
             try:
                 from ..tdabm import Tdabm
@@ -1962,53 +1887,36 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                 radius = arguments.get("radius", 0.3)
 
                 if not y_variable or not x_variables:
-                    return [
-                        TextContent(
-                            type="text",
-                            text="Error: Both y_variable and x_variables are required",
-                        )
-                    ]
+                    return error_response("Both y_variable and x_variables are required")
 
                 tdabm_analyzer = Tdabm(_corpus)
                 result = tdabm_analyzer.generate_tdabm(
                     y=y_variable, x_variables=x_variables, radius=radius, mcp=True
                 )
 
-                return [
-                    TextContent(
-                        type="text",
-                        text=f"TDABM Analysis Complete\n\n{result}\n\n"
-                        "Hint: Results are stored in corpus metadata['tdabm']\n"
-                        "Hint: Use save_corpus to persist the results\n"
-                        "Hint: Visualize with draw_tdabm or use vizcli --tdabm",
-                    )
-                ]
+                return success_response(
+                    f"TDABM Analysis Complete\n\n{result}\n\n"
+                    "Hint: Results are stored in corpus metadata['tdabm']\n"
+                    "Hint: Use save_corpus to persist the results\n"
+                    "Hint: Visualize with draw_tdabm or use vizcli --tdabm"
+                )
 
             except ValueError as e:
-                return [
-                    TextContent(
-                        type="text",
-                        text=f"Validation Error: {e}\n\n"
-                        "Tips:\n"
-                        "- Ensure corpus has a DataFrame\n"
-                        "- Y variable must be continuous (not binary)\n"
-                        "- X variables must be numeric/ordinal\n"
-                        "- All variables must exist in the DataFrame",
-                    )
-                ]
+                return error_response(
+                    f"Validation Error: {e}\n\n"
+                    "Tips:\n"
+                    "- Ensure corpus has a DataFrame\n"
+                    "- Y variable must be continuous (not binary)\n"
+                    "- X variables must be numeric/ordinal\n"
+                    "- All variables must exist in the DataFrame"
+                )
             except Exception as e:
-                return [
-                    TextContent(type="text", text=f"Error during TDABM analysis: {e}")
-                ]
+                return error_response(f"Error during TDABM analysis: {e}")
 
         # Temporal Analysis Tools
         elif name == "temporal_link_by_time":
             if not _corpus:
-                return [
-                    TextContent(
-                        type="text", text="No corpus loaded. Use load_corpus first."
-                    )
-                ]
+                return no_corpus_response()
 
             try:
                 from datetime import timedelta
@@ -2021,12 +1929,7 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
 
                 if method == "nearest":
                     _corpus = analyzer.link_by_nearest_time(time_column=time_column)
-                    return [
-                        TextContent(
-                            type="text",
-                            text="Documents linked to nearest dataframe rows by time",
-                        )
-                    ]
+                    return success_response("Documents linked to nearest dataframe rows by time")
 
                 elif method == "window":
                     window_seconds = arguments.get("window_seconds", 300)
@@ -2036,39 +1939,24 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                         window_before=window,
                         window_after=window,
                     )
-                    return [
-                        TextContent(
-                            type="text",
-                            text=f"Documents linked within ±{window_seconds}s time window",
-                        )
-                    ]
+                    return success_response(f"Documents linked within ±{window_seconds}s time window")
 
                 elif method == "sequence":
                     period = arguments.get("period", "W")
                     _corpus = analyzer.link_by_sequence(
                         time_column=time_column, period=period
                     )
-                    return [
-                        TextContent(
-                            type="text", text=f"Documents linked by {period} sequences"
-                        )
-                    ]
+                    return success_response(f"Documents linked in {period} sequences")
 
                 else:
-                    return [TextContent(type="text", text=f"Unknown method: {method}")]
+                    return error_response(f"Unknown method: {method}")
 
             except Exception as e:
-                return [
-                    TextContent(type="text", text=f"Error in temporal linking: {e}")
-                ]
+                return error_response(f"Error in temporal linking: {e}")
 
         elif name == "temporal_filter":
             if not _corpus:
-                return [
-                    TextContent(
-                        type="text", text="No corpus loaded. Use load_corpus first."
-                    )
-                ]
+                return no_corpus_response()
 
             try:
                 from ..temporal import TemporalAnalyzer
@@ -2084,25 +1972,16 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
 
                 doc_count = len(_corpus.documents)
                 df_count = len(_corpus.df) if _corpus.df is not None else 0
-                return [
-                    TextContent(
-                        type="text",
-                        text=f"Corpus filtered by time range: {doc_count} documents, {df_count} dataframe rows",
-                    )
-                ]
+                return success_response(
+                    f"Corpus filtered by time range: {doc_count} documents, {df_count} dataframe rows"
+                )
 
             except Exception as e:
-                return [
-                    TextContent(type="text", text=f"Error in temporal filtering: {e}")
-                ]
+                return error_response(f"Error in temporal filtering: {e}")
 
         elif name == "temporal_summary":
             if not _corpus:
-                return [
-                    TextContent(
-                        type="text", text="No corpus loaded. Use load_corpus first."
-                    )
-                ]
+                return no_corpus_response()
 
             try:
                 from ..temporal import TemporalAnalyzer
@@ -2118,26 +1997,16 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                 if not summary.empty:
                     response_text = f"Temporal Summary ({period} periods):\n\n"
                     response_text += summary.to_string()
-                    return [TextContent(type="text", text=response_text)]
+                    return success_response(response_text)
                 else:
-                    return [
-                        TextContent(
-                            type="text", text="No temporal data available for summary"
-                        )
-                    ]
+                    return error_response("No temporal data available for summary")
 
             except Exception as e:
-                return [
-                    TextContent(type="text", text=f"Error in temporal summary: {e}")
-                ]
+                return error_response(f"Error in temporal summary: {e}")
 
         elif name == "temporal_sentiment_trend":
             if not _corpus:
-                return [
-                    TextContent(
-                        type="text", text="No corpus loaded. Use load_corpus first."
-                    )
-                ]
+                return no_corpus_response()
 
             try:
                 from ..temporal import TemporalAnalyzer
@@ -2153,27 +2022,16 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                 if not trend.empty:
                     response_text = f"Temporal Sentiment Trend ({period} periods, {aggregation}):\n\n"
                     response_text += trend.to_string()
-                    return [TextContent(type="text", text=response_text)]
+                    return success_response(response_text)
                 else:
-                    return [
-                        TextContent(
-                            type="text",
-                            text="No sentiment data available. Run sentiment analysis first.",
-                        )
-                    ]
+                    return error_response("No sentiment data available. Run sentiment analysis first.")
 
             except Exception as e:
-                return [
-                    TextContent(type="text", text=f"Error in temporal sentiment: {e}")
-                ]
+                return error_response(f"Error in temporal sentiment: {e}")
 
         elif name == "temporal_topics":
             if not _corpus:
-                return [
-                    TextContent(
-                        type="text", text="No corpus loaded. Use load_corpus first."
-                    )
-                ]
+                return no_corpus_response()
 
             try:
                 from ..temporal import TemporalAnalyzer
@@ -2190,26 +2048,17 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                     )
                     for period_key, topic_list in topics.items():
                         response_text += f"{period_key}: {', '.join(topic_list)}\n"
-                    return [TextContent(type="text", text=response_text)]
+                    return success_response(response_text)
                 else:
-                    return [
-                        TextContent(
-                            type="text",
-                            text="No temporal data available for topic extraction",
-                        )
-                    ]
+                    return error_response("No temporal data available for topic extraction")
 
             except Exception as e:
-                return [TextContent(type="text", text=f"Error in temporal topics: {e}")]
+                return error_response(f"Error in temporal topics: {e}")
 
         # Embedding-based linking tools
         elif name == "embedding_link":
             if not _corpus:
-                return [
-                    TextContent(
-                        type="text", text="No corpus loaded. Use load_corpus first."
-                    )
-                ]
+                return no_corpus_response()
 
             try:
                 from ..embedding_linker import EmbeddingLinker
@@ -2235,33 +2084,22 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                 )
 
                 stats = linker.get_link_statistics()
-                response_text = f"Embedding-based linking complete\n\n"
+                response_text = "Embedding-based linking complete\n\n"
                 response_text += f"Linked documents: {stats['linked_documents']}/{stats['total_documents']}\n"
                 response_text += f"Total links: {stats['total_links']}\n"
                 response_text += f"Average similarity: {stats['avg_similarity']:.3f}\n"
                 response_text += f"Similarity metric: {similarity_metric}\n"
 
-                return [TextContent(type="text", text=response_text)]
+                return success_response(response_text)
 
             except ImportError:
-                return [
-                    TextContent(
-                        type="text",
-                        text="ChromaDB is not installed. Install with: pip install chromadb",
-                    )
-                ]
+                return error_response("ChromaDB is not installed. Install with: pip install chromadb")
             except Exception as e:
-                return [
-                    TextContent(type="text", text=f"Error in embedding linking: {e}")
-                ]
+                return error_response(f"Error in embedding linking: {e}")
 
         elif name == "embedding_link_stats":
             if not _corpus:
-                return [
-                    TextContent(
-                        type="text", text="No corpus loaded. Use load_corpus first."
-                    )
-                ]
+                return no_corpus_response()
 
             try:
                 from ..embedding_linker import EmbeddingLinker
@@ -2274,12 +2112,7 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                 )
 
                 if not has_links:
-                    return [
-                        TextContent(
-                            type="text",
-                            text="No embedding links found. Run embedding_link first.",
-                        )
-                    ]
+                    return error_response("No embedding links found. Run embedding_link first.")
 
                 linker = EmbeddingLinker(_corpus, use_simple_embeddings=True)
                 stats = linker.get_link_statistics()
@@ -2292,21 +2125,17 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                 response_text += f"Min similarity: {stats['min_similarity']:.3f}\n"
                 response_text += f"Max similarity: {stats['max_similarity']:.3f}\n"
 
-                return [TextContent(type="text", text=response_text)]
+                return success_response(response_text)
 
             except Exception as e:
-                return [
-                    TextContent(
-                        type="text", text=f"Error getting embedding statistics: {e}"
-                    )
-                ]
+                return error_response(f"Error getting embedding statistics: {e}")
 
         else:
-            return [TextContent(type="text", text=f"Unknown tool: {name}")]
+            return error_response(f"Unknown tool: {name}")
 
     except Exception as e:
         logger.error(f"Error executing tool {name}: {e}", exc_info=True)
-        return [TextContent(type="text", text=f"Error: {str(e)}")]
+        return error_response(str(e))
 
 
 @app.list_prompts()

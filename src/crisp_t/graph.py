@@ -18,7 +18,7 @@ along with crisp-t.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 import logging
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 import networkx as nx
 import pandas as pd
@@ -301,7 +301,7 @@ class CrispGraph:
                     {},
                 )
 
-    def create_graph(self) -> Dict[str, Any]:
+    def create_graph(self) -> dict[str, Any]:
         """
         Create a graph representation of the corpus.
 
@@ -491,7 +491,7 @@ class CrispGraph:
         self,
         period: str = "W",
         include_temporal_edges: bool = True,
-    ) -> Dict[str, nx.Graph]:
+    ) -> dict[str, nx.Graph]:
         """
         Create time-sliced subgraphs based on document timestamps.
 

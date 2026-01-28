@@ -17,7 +17,7 @@ You should have received a copy of the GNU General Public License
 along with crisp-t.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from typing import Optional
+
 from pydantic import BaseModel, Field
 
 
@@ -26,11 +26,11 @@ class Document(BaseModel):
     Document model for storing text and metadata.
     """
     id: str = Field(..., description="Unique identifier for the document.")
-    name: Optional[str] = Field(None, description="Name of the corpus.")
-    description: Optional[str] = Field(None, description="Description of the corpus.")
+    name: str | None = Field(None, description="Name of the corpus.")
+    description: str | None = Field(None, description="Description of the corpus.")
     score: float = Field(0.0, description="Score associated with the document.")
     text: str = Field(..., description="The text content of the document.")
-    timestamp: Optional[str] = Field(None, description="Optional timestamp in ISO 8601 format (e.g., '2025-01-15T10:30:00Z').")
+    timestamp: str | None = Field(None, description="Optional timestamp in ISO 8601 format (e.g., '2025-01-15T10:30:00Z').")
     metadata: dict = Field(
         default_factory=dict, description="Metadata associated with the document."
     )

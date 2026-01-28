@@ -4,16 +4,22 @@ import shutil
 import warnings
 from pathlib import Path
 
-warnings.filterwarnings("ignore", category=DeprecationWarning)
-
 import click
 
 from . import __version__
 from .cluster import Cluster
 from .helpers.analyzer import get_analyzers
+from .helpers.clib.ui import (
+    format_error,
+    format_info,
+    format_success,
+    print_section_header,
+)
 from .helpers.initializer import initialize_corpus
 from .read_data import ReadData
 from .sentiment import Sentiment
+
+warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -318,11 +324,10 @@ def main(
         if covid:
             if not source:
                 raise click.ClickException(
-                    click.style("❌ Error: ", fg="red", bold=True)
-                    + "--source (output folder) is required when using --covid."
+                    format_error("--source (output folder) is required when using --covid.")
                 )
             click.echo(
-                click.style(f"\n📥 Downloading COVID narratives...", fg="yellow")
+                click.style("\n📥 Downloading COVID narratives...", fg="yellow")
             )
             click.echo(f"   From: {click.style(covid, fg='cyan')}")
             click.echo(f"   To: {click.style(source, fg='cyan')}")
@@ -331,15 +336,12 @@ def main(
 
                 QRUtils.read_covid_narratives(source, covid)
                 click.echo(
-                    click.style(
-                        f"✓ Successfully downloaded COVID narratives to {source}",
-                        fg="green",
-                    )
+                    format_success(f"Successfully downloaded COVID narratives to {source}")
                 )
             except Exception as e:
                 raise click.ClickException(
-                    click.style("❌ Download failed: ", fg="red", bold=True) + str(e)
-                )
+                    format_error(f"Download failed: {e}")
+                ) from e
 
         # Build corpus using helpers (source preferred over inp)
         # if not source or inp, use default folders or env vars
@@ -352,21 +354,18 @@ def main(
                 comma_separated_ignore_words=(ignore if ignore else None),
             )
             # If filters were provided with ':' while using --source, emit guidance message
-            if source and filters:
-                if any(":" in flt and "=" not in flt for flt in filters):
-                    click.echo(
-                        click.style("ℹ️  Note: ", fg="blue")
-                        + "Filters are not supported when using --source"
-                    )
+            if source and filters and any(":" in flt and "=" not in flt for flt in filters):
+                click.echo(
+                    format_info("Filters are not supported when using --source")
+                )
         except click.ClickException:
             raise
         except Exception as e:
             click.echo(
-                click.style("❌ Error initializing corpus: ", fg="red", bold=True)
-                + str(e),
+                format_error(f"Error initializing corpus: {e}"),
                 err=True,
             )
-            logger.error(f"Failed to initialize corpus: {e}")
+            logger.exception(f"Failed to initialize corpus: {e}")
             return
 
         # Handle multiple sources (unchanged behavior, but no filters applied here)
@@ -382,13 +381,12 @@ def main(
                         src, comma_separated_ignore_words=ignore if ignore else None
                     )
                     loaded_any = True
-                    click.echo(click.style("     ✓ Loaded successfully", fg="green"))
+                    click.echo(format_success("Loaded successfully", indent=5))
                 except Exception as e:
-                    logger.error(f"Failed to read source {src}: {e}")
+                    logger.exception(f"Failed to read source {src}: {e}")
                     raise click.ClickException(
-                        click.style("❌ Failed to load source: ", fg="red", bold=True)
-                        + str(e)
-                    )
+                        format_error(f"Failed to load source: {e}")
+                    ) from e
 
             if loaded_any:
                 corpus = read_data.create_corpus(
@@ -422,7 +420,7 @@ def main(
                     + str(e),
                     err=True,
                 )
-                logger.error(f"Failed to initialize analyzers: {e}")
+                logger.exception(f"Failed to initialize analyzers: {e}")
                 return
 
         # Load CSV data (deprecated)
@@ -494,27 +492,7 @@ def main(
         # Text Analysis Operations
         if text_analyzer:
             if nlp or codedict:
-                click.echo(
-                    click.style(
-                        "\n╔═══════════════════════════════════════════════╗",
-                        fg="blue",
-                        bold=True,
-                    )
-                )
-                click.echo(
-                    click.style(
-                        "║  📖 CODING DICTIONARY GENERATION             ║",
-                        fg="blue",
-                        bold=True,
-                    )
-                )
-                click.echo(
-                    click.style(
-                        "╚═══════════════════════════════════════════════╝",
-                        fg="blue",
-                        bold=True,
-                    )
-                )
+                print_section_header("CODING DICTIONARY GENERATION", emoji="📖", color="blue")
                 click.echo(
                     click.style("\nWhat is a Coding Dictionary?", fg="cyan", bold=True)
                 )
@@ -557,13 +535,13 @@ def main(
                         _save_output(coding_dict, out, "coding_dictionary")
                         click.echo(
                             click.style(
-                                f"\n✓ Coding dictionary saved successfully", fg="green"
+                                "\n✓ Coding dictionary saved successfully", fg="green"
                             )
                         )
                 except Exception as e:
                     click.echo(
                         click.style(
-                            f"\n❌ Error generating coding dictionary: ",
+                            "\n❌ Error generating coding dictionary: ",
                             fg="red",
                             bold=True,
                         )
@@ -571,27 +549,7 @@ def main(
                     )
 
             if nlp or topics:
-                click.echo(
-                    click.style(
-                        "\n╔═══════════════════════════════════════════════╗",
-                        fg="blue",
-                        bold=True,
-                    )
-                )
-                click.echo(
-                    click.style(
-                        "║  🎯 TOPIC MODELING (LDA)                     ║",
-                        fg="blue",
-                        bold=True,
-                    )
-                )
-                click.echo(
-                    click.style(
-                        "╚═══════════════════════════════════════════════╝",
-                        fg="blue",
-                        bold=True,
-                    )
-                )
+                print_section_header("TOPIC MODELING (LDA)", emoji="🎯", color="blue")
                 click.echo(
                     click.style("\nWhat is Topic Modeling?", fg="cyan", bold=True)
                 )
@@ -627,38 +585,15 @@ def main(
                     if out:
                         _save_output(topics_result, out, "topics")
                         click.echo(
-                            click.style(f"✓ Topics saved successfully", fg="green")
+                            format_success("Topics saved successfully")
                         )
                 except Exception as e:
                     click.echo(
-                        click.style(
-                            f"\n❌ Error generating topics: ", fg="red", bold=True
-                        )
-                        + str(e)
+                        format_error(f"Error generating topics: {e}")
                     )
 
             if nlp or assign:
-                click.echo(
-                    click.style(
-                        "\n╔═══════════════════════════════════════════════╗",
-                        fg="blue",
-                        bold=True,
-                    )
-                )
-                click.echo(
-                    click.style(
-                        "║  📌 DOCUMENT-TOPIC ASSIGNMENTS               ║",
-                        fg="blue",
-                        bold=True,
-                    )
-                )
-                click.echo(
-                    click.style(
-                        "╚═══════════════════════════════════════════════╝",
-                        fg="blue",
-                        bold=True,
-                    )
-                )
+                print_section_header("DOCUMENT-TOPIC ASSIGNMENTS", emoji="📌", color="blue")
                 click.echo(click.style("\nWhat does this do?", fg="cyan", bold=True))
                 click.echo(
                     "   Assigns each document to its most relevant topic based on content similarity."
@@ -685,38 +620,15 @@ def main(
                     if out:
                         _save_output(assignments, out, "topic_assignments")
                         click.echo(
-                            click.style(f"✓ Assignments saved successfully", fg="green")
+                            format_success("Assignments saved successfully")
                         )
                 except Exception as e:
                     click.echo(
-                        click.style(
-                            f"\n❌ Error assigning topics: ", fg="red", bold=True
-                        )
-                        + str(e)
+                        format_error(f"Error assigning topics: {e}")
                     )
 
             if nlp or cat:
-                click.echo(
-                    click.style(
-                        "\n╔═══════════════════════════════════════════════╗",
-                        fg="blue",
-                        bold=True,
-                    )
-                )
-                click.echo(
-                    click.style(
-                        "║  🏷️  CATEGORY ANALYSIS                       ║",
-                        fg="blue",
-                        bold=True,
-                    )
-                )
-                click.echo(
-                    click.style(
-                        "╚═══════════════════════════════════════════════╝",
-                        fg="blue",
-                        bold=True,
-                    )
-                )
+                print_section_header("CATEGORY ANALYSIS", emoji="🏷️", color="blue")
                 click.echo(
                     click.style("\nWhat is Category Analysis?", fg="cyan", bold=True)
                 )
@@ -737,40 +649,18 @@ def main(
                     if out:
                         _save_output(categories, out, "categories")
                         click.echo(
-                            click.style(
-                                f"\n✓ Categories saved successfully", fg="green"
-                            )
+                            format_success("Categories saved successfully")
                         )
                 except Exception as e:
                     click.echo(
                         click.style(
-                            f"\n❌ Error generating categories: ", fg="red", bold=True
+                            "\n❌ Error generating categories: ", fg="red", bold=True
                         )
                         + str(e)
                     )
 
             if nlp or summary:
-                click.echo(
-                    click.style(
-                        "\n╔═══════════════════════════════════════════════╗",
-                        fg="blue",
-                        bold=True,
-                    )
-                )
-                click.echo(
-                    click.style(
-                        "║  📝 TEXT SUMMARIZATION                       ║",
-                        fg="blue",
-                        bold=True,
-                    )
-                )
-                click.echo(
-                    click.style(
-                        "╚═══════════════════════════════════════════════╝",
-                        fg="blue",
-                        bold=True,
-                    )
-                )
+                print_section_header("TEXT SUMMARIZATION", emoji="📝", color="blue")
                 click.echo(
                     click.style("\nWhat is Text Summarization?", fg="cyan", bold=True)
                 )
@@ -792,38 +682,15 @@ def main(
                     if out:
                         _save_output(summary_result, out, "summary")
                         click.echo(
-                            click.style(f"\n✓ Summary saved successfully", fg="green")
+                            format_success("Summary saved successfully")
                         )
                 except Exception as e:
                     click.echo(
-                        click.style(
-                            f"\n❌ Error generating summary: ", fg="red", bold=True
-                        )
-                        + str(e)
+                        format_error(f"Error generating summary: {e}")
                     )
 
             if nlp or sentiment:
-                click.echo(
-                    click.style(
-                        "\n╔═══════════════════════════════════════════════╗",
-                        fg="blue",
-                        bold=True,
-                    )
-                )
-                click.echo(
-                    click.style(
-                        "║  😊 SENTIMENT ANALYSIS (VADER)               ║",
-                        fg="blue",
-                        bold=True,
-                    )
-                )
-                click.echo(
-                    click.style(
-                        "╚═══════════════════════════════════════════════╝",
-                        fg="blue",
-                        bold=True,
-                    )
-                )
+                print_section_header("SENTIMENT ANALYSIS (VADER)", emoji="😊", color="blue")
                 click.echo(
                     click.style("\nWhat is Sentiment Analysis?", fg="cyan", bold=True)
                 )
@@ -862,18 +729,11 @@ def main(
                     if out:
                         _save_output(sentiment_results, out, "sentiment")
                         click.echo(
-                            click.style(
-                                f"\n✓ Sentiment analysis saved successfully", fg="green"
-                            )
+                            format_success("Sentiment analysis saved successfully")
                         )
                 except Exception as e:
                     click.echo(
-                        click.style(
-                            f"\n❌ Error generating sentiment analysis: ",
-                            fg="red",
-                            bold=True,
-                        )
-                        + str(e)
+                        format_error(f"Error generating sentiment analysis: {e}")
                     )
 
         # Machine Learning Operations
@@ -881,27 +741,7 @@ def main(
             target_col = outcome
 
             if kmeans or ml:
-                click.echo(
-                    click.style(
-                        "\n╔═══════════════════════════════════════════════╗",
-                        fg="magenta",
-                        bold=True,
-                    )
-                )
-                click.echo(
-                    click.style(
-                        "║  🔍 K-MEANS CLUSTERING                       ║",
-                        fg="magenta",
-                        bold=True,
-                    )
-                )
-                click.echo(
-                    click.style(
-                        "╚═══════════════════════════════════════════════╝",
-                        fg="magenta",
-                        bold=True,
-                    )
-                )
+                print_section_header("K-MEANS CLUSTERING", emoji="🔍", color="magenta")
                 click.echo(
                     click.style("\nWhat is K-Means Clustering?", fg="cyan", bold=True)
                 )
@@ -935,30 +775,10 @@ def main(
                     _save_output(
                         {"clusters": clusters, "members": members}, out, "kmeans"
                     )
-                    click.echo(click.style(f"✓ Results saved successfully", fg="green"))
+                    click.echo(format_success("Results saved successfully"))
 
             if (cls or ml) and target_col:
-                click.echo(
-                    click.style(
-                        "\n╔═══════════════════════════════════════════════╗",
-                        fg="magenta",
-                        bold=True,
-                    )
-                )
-                click.echo(
-                    click.style(
-                        "║  🎯 CLASSIFICATION MODELS                    ║",
-                        fg="magenta",
-                        bold=True,
-                    )
-                )
-                click.echo(
-                    click.style(
-                        "╚═══════════════════════════════════════════════╝",
-                        fg="magenta",
-                        bold=True,
-                    )
-                )
+                print_section_header("CLASSIFICATION MODELS", emoji="🎯", color="magenta")
                 click.echo(
                     click.style(
                         "\nWhat are Classification Models?", fg="cyan", bold=True
@@ -1003,14 +823,13 @@ def main(
                         )
                     )
                     click.echo(
-                        click.style("  ✓ SVM classification complete", fg="green")
+                        format_success("SVM classification complete", indent=2)
                     )
                     if out:
                         _save_output(confusion_matrix, out, "svm_results")
                 except Exception as e:
                     click.echo(
-                        click.style(f"  ❌ Error in SVM: ", fg="red", bold=True)
-                        + str(e)
+                        format_error(f"Error in SVM: {e}", indent=2)
                     )
                 click.echo(
                     click.style(
@@ -1028,18 +847,13 @@ def main(
                         ml_analyzer.format_confusion_matrix_to_human_readable(cm)
                     )
                     click.echo(
-                        click.style(
-                            "  ✓ Decision tree classification complete", fg="green"
-                        )
+                        format_success("Decision tree classification complete", indent=2)
                     )
                     if out:
                         _save_output(cm, out, "decision_tree_results")
                 except Exception as e:
                     click.echo(
-                        click.style(
-                            f"  ❌ Error in Decision Tree: ", fg="red", bold=True
-                        )
-                        + str(e)
+                        format_error(f"Error in Decision Tree: {e}", indent=2)
                     )
 
             if nnet or ml:
@@ -1211,8 +1025,7 @@ def main(
                 )
             if filters and ((not inp) or (not out)):
                 raise click.ClickException(
-                    click.style("❌ Error: ", fg="red", bold=True)
-                    + "Both --inp and --out must be specified when using --filters."
+                    format_error("Both --inp and --out must be specified when using --filters.")
                 )
             output_path = pathlib.Path(out)
             # Allow both directory and a file path '.../corpus.json'
@@ -1225,39 +1038,18 @@ def main(
                 save_base = output_path / "corpus.json"
             read_data.write_corpus_to_json(str(save_base), corpus=corpus)
             click.echo(
-                click.style(f"\n✓ Corpus saved to: ", fg="green", bold=True)
-                + click.style(str(save_base), fg="cyan")
+                format_success(f"Corpus saved to: {click.style(str(save_base), fg='cyan')}")
             )
 
         if print_args and corpus:
-            click.echo(
-                click.style(
-                    "\n╔═══════════════════════════════════════════════╗",
-                    fg="blue",
-                    bold=True,
-                )
-            )
-            click.echo(
-                click.style(
-                    "║  📊 CORPUS DETAILS                           ║",
-                    fg="blue",
-                    bold=True,
-                )
-            )
-            click.echo(
-                click.style(
-                    "╚═══════════════════════════════════════════════╝\n",
-                    fg="blue",
-                    bold=True,
-                )
-            )
+            print_section_header("CORPUS DETAILS", emoji="📊", color="blue")
             # Join the print arguments into a single string
             print_command = " ".join(print_args) if print_args else None
             if print_command:
                 click.echo(corpus.pretty_print(show=print_command))
 
         click.echo(click.style("\n" + "=" * 60, fg="green", bold=True))
-        click.echo(click.style("✓ Analysis Complete!", fg="green", bold=True))
+        click.echo(format_success("Analysis Complete!"))
         click.echo(click.style("=" * 60 + "\n", fg="green", bold=True))
 
     except click.ClickException:
@@ -1269,7 +1061,7 @@ def main(
             import traceback
 
             traceback.print_exc()
-        raise click.ClickException(str(e))
+        raise click.ClickException(str(e)) from e
 
 
 def _save_output(data, base_path: str, suffix: str):
@@ -1305,8 +1097,7 @@ def _save_output(data, base_path: str, suffix: str):
                     f.write(str(data))
 
         click.echo(
-            click.style(f"   ✓ Results saved to: ", fg="green")
-            + click.style(str(save_path), fg="cyan")
+            format_success(f"Results saved to: {click.style(str(save_path), fg='cyan')}", indent=3)
         )
 
     except Exception as e:
