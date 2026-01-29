@@ -114,7 +114,13 @@ CRISP-T includes a **Model Context Protocol (MCP)** server, allowing AI agents (
 }
 ```
 
-The MCP server provides tools for semantic search, topic modeling, clustering, and more, allowing you to ask your AI assistant to "analyze the trends in this corpus" directly.
+The MCP server provides tools for semantic search, topic modeling, clustering, and more, allowing you to ask your AI assistant to "analyze the trends in this corpus" directly. **Most of the CLI commands are available as MCP tools.**
+
+---
+
+### Data model
+
+[![crisp-t](https://github.com/dermatologist/crisp-t/blob/develop/notes/arch.drawio.svg)](https://github.com/dermatologist/crisp-t/blob/develop/notes/arch.drawio.svg)
 
 ---
 
@@ -124,7 +130,6 @@ The MCP server provides tools for semantic search, topic modeling, clustering, a
 *   **[Demo / Tutorial](notes/DEMO.md)**
 *   [Full Documentation](https://dermatologist.github.io/crisp-t/)
 *   [Mettler et al. (2025)](https://aisel.aisnet.org/cais/vol56/iss1/14/) - Methodological Reflection
-*   [TDABM (Topological Data Analysis)](notes/TDABM.md)
 
 ## 🤝 Contribution & Contact
 
