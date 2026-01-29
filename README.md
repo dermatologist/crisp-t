@@ -11,311 +11,85 @@
 [![Wiki](https://img.shields.io/badge/CRISP-wiki-demo)](https://github.com/dermatologist/crisp-t/wiki)
 [![Documentation](https://badgen.net/badge/icon/documentation?icon=libraries&label)](https://dermatologist.github.io/crisp-t/)
 
-**TL;DR** 🚀 *CRISP-T is a qualitative research method and a toolkit to perform textual (e.g. topic modelling) and numeric (e.g. decision trees) analysis of mixed datasets for computational triangulation and sense-making (optionally) using large language models.* 👉 [See Demo](/notes/DEMO.md) and [download cheatsheet](https://nuchange.ca/wp-content/uploads/2026/01/CRISP-T_Cheatsheet.pdf). Give us a star ⭐️ if you find this useful!
+**TL;DR** 🚀 *CRISP-T is a qualitative research method and a toolkit to perform textual (e.g. topic modelling) and numeric (e.g. decision trees) analysis of mixed datasets for computational triangulation and sense-making (optionally) using large language models.*
+
+👉 **[CLI Cheatsheet](docs/cheatsheet.md)** | **[Demo & Examples](notes/DEMO.md)** | **[Documentation](https://dermatologist.github.io/crisp-t/)**
 
 <p align="center">
   <img src="https://github.com/dermatologist/crisp-t/blob/develop/notes/crisp-logo.jpg" />
 </p>
 
-## CRISP is ❌ **NOT** for:
+Give us a star ⭐️ if you find this useful!
 
-❌  Multimodal prediction. [Use this instead!](https://github.com/dermatologist/kedro-multimodal)
+## 📖 Introduction
 
-❌  [Sequential mixed methods research,](https://us.sagepub.com/sites/default/files/upm-assets/106361_book_item_106361.pdf) where qualitative and quantitative data are collected and analyzed in separate phases.
+**Qualitative research** focuses on collecting and analyzing textual data to explore complex phenomena. While qualitative and quantitative data are often used together, there is **no standard method for combining them.**
 
-❌  Convergent parallel mixed method designs where qualitative and quantitative data are collected simultaneously but analyzed separately.
+**CRISP-T** (Cross Industry Standard Process for Triangulation) integrates **textual data** (interview transcripts, field notes) and **numeric data** (surveys, demographics) into a unified corpus. It allows researchers to:
+- Perform **INDUCTIVE analysis** (finding patterns).
+- **Triangulate findings** by linking text topics to numeric trends.
+- Use **Semantic Search** to find relevant literature or code documents.
+- Leverage **GenAI** through our MCP server for agentic analysis.
 
-## CRISP is intended to:
+### Key Features
+*   ✅ **No Python required** - Full CLI support.
+*   ✅ **Interpretivist approach** - Designed for sense-making, not just data science.
+*   ✅ **GenAI Ready** - Augments LLMs with agentic tools.
+*   ✅ **Open Source** - GPL-3.0 License.
 
-✅  Facilitate grounded theory, where disparate datatypes (sometimes collected independently) are explored simultaneously with an [interpretivist world view](https://open.library.okstate.edu/gognresearchmethods/chapter/interpretivism/).
+---
 
-✅  Co-create reality reflectively, **often with GenAI in the loop.**
-
-✅  Perform [INDUCTIVE analysis](https://www.frankumstein.com/PDF/Psychology/Inductive%20Content%20Analysis.pdf) of textual and numeric data to generate insights, patterns, and theories.
-
-## The CRISP tools may also be useful for:
-
-⭕ Automated interview **coding dictionary** generation.
-
-⭕ Semantically filtering journal articles for **literature review**.
-
-⭕ Generating **visualizations** for qualitative (e.g. word cloud) and quantitative (e.g. [TDABM](https://github.com/dermatologist/crisp-t/wiki/Topological-Data-Analysis)) data.
-
-⭕ Many other ….
-
-## Key Features
-  ✅ CRISP is written in Python, but **you don’t need to know Python** to use it!
-
-  ✅ CRISP is not a data science tool; it’s a **sense-making** tool!
-
-  ✅ CRISP does not replace your analysis; it just **augments** it!
-
-  ✅ CRISP employs an **interpretivist approach**, and the same lens is required to comprehend its results!
-
-  ✅ CRISP does not use LLMs but can augment LLMs with *agentic* tools!
-
-  ✅ CRISP is designed to **simplify your life as a qualitative researcher!**
-
-  💯 CRISP is open-source! licensed under the GPL-3.0 License.
-
-*Watch this getting started video:*
-[![WATCH DHTI DEMO](https://img.youtube.com/vi/76rVJjUD_4Y/0.jpg)](https://www.youtube.com/watch?v=76rVJjUD_4Y)
-
-**Qualitative research** focuses on collecting and analyzing textual data—such as interview transcripts, open-ended survey responses, and field notes—to explore complex phenomena and human experiences. Researchers may also incorporate quantitative or external sources (e.g., demographics, census data, social media) to provide context and triangulate findings. Characterized by an inductive approach, qualitative research emphasizes generating theories from data rather than testing hypotheses. While qualitative and quantitative data are often used together, there is **no standard method for combining them.**
-
-**CRISP-T is a method and toolset** to integrate **textual data** (as a list of documents) and **numeric data** (as Pandas DataFrame) into structured classes that retain **metadata** from various analytical processes, such as **topic modeling** and **decision trees**. Researchers, with or without **GenAI assistance**, can define relationships between textual and numerical datasets based on their chosen **theoretical lens**.  An optional final analytical phase ensures that proposed relationships actually hold true. Further, if the numeric and textual datasets share the same ID, or if the textual metadata contains keywords that match numeric column names, both datasets are filtered simultaneously, ensuring alignment and facilitating triangulation. 👉 [See Demo](/notes/DEMO.md).
-
-CRISP-T implements **semantic search** using **ChromaDB** to find relevant documents or document chunks based on similarity to a query or reference documents. This is useful for literature reviews to find documents likely to fit the inclusion criteria within your corpus/search results. It can also be used for coding/annotating documents by finding relevant chunks within a specific document.
-
-An **MCP server** exposes all functionality as tools, resources, and prompts, enabling integration with AI agent platforms such as Claude desktop, VSCODE and other MCP-compatible clients. CRISP-T cannot directly code the documents, but it provides semantic chunk search that **may be used in association with other tools to achieve automated coding**. For example, VSCODE provides built-in tools for editing text and markdown files, which can be used to code documents based on semantic search.
-
-## Installation
+## 💻 Installation
 
 ```bash
 pip install crisp-t
 ```
 
-Include machine learning features for numeric data analysis (Recommended):
+**Recommended (for Machine Learning features):**
 ```bash
 pip install crisp-t[ml]
 ```
 
-Include XGBoost for gradient boosting features (Optional):
+**Optional (for XGBoost):**
 ```bash
 pip install crisp-t[xg]
-```
-* Mac users need to install libomp: `brew install libomp` for XGBoost to work. (Needed only if you want to use XGBoost)
-
-## Command Line Scripts [[cheatsheet](https://nuchange.ca/wp-content/uploads/2026/01/CRISP-T_Cheatsheet.pdf)]
-
-CRISP-T now provides four main command-line scripts:
-
-- `crisp` — Main CLI for qualitative triangulation and analysis (see below)
-- `crispviz` — Visualization CLI for corpus data (word frequencies, topic charts, wordclouds, etc.)
-- `crispt` — Corpus manipulation CLI (create, edit, query, and manage corpus objects)
-- `crisp-mcp` — Starts the MCP server for AI integration (see MCP section below)
-
-All scripts are installed as entry points and can be run directly from the command line after installation.
-
-### crisp (Analytical CLI)
-
-```bash
-crisp [OPTIONS]
+# Mac users: brew install libomp
 ```
 
-#### ⚠️ **First step is to create a corpus from sources (Data Import).**
-Source data is read from a directory containing text files (.txt, .pdf) and a single .csv file (for numeric data). The corpus is saved to `--out` folder and this folder can be used as input for all subsequent analyses.
+---
 
-⚠️ This import step only needs to be done once.
+## 🚀 Usage
 
-```bash
-crisp --source PATH --out PATH
-```
-*e.g., `crisp --source crisp_source --out crisp_input`*
+CRISP-T provides three main CLI tools. **See the [CLI Cheatsheet](docs/cheatsheet.md) for a full list of commands.**
 
-**🆕 Partial Import for Testing**: For large datasets, you can limit the import to test your workflow:
-```bash
-# Import only 10 text/PDF files and 100 CSV rows
-crisp --source crisp_source --out test_corpus --num 10 --rec 100
-```
-👉 [See Partial Import Guide](/notes/PARTIAL_IMPORT.md) for more details.
+### 1. `crisp` (Analysis)
+The main tool for data import and analysis.
 
+*   **Import Data:** `crisp --source ./data --out ./corpus`
+*   **Analyze Text:** `crisp --inp ./corpus --topics --sentiment`
+*   **Analyze Numbers:** `crisp --inp ./corpus --kmeans --regression`
 
-ℹ️ `crisp_input` is recommended for `--out` option above. The folder is created in the current directory. 👉 [See Demo](/notes/DEMO.md).
+### 2. `crispviz` (Visualization)
+Generates charts and graphs from your analysis.
 
-ℹ️ From here onwards, you can load the corpus from that folder using `--inp` option for all subsequent analyses. You can omit `--inp` if you are using the `crisp_input` folder, as it is the default for `--inp`. 👉 [See Demo](/notes/DEMO.md).
+*   **Word Cloud:** `crispviz --inp ./corpus --wordcloud --out ./viz`
+*   **Interactive Topics:** `crispviz --inp ./corpus --ldavis --out ./viz`
 
-⚡️ Advanced users may also load corpus from URL `--source` or multiple URLs using `--sources` option. ⚡️
+### 3. `crispt` (Corpus Toolkit)
+Manages corpus structure and detailed queries.
 
-⚠️ **While analysing multiple datasets, use `crisp --clear` option to clear cache before switching datasets.**
+*   **Semantic Search:** `crispt --inp ./corpus --semantic "query" --num 5`
+*   **Metadata:** `crispt --inp ./corpus --meta "project=phase1"`
 
-#### Input/Output Options
+👉 **[View the Step-by-Step Demo](notes/DEMO.md)**
 
-- `--source, -s PATH|URL`: Read source data from a directory (reads .txt, .pdf and a single .csv) or from a URL
-- `--sources PATH|URL`: Provide multiple sources; can be used multiple times
-- `--inp, -i PATH`: Load an existing corpus from a folder containing `corpus.json` (and optional `corpus_df.csv`)
-- `--out, -o PATH`: When saving the corpus, provide a folder path; the CLI writes `corpus.json` (and `corpus_df.csv` if available) into that folder. When saving analysis results (topics, sentiment, etc.), this acts as a base path: files are written with suffixes, e.g., `results_topics.json`.
-- `--unstructured, -t TEXT`: Text CSV column(s) to analyze/compare (can be used multiple times). This is useful when you have free-form text data in a DataFrame. If this is provided, those columns are used as documents.
-- `--ignore TEXT`: Comma-separated words to ignore during ingestion (applies to `--source/--sources`)
+---
 
-#### Analysis Options
+## 🤖 MCP Server (Agentic AI)
 
-- `--codedict`: Generate qualitative coding dictionary
-- `--topics`: Generate topic model using LDA
-- `--assign`: Assign documents to [topics](https://aisel.aisnet.org/cais/vol56/iss1/14/)
-- `--cat`: List categories of entire corpus or individual documents
-- `--summary`: Generate extractive text summary
-- `--sentiment`: Generate sentiment scores using VADER
-- `--sentence`: Generate sentence-level scores when applicable
-- `--nlp`: Generate all NLP reports (combines above text analyses)
-- `--nnet`, `--cls`, `--knn`, `--kmeans`, `--cart`, `--pca`, `--regression`, `--lstm`, `--ml`: Machine learning and clustering options (requires `crisp-t[ml]`)
-  - `--regression`: Perform linear or logistic regression (automatically detects binary outcomes for logistic regression)
-  - `--lstm`: Train LSTM model on text data to predict outcome variable (requires binary outcome and 'id' column for alignment)
-- `--visualize`: Generate visualizations (word clouds, topic charts, etc.)
-- `--num, -n INTEGER`: Number parameter (clusters, topics, epochs, etc.) - default: 3. **When used with `--source`**, limits the maximum number of text/PDF files to import.
-- `--rec, -r INTEGER`: Record parameter (top N results, recommendations) - default: 3. **When used with `--source`**, limits the maximum number of CSV rows to import.
-- `--filters, -f TEXT`: Filters to apply as `key=value` or `key:value` (can be used multiple times). Regular filters keep only documents/rows where `document.metadata[key] == value` or `dataframe[key] == value`. Special link filters support bidirectional filtering:
-  - `embedding:text` or `embedding=text` - Filter dataframe rows linked via document embedding_links (text→df direction)
-  - `embedding:df` or `embedding=df` - Filter documents linked from dataframe rows via embedding_links (df→text direction)
-  - `temporal:text` or `temporal=text` - Filter dataframe rows linked via document temporal_links (text→df direction)
-  - `temporal:df` or `temporal=df` - Filter documents linked from dataframe rows via temporal_links (df→text direction)
-  - Legacy: `=embedding` or `:embedding` and `=temporal` or `:temporal` (map to text→df direction)
+CRISP-T includes a **Model Context Protocol (MCP)** server, allowing AI agents (like Claude Desktop) to interact directly with your data.
 
-  Multiple filters can be combined.
-- `--verbose, -v`: Print verbose messages for debugging
-
-#### Data Sources
-
-- `--source, -s PATH|URL`: Read source data from a directory (reads .txt and .pdf) or from a URL
-- `--sources PATH|URL`: Provide multiple sources; can be used multiple times
-
-#### Display Options
-
-The `--print, -p` option provides flexible ways to display corpus information with color-coded output. You can use either quoted or unquoted syntax:
-
-**Syntax:**
-- Quoted: `--print "command subcommand"`
-- Unquoted: `--print command --print subcommand`
-
-**Basic Options:**
-- `--print all`: Display all corpus information (documents, dataframe, metadata)
-- `--print documents`: Show first 5 documents with IDs, names, and text snippets
-- `--print documents --print N`: Show first N documents (e.g., `--print documents --print 10` shows 10 documents)
-- `--print documents --print metadata`: Display metadata for all documents (categories, scores, etc.)
-
-**DataFrame Options:**
-- `--print dataframe`: Show DataFrame head with shape and column information
-- `--print dataframe --print metadata`: Display DataFrame columns starting with `metadata_` prefix
-- `--print dataframe --print stats`: Show descriptive statistics and value distributions
-
-**Metadata Options:**
-- `--print metadata`: Display all corpus metadata keys and values
-- `--print metadata --print KEY`: Show specific metadata (e.g., `--print metadata --print pca`)
-  - Available keys include: pca, numeric_clusters, kmeans, nnet_predictions, svm_confusion_matrix, decision_tree_accuracy, and more
-
-**Legacy Option:**
-- `--print stats`: (Deprecated) Use `--print dataframe --print stats` instead
-
-**Examples:**
-```bash
-# Show first 10 documents (unquoted syntax)
-crisp --print documents --print 10
-
-# Show first 10 documents (quoted syntax - backward compatible)
-crisp --print "documents 10"
-
-# View document metadata (unquoted)
-crisp --print documents --print metadata
-
-# View document metadata (quoted)
-crisp --print "documents metadata"
-
-# Check PCA results (unquoted)
-crisp --print metadata --print pca
-
-# View DataFrame statistics (unquoted)
-crisp --print dataframe --print stats
-
-# Filter by metadata (keeps documents with keywords="healthcare" and matching DataFrame rows)
-crisp --inp corpus_dir --filters keywords=healthcare --out filtered_output
-
-# Filter by embedding links - text→df direction (keeps only DataFrame rows linked from documents via embedding_links)
-crisp --inp corpus_dir --filters embedding:text --out filtered_output
-
-# Filter by embedding links - df→text direction (keeps only documents linked from DataFrame rows via embedding_links)
-crisp --inp corpus_dir --filters embedding:df --out filtered_output
-
-# Filter by temporal links - text→df direction (keeps only DataFrame rows linked from documents via temporal_links)
-crisp --inp corpus_dir --filters temporal:text --out filtered_output
-
-# Filter by temporal links - df→text direction (keeps only documents linked from DataFrame rows via temporal_links)
-crisp --inp corpus_dir --filters temporal:df --out filtered_output
-
-# Combine multiple filters (filter by keywords AND embedding links)
-crisp --inp corpus_dir --filters keywords=mask --filters embedding:text --out filtered_output
-```
-
-
-### crispviz (Visualization CLI)
-
-```bash
-crispviz [OPTIONS]
-```
-
-- `--inp, --source, --sources`: Input corpus or sources
-- `--out`: Output directory for PNG images
-- Visualization flags: `--freq`, `--by-topic`, `--wordcloud`, `--ldavis`, `--top-terms`, `--corr-heatmap`, `--tdabm`, `--graph`
-- Optional params: `--bins`, `--top-n`, `--columns`, `--topics-num`, `--graph-layout`, `--graph-nodes`
-
-**Visualization Options:**
-- `--freq`: Export word frequency distribution
-- `--by-topic`: Export distribution by dominant topic (requires LDA)
-- `--wordcloud`: Export topic wordcloud (requires LDA)
-- `--ldavis`: Export interactive LDA visualization as HTML (requires LDA and pyLDAvis)
-- `--top-terms`: Export top terms bar chart
-- `--corr-heatmap`: Export correlation heatmap from CSV numeric columns
-- `--tdabm`: Export TDABM visualization (requires TDABM analysis in corpus metadata). Use `crispt --tdabm` to perform the analysis first.
-- `--graph`: Export graph visualization (requires graph data in corpus metadata). Use `crispt --graph` to generate the graph first.
-- `--graph-layout`: Layout algorithm for graph visualization: `spring` (default), `circular`, `kamada_kawai`, or `spectral`
-- `--graph-nodes`: Comma-separated list of node types to include in the graph visualization. Valid types: `document`, `keyword`, `cluster`, `metadata`. Example: `--graph-nodes document,keyword` will only show document and keyword nodes (and their connecting edges). If omitted or set to `all`, all node types are included.
-- `--topics-num N`: Number of topics for LDA (default: 8, based on Mettler et al., 2025)
-
-### crispt (Corpus Manipulation CLI)
-
-```bash
-crispt [OPTIONS]
-```
-
-- `--id`, `--name`, `--description`: Corpus metadata
-- `--doc`: Add document as `id|name|text` or `id|text` (repeatable)
-- `--remove-doc`: Remove document by ID (repeatable)
-- `--meta`: Add/update corpus metadata as `key=value` (repeatable)
-- `--add-rel`: Add relationship as `first|second|relation` (repeatable)
-- `--clear-rel`: Clear all relationships
-- `--out`: Save corpus to folder/file as `corpus.json`
-- `--inp`: Load corpus from folder/file containing `corpus.json`
-- Query options:
-	- `--df-cols`: Print DataFrame column names
-	- `--df-row-count`: Print DataFrame row count
-	- `--df-row INDEX`: Print DataFrame row by index
-	- `--doc-ids`: Print all document IDs
-	- `--doc-id ID`: Print document by ID
-	- `--relationships`: Print all relationships
-	- `--relationships-for-keyword KEYWORD`: Print relationships involving a keyword
-- Semantic search (requires `chromadb`):
-	- `--semantic QUERY`: Perform semantic search with query string
-	- `--similar-docs DOC_IDS`: Find documents similar to comma-separated list of document IDs (useful for literature reviews)
-	- `--num N`: Number of results to return (default: 5). Used for `--semantic` and `--similar-docs`
-	- `--semantic-chunks QUERY`: Perform semantic search on document chunks. Returns matching chunks for a specific document (use with `--doc-id` and `--rec` for similarity threshold between 0 and 10 with a default of 8.5)
-	- `--rec THRESHOLD`: Threshold for semantic operations. For `--semantic-chunks`, use 0-10 (default: 8.5). For `--similar-docs`, use 0-1 (default: 0.7). Only results with similarity above this value are returned
-	- `--metadata-df`: Export collection metadata as DataFrame+
-	- `--metadata-keys KEYS`: Comma-separated metadata keys to include+
-- [TDABM analysis](/notes/TDABM.md):
-	- `--tdabm Y_VAR:X_VARS:RADIUS`: Perform Topological Data Analysis Ball Mapper (TDABM) analysis. Format: `y_variable:x_variables:radius` (e.g., `satisfaction:age,income:0.3`). Radius defaults to 0.3 if omitted.
-- Graph generation:
-	- `--graph`: Generate graph representation of the corpus. Creates nodes for documents, keywords, clusters (if present), and metadata (if DataFrame has aligning ID field). Edges connect documents to their keywords, clusters, and metadata. Graph data is stored in corpus metadata['graph']. **Requires documents to have keywords assigned first** (e.g., using text analysis features).
-
-ℹ️ *`--metadata-df` and `--metadata-keys` options can be used  to export or add metadata from NLP to the DataFrame. For example, you can extract sentiment scores or topic assignments as additional columns for numerical analysis. This is useful if dataframe and documents are aligned as in a survey response.*
-
-
-### [Example Usage](/notes/DEMO.md)
-
-When saving the corpus via `--out`, the CLI writes `corpus.json` (and `corpus_df.csv` if present) into the specified folder. If you pass a file path, only its parent directory is used for writing `corpus.json`.
-
-## MCP Server
-
-CRISP-T provides a Model Context Protocol (MCP) server that exposes all functionality as tools, resources, and prompts. This enables integration with AI assistants and other MCP-compatible clients.
-
-### Using the MCP Server
-
-<p align="center">
-  <img src="https://github.com/dermatologist/crisp-t/blob/develop/notes/crisp.gif" />
-</p>
-
-### Configuring MCP Clients
-#### Claude Desktop
-
-Add to your Claude Desktop configuration file:
+### Configuration (Claude Desktop)
 
 **MacOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
 **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
@@ -330,96 +104,22 @@ Add to your Claude Desktop configuration file:
 }
 ```
 
-#### Using with Other MCP Clients
+The MCP server provides tools for semantic search, topic modeling, clustering, and more, allowing you to ask your AI assistant to "analyze the trends in this corpus" directly.
 
-The server can be used with any MCP-compatible client. Configure your client to run the `crisp-mcp` command via stdio.
+---
 
-### Available Tools
+## 📚 Documentation & References
 
-The MCP server provides tools for:
+*   **[CLI Cheatsheet](docs/cheatsheet.md)**
+*   **[Demo / Tutorial](notes/DEMO.md)**
+*   [Full Documentation](https://dermatologist.github.io/crisp-t/)
+*   [Mettler et al. (2025)](https://aisel.aisnet.org/cais/vol56/iss1/14/) - Methodological Reflection
+*   [TDABM (Topological Data Analysis)](notes/TDABM.md)
 
-**Corpus Management**
-- `load_corpus` - Load corpus from folder or source
-- `save_corpus` - Save corpus to folder
-- `add_document` - Add new document
-- `remove_document` - Remove document by ID
-- `get_document` - Get document details
-- `list_documents` - List all document IDs
-- `add_relationship` - Link text keywords with numeric columns
-- `get_relationships` - Get all relationships
-- `get_relationships_for_keyword` - Query relationships by keyword
+## 🤝 Contribution & Contact
 
-**NLP/Text Analysis**
-- `assign_topics` - Assign documents to topics (creates keyword labels)
-- `extract_categories` - Extract common concepts
-- `generate_summary` - Generate extractive summary
-- `sentiment_analysis` - VADER sentiment analysis
+*   **License:** GPL-3.0
+*   **Author:** [Bell Eapen](https://nuchange.ca) | [Contact](https://nuchange.ca/contact)
+*   **Social:** [![Twitter Follow](https://img.shields.io/twitter/follow/beapen?style=social)](https://twitter.com/beapen)
 
-**Semantic Search** (requires `chromadb`)
-- `semantic_search` - Find documents similar to a query using semantic similarity
-- `find_similar_documents` - Find documents similar to a set of reference documents (useful for literature reviews and qualitative research)
-- `semantic_chunk_search` - Find relevant chunks within a specific document (useful for coding/annotating documents)
-- `export_metadata_df` - Export ChromaDB metadata as DataFrame
-
-**DataFrame/CSV Operations**
-- `get_df_columns` - Get DataFrame column names
-- `get_df_row_count` - Get number of rows
-- `get_df_row` - Get specific row by index
-
-**Machine Learning** (requires `crisp-t[ml]`)
-- `kmeans_clustering` - K-Means clustering
-- `decision_tree_classification` - Decision tree with feature importance
-- `svm_classification` - SVM classification
-- `neural_network_classification` - Neural network classification
-- `regression_analysis` - Linear/logistic regression with coefficients
-- `pca_analysis` - Principal Component Analysis
-- `association_rules` - Apriori association rules
-- `knn_search` - K-nearest neighbors search
-- `lstm_text_classification` - LSTM model for text-based outcome prediction
-
-### Resources
-
-The server exposes corpus documents as resources:
-- `corpus://document/{id}` - Access document text by ID
-
-### Prompts
-
-- `analysis_workflow` - Complete step-by-step analysis guide based on INSTRUCTIONS.md
-- `triangulation_guide` - Guide for triangulating qualitative and quantitative findings
-
-### [Example MCP commands](/notes/DEMO.md)
-
-## Role of CRISP-T in research and practice
-
-The workflow enables AI assistants to help conduct comprehensive analyses by combining text analytics, machine learning, and triangulation of qualitative-quantitative findings.
-
-For example, in market research, a company collects:
-- **Textual** feedback from customer support interactions.
-- **Numerical** data on customer retention and sales performance.
-Using this framework, business analysts can investigate how recurring concerns in feedback correspond to measurable business outcomes.
-
-## Framework Documentation
-
-For detailed information about available functions, metadata handling, and theoretical frameworks, see the [comprehensive user instructions](/notes/INSTRUCTION.md). For semantic search examples and best practices, see the [Semantic Search Guide](/notes/SEMANTIC_SEARCH.md). Documentation (WIP) is also available [here](https://dermatologist.github.io/crisp-t/).
-
-### Data model
-
-[![crisp-t](https://github.com/dermatologist/crisp-t/blob/develop/notes/arch.drawio.svg)](https://github.com/dermatologist/crisp-t/blob/develop/notes/arch.drawio.svg)
-
-## References
-
-* [Mettler et al. (2025) Computational Text Analysis for Qualitative IS Research: A Methodological Reflection](https://aisel.aisnet.org/cais/vol56/iss1/14/)
-* [TDABM (Topological Data Analysis Ball Mapper) Rudkin and Dlotko (2024)](/notes/TDABM.md)
-
-
-## Citation
-
-* Released on 10/11/2025 for presentation at [ICIS 2025](https://icis2025.aisconferences.org/) conference.
-* Paper coming soon. Cite this repository in the meantime:
-
-## Give us a star ⭐️
-If you find this project useful, give us a star. It helps others discover the project.
-
-## Contact
-
-* [Bell Eapen](https://nuchange.ca) ([UIS](https://www.uis.edu/directory/bell-punneliparambil-eapen)) |  [Contact](https://nuchange.ca/contact) | [![Twitter Follow](https://img.shields.io/twitter/follow/beapen?style=social)](https://twitter.com/beapen)
+Currently targeted for presentation at [ICIS 2025](https://icis2025.aisconferences.org/).
