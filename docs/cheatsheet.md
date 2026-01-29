@@ -45,6 +45,8 @@ Used to bring data into the CRISP-T environment.
 | **Coding Dictionary**| `--codedict` | Generate a qualitative coding dictionary. |
 | **All NLP** | `--nlp` | Run *all* above NLP analyses at once. |
 
+*   `--visualize`: Prepare data for visualization; used with `--assign` (topic assignments) and with `crispviz`.
+
 ### Numeric & Statistical Analysis
 
 | Action | Flag | Description |
@@ -65,6 +67,7 @@ Used to bring data into the CRISP-T environment.
 *   `--filters <key=val>`: Filter data before analysis (e.g., `category=A`).
 *   `--outcome <col>`: Target variable for ML/Regression.
 *   `--include <cols>`: specific columns to include in analysis.
+*   `--aggregation <strategy>`: Aggregation strategy when multiple documents link to one row. Choices: `majority`, `mean`, `first`, `mode`. (Used with cross-modal analysis. [More details](../notes/text_metadata_outcomes_ml.md)).
 
 ---
 
@@ -155,6 +158,19 @@ crisp --inp ./survey_corpus --kmeans --num 5 --topics --num 5
 ```bash
 # Find documents about specific topic
 crispt --inp ./corpus --semantic "patient anxiety" --num 10
+```
+
+### 4. Cross-Modal Analysis (Text + CSV)
+```bash
+# Import CSV that contains free-text comments and numeric outcomes
+crisp --source ./survey_data --unstructured "comments" --out ./survey_corpus
+
+# Link documents to rows by ID, then run classification using linked text as features
+crisp --inp ./survey_corpus --linkage id --outcome satisfaction_score --cls --aggregation majority
+
+# Use embedding linking to aggregate document embeddings to rows then run regression
+crispt --inp ./survey_corpus --filters embedding:text --out ./linked && \
+crisp --inp ./linked --outcome satisfaction_score --regression
 ```
 
 ---
