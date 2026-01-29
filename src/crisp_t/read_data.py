@@ -85,6 +85,35 @@ def extract_timestamp_from_text(text: str) -> str | None:
     return None
 
 
+def extract_tag_from_filename(filename: str) -> str | None:
+    """
+    Extract a tag from a filename by splitting on - or _ and taking the first part.
+
+    Args:
+        filename: The filename to extract tag from (e.g., "interview-1.txt")
+
+    Returns:
+        The tag (first part before - or _) or None if no separator found.
+        The tag is the part before the first - or _ character.
+        Example: "interview-1.txt" -> "interview", "report_2025.pdf" -> "report"
+    """
+    if not filename:
+        return None
+
+    # Remove file extension
+    name_without_ext = Path(filename).stem
+
+    # Split on - or _ and get the first part
+    if "-" in name_without_ext:
+        tag = name_without_ext.split("-")[0]
+        return tag if tag else None
+    elif "_" in name_without_ext:
+        tag = name_without_ext.split("_")[0]
+        return tag if tag else None
+
+    return None
+
+
 class ReadData:
 
     def __init__(self, corpus: Corpus | None = None, source=None):
@@ -257,7 +286,11 @@ class ReadData:
         file_name.parent.mkdir(parents=True, exist_ok=True)
         with open(file_name, "w") as f:
             json.dump(corp.model_dump(exclude={"df", "visualization"}), f, indent=4)
-        if corp.df is not None and isinstance(corp.df, pd.DataFrame) and not corp.df.empty:
+        if (
+            corp.df is not None
+            and isinstance(corp.df, pd.DataFrame)
+            and not corp.df.empty
+        ):
             corp.df.to_csv(df_name, index=False)
         logger.info("Corpus written to %s", file_name)
 
@@ -349,7 +382,7 @@ class ReadData:
         file_name = Path(file_name)
         if not file_name.exists():
             raise ValueError(f"File not found: {file_name}")
-        
+
         # Read CSV with optional row limit
         if max_rows is not None:
             df = pd.read_csv(file_name, nrows=max_rows)
@@ -508,8 +541,12 @@ class ReadData:
         return self._corpus
 
     def read_source(
-        self, source, comma_separated_ignore_words=None, comma_separated_text_columns="",
-        max_text_files=None, max_csv_rows=None
+        self,
+        source,
+        comma_separated_ignore_words=None,
+        comma_separated_text_columns="",
+        max_text_files=None,
+        max_csv_rows=None,
     ):
         _CSV_EXISTS = False
 
@@ -550,40 +587,49 @@ class ReadData:
             self._source = source
             logger.info(f"Reading data from folder: {source}")
             file_list = os.listdir(source)
-            
+
             # Separate files by type for limiting
-            text_files = [f for f in file_list if f.endswith('.txt')]
-            pdf_files = [f for f in file_list if f.endswith('.pdf')]
-            csv_files = [f for f in file_list if f.endswith('.csv')]
-            
+            text_files = [f for f in file_list if f.endswith(".txt")]
+            pdf_files = [f for f in file_list if f.endswith(".pdf")]
+            csv_files = [f for f in file_list if f.endswith(".csv")]
+
             # Apply limits to text and PDF files
             text_pdf_count = 0
-            text_pdf_limit = max_text_files if max_text_files is not None else float('inf')
-            
+            text_pdf_limit = (
+                max_text_files if max_text_files is not None else float("inf")
+            )
+
             if max_text_files is not None:
-                logger.info(f"Limiting import to maximum {max_text_files} text/PDF files")
-            
+                logger.info(
+                    f"Limiting import to maximum {max_text_files} text/PDF files"
+                )
+
             # Process text files
             for file_name in tqdm(
                 text_files, desc="Reading text files", disable=len(text_files) < 10
             ):
                 if text_pdf_count >= text_pdf_limit:
                     break
-                    
+
                 file_path = source_path / file_name
                 with open(file_path) as f:
                     read_from_file = f.read()
                     read_from_file = apply_ignore_patterns(read_from_file)
                     # Extract timestamp from content
                     doc_timestamp = extract_timestamp_from_text(read_from_file)
+                    # Extract tag from filename if it contains - or _
+                    tag = extract_tag_from_filename(file_name)
                     # self._content removed
+                    metadata = {
+                        "source": str(file_path),
+                        "file_name": file_name,
+                    }
+                    if tag:
+                        metadata["tag"] = tag
                     _document = Document(
                         text=read_from_file,
                         timestamp=doc_timestamp,
-                        metadata={
-                            "source": str(file_path),
-                            "file_name": file_name,
-                        },
+                        metadata=metadata,
                         id=file_name,
                         score=0.0,
                         name="",
@@ -591,14 +637,14 @@ class ReadData:
                     )
                     self._documents.append(_document)
                     text_pdf_count += 1
-            
+
             # Process PDF files
             for file_name in tqdm(
                 pdf_files, desc="Reading PDF files", disable=len(pdf_files) < 10
             ):
                 if text_pdf_count >= text_pdf_limit:
                     break
-                    
+
                 file_path = source_path / file_name
                 with open(file_path, "rb") as f:
                     reader = PdfReader(f)
@@ -615,14 +661,19 @@ class ReadData:
                     read_from_file = apply_ignore_patterns(read_from_file)
                     # Extract timestamp from content
                     doc_timestamp = extract_timestamp_from_text(read_from_file)
+                    # Extract tag from filename if it contains - or _
+                    tag = extract_tag_from_filename(file_name)
                     # self._content removed
+                    metadata = {
+                        "source": str(file_path),
+                        "file_name": file_name,
+                    }
+                    if tag:
+                        metadata["tag"] = tag
                     _document = Document(
                         text=read_from_file,
                         timestamp=doc_timestamp,
-                        metadata={
-                            "source": str(file_path),
-                            "file_name": file_name,
-                        },
+                        metadata=metadata,
                         id=file_name,
                         score=0.0,
                         name="",
@@ -630,7 +681,7 @@ class ReadData:
                     )
                     self._documents.append(_document)
                     text_pdf_count += 1
-            
+
             # Process CSV files
             for file_name in csv_files:
                 file_path = source_path / file_name

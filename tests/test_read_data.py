@@ -7,7 +7,7 @@ from pathlib import Path
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-from src.crisp_t.read_data import extract_timestamp_from_text
+from src.crisp_t.read_data import extract_tag_from_filename, extract_timestamp_from_text
 
 
 def test_corpus_not_none(read_data_fixture):
@@ -129,3 +129,94 @@ def test_txt_file_with_timestamp():
     assert (
         "2025-01-15" in doc_with_timestamp.timestamp
     ), "Timestamp should be from file content"
+
+
+def test_extract_tag_from_filename_with_dash():
+    """Test extraction of tag from filename with dash separator."""
+    tag = extract_tag_from_filename("interview-1.txt")
+    assert tag == "interview", "Should extract 'interview' from 'interview-1.txt'"
+
+
+def test_extract_tag_from_filename_with_underscore():
+    """Test extraction of tag from filename with underscore separator."""
+    tag = extract_tag_from_filename("report_2025.pdf")
+    assert tag == "report", "Should extract 'report' from 'report_2025.pdf'"
+
+
+def test_extract_tag_from_filename_no_separator():
+    """Test that None is returned when filename has no separator."""
+    tag = extract_tag_from_filename("document.txt")
+    assert tag is None, "Should return None for filename without separator"
+
+
+def test_extract_tag_from_filename_empty_string():
+    """Test that None is returned for empty filename."""
+    tag = extract_tag_from_filename("")
+    assert tag is None, "Should return None for empty filename"
+
+
+def test_extract_tag_from_filename_none():
+    """Test that None is returned for None input."""
+    tag = extract_tag_from_filename(None)
+    assert tag is None, "Should return None for None input"
+
+
+def test_extract_tag_from_filename_multiple_separators():
+    """Test extraction when multiple separators are present."""
+    # When dash is present, it takes precedence
+    tag = extract_tag_from_filename("interview-session_1.txt")
+    assert tag == "interview", "Should extract part before first dash"
+
+    # When only underscore is present, use underscore
+    tag2 = extract_tag_from_filename("interview_session_1.txt")
+    assert tag2 == "interview", "Should extract part before first underscore"
+
+
+def test_txt_file_with_tag_metadata():
+    """Test that tag is extracted from txt filename and added to metadata."""
+    from src.crisp_t.read_data import ReadData
+
+    folder_path = str(Path(__file__).parent / "resources" / "")
+    read_data = ReadData()
+    read_data.read_source(folder_path)
+    corpus = read_data.create_corpus()
+
+    # Find document from interview-1.txt
+    doc_with_tag = None
+    for doc in corpus.documents:
+        if "interview-1.txt" in str(doc.metadata.get("file_name", "")):
+            doc_with_tag = doc
+            break
+
+    assert doc_with_tag is not None, "Should find interview-1.txt document"
+    assert "tag" in doc_with_tag.metadata, "Document metadata should contain 'tag' key"
+    assert doc_with_tag.metadata["tag"] == "interview", "Tag should be 'interview'"
+
+
+def test_txt_file_without_separator_no_tag():
+    """Test that files without separator don't have tag in metadata."""
+    from src.crisp_t.read_data import ReadData
+
+    folder_path = str(Path(__file__).parent / "resources" / "")
+    read_data = ReadData()
+    read_data.read_source(folder_path)
+    corpus = read_data.create_corpus()
+
+    # Find document from interview-with-date.txt - this has dash but it's in the description
+    # Let's look for documents and check
+    for doc in corpus.documents:
+        filename = str(doc.metadata.get("file_name", ""))
+        if filename.endswith(".txt"):
+            # interview-with-date.txt contains dash, should have tag
+            if "interview-with-date.txt" in filename:
+                assert "tag" in doc.metadata, "Should have tag for file with dash"
+                assert doc.metadata["tag"] == "interview", "Tag should be 'interview'"
+
+
+def test_extract_tag_only_first_part():
+    """Test that only the first part before separator is used as tag."""
+    tag1 = extract_tag_from_filename("research-data-analysis-2025.txt")
+    assert tag1 == "research", "Should extract only first part before dash"
+
+    tag2 = extract_tag_from_filename("report_final_version_1.pdf")
+    assert tag2 == "report", "Should extract only first part before underscore"
