@@ -348,8 +348,8 @@ def main(
         try:
             text_cols = ",".join(unstructured) if unstructured else ""
             # When using --source, num and rec are used for import limits
-            max_text_files = num if source else None
-            max_csv_rows = rec if source else None
+            max_text_files = num if source and num > 3 else None
+            max_csv_rows = rec if source and rec > 3 else None
             corpus = initialize_corpus(
                 source=source,
                 inp=inp,
@@ -380,13 +380,13 @@ def main(
             )
             loaded_any = False
             # When using --sources, num and rec are used for import limits
-            max_text_files = num if sources else None
-            max_csv_rows = rec if sources else None
+            max_text_files = num if sources and num > 3 else None
+            max_csv_rows = rec if sources and rec > 3 else None
             for src in sources:
                 click.echo(f"   • Reading from: {click.style(src, fg='cyan')}")
                 try:
                     read_data.read_source(
-                        src, 
+                        src,
                         comma_separated_ignore_words=ignore if ignore else None,
                         max_text_files=max_text_files,
                         max_csv_rows=max_csv_rows,
