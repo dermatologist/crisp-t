@@ -91,6 +91,10 @@ Run these commands *after* performing the relevant analysis with `crisp` or `cri
 *   `--inp <dir>`: Input corpus directory.
 *   `--topics-num <n>`: Number of topics to assume for visualization (default: 8).
 *   `--bins <n>`: Number of bins for histograms (default: 100).
+*   `--top-n <n>`: Number of top terms to display in `--top-terms` (default: 20).
+*   `--corr-columns <col1,col2>`: Comma-separated numeric columns to use for `--corr-heatmap`; otherwise columns are auto-selected.
+*   `--graph-nodes <types>`: Comma-separated node types to include in graph viz: `document`, `keyword`, `cluster`, `metadata` (use `all` for every type).
+*   `--graph-layout <name>`: Layout algorithm for graph viz: `spring` (default), `circular`, `kamada_kawai`, or `spectral`.
 
 ---
 
