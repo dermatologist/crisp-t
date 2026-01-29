@@ -119,11 +119,14 @@ Advanced tools for managing the corpus structure.
 **Linking Text to Numbers:**
 *   **Keyword Linking**: Default. Matches text keywords to dataframe columns.
 *   **ID Linking**: Use `--linkage id` to match Document ID to a DataFrame column.
-*   **Temporal Linking**: `crispt --temporal-link "nearest:timestamp"`
-*   **Embedding Linking**: `crispt --embedding-link "cosine:1:0.7"`
+*   **Temporal Linking**: `crispt --temporal-link "window:timestamp:300"` links by time proximity (in seconds). [More details](../notes/TEMPORAL_ANALYSIS.md)
+*   **Embedding Linking**: `crispt --embedding-link "cosine:1:0.7"` [More details](../notes/EMBEDDING_LINKING.md)
 
 **Filtering:**
-*   `--filters key=value`: Standard exact match filter.
+*   `--filters key=value` or `--filters key:value`: Standard exact match filter. Both `=` and `:` are accepted as separators for key/value filters.
+*   Special link filters: `--filters embedding:text`, `--filters embedding:df`, `--filters temporal:text`, `--filters temporal:df` (you can also use `=` instead of `:`). These select by linked rows or documents using embedding or temporal links.
+*   Legacy shorthand mappings: `--filters =embedding` or `--filters :embedding` are mapped to `embedding:text`; `--filters =temporal` or `--filters :temporal` are mapped to `temporal:text`.
+*   ID linkage: `--filters id=<value>` filters to a specific document/row by ID. Using `--filters id:` or `--filters id=` with no value syncs remaining documents and dataframe rows by matching `id` values after other filters are applied.
 *   `--temporal-filter "start:end"`: Filter by time range (ISO format).
 
 ---
