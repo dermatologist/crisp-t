@@ -1,8 +1,9 @@
 import logging
 import math
 from collections import Counter
+from collections.abc import Iterable, Sequence
 from pathlib import Path
-from typing import Iterable, Sequence, Tuple, cast
+from typing import cast
 
 import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
@@ -100,12 +101,12 @@ class QRVisualize:
         text_column: str = "Text",
         bins: int = 100,
         show: bool = True,
-    ) -> Tuple[Figure, Axes]:
+    ) -> tuple[Figure, Axes]:
         if df is None:
             try:
                 df = pd.DataFrame(self.corpus.visualization["assign_topics"])
             except Exception as e:
-                raise ValueError(f"Failed to create DataFrame from corpus: {e}")
+                raise ValueError(f"Failed to create DataFrame from corpus: {e}") from e
         df = self._ensure_columns(df, [text_column])
         doc_lens = df[text_column].dropna().map(len).tolist()
         if not doc_lens:
@@ -155,12 +156,12 @@ class QRVisualize:
         text_column: str = "Text",
         bins: int = 100,
         show: bool = True,
-    ) -> Tuple[Figure, np.ndarray]:
+    ) -> tuple[Figure, np.ndarray]:
         if df is None:
             try:
                 df = pd.DataFrame(self.corpus.visualization["assign_topics"])
             except Exception as e:
-                raise ValueError(f"Failed to create DataFrame from corpus: {e}")
+                raise ValueError(f"Failed to create DataFrame from corpus: {e}") from e
         df = self._ensure_columns(df, [topic_column, text_column])
         unique_topics = sorted(df[topic_column].dropna().unique())
         if not unique_topics:
@@ -227,12 +228,12 @@ class QRVisualize:
         folder_path: str | None = None,
         max_words: int = 50,
         show: bool = True,
-    ) -> Tuple[Figure, np.ndarray]:
+    ) -> tuple[Figure, np.ndarray]:
         if not topics:
             try:
                 topics = self.corpus.visualization["word_cloud"]
             except Exception as e:
-                raise ValueError(f"Failed to retrieve topics from corpus: {e}")
+                raise ValueError(f"Failed to retrieve topics from corpus: {e}") from e
         n_topics = len(topics)
         n_cols = min(3, n_topics)
         n_rows = math.ceil(n_topics / n_cols)
@@ -283,12 +284,12 @@ class QRVisualize:
         folder_path: str | None = None,
         ascending: bool = False,
         show: bool = True,
-    ) -> Tuple[Figure, Axes]:
+    ) -> tuple[Figure, Axes]:
         if df is None:
             try:
                 df = pd.DataFrame(self.corpus.visualization["assign_topics"])
             except Exception as e:
-                raise ValueError(f"Failed to create DataFrame from corpus: {e}")
+                raise ValueError(f"Failed to create DataFrame from corpus: {e}") from e
         if top_n <= 0:
             raise ValueError("top_n must be greater than zero.")
 
@@ -319,12 +320,12 @@ class QRVisualize:
         folder_path: str | None = None,
         cmap: str = "coolwarm",
         show: bool = True,
-    ) -> Tuple[Figure, Axes]:
+    ) -> tuple[Figure, Axes]:
         if df is None:
             try:
                 df = pd.DataFrame(self.corpus.visualization["assign_topics"])
             except Exception as e:
-                raise ValueError(f"Failed to create DataFrame from corpus: {e}")
+                raise ValueError(f"Failed to create DataFrame from corpus: {e}") from e
         if columns:
             df = self._ensure_columns(df, columns)
             data = df[list(columns)]
@@ -350,11 +351,11 @@ class QRVisualize:
 
     def plot_importance(
         self,
-        topics: Sequence[Tuple[int, Sequence[Tuple[str, float]]]],
+        topics: Sequence[tuple[int, Sequence[tuple[str, float]]]],
         processed_docs: Sequence[Sequence[str]],
         folder_path: str | None = None,
         show: bool = True,
-    ) -> Tuple[Figure, np.ndarray]:
+    ) -> tuple[Figure, np.ndarray]:
         if not topics:
             raise ValueError("No topics provided to plot importance.")
         if not processed_docs:
@@ -509,7 +510,7 @@ class QRVisualize:
                         transform=ax.transAxes,
                     )
             except Exception as e:
-                logger.error(f"Error occurred while processing document {i - 1}: {e}")
+                logger.exception(f"Error occurred while processing document {i - 1}: {e}")
                 continue
 
         plt.subplots_adjust(wspace=0, hspace=0)
@@ -796,7 +797,7 @@ class QRVisualize:
             return html_string
 
         except Exception as e:
-            logger.error(f"Error generating LDA visualization: {e}")
+            logger.exception(f"Error generating LDA visualization: {e}")
             raise
 
     def draw_tdabm(
@@ -847,7 +848,6 @@ class QRVisualize:
         locations = [landmark["location"] for landmark in landmarks]
         counts = [landmark["count"] for landmark in landmarks]
         mean_ys = [landmark["mean_y"] for landmark in landmarks]
-        landmark_ids = [landmark["id"] for landmark in landmarks]
 
         # Perform PCA to reduce to 2 components (PC1, PC2)
         from sklearn.decomposition import PCA
@@ -908,7 +908,7 @@ class QRVisualize:
             sizes = [500] * len(counts)
 
         # Draw circles for landmarks
-        scatter = ax.scatter(
+        ax.scatter(
             positions[:, 0],
             positions[:, 1],
             s=sizes,
@@ -934,7 +934,6 @@ class QRVisualize:
             )
 
         # Set labels and title
-        x_vars = tdabm_data.get("x_variables", [])
         y_var = tdabm_data.get("y_variable", "y")
 
         # Axis labels reflect PCA components
@@ -1067,7 +1066,7 @@ class QRVisualize:
             G.add_node(node_id, label=label, **properties)
 
             # Set node label (use name property if available)
-            if "name" in properties and properties["name"]:
+            if properties.get("name"):
                 node_labels[node_id] = str(properties["name"])
             else:
                 # For keywords, remove the "keyword:" prefix

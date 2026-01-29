@@ -205,3 +205,212 @@ crispviz --wordcloud --out viz_out/
 <p align="center">
   <img src="https://github.com/dermatologist/crisp-t/blob/develop/notes/wordcloud.jpg" />
 </p>
+
+## More examples — comprehensive CLI usage
+
+The following grouped examples show common and advanced usage patterns for the three CLIs: `crisp`, `crispt`, and `crispviz`. These are practical, copy-pasteable command lines that demonstrate option combinations and formats discussed in this demo and cheatsheet.
+
+### A. Data import & basic workflow (`crisp`)
+
+# Import a folder with text files and a CSV; specify unstructured text column
+```bash
+crisp --source ./raw_data --unstructured "comments" --out ./crisp_input
+```
+
+# Import but limit text files and CSV rows when ingesting large sources
+```bash
+crisp --source ./raw_data --out ./crisp_input --num 10 --rec 500
+```
+
+# Import CSV placed in the source folder; ignore specific stopwords/columns
+```bash
+crisp --source ./survey --unstructured "comments" --ignore "interviewer,interviewee" --out ./survey_corpus
+```
+
+### B. Filtering and linking (`crisp` + `crispt`) — examples
+
+# Exact-match filters (both `=` and `:` separators supported)
+```bash
+crisp --inp ./crisp_input --filters category=Health --topics
+crisp --inp ./crisp_input --filters category:Health --topics
+```
+
+# Special link filters (text→df and df→text)
+```bash
+# Filter dataframe rows that are linked from documents via embeddings
+crispt --inp ./crisp_input --filters embedding:text --out ./linked_by_embedding
+
+# Filter documents that are linked from dataframe rows via temporal links
+crispt --inp ./crisp_input --filters temporal:df --out ./linked_docs
+```
+
+# Legacy shorthand mappings — both map to `embedding:text` or `temporal:text`
+```bash
+crispt --inp ./crisp_input --filters =embedding
+crispt --inp ./crisp_input --filters :temporal
+```
+
+# ID linkage: filter to a single ID, or sync remaining docs↔rows with blank value
+```bash
+# Filter to specific id
+crisp --inp ./crisp_input --filters id=12345 --nlp
+
+# Sync documents and dataframe rows by ID after other filters
+crisp --inp ./crisp_input --filters id: --out ./synced_output
+```
+
+### C. Text analysis quick examples (`crisp`)
+
+# Topic modeling and then assign topics to documents
+```bash
+crisp --inp ./crisp_input --topics --assign --out ./crisp_input_analyzed
+```
+
+# Run sentiment and summary together
+```bash
+crisp --inp ./crisp_input --sentiment --summary --num 5
+```
+
+# Run all NLP analyses (coding dictionary, topics, categories, summary, sentiment)
+```bash
+crisp --inp ./crisp_input --nlp
+```
+
+### D. Machine learning & cross-modal examples (`crisp`)
+
+# Run k-means clustering on numeric CSV columns
+```bash
+crisp --inp ./survey_corpus --kmeans --num 4 --include age,income,score
+```
+
+# Classification (SVM + Decision Tree) using a DataFrame outcome column
+```bash
+crisp --inp ./survey_corpus --cls --outcome satisfaction_binary --include a,b,c --aggregation majority
+```
+
+# Neural net (requires `crisp-t[ml]`)
+```bash
+crisp --inp ./survey_corpus --nnet --outcome target_col --include feat1,feat2
+```
+
+# LSTM using text documents aligned by `id` column in CSV
+```bash
+crisp --inp ./survey_corpus --lstm --outcome CLASS
+```
+
+### E. Corpus management & inspection (`crispt`) — examples
+
+# Create a new corpus and add documents
+```bash
+crispt --id my_corpus --name "Study A" --doc "1|Intro|This is the first document" --out ./my_corpus
+```
+
+# Add metadata and a relationship
+```bash
+crispt --inp ./my_corpus --meta "source=field" --add-rel "text:work|numb:self_time|correlates" --out ./my_corpus
+```
+
+# Remove a document and clear relationships
+```bash
+crispt --inp ./my_corpus --remove-doc 1 --clear-rel --out ./my_corpus
+```
+
+# Inspect dataset columns, row counts, or specific rows
+```bash
+crispt --inp ./my_corpus --df-cols
+crispt --inp ./my_corpus --df-row-count
+crispt --inp ./my_corpus --df-row 12
+```
+
+# Print usage: two supported formats
+```bash
+# Multi-flag form
+crispt --inp ./my_corpus --print documents --print 10
+
+# Single-string form
+crispt --inp ./my_corpus --print "dataframe metadata"
+```
+
+### F. Semantic & embedding features (`crispt`) — examples
+
+# Semantic search for similar documents (requires embedding backend)
+```bash
+crispt --inp ./my_corpus --semantic "patient anxiety" --num 8 --rec 0.45
+```
+
+# Find documents similar to a list of document IDs
+```bash
+crispt --inp ./my_corpus --similar-docs "1,2,3" --num 5
+```
+
+# Semantic-chunks: search within specific document chunks (use with --doc-id)
+```bash
+crispt --inp ./my_corpus --doc-id 5 --semantic-chunks "query phrase" --rec 0.6
+```
+
+# Embedding linking and stats
+```bash
+crispt --inp ./my_corpus --embedding-link "cosine:3:0.7" --embedding-stats --out ./emb_links
+crispt --inp ./emb_links --filters embedding:df --out ./docs_linked_to_rows
+```
+
+### G. Temporal utilities (`crispt`) — examples
+
+# Link by time (nearest, window with seconds, or sequence)
+```bash
+crispt --inp ./my_corpus --temporal-link "nearest:timestamp"
+crispt --inp ./my_corpus --temporal-link "window:timestamp:300"  # ±300 seconds
+```
+
+# Temporal summaries, sentiment trends, and topics over periods
+```bash
+crispt --inp ./my_corpus --temporal-summary W
+crispt --inp ./my_corpus --temporal-sentiment W:mean
+crispt --inp ./my_corpus --temporal-topics W:5
+```
+
+### H. Visualization examples (`crispviz`)
+
+# Word frequency + topic wordcloud + LDA interactive visualization
+```bash
+crispviz --inp ./crisp_input_analyzed --out viz_out --freq --wordcloud --ldavis
+```
+
+# Top terms with custom top-n and bins
+```bash
+crispviz --inp ./crisp_input --out viz_out --top-terms --top-n 30 --bins 80
+```
+
+# Correlation heatmap with selected numeric columns
+```bash
+crispviz --inp ./survey_corpus --out viz_out --corr-heatmap --corr-columns "age,income,score"
+```
+
+# Graph visualization filtered by node types and a different layout
+```bash
+crispviz --inp ./my_corpus --out viz_out --graph --graph-nodes document,keyword --graph-layout circular
+```
+
+### I. Small tips & parameter semantics
+
+- `--rec` for `crispt` semantic commands can be a similarity threshold (float, default 0.4), while `--rec` for some `crisp` commands is used as an integer count — check the command context.
+- `--num` defaults differ by context (e.g., `crispt` search default is 5; `crisp` analysis default is 3).
+- `--aggregation` accepts `majority|mean|first|mode` and controls how multiple documents map to one numeric row are aggregated for ML tasks.
+
+### J. Full-run example (import → analyze → visualize)
+
+```bash
+# 1) Import
+crisp --source ./raw_data --unstructured "comments" --out ./crisp_input
+
+# 2) Run NLP + sentiment + save
+crisp --inp ./crisp_input --topics --assign --sentiment --out ./crisp_input_analyzed
+
+# 3) Link by embedding and run regression on linked set
+crispt --inp ./crisp_input_analyzed --embedding-link "cosine:1:0.7" --out ./linked
+crisp --inp ./linked --outcome satisfaction_score --regression --out ./final_results
+
+# 4) Create visualizations
+crispviz --inp ./final_results --out viz_out --ldavis --wordcloud --corr-heatmap
+```
+

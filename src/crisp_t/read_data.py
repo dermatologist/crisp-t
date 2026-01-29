@@ -25,7 +25,6 @@ import os
 import re
 import tempfile
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from functools import lru_cache
 from pathlib import Path
 
 import pandas as pd
@@ -42,6 +41,77 @@ logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(message)s",
 )
 logger = logging.getLogger(__name__)
+
+
+def extract_timestamp_from_text(text: str) -> str | None:
+    """
+    Extract the first occurrence of a timestamp from text.
+    Supports ISO 8601 format and common date formats.
+
+    Args:
+        text: Text to search for timestamps
+
+    Returns:
+        ISO 8601 formatted timestamp string or None if not found
+    """
+    if not text:
+        return None
+
+    # Pattern for ISO 8601: YYYY-MM-DD or YYYY-MM-DDTHH:MM:SS or variants
+    iso_pattern = (
+        r"\d{4}-\d{2}-\d{2}(?:T\d{2}:\d{2}:\d{2}(?:\.\d{3})?(?:Z|[+-]\d{2}:\d{2})?)?"
+    )
+    iso_match = re.search(iso_pattern, text)
+    if iso_match:
+        timestamp_str = iso_match.group(0)
+        try:
+            # Parse and return as ISO 8601 string
+            dt = pd.to_datetime(timestamp_str)
+            return dt.isoformat()
+        except Exception:
+            pass
+
+    # Pattern for common date formats: MM/DD/YYYY or DD/MM/YYYY
+    common_pattern = r"\d{1,2}[/\-]\d{1,2}[/\-]\d{2,4}"
+    common_match = re.search(common_pattern, text)
+    if common_match:
+        timestamp_str = common_match.group(0)
+        try:
+            dt = pd.to_datetime(timestamp_str)
+            return dt.isoformat()
+        except Exception:
+            pass
+
+    return None
+
+
+def extract_tag_from_filename(filename: str) -> str | None:
+    """
+    Extract a tag from a filename by splitting on - or _ and taking the first part.
+
+    Args:
+        filename: The filename to extract tag from (e.g., "interview-1.txt")
+
+    Returns:
+        The tag (first part before - or _) or None if no separator found.
+        The tag is the part before the first - or _ character.
+        Example: "interview-1.txt" -> "interview", "report_2025.pdf" -> "report"
+    """
+    if not filename:
+        return None
+
+    # Remove file extension
+    name_without_ext = Path(filename).stem
+
+    # Split on - or _ and get the first part
+    if "-" in name_without_ext:
+        tag = name_without_ext.split("-")[0]
+        return tag if tag else None
+    elif "_" in name_without_ext:
+        tag = name_without_ext.split("_")[0]
+        return tag if tag else None
+
+    return None
 
 
 class ReadData:
@@ -216,9 +286,12 @@ class ReadData:
         file_name.parent.mkdir(parents=True, exist_ok=True)
         with open(file_name, "w") as f:
             json.dump(corp.model_dump(exclude={"df", "visualization"}), f, indent=4)
-        if corp.df is not None and isinstance(corp.df, pd.DataFrame):
-            if not corp.df.empty:
-                corp.df.to_csv(df_name, index=False)
+        if (
+            corp.df is not None
+            and isinstance(corp.df, pd.DataFrame)
+            and not corp.df.empty
+        ):
+            corp.df.to_csv(df_name, index=False)
         logger.info("Corpus written to %s", file_name)
 
     # @lru_cache(maxsize=3)
@@ -235,7 +308,7 @@ class ReadData:
             file_name = Path(self._source) / file_name
         if not file_name.exists():
             raise ValueError(f"File not found: {file_name}")
-        with open(file_name, "r") as f:
+        with open(file_name) as f:
             data = json.load(f)
             self._corpus = Corpus.model_validate(data)
             logger.info(f"Corpus read from {file_name}")
@@ -245,14 +318,14 @@ class ReadData:
             self._corpus.df = None
         # Remove ignore words from self._corpus.documents text
         documents = self._corpus.documents
-        
+
         # Pre-compile regex patterns once for efficiency instead of inside loops
         compiled_patterns = []
         if comma_separated_ignore_words:
             for word in comma_separated_ignore_words.split(","):
                 pattern = re.compile(r"\b" + word.strip() + r"\b", flags=re.IGNORECASE)
                 compiled_patterns.append(pattern)
-        
+
         if len(documents) < 10:
             processed_docs = []
             for document in tqdm(documents, desc="Processing documents", disable=True):
@@ -290,17 +363,60 @@ class ReadData:
         comma_separated_ignore_words=None,
         comma_separated_text_columns="",
         id_column="",
+        timestamp_column="",
+        max_rows=None,
     ):
         """
         Read the corpus from a csv file. Parallelizes document creation for large CSVs.
+
+        Args:
+            file_name: Path to CSV file
+            comma_separated_ignore_words: Stop words to ignore
+            comma_separated_text_columns: Text columns to extract
+            id_column: Column to use as document ID
+            timestamp_column: Column containing timestamps (auto-detected if not specified)
+            max_rows: Maximum number of rows to read from CSV
         """
         from pathlib import Path
 
         file_name = Path(file_name)
         if not file_name.exists():
             raise ValueError(f"File not found: {file_name}")
-        df = pd.read_csv(file_name)
+
+        # Read CSV with optional row limit
+        if max_rows is not None:
+            df = pd.read_csv(file_name, nrows=max_rows)
+            logger.info(f"Limited CSV reading to first {max_rows} rows")
+        else:
+            df = pd.read_csv(file_name)
         original_df = df.copy()
+
+        # Auto-detect timestamp column if not specified
+        if not timestamp_column:
+            timestamp_candidates = [
+                "timestamp",
+                "datetime",
+                "time",
+                "date",
+                "created_at",
+                "updated_at",
+            ]
+            for candidate in timestamp_candidates:
+                if candidate in df.columns:
+                    timestamp_column = candidate
+                    logger.info(f"Auto-detected timestamp column: {timestamp_column}")
+                    break
+
+        # Parse timestamp column to datetime if it exists
+        if timestamp_column and timestamp_column in df.columns:
+            try:
+                df[timestamp_column] = pd.to_datetime(df[timestamp_column])
+                logger.info(f"Parsed timestamp column '{timestamp_column}' to datetime")
+            except Exception as e:
+                logger.warning(
+                    f"Could not parse timestamp column '{timestamp_column}': {e}"
+                )
+
         if comma_separated_text_columns:
             text_columns = comma_separated_text_columns.split(",")
         else:
@@ -323,13 +439,46 @@ class ReadData:
         def create_document(args):
             index, row = args
             # Use list and join for efficient string concatenation, handle None values
-            text_parts = [str(row[column]) if row[column] is not None and not (isinstance(row[column], float) and row[column] != row[column]) else '' for column in text_columns]
+            text_parts = [
+                (
+                    str(row[column])
+                    if row[column] is not None
+                    and not (
+                        isinstance(row[column], float) and row[column] != row[column]
+                    )
+                    else ""
+                )
+                for column in text_columns
+            ]
             read_from_file = " ".join(text_parts)
             # Apply pre-compiled patterns
             for pattern in compiled_patterns:
                 read_from_file = pattern.sub("", read_from_file)
+
+            # Extract timestamp if available
+            doc_timestamp = None
+            if timestamp_column and timestamp_column in original_df.columns:
+                ts_value = row[timestamp_column]
+                if ts_value is not None and not pd.isna(ts_value):
+                    # Convert to ISO 8601 string
+                    try:
+                        if isinstance(ts_value, pd.Timestamp):
+                            doc_timestamp = ts_value.isoformat()
+                        else:
+                            doc_timestamp = pd.to_datetime(ts_value).isoformat()
+                    except Exception as exc:
+                        # Intentionally ignore timestamp parsing errors and fall back to no timestamp,
+                        # but log them for diagnostic purposes.
+                        logging.debug(
+                            "Failed to parse timestamp value %r in column %r: %s",
+                            ts_value,
+                            timestamp_column,
+                            exc,
+                        )
+
             _document = Document(
                 text=read_from_file,
+                timestamp=doc_timestamp,
                 metadata={
                     "source": str(file_name),
                     "file_name": str(file_name),
@@ -392,32 +541,40 @@ class ReadData:
         return self._corpus
 
     def read_source(
-        self, source, comma_separated_ignore_words=None, comma_separated_text_columns=""
+        self,
+        source,
+        comma_separated_ignore_words=None,
+        comma_separated_text_columns="",
+        max_text_files=None,
+        max_csv_rows=None,
     ):
         _CSV_EXISTS = False
-        
+
         # Pre-compile regex patterns once for efficiency instead of inside loops
         compiled_patterns = []
         if comma_separated_ignore_words:
             for word in comma_separated_ignore_words.split(","):
                 pattern = re.compile(r"\b" + word.strip() + r"\b", flags=re.IGNORECASE)
                 compiled_patterns.append(pattern)
-        
+
         def apply_ignore_patterns(text):
             """Apply pre-compiled ignore patterns to text."""
             for pattern in compiled_patterns:
                 text = pattern.sub("", text)
             return text
-        
+
         # if source is a url
         if source.startswith("http://") or source.startswith("https://"):
             response = requests.get(source)
             if response.status_code == 200:
                 read_from_file = response.text
                 read_from_file = apply_ignore_patterns(read_from_file)
+                # Extract timestamp from content
+                doc_timestamp = extract_timestamp_from_text(read_from_file)
                 # self._content removed
                 _document = Document(
                     text=read_from_file,
+                    timestamp=doc_timestamp,
                     metadata={"source": source},
                     id=source,
                     score=0.0,
@@ -430,65 +587,120 @@ class ReadData:
             self._source = source
             logger.info(f"Reading data from folder: {source}")
             file_list = os.listdir(source)
+
+            # Separate files by type for limiting
+            text_files = [f for f in file_list if f.endswith(".txt")]
+            pdf_files = [f for f in file_list if f.endswith(".pdf")]
+            csv_files = [f for f in file_list if f.endswith(".csv")]
+
+            # Apply limits to text and PDF files
+            text_pdf_count = 0
+            text_pdf_limit = (
+                max_text_files if max_text_files is not None else float("inf")
+            )
+
+            if max_text_files is not None:
+                logger.info(
+                    f"Limiting import to maximum {max_text_files} text/PDF files"
+                )
+
+            # Process text files
             for file_name in tqdm(
-                file_list, desc="Reading files", disable=len(file_list) < 10
+                text_files, desc="Reading text files", disable=len(text_files) < 10
             ):
+                if text_pdf_count >= text_pdf_limit:
+                    break
+
                 file_path = source_path / file_name
-                if file_name.endswith(".txt"):
-                    with open(file_path, "r") as f:
-                        read_from_file = f.read()
-                        read_from_file = apply_ignore_patterns(read_from_file)
-                        # self._content removed
-                        _document = Document(
-                            text=read_from_file,
-                            metadata={
-                                "source": str(file_path),
-                                "file_name": file_name,
-                            },
-                            id=file_name,
-                            score=0.0,
-                            name="",
-                            description="",
-                        )
-                        self._documents.append(_document)
-                if file_name.endswith(".pdf"):
-                    with open(file_path, "rb") as f:
-                        reader = PdfReader(f)
-                        # Use list and join for efficient string concatenation
-                        page_texts = []
-                        for page in tqdm(
-                            reader.pages,
-                            desc=f"Reading PDF {file_name}",
-                            leave=False,
-                            disable=len(reader.pages) < 10,
-                        ):
-                            page_texts.append(page.extract_text())
-                        read_from_file = "".join(page_texts)
-                        read_from_file = apply_ignore_patterns(read_from_file)
-                        # self._content removed
-                        _document = Document(
-                            text=read_from_file,
-                            metadata={
-                                "source": str(file_path),
-                                "file_name": file_name,
-                            },
-                            id=file_name,
-                            score=0.0,
-                            name="",
-                            description="",
-                        )
-                        self._documents.append(_document)
-                if file_name.endswith(".csv") and comma_separated_text_columns == "":
+                with open(file_path) as f:
+                    read_from_file = f.read()
+                    read_from_file = apply_ignore_patterns(read_from_file)
+                    # Extract timestamp from content
+                    doc_timestamp = extract_timestamp_from_text(read_from_file)
+                    # Extract tag from filename if it contains - or _
+                    tag = extract_tag_from_filename(file_name)
+                    # self._content removed
+                    metadata = {
+                        "source": str(file_path),
+                        "file_name": file_name,
+                    }
+                    if tag:
+                        metadata["tag"] = tag
+                    _document = Document(
+                        text=read_from_file,
+                        timestamp=doc_timestamp,
+                        metadata=metadata,
+                        id=file_name,
+                        score=0.0,
+                        name="",
+                        description="",
+                    )
+                    self._documents.append(_document)
+                    text_pdf_count += 1
+
+            # Process PDF files
+            for file_name in tqdm(
+                pdf_files, desc="Reading PDF files", disable=len(pdf_files) < 10
+            ):
+                if text_pdf_count >= text_pdf_limit:
+                    break
+
+                file_path = source_path / file_name
+                with open(file_path, "rb") as f:
+                    reader = PdfReader(f)
+                    # Use list and join for efficient string concatenation
+                    page_texts = []
+                    for page in tqdm(
+                        reader.pages,
+                        desc=f"Reading PDF {file_name}",
+                        leave=False,
+                        disable=len(reader.pages) < 10,
+                    ):
+                        page_texts.append(page.extract_text())
+                    read_from_file = "".join(page_texts)
+                    read_from_file = apply_ignore_patterns(read_from_file)
+                    # Extract timestamp from content
+                    doc_timestamp = extract_timestamp_from_text(read_from_file)
+                    # Extract tag from filename if it contains - or _
+                    tag = extract_tag_from_filename(file_name)
+                    # self._content removed
+                    metadata = {
+                        "source": str(file_path),
+                        "file_name": file_name,
+                    }
+                    if tag:
+                        metadata["tag"] = tag
+                    _document = Document(
+                        text=read_from_file,
+                        timestamp=doc_timestamp,
+                        metadata=metadata,
+                        id=file_name,
+                        score=0.0,
+                        name="",
+                        description="",
+                    )
+                    self._documents.append(_document)
+                    text_pdf_count += 1
+
+            # Process CSV files
+            for file_name in csv_files:
+                file_path = source_path / file_name
+                if comma_separated_text_columns == "":
                     logger.info(f"Reading CSV file: {file_path}")
                     self._df = Csv().read_csv(file_path)
+                    # Apply row limit if specified
+                    if max_csv_rows is not None and len(self._df) > max_csv_rows:
+                        logger.info(f"Limiting CSV to first {max_csv_rows} rows")
+                        self._df = self._df.head(max_csv_rows)
                     logger.info(f"CSV file read with shape: {self._df.shape}")
                     _CSV_EXISTS = True
-                if file_name.endswith(".csv") and comma_separated_text_columns != "":
+                if comma_separated_text_columns != "":
                     logger.info(f"Reading CSV file to corpus: {file_path}")
                     self.read_csv_to_corpus(
                         file_path,
                         comma_separated_ignore_words,
                         comma_separated_text_columns,
+                        max_rows=max_csv_rows,
                     )
                     logger.info(
                         f"CSV file read to corpus with documents: {len(self._documents)}"

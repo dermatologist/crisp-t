@@ -8,7 +8,7 @@ as tools, resources, and prompts.
 
 import json
 import logging
-from typing import Any, Optional, cast
+from typing import Any, cast
 
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
@@ -22,12 +22,16 @@ from mcp.types import (
 )
 
 from ..cluster import Cluster
-from ..csv import Csv
 from ..helpers.analyzer import get_csv_analyzer, get_text_analyzer
 from ..helpers.initializer import initialize_corpus
 from ..read_data import ReadData
 from ..sentiment import Sentiment
-from ..text import Text
+from .utils.responses import (
+    error_response,
+    no_corpus_response,
+    no_csv_analyzer_response,
+    success_response,
+)
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -52,8 +56,8 @@ _ml_analyzer = None
 
 
 def _init_corpus(
-    inp: Optional[str] = None,
-    source: Optional[str] = None,
+    inp: str | None = None,
+    source: str | None = None,
     text_columns: str = "",
     ignore_words: str = "",
 ):
@@ -82,7 +86,7 @@ def _init_corpus(
 
         return True
     except Exception as e:
-        logger.error(f"Failed to initialize corpus: {e}")
+        logger.exception(f"Failed to initialize corpus: {e}")
         return False
 
 
@@ -400,20 +404,25 @@ async def list_tools() -> list[Tool]:
         # Text/Corpus filtering tools
         Tool(
             name="filter_documents",
-            description="Filter corpus documents based on a metadata key/value, document id, or name substring. Updates the active corpus.",
+            description=(
+                "Filter corpus documents or DataFrame rows using metadata or link filters. "
+                "Supports regular filters (key=value or key:value) and bidirectional link filters: "
+                "embedding:text (text→df), embedding:df (df→text), temporal:text (text→df), temporal:df (df→text). "
+                "Legacy =embedding/:embedding/=temporal/:temporal are mapped to :text variants. "
+                "Updates the active corpus."
+            ),
             inputSchema={
                 "type": "object",
                 "properties": {
-                    "metadata_key": {
+                    "filter": {
                         "type": "string",
-                        "description": "Metadata key to search (optional if filtering by id/name)",
-                    },
-                    "metadata_value": {
-                        "type": "string",
-                        "description": "Value to look for in metadata, id, or name",
+                        "description": (
+                            "Filter string. Examples: 'keywords=health', 'embedding:text', 'embedding:df', 'temporal:text', 'temporal:df'. "
+                            "Multiple filters can be applied sequentially."
+                        ),
                     },
                 },
-                "required": ["metadata_value"],
+                "required": ["filter"],
             },
         ),
         Tool(
@@ -580,9 +589,11 @@ async def list_tools() -> list[Tool]:
                 Required: specify columns to include in the classification as a comma-separated list (include).
 
                     Args:
-                        outcome (str): The target variable for classification.
+                        outcome (str): The target variable for classification. Can be a DataFrame column OR text metadata field (when linkage_method is specified).
                         top_n (int): The number of top features to return.
                         include (str): Comma-separated list of columns to include.
+                        linkage_method (str, optional): Linkage method when outcome is a text metadata field. Options: id, embedding, temporal, keyword.
+                        aggregation (str, optional): Aggregation strategy for multiple documents per row. Options: majority, mean, first, mode.
                 """,
                     inputSchema={
                         "type": "object",
@@ -600,6 +611,17 @@ async def list_tools() -> list[Tool]:
                                 "type": "string",
                                 "description": "Comma-separated columns to include",
                             },
+                            "linkage_method": {
+                                "type": "string",
+                                "description": "Linkage method for text metadata outcomes",
+                                "enum": ["id", "embedding", "temporal", "keyword"],
+                            },
+                            "aggregation": {
+                                "type": "string",
+                                "description": "Aggregation strategy",
+                                "enum": ["majority", "mean", "first", "mode"],
+                                "default": "majority",
+                            },
                         },
                         "required": ["outcome", "include"],
                     },
@@ -611,8 +633,10 @@ async def list_tools() -> list[Tool]:
                 Required: specify columns to include in the classification as a comma-separated list (include).
 
                 Args:
-                    outcome (str): The target variable for classification.
+                    outcome (str): The target variable for classification. Can be a DataFrame column OR text metadata field (when linkage_method is specified).
                     include (str): Comma-separated list of columns to include.
+                    linkage_method (str, optional): Linkage method when outcome is a text metadata field. Options: id, embedding, temporal, keyword.
+                    aggregation (str, optional): Aggregation strategy for multiple documents per row. Options: majority, mean, first, mode.
                 """,
                     inputSchema={
                         "type": "object",
@@ -624,6 +648,17 @@ async def list_tools() -> list[Tool]:
                             "include": {
                                 "type": "string",
                                 "description": "Comma-separated columns to include",
+                            },
+                            "linkage_method": {
+                                "type": "string",
+                                "description": "Linkage method for text metadata outcomes",
+                                "enum": ["id", "embedding", "temporal", "keyword"],
+                            },
+                            "aggregation": {
+                                "type": "string",
+                                "description": "Aggregation strategy",
+                                "enum": ["majority", "mean", "first", "mode"],
+                                "default": "majority",
                             },
                         },
                         "required": ["outcome", "include"],
@@ -636,8 +671,10 @@ async def list_tools() -> list[Tool]:
                 Required: specify columns to include in the classification as a comma-separated list (include).
 
                 Args:
-                    outcome (str): The target variable for classification.
+                    outcome (str): The target variable for classification. Can be a DataFrame column OR text metadata field (when linkage_method is specified).
                     include (str): Comma-separated list of columns to include.
+                    linkage_method (str, optional): Linkage method when outcome is a text metadata field. Options: id, embedding, temporal, keyword.
+                    aggregation (str, optional): Aggregation strategy for multiple documents per row. Options: majority, mean, first, mode.
                 """,
                     inputSchema={
                         "type": "object",
@@ -649,6 +686,17 @@ async def list_tools() -> list[Tool]:
                             "include": {
                                 "type": "string",
                                 "description": "Comma-separated columns to include",
+                            },
+                            "linkage_method": {
+                                "type": "string",
+                                "description": "Linkage method for text metadata outcomes",
+                                "enum": ["id", "embedding", "temporal", "keyword"],
+                            },
+                            "aggregation": {
+                                "type": "string",
+                                "description": "Aggregation strategy",
+                                "enum": ["majority", "mean", "first", "mode"],
+                                "default": "majority",
                             },
                         },
                         "required": ["outcome", "include"],
@@ -661,8 +709,10 @@ async def list_tools() -> list[Tool]:
                 Required: specify columns to include in the regression as a comma-separated list (include).
 
                 Args:
-                    outcome (str): The target variable for regression.
+                    outcome (str): The target variable for regression. Can be a DataFrame column OR text metadata field (when linkage_method is specified).
                     include (str): Comma-separated list of columns to include.
+                    linkage_method (str, optional): Linkage method when outcome is a text metadata field. Options: id, embedding, temporal, keyword.
+                    aggregation (str, optional): Aggregation strategy for multiple documents per row. Options: majority, mean, first, mode. Default: mean for regression.
                 """,
                     inputSchema={
                         "type": "object",
@@ -675,6 +725,17 @@ async def list_tools() -> list[Tool]:
                                 "type": "string",
                                 "description": "Comma-separated columns to include",
                             },
+                            "linkage_method": {
+                                "type": "string",
+                                "description": "Linkage method for text metadata outcomes",
+                                "enum": ["id", "embedding", "temporal", "keyword"],
+                            },
+                            "aggregation": {
+                                "type": "string",
+                                "description": "Aggregation strategy",
+                                "enum": ["majority", "mean", "first", "mode"],
+                                "default": "mean",
+                            },
                         },
                         "required": ["outcome", "include"],
                     },
@@ -686,9 +747,11 @@ async def list_tools() -> list[Tool]:
                 Required: specify columns to include in the PCA as a comma-separated list (include).
 
                 Args:
-                    outcome (str): The variable to exclude from PCA.
+                    outcome (str): The variable to exclude from PCA. Can be a DataFrame column OR text metadata field (when linkage_method is specified).
                     n_components (int): The number of components to keep.
                     include (str): Comma-separated list of columns to include.
+                    linkage_method (str, optional): Linkage method when outcome is a text metadata field. Options: id, embedding, temporal, keyword.
+                    aggregation (str, optional): Aggregation strategy for multiple documents per row. Options: majority, mean, first, mode.
 
                 """,
                     inputSchema={
@@ -706,6 +769,17 @@ async def list_tools() -> list[Tool]:
                             "include": {
                                 "type": "string",
                                 "description": "Comma-separated columns to include",
+                            },
+                            "linkage_method": {
+                                "type": "string",
+                                "description": "Linkage method for text metadata outcomes",
+                                "enum": ["id", "embedding", "temporal", "keyword"],
+                            },
+                            "aggregation": {
+                                "type": "string",
+                                "description": "Aggregation strategy",
+                                "enum": ["majority", "mean", "first", "mode"],
+                                "default": "majority",
                             },
                         },
                         "required": ["outcome", "include"],
@@ -755,10 +829,12 @@ async def list_tools() -> list[Tool]:
                 Required: specify columns to include in the search as a comma-separated list (include).
 
                 Args:
-                    outcome (str): The target variable (excluded from features).
+                    outcome (str): The target variable (excluded from features). Can be a DataFrame column OR text metadata field (when linkage_method is specified).
                     n (int): The number of neighbors to find.
                     record (int): The record index (1-based) to find neighbors for.
                     include (str): Comma-separated columns to include.
+                    linkage_method (str, optional): Linkage method when outcome is a text metadata field. Options: id, embedding, temporal, keyword.
+                    aggregation (str, optional): Aggregation strategy for multiple documents per row. Options: majority, mean, first, mode.
                 """,
                     inputSchema={
                         "type": "object",
@@ -781,6 +857,17 @@ async def list_tools() -> list[Tool]:
                                 "type": "string",
                                 "description": "Comma-separated columns to include",
                             },
+                            "linkage_method": {
+                                "type": "string",
+                                "description": "Linkage method for text metadata outcomes",
+                                "enum": ["id", "embedding", "temporal", "keyword"],
+                            },
+                            "aggregation": {
+                                "type": "string",
+                                "description": "Aggregation strategy",
+                                "enum": ["majority", "mean", "first", "mode"],
+                                "default": "majority",
+                            },
                         },
                         "required": ["outcome", "include"],
                     },
@@ -790,15 +877,15 @@ async def list_tools() -> list[Tool]:
                     description="""
                 Train an LSTM (Long Short-Term Memory) model on text documents to predict an outcome variable.
                 This tool can be used to see if the texts converge towards predicting the outcome.
-                
+
                 Requirements:
                     - Text documents must be loaded in the corpus
                     - An 'id' column must exist in the DataFrame to align documents with outcomes
                     - The outcome variable must be binary (two classes)
-                
+
                 Args:
                     outcome (str): The target variable to predict (must be binary).
-                
+
                 Note: This tool tests convergence between textual content and numeric outcomes.
                 """,
                     inputSchema={
@@ -910,18 +997,18 @@ async def list_tools() -> list[Tool]:
         Tool(
             name="tdabm_analysis",
             description="""
-            Perform Topological Data Analysis Ball Mapper (TDABM) analysis to uncover hidden, global patterns 
+            Perform Topological Data Analysis Ball Mapper (TDABM) analysis to uncover hidden, global patterns
             in complex, noisy, or high-dimensional data. Based on the algorithm by Rudkin and Dlotko (2024).
-            
+
             TDABM creates a point cloud from multidimensional data and covers it with overlapping balls,
             revealing topological structure and relationships between variables.
-            
+
             Use this when you need to:
             - Discover hidden patterns in multidimensional data
             - Visualize relationships between multiple variables
             - Identify clusters and connections in complex datasets
             - Perform model-free exploratory data analysis
-            
+
             Results are stored in corpus metadata and can be visualized.
             """,
             inputSchema={
@@ -946,6 +1033,192 @@ async def list_tools() -> list[Tool]:
         )
     )
 
+    # Temporal analysis tools
+    tools.extend(
+        [
+            Tool(
+                name="temporal_link_by_time",
+                description="""
+            Link documents to dataframe rows based on timestamps. Three methods available:
+            - 'nearest': Link to nearest row in time
+            - 'window': Link to all rows within a time window
+            - 'sequence': Link by time periods (day, week, month)
+
+            Requires documents and dataframe rows to have timestamps.
+            """,
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "method": {
+                            "type": "string",
+                            "description": "Linking method: 'nearest', 'window', or 'sequence'",
+                            "enum": ["nearest", "window", "sequence"],
+                        },
+                        "time_column": {
+                            "type": "string",
+                            "description": "Name of timestamp column in dataframe (default: 'timestamp')",
+                            "default": "timestamp",
+                        },
+                        "window_seconds": {
+                            "type": "number",
+                            "description": "Time window in seconds for 'window' method (default: 300)",
+                            "default": 300,
+                        },
+                        "period": {
+                            "type": "string",
+                            "description": "Period for 'sequence' method: 'D' (day), 'W' (week), 'M' (month)",
+                            "default": "W",
+                        },
+                    },
+                    "required": ["method"],
+                },
+            ),
+            Tool(
+                name="temporal_filter",
+                description="""
+            Filter corpus by time range. Documents and dataframe rows outside the range are removed.
+            Returns a new filtered corpus.
+            """,
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "start_time": {
+                            "type": "string",
+                            "description": "Start time in ISO 8601 format (e.g., '2025-01-01T00:00:00')",
+                        },
+                        "end_time": {
+                            "type": "string",
+                            "description": "End time in ISO 8601 format",
+                        },
+                        "time_column": {
+                            "type": "string",
+                            "description": "Timestamp column in dataframe (default: 'timestamp')",
+                            "default": "timestamp",
+                        },
+                    },
+                },
+            ),
+            Tool(
+                name="temporal_summary",
+                description="""
+            Generate temporal summary of numeric and text data over time periods.
+            Shows aggregated statistics and document counts per period.
+            """,
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "period": {
+                            "type": "string",
+                            "description": "Time period: 'D' (day), 'W' (week), 'M' (month), 'Y' (year)",
+                            "default": "W",
+                        },
+                        "time_column": {
+                            "type": "string",
+                            "description": "Timestamp column in dataframe",
+                            "default": "timestamp",
+                        },
+                    },
+                },
+            ),
+            Tool(
+                name="temporal_sentiment_trend",
+                description="""
+            Analyze sentiment trends over time. Requires documents to have sentiment metadata.
+            Returns aggregated sentiment scores per time period.
+            """,
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "period": {
+                            "type": "string",
+                            "description": "Time period: 'D' (day), 'W' (week), 'M' (month)",
+                            "default": "W",
+                        },
+                        "aggregation": {
+                            "type": "string",
+                            "description": "Aggregation method: 'mean', 'median', 'max', 'min'",
+                            "default": "mean",
+                        },
+                    },
+                },
+            ),
+            Tool(
+                name="temporal_topics",
+                description="""
+            Extract topics over time periods. Shows how topics evolve and change over time.
+            Works best with documents that have topic metadata from topic modeling.
+            """,
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "period": {
+                            "type": "string",
+                            "description": "Time period: 'D', 'W', 'M'",
+                            "default": "W",
+                        },
+                        "top_n": {
+                            "type": "integer",
+                            "description": "Number of top topics per period",
+                            "default": 5,
+                        },
+                    },
+                },
+            ),
+        ]
+    )
+
+    # Embedding-based linking tools
+    tools.extend(
+        [
+            Tool(
+                name="embedding_link",
+                description="""
+            Link documents to dataframe rows using embedding similarity.
+
+            This provides fuzzy semantic alignment when explicit IDs or timestamps are missing.
+            Uses vector embeddings for both text documents and numeric data rows.
+
+            Complements existing ID-based, keyword-based, and time-based linking methods.
+            """,
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "similarity_metric": {
+                            "type": "string",
+                            "description": "Similarity metric: 'cosine' or 'euclidean'",
+                            "enum": ["cosine", "euclidean"],
+                            "default": "cosine",
+                        },
+                        "top_k": {
+                            "type": "integer",
+                            "description": "Number of top similar rows to link per document",
+                            "default": 1,
+                        },
+                        "threshold": {
+                            "type": "number",
+                            "description": "Minimum similarity threshold (0-1). If not set, no filtering",
+                        },
+                        "numeric_columns": {
+                            "type": "string",
+                            "description": "Comma-separated list of numeric columns to use for embeddings",
+                        },
+                    },
+                },
+            ),
+            Tool(
+                name="embedding_link_stats",
+                description="""
+            Get statistics about embedding-based links in the corpus.
+            Shows how many documents are linked, average similarity scores, etc.
+            """,
+                inputSchema={
+                    "type": "object",
+                    "properties": {},
+                },
+            ),
+        ]
+    )
+
     return tools
 
 
@@ -964,27 +1237,22 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
 
             if _init_corpus(inp, source, text_columns, ignore_words):
                 doc_count = len(_corpus.documents) if _corpus else 0
-                return [
-                    TextContent(
-                        type="text",
-                        text=f"Corpus loaded successfully with {doc_count} document(s)",
-                    )
-                ]
+                return success_response(f"Corpus loaded successfully with {doc_count} document(s)")
             else:
-                return [TextContent(type="text", text="Failed to load corpus")]
+                return error_response("Failed to load corpus")
 
         elif name == "save_corpus":
             if not _corpus:
-                return [TextContent(type="text", text="No corpus loaded")]
+                return no_corpus_response()
 
             out = arguments["out"]
             read_data = ReadData(corpus=_corpus)
             read_data.write_corpus_to_json(out, corpus=_corpus)
-            return [TextContent(type="text", text=f"Corpus saved to {out}")]
+            return success_response(f"Corpus saved to {out}")
 
         elif name == "add_document":
             if not _corpus:
-                return [TextContent(type="text", text="No corpus loaded")]
+                return no_corpus_response()
 
             from ..model.document import Document
 
@@ -997,55 +1265,46 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                 metadata={},
             )
             _corpus.add_document(doc)
-            return [
-                TextContent(type="text", text=f"Document {arguments['doc_id']} added")
-            ]
+            return success_response(f"Document {arguments['doc_id']} added")
 
         elif name == "remove_document":
             if not _corpus:
-                return [TextContent(type="text", text="No corpus loaded")]
+                return no_corpus_response()
 
             _corpus.remove_document_by_id(arguments["doc_id"])
-            return [
-                TextContent(type="text", text=f"Document {arguments['doc_id']} removed")
-            ]
+            return success_response(f"Document {arguments['doc_id']} removed")
 
         elif name == "get_document":
             if not _corpus:
-                return [TextContent(type="text", text="No corpus loaded")]
+                return no_corpus_response()
 
             doc = _corpus.get_document_by_id(arguments["doc_id"])
             if doc:
-                return [
-                    TextContent(
-                        type="text",
-                        text=json.dumps(doc.model_dump(), indent=2, default=str),
-                    )
-                ]
-            return [TextContent(type="text", text="Document not found")]
+                return success_response(json.dumps(doc.model_dump(), indent=2, default=str))
+            return error_response("Document not found")
 
         elif name == "list_documents":
             if not _corpus:
-                return [TextContent(type="text", text="No corpus loaded")]
+                return no_corpus_response()
 
             doc_ids = _corpus.get_all_document_ids()
-            return [TextContent(type="text", text=json.dumps(doc_ids, indent=2))]
+            return success_response(json.dumps(doc_ids, indent=2))
 
         elif name == "add_relationship":
             if not _corpus:
-                return [TextContent(type="text", text="No corpus loaded")]
+                return no_corpus_response()
 
             _corpus.add_relationship(
                 arguments["first"], arguments["second"], arguments["relation"]
             )
-            return [TextContent(type="text", text="Relationship added")]
+            return success_response("Relationship added")
 
         elif name == "get_relationships":
             if not _corpus:
-                return [TextContent(type="text", text="No corpus loaded")]
+                return no_corpus_response()
 
             rels = _corpus.get_relationships()
-            return [TextContent(type="text", text=json.dumps(rels, indent=2))]
+            return success_response(json.dumps(rels, indent=2))
 
         elif name == "get_relationships_for_keyword":
             if not _corpus:
@@ -1057,192 +1316,175 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
         # NLP/Text Analysis Tools
         elif name == "generate_coding_dictionary":
             if not _text_analyzer:
-                return [TextContent(type="text", text="No corpus loaded")]
+                return no_corpus_response()
 
             _text_analyzer.make_spacy_doc()
             result = _text_analyzer.print_coding_dictionary(
                 num=arguments.get("num", 3), top_n=arguments.get("top_n", 3)
             )
-            return [
-                TextContent(type="text", text=json.dumps(result, indent=2, default=str))
-            ]
+            return success_response(json.dumps(result, indent=2, default=str))
 
         elif name == "topic_modeling":
             if not _corpus:
-                return [TextContent(type="text", text="No corpus loaded")]
+                return no_corpus_response()
 
             cluster = Cluster(corpus=_corpus)
             cluster.build_lda_model(topics=arguments.get("num_topics", 3))
             result = cluster.print_topics(num_words=arguments.get("num_words", 5))
-            return [
-                TextContent(type="text", text=json.dumps(result, indent=2, default=str))
-            ]
+            return success_response(json.dumps(result, indent=2, default=str))
 
         elif name == "assign_topics":
             if not _corpus:
-                return [TextContent(type="text", text="No corpus loaded")]
+                return no_corpus_response()
 
             cluster = Cluster(corpus=_corpus)
             cluster.build_lda_model(topics=arguments.get("num_topics", 3))
             result = cluster.format_topics_sentences(visualize=False)
-            return [
-                TextContent(type="text", text=json.dumps(result, indent=2, default=str))
-            ]
+            return success_response(json.dumps(result, indent=2, default=str))
 
         elif name == "extract_categories":
             if not _text_analyzer:
-                return [TextContent(type="text", text="No corpus loaded")]
+                return no_corpus_response()
 
             _text_analyzer.make_spacy_doc()
             result = _text_analyzer.print_categories(num=arguments.get("num", 10))
-            return [
-                TextContent(type="text", text=json.dumps(result, indent=2, default=str))
-            ]
+            return success_response(json.dumps(result, indent=2, default=str))
 
         elif name == "generate_summary":
             if not _text_analyzer:
-                return [TextContent(type="text", text="No corpus loaded")]
+                return no_corpus_response()
 
             _text_analyzer.make_spacy_doc()
             result = _text_analyzer.generate_summary(weight=arguments.get("weight", 10))
-            return [TextContent(type="text", text=str(result))]
+            return success_response(str(result))
 
         elif name == "sentiment_analysis":
             if not _corpus:
-                return [TextContent(type="text", text="No corpus loaded")]
+                return no_corpus_response()
 
             sentiment = Sentiment(corpus=_corpus)
             result = sentiment.get_sentiment(
                 documents=arguments.get("documents", False),
                 verbose=arguments.get("verbose", True),
             )
-            return [TextContent(type="text", text=str(result))]
+            return success_response(str(result))
 
         # Text/Corpus filtering tools
         elif name == "filter_documents":
             if not _text_analyzer:
-                return [TextContent(type="text", text="No corpus loaded")]
+                return no_corpus_response()
 
             metadata_key = arguments.get("metadata_key", "keywords")
             metadata_value = arguments.get("metadata_value")
             if not metadata_value:
-                return [TextContent(type="text", text="metadata_value is required")]
+                return error_response("metadata_value is required")
 
             msg = _text_analyzer.filter_documents(
                 metadata_key=metadata_key, metadata_value=metadata_value, mcp=True
             )
-            return [TextContent(type="text", text=str(msg))]
+            return success_response(str(msg))
 
         elif name == "document_count":
             if not _text_analyzer:
-                return [TextContent(type="text", text="No corpus loaded")]
+                return no_corpus_response()
 
             try:
                 count = _text_analyzer.document_count()
             except Exception as e:
-                return [TextContent(type="text", text=f"Error: {e}")]
-            return [TextContent(type="text", text=f"Document count: {count}")]
+                return error_response(str(e))
+            return success_response(f"Document count: {count}")
 
         # DataFrame/CSV Tools
         elif name == "get_df_columns":
             if not _corpus:
-                return [TextContent(type="text", text="No corpus loaded")]
+                return no_corpus_response()
 
             cols = _corpus.get_all_df_column_names()
-            return [TextContent(type="text", text=json.dumps(cols, indent=2))]
+            return success_response(json.dumps(cols, indent=2))
 
         elif name == "get_df_row_count":
             if not _corpus:
-                return [TextContent(type="text", text="No corpus loaded")]
+                return no_corpus_response()
 
             count = _corpus.get_row_count()
-            return [TextContent(type="text", text=f"Row count: {count}")]
+            return success_response(f"Row count: {count}")
 
         elif name == "get_df_row":
             if not _corpus:
-                return [TextContent(type="text", text="No corpus loaded")]
+                return no_corpus_response()
 
             row = _corpus.get_row_by_index(arguments["index"])
             if row is not None:
-                return [
-                    TextContent(
-                        type="text",
-                        text=json.dumps(row.to_dict(), indent=2, default=str),
-                    )
-                ]
-            return [TextContent(type="text", text="Row not found")]
+                return success_response(json.dumps(row.to_dict(), indent=2, default=str))
+            return error_response("Row not found")
 
         # CSV Column/DataFrame operations
         elif name == "bin_a_column":
             if not _csv_analyzer:
-                return [TextContent(type="text", text="No CSV data available")]
+                return no_csv_analyzer_response()
 
             msg = _csv_analyzer.bin_a_column(
                 column_name=arguments["column_name"], bins=arguments.get("bins", 2)
             )
-            return [TextContent(type="text", text=str(msg))]
+            return success_response(str(msg))
 
         elif name == "one_hot_encode_column":
             if not _csv_analyzer:
-                return [TextContent(type="text", text="No CSV data available")]
+                return no_csv_analyzer_response()
 
             msg = _csv_analyzer.one_hot_encode_column(
                 column_name=arguments["column_name"]
             )
-            return [TextContent(type="text", text=str(msg))]
+            return success_response(str(msg))
 
         elif name == "filter_rows_by_column_value":
             if not _csv_analyzer:
-                return [TextContent(type="text", text="No CSV data available")]
+                return no_csv_analyzer_response()
 
             msg = _csv_analyzer.filter_rows_by_column_value(
                 column_name=arguments["column_name"], value=arguments["value"], mcp=True
             )
-            return [TextContent(type="text", text=str(msg))]
+            return success_response(str(msg))
 
         elif name == "oversample":
             if not _csv_analyzer:
-                return [TextContent(type="text", text="No CSV data available")]
+                return no_csv_analyzer_response()
 
             result = _csv_analyzer.oversample(mcp=True)
-            return [TextContent(type="text", text=str(result))]
+            return success_response(str(result))
 
         elif name == "restore_oversample":
             if not _csv_analyzer:
-                return [TextContent(type="text", text="No CSV data available")]
+                return no_csv_analyzer_response()
 
             result = _csv_analyzer.restore_oversample(mcp=True)
-            return [TextContent(type="text", text=str(result))]
+            return success_response(str(result))
 
         elif name == "get_column_types":
             if not _csv_analyzer:
-                return [TextContent(type="text", text="No CSV data available")]
+                return no_csv_analyzer_response()
 
             types = _csv_analyzer.get_column_types()
-            return [
-                TextContent(type="text", text=json.dumps(types, indent=2, default=str))
-            ]
+            return success_response(json.dumps(types, indent=2, default=str))
 
         elif name == "get_column_values":
             if not _csv_analyzer:
-                return [TextContent(type="text", text="No CSV data available")]
+                return no_csv_analyzer_response()
 
             values = _csv_analyzer.get_column_values(arguments["column_name"])
-            return [
-                TextContent(type="text", text=json.dumps(values, indent=2, default=str))
-            ]
+            return success_response(json.dumps(values, indent=2, default=str))
 
         elif name == "retain_numeric_columns_only":
             if not _csv_analyzer:
-                return [TextContent(type="text", text="No CSV data available")]
+                return no_csv_analyzer_response()
 
             _csv_analyzer.retain_numeric_columns_only()
-            return [TextContent(type="text", text="Retained numeric columns only.")]
+            return success_response("Retained numeric columns only.")
 
         # ML Tools
         elif name == "kmeans_clustering":
             if not _csv_analyzer:
-                return [TextContent(type="text", text="No CSV data available")]
+                return no_csv_analyzer_response()
             else:
                 if "include" in arguments:
                     _csv_analyzer.comma_separated_include_columns(
@@ -1250,7 +1492,7 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                     )
 
             if not ML_AVAILABLE:
-                return [TextContent(type="text", text="ML dependencies not available")]
+                return error_response("ML dependencies not available")
 
             _csv_analyzer.retain_numeric_columns_only()
 
@@ -1261,11 +1503,11 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                 verbose=False,
                 mcp=True,
             )
-            return [TextContent(type="text", text=str(result))]
+            return success_response(str(result))
 
         elif name == "decision_tree_classification":
             if not _csv_analyzer:
-                return [TextContent(type="text", text="No CSV data available")]
+                return no_csv_analyzer_response()
             else:
                 if "include" in arguments:
                     _csv_analyzer.comma_separated_include_columns(
@@ -1273,19 +1515,21 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                     )
 
             if not ML_AVAILABLE:
-                return [TextContent(type="text", text="ML dependencies not available")]
+                return error_response("ML dependencies not available")
 
             if not _ml_analyzer:
                 _ml_analyzer = ML(csv=_csv_analyzer)
 
             result = _ml_analyzer.get_decision_tree_classes(
-                y=arguments["outcome"], top_n=arguments.get("top_n", 10), mcp=True
+                y=arguments["outcome"], top_n=arguments.get("top_n", 10), mcp=True,
+                linkage_method=arguments.get("linkage_method"),
+                aggregation=arguments.get("aggregation", "majority"),
             )
-            return [TextContent(type="text", text=str(result))]
+            return success_response(str(result))
 
         elif name == "svm_classification":
             if not _csv_analyzer:
-                return [TextContent(type="text", text="No CSV data available")]
+                return no_csv_analyzer_response()
             else:
                 if "include" in arguments:
                     _csv_analyzer.comma_separated_include_columns(
@@ -1293,19 +1537,22 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                     )
 
             if not ML_AVAILABLE:
-                return [TextContent(type="text", text="ML dependencies not available")]
+                return error_response("ML dependencies not available")
 
             if not _ml_analyzer:
                 _ml_analyzer = ML(csv=_csv_analyzer)
 
+            linkage_method = arguments.get("linkage_method")
+            aggregation = arguments.get("aggregation", "majority")
+
             result = _ml_analyzer.svm_confusion_matrix(
-                y=arguments["outcome"], test_size=0.25, mcp=True
+                y=arguments["outcome"], test_size=0.25, mcp=True, linkage_method=linkage_method, aggregation=aggregation
             )
-            return [TextContent(type="text", text=str(result))]
+            return success_response(str(result))
 
         elif name == "neural_network_classification":
             if not _csv_analyzer:
-                return [TextContent(type="text", text="No CSV data available")]
+                return no_csv_analyzer_response()
             else:
                 if "include" in arguments:
                     _csv_analyzer.comma_separated_include_columns(
@@ -1313,17 +1560,20 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                     )
 
             if not ML_AVAILABLE:
-                return [TextContent(type="text", text="ML dependencies not available")]
+                return error_response("ML dependencies not available")
 
             if not _ml_analyzer:
                 _ml_analyzer = ML(csv=_csv_analyzer)
 
-            result = _ml_analyzer.get_nnet_predictions(y=arguments["outcome"], mcp=True)
-            return [TextContent(type="text", text=str(result))]
+            linkage_method = arguments.get("linkage_method")
+            aggregation = arguments.get("aggregation", "majority")
+
+            result = _ml_analyzer.get_nnet_predictions(y=arguments["outcome"], mcp=True, linkage_method=linkage_method, aggregation=aggregation)
+            return success_response(str(result))
 
         elif name == "regression_analysis":
             if not _csv_analyzer:
-                return [TextContent(type="text", text="No CSV data available")]
+                return no_csv_analyzer_response()
             else:
                 if "include" in arguments:
                     _csv_analyzer.comma_separated_include_columns(
@@ -1331,17 +1581,20 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                     )
 
             if not ML_AVAILABLE:
-                return [TextContent(type="text", text="ML dependencies not available")]
+                return error_response("ML dependencies not available")
 
             if not _ml_analyzer:
                 _ml_analyzer = ML(csv=_csv_analyzer)
 
-            result = _ml_analyzer.get_regression(y=arguments["outcome"], mcp=True)
-            return [TextContent(type="text", text=str(result))]
+            linkage_method = arguments.get("linkage_method")
+            aggregation = arguments.get("aggregation", "mean")  # Default to mean for regression
+
+            result = _ml_analyzer.get_regression(y=arguments["outcome"], mcp=True, linkage_method=linkage_method, aggregation=aggregation)
+            return success_response(str(result))
 
         elif name == "pca_analysis":
             if not _csv_analyzer:
-                return [TextContent(type="text", text="No CSV data available")]
+                return no_csv_analyzer_response()
             else:
                 if "include" in arguments:
                     _csv_analyzer.comma_separated_include_columns(
@@ -1349,19 +1602,21 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                     )
 
             if not ML_AVAILABLE:
-                return [TextContent(type="text", text="ML dependencies not available")]
+                return error_response("ML dependencies not available")
 
             if not _ml_analyzer:
                 _ml_analyzer = ML(csv=_csv_analyzer)
 
             result = _ml_analyzer.get_pca(
-                y=arguments["outcome"], n=arguments.get("n_components", 3), mcp=True
+                y=arguments["outcome"], n=arguments.get("n_components", 3), mcp=True,
+                linkage_method=arguments.get("linkage_method"),
+                aggregation=arguments.get("aggregation", "majority"),
             )
-            return [TextContent(type="text", text=str(result))]
+            return success_response(str(result))
 
         elif name == "association_rules":
             if not _csv_analyzer:
-                return [TextContent(type="text", text="No CSV data available")]
+                return no_csv_analyzer_response()
             else:
                 if "include" in arguments:
                     _csv_analyzer.comma_separated_include_columns(
@@ -1369,7 +1624,7 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                     )
 
             if not ML_AVAILABLE:
-                return [TextContent(type="text", text="ML dependencies not available")]
+                return error_response("ML dependencies not available")
 
             if not _ml_analyzer:
                 _ml_analyzer = ML(csv=_csv_analyzer)
@@ -1383,11 +1638,11 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                 min_threshold=min_threshold,
                 mcp=True,
             )
-            return [TextContent(type="text", text=str(result))]
+            return success_response(str(result))
 
         elif name == "knn_search":
             if not _csv_analyzer:
-                return [TextContent(type="text", text="No CSV data available")]
+                return no_csv_analyzer_response()
             else:
                 if "include" in arguments:
                     _csv_analyzer.comma_separated_include_columns(
@@ -1395,7 +1650,7 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                     )
 
             if not ML_AVAILABLE:
-                return [TextContent(type="text", text="ML dependencies not available")]
+                return error_response("ML dependencies not available")
 
             if not _ml_analyzer:
                 _ml_analyzer = ML(csv=_csv_analyzer)
@@ -1405,45 +1660,41 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                 n=arguments.get("n", 3),
                 r=arguments.get("record", 1),
                 mcp=True,
+                linkage_method=arguments.get("linkage_method"),
+                aggregation=arguments.get("aggregation", "majority"),
             )
-            return [TextContent(type="text", text=str(result))]
+            return success_response(str(result))
 
         elif name == "lstm_text_classification":
             if not _csv_analyzer:
-                return [TextContent(type="text", text="No CSV data available")]
+                return no_csv_analyzer_response()
 
             if not ML_AVAILABLE:
-                return [TextContent(type="text", text="ML dependencies not available")]
+                return error_response("ML dependencies not available")
 
             if not _ml_analyzer:
                 _ml_analyzer = ML(csv=_csv_analyzer)
 
             result = _ml_analyzer.get_lstm_predictions(y=arguments["outcome"], mcp=True)
-            return [TextContent(type="text", text=str(result))]
+            return success_response(str(result))
 
         elif name == "reset_corpus_state":
             _corpus = None
             _text_analyzer = None
             _csv_analyzer = None
             _ml_analyzer = None
-            return [
-                TextContent(type="text", text="Global corpus state has been reset.")
-            ]
+            return success_response("Global corpus state has been reset.")
 
         elif name == "semantic_search":
             if not _corpus:
-                return [
-                    TextContent(
-                        type="text", text="No corpus loaded. Use load_corpus first."
-                    )
-                ]
+                return no_corpus_response()
 
             try:
                 from ..semantic import Semantic
 
                 query = arguments.get("query")
                 if not query:
-                    return [TextContent(type="text", text="query is required")]
+                    return error_response("query is required")
 
                 n_results = arguments.get("n_results", 5)
 
@@ -1469,43 +1720,30 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                         f"... and {len(result_corpus.documents) - 10} more\n"
                     )
 
-                return [TextContent(type="text", text=response_text)]
+                return success_response(response_text)
 
             except ImportError:
-                return [
-                    TextContent(
-                        type="text",
-                        text="chromadb is not installed. Install with: pip install chromadb",
-                    )
-                ]
+                return error_response("chromadb is not installed. Install with: pip install chromadb")
             except Exception as e:
-                return [
-                    TextContent(type="text", text=f"Error during semantic search: {e}")
-                ]
+                return error_response(f"Error during semantic search: {e}")
 
         elif name == "find_similar_documents":
             if not _corpus:
-                return [
-                    TextContent(
-                        type="text", text="No corpus loaded. Use load_corpus first."
-                    )
-                ]
+                return no_corpus_response()
 
             try:
                 from ..semantic import Semantic
 
                 document_ids = arguments.get("document_ids")
                 if not document_ids:
-                    return [TextContent(type="text", text="document_ids is required")]
+                    return error_response("document_ids is required")
 
                 n_results = arguments.get("n_results", 5)
                 threshold = arguments.get("threshold", 0.7)
 
                 semantic_analyzer = Semantic(_corpus)
                 similar_doc_ids = semantic_analyzer.get_similar_documents(
-                    document_ids=document_ids,
-                    n_results=n_results,
-                    threshold=threshold
+                    document_ids=document_ids, n_results=n_results, threshold=threshold
                 )
 
                 # Prepare response
@@ -1522,34 +1760,27 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                         response_text += f"  • {doc_id}{doc_name}\n"
 
                     response_text += "\nThis feature is useful for:\n"
-                    response_text += "- Literature reviews: Find additional relevant papers\n"
+                    response_text += (
+                        "- Literature reviews: Find additional relevant papers\n"
+                    )
                     response_text += "- Qualitative research: Identify documents with similar themes\n"
-                    response_text += "- Content grouping: Group similar documents for analysis\n"
+                    response_text += (
+                        "- Content grouping: Group similar documents for analysis\n"
+                    )
                 else:
                     response_text += "No similar documents found above the threshold.\n"
                     response_text += "Try lowering the threshold or using different reference documents.\n"
 
-                return [TextContent(type="text", text=response_text)]
+                return success_response(response_text)
 
             except ImportError:
-                return [
-                    TextContent(
-                        type="text",
-                        text="chromadb is not installed. Install with: pip install chromadb",
-                    )
-                ]
+                return error_response("chromadb is not installed. Install with: pip install chromadb")
             except Exception as e:
-                return [
-                    TextContent(type="text", text=f"Error finding similar documents: {e}")
-                ]
+                return error_response(f"Error finding similar documents: {e}")
 
         elif name == "semantic_chunk_search":
             if not _corpus:
-                return [
-                    TextContent(
-                        type="text", text="No corpus loaded. Use load_corpus first."
-                    )
-                ]
+                return no_corpus_response()
 
             try:
                 from ..semantic import Semantic
@@ -1558,23 +1789,22 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                 doc_id = arguments.get("doc_id")
 
                 if not query:
-                    return [TextContent(type="text", text="query is required")]
+                    return error_response("query is required")
                 if not doc_id:
-                    return [TextContent(type="text", text="doc_id is required")]
+                    return error_response("doc_id is required")
 
                 threshold = arguments.get("threshold", 0.5)
                 n_results = arguments.get("n_results", 10)
 
                 semantic_analyzer = Semantic(_corpus)
                 chunks = semantic_analyzer.get_similar_chunks(
-                    query=query,
-                    doc_id=doc_id,
-                    threshold=threshold,
-                    n_results=n_results
+                    query=query, doc_id=doc_id, threshold=threshold, n_results=n_results
                 )
 
                 # Prepare response
-                response_text = f"Semantic chunk search completed for query: '{query}'\n"
+                response_text = (
+                    f"Semantic chunk search completed for query: '{query}'\n"
+                )
                 response_text += f"Document ID: {doc_id}\n"
                 response_text += f"Threshold: {threshold}\n"
                 response_text += f"Found {len(chunks)} matching chunks\n\n"
@@ -1588,24 +1818,23 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                         response_text += "-" * 60 + "\n\n"
 
                     response_text += f"\nThese {len(chunks)} chunks can be used for coding/annotating the document.\n"
-                    response_text += "You can adjust the threshold to get more or fewer results.\n"
+                    response_text += (
+                        "You can adjust the threshold to get more or fewer results.\n"
+                    )
                 else:
-                    response_text += "No chunks matched the query above the threshold.\n"
-                    response_text += "Try lowering the threshold or use a different query.\n"
+                    response_text += (
+                        "No chunks matched the query above the threshold.\n"
+                    )
+                    response_text += (
+                        "Try lowering the threshold or use a different query.\n"
+                    )
 
-                return [TextContent(type="text", text=response_text)]
+                return success_response(response_text)
 
             except ImportError:
-                return [
-                    TextContent(
-                        type="text",
-                        text="chromadb is not installed. Install with: pip install chromadb",
-                    )
-                ]
+                return error_response("chromadb is not installed. Install with: pip install chromadb")
             except Exception as e:
-                return [
-                    TextContent(type="text", text=f"Error during semantic chunk search: {e}")
-                ]
+                return error_response(f"Error during semantic chunk search: {e}")
 
         elif name == "export_metadata_df":
             if not _corpus:
@@ -1637,27 +1866,18 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                     response_text += f"Columns: {list(result_corpus.df.columns)}\n\n"
                     response_text += "First 5 rows:\n"
                     response_text += result_corpus.df.head().to_string()
-                    return [TextContent(type="text", text=response_text)]
+                    return success_response(response_text)
                 else:
-                    return [TextContent(type="text", text="No DataFrame created")]
+                    return error_response("No DataFrame created")
 
             except ImportError:
-                return [
-                    TextContent(
-                        type="text",
-                        text="chromadb is not installed. Install with: pip install chromadb",
-                    )
-                ]
+                return error_response("chromadb is not installed. Install with: pip install chromadb")
             except Exception as e:
-                return [TextContent(type="text", text=f"Error exporting metadata: {e}")]
+                return error_response(f"Error exporting metadata: {e}")
 
         elif name == "tdabm_analysis":
             if not _corpus:
-                return [
-                    TextContent(
-                        type="text", text="No corpus loaded. Use load_corpus first."
-                    )
-                ]
+                return no_corpus_response()
 
             try:
                 from ..tdabm import Tdabm
@@ -1667,49 +1887,255 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                 radius = arguments.get("radius", 0.3)
 
                 if not y_variable or not x_variables:
-                    return [
-                        TextContent(
-                            type="text",
-                            text="Error: Both y_variable and x_variables are required",
-                        )
-                    ]
+                    return error_response("Both y_variable and x_variables are required")
 
                 tdabm_analyzer = Tdabm(_corpus)
                 result = tdabm_analyzer.generate_tdabm(
                     y=y_variable, x_variables=x_variables, radius=radius, mcp=True
                 )
 
-                return [
-                    TextContent(
-                        type="text",
-                        text=f"TDABM Analysis Complete\n\n{result}\n\n"
-                        "Hint: Results are stored in corpus metadata['tdabm']\n"
-                        "Hint: Use save_corpus to persist the results\n"
-                        "Hint: Visualize with draw_tdabm or use vizcli --tdabm",
-                    )
-                ]
+                return success_response(
+                    f"TDABM Analysis Complete\n\n{result}\n\n"
+                    "Hint: Results are stored in corpus metadata['tdabm']\n"
+                    "Hint: Use save_corpus to persist the results\n"
+                    "Hint: Visualize with draw_tdabm or use vizcli --tdabm"
+                )
 
             except ValueError as e:
-                return [
-                    TextContent(
-                        type="text",
-                        text=f"Validation Error: {e}\n\n"
-                        "Tips:\n"
-                        "- Ensure corpus has a DataFrame\n"
-                        "- Y variable must be continuous (not binary)\n"
-                        "- X variables must be numeric/ordinal\n"
-                        "- All variables must exist in the DataFrame",
-                    )
-                ]
+                return error_response(
+                    f"Validation Error: {e}\n\n"
+                    "Tips:\n"
+                    "- Ensure corpus has a DataFrame\n"
+                    "- Y variable must be continuous (not binary)\n"
+                    "- X variables must be numeric/ordinal\n"
+                    "- All variables must exist in the DataFrame"
+                )
             except Exception as e:
-                return [TextContent(type="text", text=f"Error during TDABM analysis: {e}")]
+                return error_response(f"Error during TDABM analysis: {e}")
+
+        # Temporal Analysis Tools
+        elif name == "temporal_link_by_time":
+            if not _corpus:
+                return no_corpus_response()
+
+            try:
+                from datetime import timedelta
+
+                from ..temporal import TemporalAnalyzer
+
+                method = arguments.get("method", "nearest")
+                time_column = arguments.get("time_column", "timestamp")
+                analyzer = TemporalAnalyzer(_corpus)
+
+                if method == "nearest":
+                    _corpus = analyzer.link_by_nearest_time(time_column=time_column)
+                    return success_response("Documents linked to nearest dataframe rows by time")
+
+                elif method == "window":
+                    window_seconds = arguments.get("window_seconds", 300)
+                    window = timedelta(seconds=window_seconds)
+                    _corpus = analyzer.link_by_time_window(
+                        time_column=time_column,
+                        window_before=window,
+                        window_after=window,
+                    )
+                    return success_response(f"Documents linked within ±{window_seconds}s time window")
+
+                elif method == "sequence":
+                    period = arguments.get("period", "W")
+                    _corpus = analyzer.link_by_sequence(
+                        time_column=time_column, period=period
+                    )
+                    return success_response(f"Documents linked in {period} sequences")
+
+                else:
+                    return error_response(f"Unknown method: {method}")
+
+            except Exception as e:
+                return error_response(f"Error in temporal linking: {e}")
+
+        elif name == "temporal_filter":
+            if not _corpus:
+                return no_corpus_response()
+
+            try:
+                from ..temporal import TemporalAnalyzer
+
+                start_time = arguments.get("start_time")
+                end_time = arguments.get("end_time")
+                time_column = arguments.get("time_column", "timestamp")
+
+                analyzer = TemporalAnalyzer(_corpus)
+                _corpus = analyzer.filter_by_time_range(
+                    start_time=start_time, end_time=end_time, time_column=time_column
+                )
+
+                doc_count = len(_corpus.documents)
+                df_count = len(_corpus.df) if _corpus.df is not None else 0
+                return success_response(
+                    f"Corpus filtered by time range: {doc_count} documents, {df_count} dataframe rows"
+                )
+
+            except Exception as e:
+                return error_response(f"Error in temporal filtering: {e}")
+
+        elif name == "temporal_summary":
+            if not _corpus:
+                return no_corpus_response()
+
+            try:
+                from ..temporal import TemporalAnalyzer
+
+                period = arguments.get("period", "W")
+                time_column = arguments.get("time_column", "timestamp")
+
+                analyzer = TemporalAnalyzer(_corpus)
+                summary = analyzer.get_temporal_summary(
+                    time_column=time_column, period=period
+                )
+
+                if not summary.empty:
+                    response_text = f"Temporal Summary ({period} periods):\n\n"
+                    response_text += summary.to_string()
+                    return success_response(response_text)
+                else:
+                    return error_response("No temporal data available for summary")
+
+            except Exception as e:
+                return error_response(f"Error in temporal summary: {e}")
+
+        elif name == "temporal_sentiment_trend":
+            if not _corpus:
+                return no_corpus_response()
+
+            try:
+                from ..temporal import TemporalAnalyzer
+
+                period = arguments.get("period", "W")
+                aggregation = arguments.get("aggregation", "mean")
+
+                analyzer = TemporalAnalyzer(_corpus)
+                trend = analyzer.get_temporal_sentiment_trend(
+                    period=period, aggregation=aggregation
+                )
+
+                if not trend.empty:
+                    response_text = f"Temporal Sentiment Trend ({period} periods, {aggregation}):\n\n"
+                    response_text += trend.to_string()
+                    return success_response(response_text)
+                else:
+                    return error_response("No sentiment data available. Run sentiment analysis first.")
+
+            except Exception as e:
+                return error_response(f"Error in temporal sentiment: {e}")
+
+        elif name == "temporal_topics":
+            if not _corpus:
+                return no_corpus_response()
+
+            try:
+                from ..temporal import TemporalAnalyzer
+
+                period = arguments.get("period", "W")
+                top_n = arguments.get("top_n", 5)
+
+                analyzer = TemporalAnalyzer(_corpus)
+                topics = analyzer.get_temporal_topics(period=period, top_n=top_n)
+
+                if topics:
+                    response_text = (
+                        f"Temporal Topics (top {top_n} per {period} period):\n\n"
+                    )
+                    for period_key, topic_list in topics.items():
+                        response_text += f"{period_key}: {', '.join(topic_list)}\n"
+                    return success_response(response_text)
+                else:
+                    return error_response("No temporal data available for topic extraction")
+
+            except Exception as e:
+                return error_response(f"Error in temporal topics: {e}")
+
+        # Embedding-based linking tools
+        elif name == "embedding_link":
+            if not _corpus:
+                return no_corpus_response()
+
+            try:
+                from ..embedding_linker import EmbeddingLinker
+
+                similarity_metric = arguments.get("similarity_metric", "cosine")
+                top_k = arguments.get("top_k", 1)
+                threshold = arguments.get("threshold")
+                numeric_columns_str = arguments.get("numeric_columns")
+
+                numeric_columns = None
+                if numeric_columns_str:
+                    numeric_columns = [
+                        c.strip() for c in numeric_columns_str.split(",")
+                    ]
+
+                linker = EmbeddingLinker(
+                    _corpus,
+                    similarity_metric=similarity_metric,
+                    use_simple_embeddings=True,
+                )
+                _corpus = linker.link_by_embedding_similarity(
+                    numeric_columns=numeric_columns, threshold=threshold, top_k=top_k
+                )
+
+                stats = linker.get_link_statistics()
+                response_text = "Embedding-based linking complete\n\n"
+                response_text += f"Linked documents: {stats['linked_documents']}/{stats['total_documents']}\n"
+                response_text += f"Total links: {stats['total_links']}\n"
+                response_text += f"Average similarity: {stats['avg_similarity']:.3f}\n"
+                response_text += f"Similarity metric: {similarity_metric}\n"
+
+                return success_response(response_text)
+
+            except ImportError:
+                return error_response("ChromaDB is not installed. Install with: pip install chromadb")
+            except Exception as e:
+                return error_response(f"Error in embedding linking: {e}")
+
+        elif name == "embedding_link_stats":
+            if not _corpus:
+                return no_corpus_response()
+
+            try:
+                from ..embedding_linker import EmbeddingLinker
+
+                # Check if corpus has embedding links
+                has_links = any(
+                    "embedding_links" in doc.metadata
+                    and doc.metadata["embedding_links"]
+                    for doc in _corpus.documents
+                )
+
+                if not has_links:
+                    return error_response("No embedding links found. Run embedding_link first.")
+
+                linker = EmbeddingLinker(_corpus, use_simple_embeddings=True)
+                stats = linker.get_link_statistics()
+
+                response_text = "Embedding Link Statistics:\n\n"
+                response_text += f"Total documents: {stats['total_documents']}\n"
+                response_text += f"Linked documents: {stats['linked_documents']}\n"
+                response_text += f"Total links: {stats['total_links']}\n"
+                response_text += f"Average similarity: {stats['avg_similarity']:.3f}\n"
+                response_text += f"Min similarity: {stats['min_similarity']:.3f}\n"
+                response_text += f"Max similarity: {stats['max_similarity']:.3f}\n"
+
+                return success_response(response_text)
+
+            except Exception as e:
+                return error_response(f"Error getting embedding statistics: {e}")
 
         else:
-            return [TextContent(type="text", text=f"Unknown tool: {name}")]
+            return error_response(f"Unknown tool: {name}")
 
     except Exception as e:
         logger.error(f"Error executing tool {name}: {e}", exc_info=True)
-        return [TextContent(type="text", text=f"Error: {str(e)}")]
+        return error_response(str(e))
 
 
 @app.list_prompts()
@@ -1902,11 +2328,15 @@ async def main():
     """Main entry point for the MCP server."""
     # Print startup message to stderr so it doesn't interfere with MCP protocol
     import sys
+
     print("=" * 60, file=sys.stderr)
     print("🚀 CRISP-T MCP Server Starting...", file=sys.stderr)
-    print("   Model Context Protocol (MCP) Server for Qualitative Research", file=sys.stderr)
+    print(
+        "   Model Context Protocol (MCP) Server for Qualitative Research",
+        file=sys.stderr,
+    )
     print("   Ready to accept connections from MCP clients", file=sys.stderr)
     print("=" * 60, file=sys.stderr)
-    
+
     async with stdio_server() as (read_stream, write_stream):
         await app.run(read_stream, write_stream, app.create_initialization_options())

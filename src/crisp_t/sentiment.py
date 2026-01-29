@@ -1,8 +1,7 @@
-import textacy.similarity
-from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 import operator
-from tqdm import tqdm
 
+from tqdm import tqdm
+from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
 from .model import Corpus
 from .text import Text

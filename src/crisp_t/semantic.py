@@ -17,26 +17,24 @@ You should have received a copy of the GNU General Public License
 along with crisp-t.  If not, see <https://www.gnu.org/licenses/>.
 """
 
+import logging
 import os
 import warnings
-from typing import Optional
 
 import pandas as pd
 from tqdm import tqdm
 
-from .model import Corpus, Document
+from .model import Corpus
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)
-
-import logging
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 try:
     import chromadb
-    from chromadb.config import Settings
     from chromadb.api.types import EmbeddingFunction
+    from chromadb.config import Settings
 
     CHROMADB_AVAILABLE = True
 except ImportError:
@@ -139,7 +137,7 @@ class Semantic:
 
         # Create or get collection - delete existing if using different embedding
         try:
-            existing_collection = self._client.get_collection(name=self._collection_name)
+            self._client.get_collection(name=self._collection_name)
             # Delete and recreate to ensure clean state
             self._client.delete_collection(name=self._collection_name)
         except Exception:
@@ -161,7 +159,7 @@ class Semantic:
 
         # Create chunks collection - delete existing if present
         try:
-            existing_chunks_collection = self._client.get_collection(name=self._chunks_collection_name)
+            self._client.get_collection(name=self._chunks_collection_name)
             self._client.delete_collection(name=self._chunks_collection_name)
         except Exception:
             pass  # Collection doesn't exist yet
@@ -192,9 +190,7 @@ class Semantic:
             metadata = {}
             for key, value in doc.metadata.items():
                 # Convert non-string values to strings
-                if isinstance(value, (str, int, float, bool)):
-                    metadata[key] = str(value)
-                elif isinstance(value, (list, tuple)):
+                if isinstance(value, (str, int, float, bool)) or isinstance(value, (list, tuple)):
                     metadata[key] = str(value)
                 else:
                     metadata[key] = str(value)
@@ -441,7 +437,7 @@ class Semantic:
 
         return matching_chunks
 
-    def get_df(self, metadata_keys: Optional[list[str]] = None) -> Corpus:
+    def get_df(self, metadata_keys: list[str] | None = None) -> Corpus:
         """
         Export collection metadata as a pandas DataFrame and merge with corpus.df.
 
@@ -507,7 +503,7 @@ class Semantic:
 
         return self._corpus
 
-    def save_collection(self, path: Optional[str] = None):
+    def save_collection(self, path: str | None = None):
         """
         Save the ChromaDB collection to disk.
 
@@ -554,7 +550,7 @@ class Semantic:
 
         print(f"Collection saved to {path}")
 
-    def restore_collection(self, path: Optional[str] = None):
+    def restore_collection(self, path: str | None = None):
         """
         Restore the ChromaDB collection from disk.
 
