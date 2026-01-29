@@ -104,16 +104,53 @@ Advanced tools for managing the corpus structure.
 *   `--similar-docs "id1,id2"`: Find documents similar to the provided IDs.
 *   `--feature-search "query"`: Search for features/variables in the dataframe.
 
+**Inspect & Utilities:**
+*   `--print`: Display the full corpus structure in a formatted view.
+*   `--df-cols`: List all DataFrame column names.
+*   `--df-row-count`: Show the number of rows in the DataFrame.
+*   `--df-row <index>`: Display a specific DataFrame row by index.
+*   `--doc-ids`: List all document IDs in the corpus.
+*   `--doc-id <id>`: Show details for a specific document by ID.
+*   `--remove-doc <id>`: Remove a document from the corpus by ID.
+
+**Print Options:**
+*   Two formats are supported for `--print`:
+	- Multiple flags: pass several `--print` flags, e.g. `--print documents --print 10`.
+	- Single string: pass the full command as one quoted argument, e.g. `--print "documents 10"` or `--print "dataframe metadata"`.
+
+Examples:
+```bash
+# Print first 10 documents (two-flag form)
+crispt --inp ./corpus --print documents --print 10
+
+# Print DataFrame metadata columns (single-string form)
+crispt --inp ./corpus --print "dataframe metadata"
+```
+
 ### Metadata & Structure
 *   `--id <name>`: Create new corpus with ID.
 *   `--doc "id|text"`: Add a document manually.
 *   `--meta "key=val"`: Add metadata to corpus.
 *   `--add-rel "A|B|rel"`: Define relationship between data points.
 *   `--temporal-link <method>`: Link docs to data by time (`nearest`, `window`, etc.).
+*   `--clear-rel`: Remove all relationships from the corpus metadata.
+*   `--relationships`: Print all relationships defined in the corpus.
+*   `--relationships-for-keyword <kw>`: Print relationships involving a specific keyword.
+*   `--metadata-df`: Export semantic-search collection metadata as a DataFrame.
+*   `--metadata-keys <keys>`: Comma-separated metadata keys to include when exporting.
 
 ### Advanced Analysis
 *   `--tdabm "y:x1,x2:ranking"`: Topological Data Analysis / Agent Based Modeling.
 *   `--graph`: Generate graph network from keywords/metadata.
+
+**Temporal & Embedding Tools:**
+*   `--temporal-summary <period>`: Generate temporal summary (`D`, `W`, `M`, `Y`).
+*   `--temporal-sentiment <period:aggregation>`: Analyze sentiment trends (e.g., `W:mean`).
+*   `--temporal-topics <period:top_n>`: Extract topics over time (e.g., `W:5`).
+*   `--temporal-subgraphs <period>`: Create time-sliced subgraphs (e.g., `W`).
+*   `--embedding-link <metric:top_k:threshold>`: Link by embedding similarity (e.g., `cosine:1:0.7`).
+*   `--embedding-stats`: Display statistics about embedding-based links.
+*   `--embedding-viz <method:output_path>`: Visualize embedding space (`tsne`, `pca`, `umap`).
 
 ---
 
