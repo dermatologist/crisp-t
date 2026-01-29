@@ -25,7 +25,7 @@ Give us a star ⭐️ if you find this useful!
 
 **Qualitative research** focuses on collecting and analyzing textual data to explore complex phenomena. While qualitative and quantitative data are often used together, there is **no standard method for combining them.**
 
-**CRISP-T** (Cross Industry Standard Process for Triangulation) integrates **textual data** (interview transcripts, field notes) and **numeric data** (surveys, demographics) into a unified corpus. It allows researchers to:
+**CRISP-T** integrates **textual data** (interview transcripts, field notes) and **numeric data** (surveys, demographics) into a unified corpus. It allows researchers to:
 - Perform **INDUCTIVE analysis** (finding patterns).
 - **Triangulate findings** by linking text topics to numeric trends.
 - Use **Semantic Search** to find relevant literature or code documents.
@@ -37,6 +37,16 @@ Give us a star ⭐️ if you find this useful!
 *   ✅ **GenAI Ready** - Augments LLMs with agentic tools.
 *   ✅ **Open Source** - GPL-3.0 License.
 
+### The CRISP tools may also be useful for:
+* ⭕ Automated interview **coding dictionary** generation.
+* ⭕ Semantically filtering journal articles for **literature review**.
+* ⭕ Generating **visualizations** for qualitative (e.g. word cloud) and quantitative (e.g. [TDABM](https://github.com/dermatologist/crisp-t/wiki/Topological-Data-Analysis)) data.
+* ⭕ Many other ….
+
+### CRISP is ❌ **NOT** for:
+* ❌  Multimodal prediction. [Use this instead!](https://github.com/dermatologist/kedro-multimodal)
+* ❌  [Sequential mixed methods research,](https://us.sagepub.com/sites/default/files/upm-assets/106361_book_item_106361.pdf) where qualitative and quantitative data are collected and analyzed in separate phases.
+* ❌  Convergent parallel mixed method designs where qualitative and quantitative data are collected simultaneously but analyzed separately.
 ---
 
 ## 💻 Installation
@@ -119,7 +129,7 @@ The MCP server provides tools for semantic search, topic modeling, clustering, a
 ## 🤝 Contribution & Contact
 
 *   **License:** GPL-3.0
-*   **Author:** [Bell Eapen](https://nuchange.ca) | [Contact](https://nuchange.ca/contact)
+*   **Author:** [Bell Eapen](https://nuchange.ca) ([UIS](https://www.uis.edu/directory/bell-punneliparambil-eapen))| [Contact](https://nuchange.ca/contact)
 *   **Social:** [![Twitter Follow](https://img.shields.io/twitter/follow/beapen?style=social)](https://twitter.com/beapen)
 
-Currently targeted for presentation at [ICIS 2025](https://icis2025.aisconferences.org/).
+First presented at [ICIS 2025](https://aisel.aisnet.org/treos_icis2025/25/).

@@ -11,19 +11,18 @@ CRISP-T provides three main CLI tools:
 
 ---
 
-## 📥 Data Import Commands
+## 📥 Data Import Commands (Required first step)
 
 Used to bring data into the CRISP-T environment.
 
 | Command | Description | Example |
 | :--- | :--- | :--- |
-| `crisp --source <path>` | Import data from a directory (PDFs, TXT, CSV) or URL. | `crisp --source ./raw_data --out ./crisp_corpus` |
+| `crisp --source <path>` | Import data from a directory (PDFs, TXT, CSV) or URL. | `crisp --source ./raw_data --out ./crisp_input` |
 | `crisp --sources <path> --sources <path2>` | Import from multiple sources. | `crisp --sources ./data1 --sources ./data2` |
-| `crisp --covid <url>` | Download COVID-19 narratives from a specific URL. | `crisp --covid covidstories.omeka.net --source ./data` |
 | `crisp --unstructured <col>` | Specify CSV columns containing free text to treat as documents. | `crisp --source ./data --unstructured "comments"` |
 
 **Common Options:**
-*   `--out <path>`: Directory to save the imported corpus (recommended).
+*   `--out <path>`: Directory to save the imported corpus (required). Recommended value `crisp_input`.
 *   `--num <int>`: Limit number of text files to import (when used with `--source`).
 *   `--rec <int>`: Limit number of CSV rows to import (when used with `--source`).
 *   `--ignore <text>`: Comma-separated list of words/columns to exclude during import.
@@ -31,6 +30,8 @@ Used to bring data into the CRISP-T environment.
 ---
 
 ## 🔍 Data Analysis Commands
+
+**All commands below are run with the `--inp <corpus-path>` argument to specify the input corpus. `--inp` defaults to `crisp_input`.**
 
 ### Text Analysis (NLP)
 
