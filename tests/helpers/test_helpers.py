@@ -13,7 +13,7 @@ class DummyCorpus:
             Document(id="doc1", text="test document 1", metadata={}),
             Document(id="doc2", text="test document 2", metadata={}),
         ]
-        self.df = None
+        self.df = None  # type: ignore
 
 
 class DummyCsv:
@@ -52,12 +52,14 @@ analyzer.Csv = DummyCsv
 
 # initializer.py tests
 def test_initialize_corpus_source(monkeypatch):
+
     class DummyReadData:
         def read_source(
             self,
             source,
             comma_separated_text_columns=None,
             comma_separated_ignore_words=None,
+            **kwargs,
         ):
             pass
 

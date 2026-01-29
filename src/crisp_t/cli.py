@@ -68,13 +68,13 @@ except ImportError:
     "--num",
     "-n",
     default=3,
-    help="Numerical parameter for analysis (e.g., number of clusters, topics, or epochs). Default: 3.",
+    help="Numerical parameter for analysis (e.g., number of clusters, topics, or epochs). When used with --source, limits the maximum number of text/PDF files to import. Default: 3.",
 )
 @click.option(
     "--rec",
     "-r",
     default=3,
-    help="Number of top results to display or record index for specific operations. Default: 3.",
+    help="Number of top results to display or record index for specific operations. When used with --source, limits the maximum number of CSV rows to import. Default: 3.",
 )
 @click.option(
     "--unstructured",
@@ -347,11 +347,16 @@ def main(
         # if not source or inp, use default folders or env vars
         try:
             text_cols = ",".join(unstructured) if unstructured else ""
+            # When using --source, num and rec are used for import limits
+            max_text_files = num if source and num > 3 else None
+            max_csv_rows = rec if source and rec > 3 else None
             corpus = initialize_corpus(
                 source=source,
                 inp=inp,
                 comma_separated_text_columns=text_cols,
                 comma_separated_ignore_words=(ignore if ignore else None),
+                max_text_files=max_text_files,
+                max_csv_rows=max_csv_rows,
             )
             # If filters were provided with ':' while using --source, emit guidance message
             if source and filters and any(":" in flt and "=" not in flt for flt in filters):
@@ -374,11 +379,17 @@ def main(
                 click.style("\n📥 Loading data from multiple sources...", fg="yellow")
             )
             loaded_any = False
+            # When using --sources, num and rec are used for import limits
+            max_text_files = num if sources and num > 3 else None
+            max_csv_rows = rec if sources and rec > 3 else None
             for src in sources:
                 click.echo(f"   • Reading from: {click.style(src, fg='cyan')}")
                 try:
                     read_data.read_source(
-                        src, comma_separated_ignore_words=ignore if ignore else None
+                        src,
+                        comma_separated_ignore_words=ignore if ignore else None,
+                        max_text_files=max_text_files,
+                        max_csv_rows=max_csv_rows,
                     )
                     loaded_any = True
                     click.echo(format_success("Loaded successfully", indent=5))
