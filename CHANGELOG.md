@@ -2,15 +2,12 @@
 
 ## [Unreleased](https://github.com/dermatologist/crisp-t/tree/HEAD)
 
-[Full Changelog](https://github.com/dermatologist/crisp-t/compare/v1.2.2...HEAD)
-
-**Closed issues:**
-
-- Feature request: Improve the CLI scripts using click. [\#60](https://github.com/dermatologist/crisp-t/issues/60)
-- Feature request: Improve the cli with Typer. [\#57](https://github.com/dermatologist/crisp-t/issues/57)
+[Full Changelog](https://github.com/dermatologist/crisp-t/compare/v1.2.3...HEAD)
 
 **Merged pull requests:**
 
+- Time embedding Linkage [\#70](https://github.com/dermatologist/crisp-t/pull/70) ([dermatologist](https://github.com/dermatologist))
+- Bump pyasn1 from 0.6.1 to 0.6.2 [\#64](https://github.com/dermatologist/crisp-t/pull/64) ([dependabot[bot]](https://github.com/apps/dependabot))
 - Enhance CLI UX with colored output and improved messaging for non-technical users [\#61](https://github.com/dermatologist/crisp-t/pull/61) ([Copilot](https://github.com/apps/copilot-swe-agent))
 - Add --import flag synonym for --source and enhance help with data preparation steps [\#56](https://github.com/dermatologist/crisp-t/pull/56) ([Copilot](https://github.com/apps/copilot-swe-agent))
 - Bump peter-evans/create-pull-request from 7 to 8 [\#55](https://github.com/dermatologist/crisp-t/pull/55) ([dependabot[bot]](https://github.com/apps/dependabot))
@@ -50,6 +47,15 @@
 - Feature/uv 1 [\#8](https://github.com/dermatologist/crisp-t/pull/8) ([dermatologist](https://github.com/dermatologist))
 - Feature/readme 1 [\#4](https://github.com/dermatologist/crisp-t/pull/4) ([dermatologist](https://github.com/dermatologist))
 - Bump astral-sh/setup-uv from 5 to 6 [\#2](https://github.com/dermatologist/crisp-t/pull/2) ([dependabot[bot]](https://github.com/apps/dependabot))
+
+## [v1.2.3](https://github.com/dermatologist/crisp-t/tree/v1.2.3) (2026-01-09)
+
+[Full Changelog](https://github.com/dermatologist/crisp-t/compare/v1.2.2...v1.2.3)
+
+**Closed issues:**
+
+- Feature request: Improve the CLI scripts using click. [\#60](https://github.com/dermatologist/crisp-t/issues/60)
+- Feature request: Improve the cli with Typer. [\#57](https://github.com/dermatologist/crisp-t/issues/57)
 
 ## [v1.2.2](https://github.com/dermatologist/crisp-t/tree/v1.2.2) (2025-12-23)
 

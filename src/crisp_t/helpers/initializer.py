@@ -1,7 +1,8 @@
 import logging
 import os
-from typing import Text
+
 import click
+
 from ..read_data import ReadData
 
 logger = logging.getLogger(__name__)
@@ -12,6 +13,8 @@ def initialize_corpus(
     inp=None,
     comma_separated_text_columns="",
     comma_separated_ignore_words="i,me,my,myself,we,our,ours,ourselves,you,your,yours,yourself,yourselves,he,him,his,himself,she,her,hers,herself,it,its,itself,they,them,their,theirs,themselves,what,which,who,whom,this,that,these,those,am,is,are,was,were,be,been,being,have,has,had,having,do,does,did,doing,a,an,the,and,but,if,or,because,as,until,while,of,at,by,for,with,about,against,between,into,through,during,before,after,above,below,to,from,up,down,in,out,on,off,over,under,again,further,then,once,here,there,when,where,why,how,all,any,both,each,few,more,most,other,some,such,no,nor,not,only,own,same,so,than,too,very,s,t,can,will,just,don,should,now",
+    max_text_files=None,
+    max_csv_rows=None,
 ):
     """Initialize a corpus from source or input file.
     Priority is given to source if both are provided.
@@ -23,6 +26,8 @@ def initialize_corpus(
         inp (str, optional): Path to input text file or directory.
         comma_separated_text_columns (str, optional): Comma-separated list of unstructured text columns in CSV files to be treated as text documents.
         comma_separated_ignore_words (str, optional): Comma-separated stop words to ignore.
+        max_text_files (int, optional): Maximum number of text/PDF files to import when using source.
+        max_csv_rows (int, optional): Maximum number of CSV rows to import when using source.
     """
     # Handle source option (URL or directory)
     read_data = ReadData()
@@ -43,6 +48,8 @@ def initialize_corpus(
                     if comma_separated_ignore_words
                     else None
                 ),
+                max_text_files=max_text_files,
+                max_csv_rows=max_csv_rows,
             )
             corpus = read_data.create_corpus(
                 name=f"Corpus from {source}",
@@ -53,11 +60,11 @@ def initialize_corpus(
             )
 
         except click.ClickException as e:
-            logger.error(f"Failed to read source {source}: {e}")
+            logger.exception(f"Failed to read source {source}: {e}")
             raise
         except Exception as e:
             click.echo(f"✗ Error reading from source: {e}", err=True)
-            logger.error(f"Failed to read source {source}: {e}")
+            logger.exception(f"Failed to read source {source}: {e}")
             return
         return corpus
 

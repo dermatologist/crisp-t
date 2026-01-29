@@ -18,8 +18,9 @@ along with crisp-t.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 import textacy.representations.network as network
-from .model import Corpus
+
 from .cluster import Cluster
+from .model import Corpus
 from .text import Text
 
 
