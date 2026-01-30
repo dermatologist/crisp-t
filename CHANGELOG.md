@@ -2,10 +2,11 @@
 
 ## [Unreleased](https://github.com/dermatologist/crisp-t/tree/HEAD)
 
-[Full Changelog](https://github.com/dermatologist/crisp-t/compare/v1.2.3...HEAD)
+[Full Changelog](https://github.com/dermatologist/crisp-t/compare/v2.0.0...HEAD)
 
 **Merged pull requests:**
 
+- Feature/fix mcp 1 [\#74](https://github.com/dermatologist/crisp-t/pull/74) ([dermatologist](https://github.com/dermatologist))
 - Time embedding Linkage [\#70](https://github.com/dermatologist/crisp-t/pull/70) ([dermatologist](https://github.com/dermatologist))
 - Bump pyasn1 from 0.6.1 to 0.6.2 [\#64](https://github.com/dermatologist/crisp-t/pull/64) ([dependabot[bot]](https://github.com/apps/dependabot))
 - Enhance CLI UX with colored output and improved messaging for non-technical users [\#61](https://github.com/dermatologist/crisp-t/pull/61) ([Copilot](https://github.com/apps/copilot-swe-agent))
@@ -47,6 +48,10 @@
 - Feature/uv 1 [\#8](https://github.com/dermatologist/crisp-t/pull/8) ([dermatologist](https://github.com/dermatologist))
 - Feature/readme 1 [\#4](https://github.com/dermatologist/crisp-t/pull/4) ([dermatologist](https://github.com/dermatologist))
 - Bump astral-sh/setup-uv from 5 to 6 [\#2](https://github.com/dermatologist/crisp-t/pull/2) ([dependabot[bot]](https://github.com/apps/dependabot))
+
+## [v2.0.0](https://github.com/dermatologist/crisp-t/tree/v2.0.0) (2026-01-29)
+
+[Full Changelog](https://github.com/dermatologist/crisp-t/compare/v1.2.3...v2.0.0)
 
 ## [v1.2.3](https://github.com/dermatologist/crisp-t/tree/v1.2.3) (2026-01-09)
 
