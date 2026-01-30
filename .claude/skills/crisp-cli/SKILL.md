@@ -15,12 +15,16 @@ This skill enables agents to perform qualitative and mixed-methods research anal
 * If it still fails, ensure CRISP-T is installed: `pip install crisp-t[ml]`
 
 ## Tips
-* Perform multi-step workflows step-by-step, saving intermediate results with `--out` for analytical flexibility.
+* Perform multi-step workflows STEP-BY-STEP, saving intermediate results with `--out` for analytical flexibility.
+* Do not run all analyses at once; break into smaller steps to isolate issues.
 * If analysis results seem off, clear cache with `--clear` before re-running.
 * If a particular analysis fails or takes too long, try reducing dataset size with filters or `--num` or `--rec` or both.
 * If errors persist or if it still takes too long, skip the step and proceed to the next analysis.
 * Document level TOPIC assignment using `--assign` is a VERY important step different from just running `--topics`. THIS STEP MUST be for TEXT DATA.
 * Use `--clear` when switching datasets or modifying filters before `--assign`
+* Generate a report as you go, documenting insights from each step.
+* If the source folder contains multiple CSV files, warn the user that only one CSV file is supported.
+* If the folder has no text or PDF files, warn the user that at least one text or PDF file is required.
 
 ## Important steps
 Collect data (e.g. in crisp_source folder). Data includes multiple text documents (txt or pdf) and ONE numeric CSV file with (optional) timestamps.
