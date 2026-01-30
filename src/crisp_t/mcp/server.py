@@ -12,26 +12,17 @@ from typing import Any, cast
 
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
-from mcp.types import (
-    GetPromptResult,
-    Prompt,
-    PromptMessage,
-    Resource,
-    TextContent,
-    Tool,
-)
+from mcp.types import (GetPromptResult, Prompt, PromptMessage, Resource,
+                       TextContent, Tool)
 
 from ..cluster import Cluster
 from ..helpers.analyzer import get_csv_analyzer, get_text_analyzer
+from ..helpers.clib import clear_cache
 from ..helpers.initializer import initialize_corpus
 from ..read_data import ReadData
 from ..sentiment import Sentiment
-from .utils.responses import (
-    error_response,
-    no_corpus_response,
-    no_csv_analyzer_response,
-    success_response,
-)
+from .utils.responses import (error_response, no_corpus_response,
+                              no_csv_analyzer_response, success_response)
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -549,6 +540,11 @@ async def list_tools() -> list[Tool]:
                 "type": "object",
                 "properties": {},
             },
+        ),
+        Tool(
+            name="clear_cache",
+            description="Delete the cache folder if it exists. Use this to clear cached analysis results and free up disk space.",
+            inputSchema={"type": "object", "properties": {}},
         ),
     ]
 
@@ -1688,6 +1684,13 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
             _csv_analyzer = None
             _ml_analyzer = None
             return success_response("Global corpus state has been reset.")
+
+        elif name == "clear_cache":
+            try:
+                clear_cache()
+                return success_response("Cache has been cleared successfully.")
+            except Exception as e:
+                return error_response(f"Error clearing cache: {str(e)}")
 
         elif name == "semantic_search":
             if not _corpus:
