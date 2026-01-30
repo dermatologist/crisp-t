@@ -31,6 +31,10 @@ class DummyCsv:
     def filter_rows_by_column_value(self, key, value):
         return None
 
+    def comma_separated_include_columns(self, include_cols: str = ""):
+        # Dummy method for test compatibility
+        pass
+
 
 class DummyText:
     def __init__(self, corpus=None):
