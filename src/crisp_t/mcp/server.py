@@ -2181,74 +2181,84 @@ async def get_prompt(
 
 Follow these steps to conduct a comprehensive analysis:
 
-## Phase 1: Data Preparation and Exploration
+## Data Preparation and Exploration
 
-1. **Load your data**
+* **Load your data**
    - Use `load_corpus` tool with either `inp` (existing corpus) or `source` (directory/URL)
    - For CSV data with text columns, specify `text_columns` parameter
 
-2. **Inspect the data**
+* **Inspect the data**
    - Use `list_documents` to see all documents
    - Use `get_df_columns` and `get_df_row_count` if you have numeric data
    - Use `get_document` to examine specific documents
 
-## Phase 2: Descriptive Analysis
+* **Link text to numeric data**
+   - Use `temporal_link_by_time` if you have timestamps
+   - Use `embedding_link` to link based on semantic similarity, if applicable
 
-3. **Generate coding dictionary**
+## Descriptive Analysis
+
+* **Generate coding dictionary for entire corpus**
    - Use `generate_coding_dictionary` with appropriate `num` and `top_n` parameters
    - This reveals categories (verbs), properties (nouns), and dimensions (adjectives)
 
-4. **Perform sentiment analysis**
+* **Perform sentiment analysis**
    - Use `sentiment_analysis` to understand emotional tone
    - Set `documents=true` for document-level analysis
 
-5. **Basic statistical exploration**
+* **Basic statistical exploration**
    - Use `get_df_row` to examine specific data points
    - Review column distributions
 
-## Phase 3: Advanced Pattern Discovery
+## Advanced Pattern Discovery
 
-6. **Topic modeling**
-   - Use `topic_modeling` to discover latent themes (set appropriate `num_topics`)
-   - Use `assign_topics` to assign documents to their dominant topics
+* **Topic modeling**
+   - Use `topic_modeling` to discover latent themes for entire corpus (set appropriate `num_topics`)
+   - Use `assign_topics` to assign documents to their dominant topics. PERFORM THIS STEP ALWAYS.
+   - Use `clear_cache` before `assign_topics` if you change filters
    - Topics generate keywords that can be used to categorize documents
 
-7. **Numerical clustering** (if you have numeric data)
+* **Numerical clustering** (if you have numeric data)
    - Use `kmeans_clustering` to segment your data
    - Review cluster profiles to understand groupings
 
-8. **Association rules** (if applicable)
+* **Association rules** (if applicable)
    - Use `extract_categories` for text-based associations
    - Use `association_rules` for numeric pattern mining
 
-## Phase 4: Predictive Modeling (if you have an outcome variable)
-
-9. **Classification**
+## Predictive Modeling (if you have an outcome variable)
+* **Classification**
    - Use `decision_tree_classification` to get feature importance rankings
    - Use `svm_classification` for robust classification
    - Use `neural_network_classification` for complex patterns
 
-10. **Regression analysis**
+* **Regression analysis**
     - Use `regression_analysis` to understand factor relationships
     - It auto-detects binary outcomes (logistic) vs continuous (linear)
     - Returns coefficients showing strength and direction of relationships
 
-11. **Dimensionality reduction**
+* **Dimensionality reduction**
     - Use `pca_analysis` to reduce feature space
 
-## Phase 5: Validation and Triangulation
+## Validation and Triangulation
 
-12. **Create relationships**
+* **Cross-modal analysis**
+    - Use linkage and aggregation methods in ML tools to combine text and numeric data
+    - Experiment with different linkage methods: nearest, window, sequence
+    - Experiment with aggregation methods: majority, mean, median
+    - With linked data the outcome variable can be in the text or numeric side
+
+* **Create relationships**
     - Use `add_relationship` to link text keywords (from topics) with numeric columns
     - Example: link topic keywords to demographic or outcome variables
     - Use format like: first="text:healthcare", second="num:age_group", relation="correlates"
 
-13. **Validate findings**
+* **Validate findings**
     - Compare topic assignments with numerical clusters
     - Validate sentiment patterns with outcome variables
     - Use `get_relationships_for_keyword` to explore connections
 
-14. **Save your work**
+* **Save your work**
     - Use `save_corpus` to persist all analyses and metadata
     - The corpus retains all transformations and relationships
 
@@ -2280,26 +2290,32 @@ Triangulation involves validating findings by comparing and contrasting results 
 
 ## Key Strategies
 
-### 1. Link Topic Keywords to Variables
+### Cross-Modal Linking
+- Use `temporal_link_by_time` to align text documents with time-stamped numeric data
+- Use `embedding_link` to connect documents with similar semantic content to numeric records
+- If id columns exist, use them to directly link text and numeric data
+- If keywords exist in both text and numeric data (as columns), use them for linking
+
+### Link Topic Keywords to Variables
 
 After topic modeling:
 - Topics generate keywords representing themes
 - Use `add_relationship` to link keywords to relevant dataframe columns
 - Example: If topic discusses "satisfaction", link to satisfaction score column
 
-### 2. Compare Patterns
+### Compare Patterns
 
 - Cross-reference sentiment with numeric outcomes
 - Compare topic distributions across demographic groups
 - Validate clustering results using both text and numbers
 
-### 3. Use Relationships
+### Use Relationships
 
 - `add_relationship("text:keyword", "num:column", "correlates")`
 - `get_relationships_for_keyword` to explore connections
 - Document theoretical justifications for relationships
 
-### 4. Validate Findings
+### Validate Findings
 
 - Check if text-based themes align with numeric clusters
 - Test if sentiment patterns predict outcomes
