@@ -19,8 +19,21 @@ This skill enables agents to perform qualitative and mixed-methods research anal
 * If analysis results seem off, clear cache with `--clear` before re-running.
 * If a particular analysis fails or takes too long, try reducing dataset size with filters or `--num` or `--rec` or both.
 * If errors persist or if it still takes too long, skip the step and proceed to the next analysis.
+* Document level TOPIC assignment using `--assign` is a VERY important step different from just running `--topics`. THIS STEP MUST be for TEXT DATA.
 * Use `--clear` when switching datasets or modifying filters before `--assign`
 
+## Important steps
+Collect data (e.g. in crisp_source folder). Data includes multiple text documents (txt or pdf) and ONE numeric CSV file with (optional) timestamps.
+Import data into CRISP-T corpus and dataframe.
+Perform linking between text and numeric data using various methods (id based, keyword based, time based, embedding based).
+Explore text data using various methods (e.g., topic modeling, keyword extraction, sentiment analysis, visualizations).
+Explore numeric data using various methods (e.g., summary statistics, classification, clustering, regression, association, visualizations, TDA, etc.).
+Perform cross modal analysis using linked text and numeric data (e.g., text features as predictors for numeric outcomes, numeric features as predictors for text outcomes, etc.).
+Add manual connections between text documents and numeric rows if needed to support theory driven analysis.
+Derive insights from the analysis and document them.
+---
+
+### Reference Guide: https://r.jina.ai/https://github.com/dermatologist/crisp-t/wiki
 
 
 ### 1. CRISP - Main Analysis Engine
