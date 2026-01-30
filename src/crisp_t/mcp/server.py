@@ -134,7 +134,7 @@ async def list_tools() -> list[Tool]:
         # Corpus management tools
         Tool(
             name="load_corpus",
-            description="Load a corpus from a folder containing corpus.json or from a source directory/URL. Run this first before any analysis.",
+            description="Load a corpus from a folder containing corpus.json or from a source directory/URL. Essential starting point for all analysis workflows. If using 'source', CRISP-T will import text files (.txt, .pdf) and CSV data into a new corpus structure.\n\t    Workflow tips:\n\t    - If corpus already exists: use 'inp' parameter\n\t    - If importing raw data: use 'source' parameter to auto-create corpus\n\t    - For CSV with text columns: specify 'text_columns' to mark free-text fields\n\t    - Use 'ignore_words' to exclude stop words during initial processing\n\t    - Always call this first before any analysis",
             inputSchema={
                 "type": "object",
                 "properties": {
@@ -159,7 +159,7 @@ async def list_tools() -> list[Tool]:
         ),
         Tool(
             name="save_corpus",
-            description="Save the current corpus to a folder as corpus.json. Use this to persist your work after analysis or transformation.",
+            description="Save the current corpus to a folder as corpus.json and corpus_df.csv (if DataFrame exists). Persists all work including documents, metadata, relationships, and analysis results.\n\t    Use cases: After document modifications, text analysis, linking documents to numeric data, filtering/transforming corpus, or creating analysis checkpoints.\n\t    Tip: Save frequently to preserve work. Different output folders create separate analysis branches.",
             inputSchema={
                 "type": "object",
                 "properties": {
@@ -173,7 +173,7 @@ async def list_tools() -> list[Tool]:
         ),
         Tool(
             name="add_document",
-            description="Add a new document to the corpus. Use this to expand your dataset with new text entries.",
+            description="Add a new document to the corpus. Expands your dataset with new text entries or integrates external documents into existing corpus.\n\t    Use when: Incrementally building corpus, manually adding external documents, correcting/updating specific documents, or combining multiple corpora.\n\t    Tips: doc_id must be unique within corpus. name field is optional but recommended. Consider adding before analysis for best results.",
             inputSchema={
                 "type": "object",
                 "properties": {
@@ -186,7 +186,7 @@ async def list_tools() -> list[Tool]:
         ),
         Tool(
             name="remove_document",
-            description="Remove a document from the corpus by ID. Use this to clean up or curate your corpus.",
+            description="Remove a document from the corpus by ID. Useful for data cleaning, curation, or excluding outliers/irrelevant entries.\n\t    Use for: Removing duplicates, excluding irrelevant/off-topic documents, correcting data quality issues, or curating corpus to specific criteria.\n\t    Tip: Call list_documents first to identify document IDs to remove.",
             inputSchema={
                 "type": "object",
                 "properties": {
@@ -197,7 +197,7 @@ async def list_tools() -> list[Tool]:
         ),
         Tool(
             name="get_document",
-            description="Get a document by ID from the corpus. Use this to inspect or retrieve specific documents for review.",
+            description="Retrieve a specific document by ID to inspect its full text and metadata. Essential for validating data, reviewing specific cases, or extracting quotes.\n\t    Use for: Validating document content, extracting passages for reporting, reviewing documents with specific characteristics, or debugging metadata/assignments.\n\t    Tip: Use with assign_topics or get_relationships to understand document context.",
             inputSchema={
                 "type": "object",
                 "properties": {
@@ -208,12 +208,12 @@ async def list_tools() -> list[Tool]:
         ),
         Tool(
             name="list_documents",
-            description="List all document IDs in the corpus. Use this to enumerate all available documents for batch operations.",
+            description="List all document IDs in the corpus. Returns IDs for all available documents, useful for exploration, validation, and batch operations.\n\t    Use to: Explore corpus structure/size, identify specific documents for further analysis, validate document import/creation, or generate reference lists for reporting.\n\t    Workflow: Call this after load_corpus to verify data was loaded correctly.",
             inputSchema={"type": "object", "properties": {}},
         ),
         Tool(
             name="add_relationship",
-            description="Add a relationship between text keywords and numeric columns. Link topic modeling results with DataFrame columns for triangulation.",
+            description="Establish explicit links between text findings and numeric variables for mixed-methods triangulation. Documents connections discovered through analysis.\n\t    Format: first|second|relation where first='text:keyword', second='num:column', relation='predicts'/'correlates'/'contrasts'.\n\t    Workflow: Add relationships after running assign_topics, topic_modeling, or sentiment_analysis to link findings to outcomes.",
             inputSchema={
                 "type": "object",
                 "properties": {
@@ -235,12 +235,12 @@ async def list_tools() -> list[Tool]:
         ),
         Tool(
             name="get_relationships",
-            description="Get all relationships in the corpus. Review established links between text and numeric data.",
+            description="Retrieve all established relationships between text and numeric data. Essential for understanding corpus-wide connections and triangulation findings.\n\t    Use to: Review all documented connections, validate relationship patterns, export findings for reporting, or plan further analysis based on known patterns.\n\t    Returns: List of all text↔numeric relationships with their types.",
             inputSchema={"type": "object", "properties": {}},
         ),
         Tool(
             name="get_relationships_for_keyword",
-            description="Get relationships involving a specific keyword. Explore connections for a particular topic or term.",
+            description="Find all relationships connected to a specific keyword, topic, or theme. Useful for exploring how particular concepts relate to numeric outcomes.\n\t    Examples: Find all metrics related to 'satisfaction' keyword, explore connections for specific topics, trace theme relationships through data.\n\t    Tip: Use after add_relationship to verify links were created correctly.",
             inputSchema={
                 "type": "object",
                 "properties": {
@@ -256,13 +256,21 @@ async def list_tools() -> list[Tool]:
         Tool(
             name="generate_coding_dictionary",
             description="""
-            Generate a qualitative coding dictionary with categories (verbs), properties (nouns), and dimensions (adjectives/adverbs).
-            Useful for understanding the main themes and concepts in the corpus.
-            IMPORTANT: This is a corpus-level operation. If you are looking to code individual documents, use the assign_topics tools instead.
-            Tips:
-              - Use ignore to exclude common but uninformative words.
-              - Use filters to narrow down documents based on metadata (key=value).
-              - Adjust num (categories) and top_n (items per section).
+            Generate a qualitative coding dictionary with categories organized by grammatical function:
+            - Verbs (actions/processes)
+            - Nouns (properties/concepts)
+            - Adjectives/Adverbs (dimensions/qualities)
+            
+            Reveals main themes and constructs in corpus. Excellent for grounded theory and thematic analysis.
+            IMPORTANT: This analyzes CORPUS-LEVEL patterns. Use assign_topics for document-level coding.
+            
+            Configuration tips:
+            - num: Increase (5-10) for exploratory analysis, decrease (3) for focused analysis
+            - top_n: Show 3-5 items per category for balanced view
+            - ignore: Exclude stop words and domain-specific noise words
+            - filters: Use key=value to analyze subsets (e.g., sentiment=positive)
+            
+            Workflow: Usually second step after load_corpus for understanding corpus structure.
             """,
             inputSchema={
                 "type": "object",
@@ -293,12 +301,23 @@ async def list_tools() -> list[Tool]:
         Tool(
             name="topic_modeling",
             description="""
-            Perform LDA topic modeling to discover latent topics in the corpus.
-            Returns topics with their associated keywords and weights, useful for categorizing documents by theme.
-            IMPORTANT: This is a corpus-level operation. If you are looking to code individual documents, use the assign_topics tools instead.
-            Tips:
-              - Set num_topics (number of topics).
-              - Set num_words (words to show per topic).
+            Discover latent topics in corpus using Latent Dirichlet Allocation (LDA). Returns probabilistic topic distributions.
+            Each topic is represented as a weighted set of keywords, useful for understanding corpus themes and patterns.
+            
+            IMPORTANT: This discovers corpus-level topics. Follow with assign_topics to label documents with their dominant topics.
+            
+            Parameter guidance:
+            - num_topics: Start with 3-5 for initial exploration. Increase for large/diverse corpora.
+              - Low (2-3): High-level themes
+              - Medium (5-10): Detailed topic breakdown
+              - High (15+): Fine-grained distinction (needs large corpus)
+            - num_words: 5-10 recommended for interpretability
+            
+            Workflow:
+            1. Run topic_modeling to discover topics
+            2. Review topic keywords to validate they're meaningful
+            3. Use assign_topics to assign documents to topics
+            4. Add relationships linking topics to numeric outcomes
             """,
             inputSchema={
                 "type": "object",
@@ -319,11 +338,21 @@ async def list_tools() -> list[Tool]:
         Tool(
             name="assign_topics",
             description="""
-            Assign documents to their dominant topics, themes and keywords with contribution percentages.
-            These topic assignments can be used as keywords to filter or categorize documents.
-            IMPORTANT: This operation creates a cache when used the first time. If you are using filters with this tool,
-            you should use clear_cache tool to clear the cache when changing filters.
-            Note: Use the results to create keywords for filtering/categorization.
+            Assign each document to its dominant topics with contribution percentages. Provides document-level topic labels.
+            Results can be used for filtering, categorization, and adding relationships to numeric outcomes.
+            
+            IMPORTANT CACHE BEHAVIOR:
+            - First run creates cache (may take time for large corpora)
+            - Subsequent runs use cache (fast)
+            - When changing filters: MUST call clear_cache first, then rerun
+            - If you change num_topics after initial analysis: clear_cache first
+            
+            Workflow:
+            1. Run topic_modeling first (discovers corpus topics)
+            2. Call assign_topics to label documents
+            3. Use results in filter_documents or add_relationship
+            
+            Tip: Check topic keywords from topic_modeling before assigning to ensure they're meaningful.
             """,
             inputSchema={
                 "type": "object",
@@ -339,9 +368,17 @@ async def list_tools() -> list[Tool]:
         Tool(
             name="extract_categories",
             description="""
-            Extract common categories/concepts from the corpus as bag-of-terms with weights
-
-            Tip: Adjust num to change how many categories are returned.
+            Extract distinct categories/concepts from corpus as weighted bag-of-terms. Similar to topic modeling but
+            provides category-level (rather than document-level) analysis.
+            
+            Use for: Quick overview of major concepts, validation of topic modeling results, creating concept hierarchies, understanding corpus vocabulary.
+            
+            Configuration:
+            - num: 5-15 recommended. Higher values reveal more fine-grained distinctions.
+            
+            Comparison to topic_modeling:
+            - extract_categories: Faster, corpus-level only, simpler interpretation
+            - topic_modeling: Probabilistic, document-level mapping possible
             """,
             inputSchema={
                 "type": "object",
@@ -357,9 +394,18 @@ async def list_tools() -> list[Tool]:
         Tool(
             name="generate_summary",
             description="""
-            Generate an extractive text summary of the entire corpus
-
-            Tip: Increase weight for longer summaries.
+            Generate extractive summary (key sentences from original documents) representing entire corpus.
+            Useful for quick overviews, stakeholder reports, and understanding dominant themes.
+            
+            Use for: Executive summaries of corpus content, understanding key passages, report generation, identifying representative quotes.
+            
+            Configuration:
+            - weight: 5-15 for most corpora
+              - Low (5): Concise 1-2 sentence summary
+              - Medium (10): Balanced overview
+              - High (20+): Comprehensive summary with many key points
+            
+            Note: This is extractive (using original sentences), not generative (creating new text).
             """,
             inputSchema={
                 "type": "object",
@@ -375,11 +421,24 @@ async def list_tools() -> list[Tool]:
         Tool(
             name="sentiment_analysis",
             description="""
-            Perform VADER sentiment analysis on the corpus, providing positive, negative, neutral, and compound scores
-
-            Tips:
-              - Set documents=true to analyze at document level.
-              - Set verbose=true for detailed output.
+            Analyze emotional tone in corpus using VADER (Valence Aware Dictionary and sEntiment Reasoner).
+            Returns: positive, negative, neutral proportions + compound sentiment score (-1 to +1).
+            
+            VADER is optimized for:
+            - Social media text and informal language
+            - Texts with emojis, contractions, slang
+            - Mixed sentiment (not strictly positive/negative)
+            
+            Output options:
+            - documents=false (default): Corpus-level sentiment (useful for: Overall tone, trend analysis, outcome prediction)
+            - documents=true: Document-level sentiment (useful for: Tracking individual perspectives, document categorization)
+            
+            Workflow:
+            1. Run sentiment_analysis(documents=false) for corpus overview
+            2. If interesting pattern found, run with documents=true to drill down
+            3. Use results to add relationships: text:sentiment_category|num:outcome_metric|correlates
+            
+            Tip: For more rigorous NLP, combine with topic_modeling for aspect-based sentiment.
             """,
             inputSchema={
                 "type": "object",
@@ -401,10 +460,13 @@ async def list_tools() -> list[Tool]:
         Tool(
             name="filter_documents",
             description=(
-                "Filter corpus documents or DataFrame rows using metadata or link filters. "
-                "Supports regular filters (key=value or key:value) and bidirectional link filters: "
-                "embedding:text (text→df), embedding:df (df→text), temporal:text (text→df), temporal:df (df→text). "
-                "Legacy =embedding/:embedding/=temporal/:temporal are mapped to :text variants. "
+                "Filter corpus documents based on coding links and/or metadata filters. "
+                "Supports metadata filters (key:value or key=value) and link filters for embedding and temporal relationships. "
+                "Link format: 'embedding:text' (documents with embedding links), 'embedding:df' (matches temporal links), etc. "
+                "Apply AND logic when combining filters. Returns filtered corpus and document count. "
+                "Use to subset corpus for sub-analysis, identify documents with specific relationships, or validate link creation. "
+                "Tip: Use list_documents first to understand existing links before filtering. "
+                "Workflow: Filter to documents with specific coded categories → analyze subset → save as branch for comparison. "
                 "Updates the active corpus."
             ),
             inputSchema={
@@ -423,27 +485,27 @@ async def list_tools() -> list[Tool]:
         ),
         Tool(
             name="document_count",
-            description="Return the number of documents currently in the active corpus (after any filters).",
+            description="Return number of documents currently in active corpus (accounting for any active filters). Use to validate filtering operations or understand corpus size after subsetting. Useful in workflows: load corpus → filter by criteria → check count to verify expected subset size.",
             inputSchema={"type": "object", "properties": {}},
         ),
         # DataFrame/CSV Tools
         Tool(
             name="get_df_columns",
-            description="Get all column names from the DataFrame. Use this to inspect available features for analysis.",
+            description="Get all column names from the DataFrame. Essential first step in data exploration to understand available features for ML analysis or numeric linking. Returns column list and data types. Workflow: get_df_columns → get_column_types → filter/prepare columns → use in analysis. Tip: Use get_column_values to preview column contents.",
             inputSchema={"type": "object", "properties": {}},
         ),
         Tool(
             name="get_df_row_count",
-            description="Get the number of rows in the DataFrame. Useful for understanding dataset size before analysis.",
+            description="Get number of rows in the DataFrame. Essential for understanding dataset size before ML analysis or statistical testing. Check row count after filtering/preprocessing to validate data transformations. Workflow: get_df_row_count (before) → bin_a_column/oversample → get_df_row_count (after) to verify changes. Tip: Compare with document_count for text↔numeric alignment.",
             inputSchema={"type": "object", "properties": {}},
         ),
         Tool(
             name="get_df_row",
-            description="Get a specific row from the DataFrame by index. Use this to inspect individual records for debugging or exploration.",
+            description="Get specific row from DataFrame by index. Use for: Inspecting individual records, debugging data issues, validating values, extracting quotes for embedding context. Workflow: get_df_row_count to find valid range → get_df_row(index=N) to examine. Tip: Use after filtering to verify filter correctness. Returns all column values for that row.",
             inputSchema={
                 "type": "object",
                 "properties": {
-                    "index": {"type": "integer", "description": "Row index"}
+                    "index": {"type": "integer", "description": "Row index (0-based)"}
                 },
                 "required": ["index"],
             },
@@ -451,7 +513,7 @@ async def list_tools() -> list[Tool]:
         # CSV Column/DataFrame operations
         Tool(
             name="bin_a_column",
-            description="Bin a numeric column into a specified number of bins.",
+            description="Convert numeric column to categorical by binning into equal-width intervals. Essential preprocessing for: Creating outcome categories (e.g., satisfaction_score → low/medium/high), Preparing data for categorical ML algorithms, Creating linked text↔numeric relationships. Bins parameter: Default 2 (binary), 3-5 common for typical ranges, 10+ for fine-grained analysis. Workflow: get_column_values → bin_a_column (default 3 bins) → one_hot_encode_column → use in ML. Tip: Inspect distribution first with get_df_row to choose appropriate bin count.",
             inputSchema={
                 "type": "object",
                 "properties": {
@@ -461,7 +523,7 @@ async def list_tools() -> list[Tool]:
                     },
                     "bins": {
                         "type": "integer",
-                        "description": "Number of bins",
+                        "description": "Number of bins (default: 2, typical: 3-5)",
                         "default": 2,
                     },
                 },
@@ -470,7 +532,7 @@ async def list_tools() -> list[Tool]:
         ),
         Tool(
             name="one_hot_encode_column",
-            description="One-hot encode a specific categorical column.",
+            description="One-hot encode categorical column to binary indicator columns (necessary preprocessing for many ML algorithms). Essential for: Tree-based models (decision_tree_classification, random forests), Linear models (regression_analysis), Neural networks. Creates dummy columns for each category. Workflow: After bin_a_column or for natural categorical columns → one_hot_encode_column → train_model. Tip: Ensure categorical column is properly formatted (strings or ints); numbers are not auto-detected as categories unless binned first. Tip: For multiclass problems, removes one redundant column to prevent multicollinearity.",
             inputSchema={
                 "type": "object",
                 "properties": {
@@ -484,7 +546,7 @@ async def list_tools() -> list[Tool]:
         ),
         Tool(
             name="filter_rows_by_column_value",
-            description="Filter DataFrame rows where a column equals a specific value.",
+            description="Filter DataFrame to keep only rows matching specific column value. Essential for: Subsetting data (e.g., keep only 'Treatment' group), Data exploration (examine specific categories), Linked analysis (combine with filter_documents for text+numeric matching). Returns filtered DataFrame. Workflow: get_df_columns → get_column_values(column) to see options → filter_rows_by_column_value to subset. Note: Supports both string and numeric values (auto-detected). Tip: Use with filter_documents(metadata_filter=...) to coordinate text and numeric subsetting.",
             inputSchema={
                 "type": "object",
                 "properties": {
@@ -502,22 +564,22 @@ async def list_tools() -> list[Tool]:
         ),
         Tool(
             name="oversample",
-            description="Apply random oversampling to balance classes (requires prior X/y preparation).",
+            description="Apply random oversampling to balance imbalanced classes in DataFrame. Essential for: Imbalanced classification (rare outcome prediction), Ensuring model trains on balanced proportions. Workflow: Prepare X/y via ML tools → Check class distribution (get_column_values) → oversample if imbalanced (target: ~50/50 or equal proportions) → train_model. Use restore_oversample after model training to return to original data. Warning: Oversampling increases data size and can slow training; best for small datasets (<10K rows). Tip: For large datasets, consider stratified sampling or class weights in ML algorithm instead.",
             inputSchema={"type": "object", "properties": {}},
         ),
         Tool(
             name="restore_oversample",
-            description="Restore X and y to their original (pre-oversampling) values.",
+            description="Restore X and y to original (pre-oversampling) values. Use after model training when oversampling was applied. Workflow: oversample → train_model → evaluate_model → restore_oversample to return to original proportions for final evaluation on unbalanced data. Essential for: Accurate performance metrics on real-world imbalanced data, Preventing overfitting from synthetic duplicates, Final validation of model generalization.",
             inputSchema={"type": "object", "properties": {}},
         ),
         Tool(
             name="get_column_types",
-            description="Get data types of all DataFrame columns.",
+            description="Get data types of all DataFrame columns. Essential for: Understanding data format (int64, float64, object/string, etc.), Validating data after loading/preprocessing, Planning feature engineering (e.g., categorical vs numeric columns). Workflow: load data → get_df_columns → get_column_types to understand structure → plan preprocessing. Use retain_numeric_columns_only if you need only numeric features for ML.",
             inputSchema={"type": "object", "properties": {}},
         ),
         Tool(
             name="get_column_values",
-            description="Get values from a specific DataFrame column.",
+            description="Get all unique values from specific DataFrame column with value counts. Essential for: Exploring column contents before filtering/analysis, Understanding categorical distributions, Planning binning (get_column_values before bin_a_column to understand numeric range), Validation after preprocessing. Workflow: get_df_columns → get_column_values(column) → filter_rows_by_column_value (with desired value). Returns unique values and their frequencies (if available). Useful for both numeric and categorical columns.",
             inputSchema={
                 "type": "object",
                 "properties": {
@@ -531,7 +593,7 @@ async def list_tools() -> list[Tool]:
         ),
         Tool(
             name="retain_numeric_columns_only",
-            description="Retain only numeric columns in the DataFrame.",
+            description="Keep only numeric columns in DataFrame; remove string/object columns. Essential preprocessing for: Preparing data for ML algorithms (most require numeric input), PCA analysis, Regression/classification with numeric features. Workflow: get_column_types → identify categorical columns (if needed: one_hot_encode first) → retain_numeric_columns_only → use in ML model. Warning: This removes all non-numeric data permanently from active corpus; consider encoding categoricals to numeric before using. Tip: Compare with get_column_types first to understand what will be removed.",
             inputSchema={"type": "object", "properties": {}},
         ),
         Tool(
@@ -556,19 +618,23 @@ async def list_tools() -> list[Tool]:
                 Tool(
                     name="kmeans_clustering",
                     description="""
-                Perform K-Means clustering on numeric data. Useful for segmenting data into groups based on similarity.
-                Required: specify columns to include as a comma-separated list (include).
-
-                Args:
-                    num_clusters (int): The number of clusters to form.
-                    include (str): Comma-separated columns to include in clustering.
+                Perform K-Means clustering on numeric features to segment data into groups. Essential for: Unsupervised exploratory analysis, Finding natural groupings in data, Creating clusters for mixed-methods linking to text themes.
+                
+                Workflow: get_df_columns → retain_numeric_columns_only (if needed) → kmeans_clustering (start with num_clusters=3) → use cluster assignments to add_relationship linking clusters to text topics or coded categories.
+                
+                Parameters:
+                - num_clusters: Start with 3-5 for exploratory analysis; use elbow method (try 2-10) to find optimal k
+                - include: Specify numeric columns for clustering (e.g., "age,income,satisfaction")
+                - outcome: Optional column to exclude from clustering features
+                
+                Tip: Normalize/scale columns first for best results; clustering is sensitive to feature magnitude.
                 """,
                     inputSchema={
                         "type": "object",
                         "properties": {
                             "num_clusters": {
                                 "type": "integer",
-                                "description": "Number of clusters",
+                                "description": "Number of clusters (default: 3, typical range: 2-10)",
                                 "default": 3,
                             },
                             "outcome": {
@@ -586,15 +652,18 @@ async def list_tools() -> list[Tool]:
                 Tool(
                     name="decision_tree_classification",
                     description="""
-                Train a decision tree classifier and return variable importance rankings. Shows which features are most predictive of the outcome.
-                Required: specify columns to include in the classification as a comma-separated list (include).
-
-                    Args:
-                        outcome (str): The target variable for classification. Can be a DataFrame column OR text metadata field (when linkage_method is specified).
-                        top_n (int): The number of top features to return.
-                        include (str): Comma-separated list of columns to include.
-                        linkage_method (str, optional): Linkage method when outcome is a text metadata field. Options: id, embedding, temporal, keyword.
-                        aggregation (str, optional): Aggregation strategy for multiple documents per row. Options: majority, mean, first, mode.
+                Train decision tree classifier to identify predictive features. Returns variable importance rankings. Essential for: Understanding feature importance (what predicts outcome?), Creating interpretable ML models, Validating qualitative coding against numeric outcomes.
+                
+                Workflow: filter_documents + filter_rows_by_column_value (subset to key groups) → decision_tree_classification (outcome=target_column) → Examine top features → Add relationships linking top predictors to text themes.
+                
+                Parameters:
+                - outcome: Target variable (DataFrame column or text metadata field if linkage_method specified)
+                - include: Feature columns for model (comma-separated)
+                - top_n: Number of important features to return (default: 10, typical: 5-20)
+                - linkage_method: For text metadata outcomes: "id" (document level), "embedding" (semantic), "temporal" (time-based), "keyword" (link-based)
+                - aggregation: When multiple documents per outcome: "majority" (most common), "mean" (average), "mode", "first"
+                
+                Tip: Binary classification (2 classes) more reliable than multi-class; start simple.
                 """,
                     inputSchema={
                         "type": "object",
@@ -605,7 +674,7 @@ async def list_tools() -> list[Tool]:
                             },
                             "top_n": {
                                 "type": "integer",
-                                "description": "Top N important features",
+                                "description": "Top N important features to return (default: 10, typical: 5-20)",
                                 "default": 10,
                             },
                             "include": {
@@ -614,12 +683,12 @@ async def list_tools() -> list[Tool]:
                             },
                             "linkage_method": {
                                 "type": "string",
-                                "description": "Linkage method for text metadata outcomes",
+                                "description": "Linkage method for text metadata outcomes: id, embedding, temporal, keyword",
                                 "enum": ["id", "embedding", "temporal", "keyword"],
                             },
                             "aggregation": {
                                 "type": "string",
-                                "description": "Aggregation strategy",
+                                "description": "Aggregation strategy for multiple documents: majority, mean, first, mode",
                                 "enum": ["majority", "mean", "first", "mode"],
                                 "default": "majority",
                             },
@@ -630,14 +699,22 @@ async def list_tools() -> list[Tool]:
                 Tool(
                     name="svm_classification",
                     description="""
-                Perform SVM classification and return confusion matrix
-                Required: specify columns to include in the classification as a comma-separated list (include).
-
-                Args:
-                    outcome (str): The target variable for classification. Can be a DataFrame column OR text metadata field (when linkage_method is specified).
-                    include (str): Comma-separated list of columns to include.
-                    linkage_method (str, optional): Linkage method when outcome is a text metadata field. Options: id, embedding, temporal, keyword.
-                    aggregation (str, optional): Aggregation strategy for multiple documents per row. Options: majority, mean, first, mode.
+                Perform SVM (Support Vector Machine) classification. Returns confusion matrix and accuracy. Essential for: Binary/multiclass classification problems, Finding decision boundaries in high-dimensional data, Validating text coding against numeric outcomes.
+                
+                Workflow: prepare numeric features → bin outcome if needed (e.g., satisfaction_score → high/low) → svm_classification → validate results → create relationships linking predictions to text themes.
+                
+                Parameters:
+                - outcome: Target variable (DataFrame column or text metadata)
+                - include: Feature columns (comma-separated)
+                - linkage_method: For text outcomes: "id", "embedding", "temporal", "keyword"
+                - aggregation: Strategy for multiple documents
+                
+                Use cases: 
+                - Binary (2 classes): Most reliable, typical use case
+                - Multiclass (3+ classes): Possible but more challenging
+                
+                Compare to: decision_tree_classification (more interpretable) vs svm_classification (better for complex boundaries)
+                Tip: Normalize/scale features for better SVM performance.
                 """,
                     inputSchema={
                         "type": "object",
@@ -652,12 +729,12 @@ async def list_tools() -> list[Tool]:
                             },
                             "linkage_method": {
                                 "type": "string",
-                                "description": "Linkage method for text metadata outcomes",
+                                "description": "Linkage method for text metadata outcomes: id, embedding, temporal, keyword",
                                 "enum": ["id", "embedding", "temporal", "keyword"],
                             },
                             "aggregation": {
                                 "type": "string",
-                                "description": "Aggregation strategy",
+                                "description": "Aggregation strategy for multiple documents",
                                 "enum": ["majority", "mean", "first", "mode"],
                                 "default": "majority",
                             },
@@ -668,14 +745,19 @@ async def list_tools() -> list[Tool]:
                 Tool(
                     name="neural_network_classification",
                     description="""
-                Train a neural network classifier and return predictions with accuracy
-                Required: specify columns to include in the classification as a comma-separated list (include).
-
-                Args:
-                    outcome (str): The target variable for classification. Can be a DataFrame column OR text metadata field (when linkage_method is specified).
-                    include (str): Comma-separated list of columns to include.
-                    linkage_method (str, optional): Linkage method when outcome is a text metadata field. Options: id, embedding, temporal, keyword.
-                    aggregation (str, optional): Aggregation strategy for multiple documents per row. Options: majority, mean, first, mode.
+                Train neural network (deep learning) classifier for complex pattern detection. Returns predictions and accuracy. Best for: Large datasets (1000+ rows), Complex non-linear relationships, Multiclass problems (3+ outcomes).
+                
+                Workflow: prepare data with bin_a_column (categorize outcome) → one_hot_encode_column (for features) → neural_network_classification → evaluate results.
+                
+                Parameters:
+                - outcome: Target variable (binary or multiclass)
+                - include: Feature columns (comma-separated)
+                - linkage_method/aggregation: Same as SVM
+                
+                Warning: Requires more data than decision_tree or SVM. Small datasets (<100 rows) may overfit.
+                
+                Compare to: decision_tree (interpretable), svm (good baseline), neural_network (handles complex patterns).
+                Tip: Start with simpler models (decision_tree) first; use neural networks when simpler models underperform.
                 """,
                     inputSchema={
                         "type": "object",
@@ -706,14 +788,22 @@ async def list_tools() -> list[Tool]:
                 Tool(
                     name="regression_analysis",
                     description="""
-                Perform linear or logistic regression (auto-detects based on outcome). Returns coefficients for each factor/predictor, showing their relationship with the outcome variable.
-                Required: specify columns to include in the regression as a comma-separated list (include).
-
-                Args:
-                    outcome (str): The target variable for regression. Can be a DataFrame column OR text metadata field (when linkage_method is specified).
-                    include (str): Comma-separated list of columns to include.
-                    linkage_method (str, optional): Linkage method when outcome is a text metadata field. Options: id, embedding, temporal, keyword.
-                    aggregation (str, optional): Aggregation strategy for multiple documents per row. Options: majority, mean, first, mode. Default: mean for regression.
+                Perform linear (numeric outcome) or logistic (binary outcome) regression. Returns coefficients showing relationship strength/direction for each predictor. Essential for: Testing hypotheses about what predicts outcome, Quantifying predictor effects (which factors matter most?), Validating relationships found in text analysis.
+                
+                Workflow: filter by groups → regression_analysis(outcome=target, include="factor1,factor2") → Extract coefficients → Add relationships linking significant factors to text themes.
+                
+                Auto-detects regression type:
+                - Numeric outcome: Linear regression (continuous prediction)
+                - Binary/categorical: Logistic regression (probability prediction)
+                
+                Parameters:
+                - outcome: Target variable (numeric or binary categorical)
+                - include: Predictor columns (comma-separated)
+                - linkage_method: For text outcomes
+                - aggregation: Default="mean" for regression (numeric aggregation)
+                
+                Interpretation: Larger coefficient = stronger effect on outcome (positive/negative direction).
+                Tip: Start with top factors from decision_tree_classification for focused regression.
                 """,
                     inputSchema={
                         "type": "object",
@@ -733,7 +823,7 @@ async def list_tools() -> list[Tool]:
                             },
                             "aggregation": {
                                 "type": "string",
-                                "description": "Aggregation strategy",
+                                "description": "Aggregation strategy (default: mean for regression)",
                                 "enum": ["majority", "mean", "first", "mode"],
                                 "default": "mean",
                             },
@@ -744,16 +834,19 @@ async def list_tools() -> list[Tool]:
                 Tool(
                     name="pca_analysis",
                     description="""
-                Perform Principal Component Analysis for dimensionality reduction
-                Required: specify columns to include in the PCA as a comma-separated list (include).
-
-                Args:
-                    outcome (str): The variable to exclude from PCA. Can be a DataFrame column OR text metadata field (when linkage_method is specified).
-                    n_components (int): The number of components to keep.
-                    include (str): Comma-separated list of columns to include.
-                    linkage_method (str, optional): Linkage method when outcome is a text metadata field. Options: id, embedding, temporal, keyword.
-                    aggregation (str, optional): Aggregation strategy for multiple documents per row. Options: majority, mean, first, mode.
-
+                Perform Principal Component Analysis for dimensionality reduction and visualization. Combines correlated features into uncorrelated principal components. Essential for: Visualizing high-dimensional data, Reducing feature count before ML (noise reduction), Exploratory analysis (which feature groups cluster together?).
+                
+                Workflow: retain_numeric_columns_only → pca_analysis(n_components=2 or 3) → visualize/create relationships linking principal components to text themes/clusters.
+                
+                Parameters:
+                - n_components: Number of dimensions to keep (default: 3, typical: 2-5 for visualization, 50%+ of original features for data reduction)
+                - outcome: Variable to exclude from analysis
+                - include: Features for PCA (comma-separated, typically all numeric columns)
+                
+                Interpretation: Each principal component is weighted combination of original features. Explained variance % shows how much information each component captures.
+                
+                Workflow example: Do documents with topic X differ on measured variables Y,Z? PCA(n_components=2) on Y,Z → check if topic X documents separate in PCA space.
+                Tip: Normalize/scale features first; PCA sensitive to feature magnitude.
                 """,
                     inputSchema={
                         "type": "object",
@@ -764,7 +857,7 @@ async def list_tools() -> list[Tool]:
                             },
                             "n_components": {
                                 "type": "integer",
-                                "description": "Number of components",
+                                "description": "Number of components (default: 3, typical: 2-5 for visualization)",
                                 "default": 3,
                             },
                             "include": {
@@ -908,17 +1001,17 @@ async def list_tools() -> list[Tool]:
         [
             Tool(
                 name="semantic_search",
-                description="Perform semantic search to find documents similar to a query using ChromaDB. Returns documents based on semantic similarity.",
+                description="Perform semantic search to find documents similar to query using ChromaDB embeddings (not keyword search). Essential for: Literature reviews (find relevant papers), Qualitative coding (find documents matching themes), Exploring corpus conceptually. Returns documents ordered by semantic similarity (highest first). Query examples: 'healthcare barriers' (finds relevant passages regardless of exact wording). Compare to: filter_documents (exact metadata matching), semantic_chunk_search (searches within one document). Workflow: semantic_search(query='theme') → examine results → use top doc IDs for find_similar_documents. Tip: Refine query if results miss relevant documents.",
                 inputSchema={
                     "type": "object",
                     "properties": {
                         "query": {
                             "type": "string",
-                            "description": "Search query text",
+                            "description": "Search query text (conceptual search, not keyword)",
                         },
                         "n_results": {
                             "type": "integer",
-                            "description": "Number of similar documents to return (default: 5)",
+                            "description": "Number of similar documents to return (default: 5, typical: 3-20)",
                             "default": 5,
                         },
                     },
@@ -927,22 +1020,22 @@ async def list_tools() -> list[Tool]:
             ),
             Tool(
                 name="find_similar_documents",
-                description="Find documents similar to a given set of reference documents based on semantic similarity. This tool is particularly useful for literature reviews and qualitative research where you want to find additional documents that are similar to a set of known relevant documents. It can also be used to identify documents with similar themes, topics, or content for grouping and analysis purposes.",
+                description="Find documents semantically similar to reference documents (seed-based search). Essential for: Literature review snowballing (start with known relevant papers → find more similar ones), Validation (are these documents similar to my key examples?), Grouping (find all docs similar to this cluster). Parameters: document_ids (one or multiple), n_results (documents to return), threshold (minimum similarity 0-1, default 0.7 = high similarity). Workflow: Pick 1-3 exemplary documents → find_similar_documents → expand literature set → validate quality. Typical threshold: 0.5 (loose matching) to 0.9 (strict matching). Compare to: semantic_search (query-based), semantic_chunk_search (within-document search). Tip: Start with threshold=0.5 if getting too few results.",
                 inputSchema={
                     "type": "object",
                     "properties": {
                         "document_ids": {
                             "type": "string",
-                            "description": "A single document ID or comma-separated list of document IDs to use as reference",
+                            "description": "Single document ID or comma-separated list of IDs to use as reference",
                         },
                         "n_results": {
                             "type": "integer",
-                            "description": "Number of similar documents to return (default: 5)",
+                            "description": "Number of similar documents to return (default: 5, typical: 3-20)",
                             "default": 5,
                         },
                         "threshold": {
                             "type": "number",
-                            "description": "Minimum similarity threshold (0-1). Only documents with similarity above this value are returned (default: 0.7)",
+                            "description": "Minimum similarity threshold 0-1 (default: 0.7=high, try 0.5 for loose matching, 0.9 for strict)",
                             "default": 0.7,
                         },
                     },
@@ -951,13 +1044,13 @@ async def list_tools() -> list[Tool]:
             ),
             Tool(
                 name="semantic_chunk_search",
-                description="Perform semantic search on chunks of a specific document to find relevant sections. This tool is useful for coding/annotating documents by identifying chunks that match specific concepts or themes. Returns matching text chunks that can be used for qualitative analysis or document annotation.",
+                description="Perform semantic search within a single document to find relevant passages/chunks matching a concept or theme. Essential for: Qualitative coding (find mentions of concept X in document Y), Annotation (mark relevant sections for later analysis), Quote extraction (identify key passages supporting theme). Parameters: query (concept/theme), doc_id (document to search), threshold (minimum similarity 0-1, default 0.5), n_results (max chunks to retrieve). Workflow: Get doc_id with semantic_search → semantic_chunk_search(query='theme', doc_id=X) → extract matching chunks for coding/quotes. Threshold guidance: 0.3-0.5 (loose, catch all mentions), 0.7+ (strict, only high matches). Compare to: semantic_search (whole corpus), filter_documents (metadata-based). Tip: Use for manual annotation/coding validation.",
                 inputSchema={
                     "type": "object",
                     "properties": {
                         "query": {
                             "type": "string",
-                            "description": "Search query text (concept or set of concepts to search for)",
+                            "description": "Search query (concept/theme to find within document)",
                         },
                         "doc_id": {
                             "type": "string",
@@ -965,12 +1058,12 @@ async def list_tools() -> list[Tool]:
                         },
                         "threshold": {
                             "type": "number",
-                            "description": "Minimum similarity threshold (0-1). Only chunks with similarity above this value are returned (default: 0.5)",
+                            "description": "Minimum similarity threshold 0-1 (default: 0.5; try 0.3-0.7 range)",
                             "default": 0.5,
                         },
                         "n_results": {
                             "type": "integer",
-                            "description": "Maximum number of chunks to retrieve before filtering (default: 10)",
+                            "description": "Maximum chunks to retrieve before filtering (default: 10, typical: 5-20)",
                             "default": 10,
                         },
                     },
@@ -979,13 +1072,13 @@ async def list_tools() -> list[Tool]:
             ),
             Tool(
                 name="export_metadata_df",
-                description="Export ChromaDB collection metadata as a pandas DataFrame. Useful for further analysis of document metadata.",
+                description="Export ChromaDB collection metadata as DataFrame for analysis/visualization. Essential for: Analyzing document-level metadata (sources, dates, etc.), Exporting for external analysis tools, Creating reports. Parameters: metadata_keys (comma-separated keys to export, optional - all keys by default). Returns: DataFrame with document metadata. Workflow: semantic_search → export_metadata_df(metadata_keys='source,date') → analyze patterns in metadata.",
                 inputSchema={
                     "type": "object",
                     "properties": {
                         "metadata_keys": {
                             "type": "string",
-                            "description": "Comma-separated list of metadata keys to include (optional, includes all if not specified)",
+                            "description": "Comma-separated metadata keys to include (optional, all if not specified)",
                         },
                     },
                 },
@@ -998,34 +1091,37 @@ async def list_tools() -> list[Tool]:
         Tool(
             name="tdabm_analysis",
             description="""
-            Perform Topological Data Analysis Ball Mapper (TDABM) analysis to uncover hidden, global patterns
-            in complex, noisy, or high-dimensional data. Based on the algorithm by Rudkin and Dlotko (2024).
-
-            TDABM creates a point cloud from multidimensional data and covers it with overlapping balls,
-            revealing topological structure and relationships between variables.
-
-            Use this when you need to:
-            - Discover hidden patterns in multidimensional data
-            - Visualize relationships between multiple variables
-            - Identify clusters and connections in complex datasets
-            - Perform model-free exploratory data analysis
-
-            Results are stored in corpus metadata and can be visualized.
+            Perform Topological Data Analysis Ball Mapper (TDABM) to discover hidden patterns in multidimensional data. Creates point cloud revealing topological structure and variable relationships. Essential for: Exploratory multidimensional analysis (many variables simultaneously), Discovering non-linear patterns, Model-free data understanding (no assumptions about relationships).
+            
+            TDABM algorithm: Creates balls (overlapping regions) covering data points, reveals topological connectivity and clusters. Complements statistical methods (which assume distributions) and ML (which needs outcome labels).
+            
+            Parameters:
+            - y_variable: Target/outcome continuous variable
+            - x_variables: Predictor variables comma-separated (should be numeric/ordinal)
+            - radius: Ball coverage size (default: 0.3, smaller=more detail, larger=smoother)
+              - 0.1-0.2: Fine granularity, more balls, detailed patterns
+              - 0.3-0.5: Balanced, typical use
+              - 0.5+: Coarse aggregation, fewer balls
+            
+            Workflow: get_df_columns → retain_numeric_columns_only → tdabm_analysis(y_variable='outcome', x_variables='factor1,factor2,factor3', radius=0.3) → explore results.
+            
+            Use when: Decision trees/regression don't capture patterns, need global structure understanding, data is high-dimensional.
+            Tip: Start with radius=0.3; adjust if too sparse (increase) or too dense (decrease).
             """,
             inputSchema={
                 "type": "object",
                 "properties": {
                     "y_variable": {
                         "type": "string",
-                        "description": "Name of the continuous Y variable to analyze",
+                        "description": "Target/outcome continuous variable name",
                     },
                     "x_variables": {
                         "type": "string",
-                        "description": "Comma-separated list of ordinal/numeric X variable names",
+                        "description": "Comma-separated predictor variables (numeric/ordinal)",
                     },
                     "radius": {
                         "type": "number",
-                        "description": "Radius for ball coverage (default: 0.3). Smaller values create more detailed mappings.",
+                        "description": "Ball coverage radius (default: 0.3, try 0.1-0.5 for detail adjustment)",
                         "default": 0.3,
                     },
                 },
@@ -1040,34 +1136,43 @@ async def list_tools() -> list[Tool]:
             Tool(
                 name="temporal_link_by_time",
                 description="""
-            Link documents to dataframe rows based on timestamps. Three methods available:
-            - 'nearest': Link to nearest row in time
-            - 'window': Link to all rows within a time window
-            - 'sequence': Link by time periods (day, week, month)
-
-            Requires documents and dataframe rows to have timestamps.
+            Link documents to dataframe rows based on timestamps to create text↔numeric relationships over time. Essential for: Studying how text themes evolve (sentiment over time), Validating numeric trends with qualitative context (what happened during spike?), Mixed-methods temporal analysis.
+            
+            Three linking methods:
+            - 'nearest': Document links to closest timestamp (best for: sparse data, one event per period)
+            - 'window': Document links to all rows within time window (best for: capturing events in time range, default window=300 seconds)
+            - 'sequence': Documents grouped by period then linked (best for: regular periods like D/W/M/Y)
+            
+            Parameters:
+            - method: One of nearest, window, sequence
+            - time_column: DataFrame column with timestamps (default: 'timestamp')
+            - window_seconds: Time range in seconds for 'window' (default: 300=5 min)
+            - period: For 'sequence': 'D' (day), 'W' (week), 'M' (month), 'Y' (year) - affects grouping granularity
+            
+            Workflow: Ensure documents have doc.time field → temporal_link_by_time(method='sequence', period='W') → get_relationships to validate links → Analyze text+numeric patterns over time.
+            Tip: Use temporal_sentiment_trend after linking to see sentiment evolution.
             """,
                 inputSchema={
                     "type": "object",
                     "properties": {
                         "method": {
                             "type": "string",
-                            "description": "Linking method: 'nearest', 'window', or 'sequence'",
+                            "description": "Linking method: 'nearest' (closest time), 'window' (within time range), 'sequence' (grouped periods)",
                             "enum": ["nearest", "window", "sequence"],
                         },
                         "time_column": {
                             "type": "string",
-                            "description": "Name of timestamp column in dataframe (default: 'timestamp')",
+                            "description": "DataFrame timestamp column (default: 'timestamp')",
                             "default": "timestamp",
                         },
                         "window_seconds": {
                             "type": "number",
-                            "description": "Time window in seconds for 'window' method (default: 300)",
+                            "description": "Time window in seconds for 'window' method (default: 300=5min, try 60-3600)",
                             "default": 300,
                         },
                         "period": {
                             "type": "string",
-                            "description": "Period for 'sequence' method: 'D' (day), 'W' (week), 'M' (month)",
+                            "description": "Period for 'sequence': 'D'(day), 'W'(week), 'M'(month), 'Y'(year)",
                             "default": "W",
                         },
                     },
@@ -1077,23 +1182,30 @@ async def list_tools() -> list[Tool]:
             Tool(
                 name="temporal_filter",
                 description="""
-            Filter corpus by time range. Documents and dataframe rows outside the range are removed.
-            Returns a new filtered corpus.
+            Filter corpus by time range (ISO 8601 format). Removes documents/rows outside range. Essential for: Studying specific time periods, Validating temporal patterns, Reducing scope for focused analysis. 
+            
+            Parameters:
+            - start_time, end_time: ISO format '2025-01-01T00:00:00'
+            - time_column: DataFrame timestamp column (default: 'timestamp')
+            
+            Workflow: temporal_summary (initial exploration) → identify interesting period → temporal_filter(start_time, end_time) → analyze subset → temporal_sentiment_trend to see patterns in period. 
+            
+            Returns: Filtered corpus with documents/rows only in time range. Use temporal_sentiment_trend or temporal_topics after filtering.
             """,
                 inputSchema={
                     "type": "object",
                     "properties": {
                         "start_time": {
                             "type": "string",
-                            "description": "Start time in ISO 8601 format (e.g., '2025-01-01T00:00:00')",
+                            "description": "Start time ISO 8601 (e.g., '2025-01-01T00:00:00')",
                         },
                         "end_time": {
                             "type": "string",
-                            "description": "End time in ISO 8601 format",
+                            "description": "End time ISO 8601 (e.g., '2025-12-31T23:59:59')",
                         },
                         "time_column": {
                             "type": "string",
-                            "description": "Timestamp column in dataframe (default: 'timestamp')",
+                            "description": "DataFrame timestamp column (default: 'timestamp')",
                             "default": "timestamp",
                         },
                     },
@@ -1102,15 +1214,27 @@ async def list_tools() -> list[Tool]:
             Tool(
                 name="temporal_summary",
                 description="""
-            Generate temporal summary of numeric and text data over time periods.
-            Shows aggregated statistics and document counts per period.
+            Generate temporal summary showing aggregated statistics and document counts per time period. Essential for: Exploratory temporal analysis (what happened when?), Identifying interesting periods for deeper analysis, Validating temporal patterns in data.
+            
+            Parameters:
+            - period: 'D' (day), 'W' (week), 'M' (month), 'Y' (year) - choose granularity matching your data
+              - Daily (D): For fine-grained events, real-time data
+              - Weekly (W): Common for interview/survey data
+              - Monthly (M): For long-term trends
+              - Yearly (Y): For multi-year studies
+            - time_column: DataFrame timestamp column (default: 'timestamp')
+            
+            Output: Counts and statistics per period (e.g., document count, numeric means).
+            
+            Workflow: temporal_summary(period='W') to see overall pattern → temporal_filter to zoom into interesting period → temporal_sentiment_trend to analyze mood. 
+            Tip: If too sparse, try longer period (M instead of W). If too aggregated, try shorter (W instead of M).
             """,
                 inputSchema={
                     "type": "object",
                     "properties": {
                         "period": {
                             "type": "string",
-                            "description": "Time period: 'D' (day), 'W' (week), 'M' (month), 'Y' (year)",
+                            "description": "Time period: 'D'(day), 'W'(week-default), 'M'(month), 'Y'(year)",
                             "default": "W",
                         },
                         "time_column": {
@@ -1174,34 +1298,42 @@ async def list_tools() -> list[Tool]:
             Tool(
                 name="embedding_link",
                 description="""
-            Link documents to dataframe rows using embedding similarity.
-
-            This provides fuzzy semantic alignment when explicit IDs or timestamps are missing.
-            Uses vector embeddings for both text documents and numeric data rows.
-
-            Complements existing ID-based, keyword-based, and time-based linking methods.
+            Link documents to dataframe rows using semantic embedding similarity. Essential for: Mixed-methods triangulation when explicit IDs/timestamps unavailable, Fuzzy matching based on content meaning, Validating qualitative themes against numeric patterns.
+            
+            Uses vector embeddings to create text↔numeric relationships based on semantic similarity (how conceptually similar are they?).
+            
+            Parameters:
+            - similarity_metric: 'cosine' (default, most common for embeddings) or 'euclidean'
+            - top_k: Number of DataFrame rows to link per document (default: 1, try 1-5)
+            - threshold: Minimum similarity score 0-1 (e.g., 0.7 = high similarity; optional, filters low matches)
+            - numeric_columns: Specific columns for embedding (default: all numeric)
+            
+            Workflow: Load corpus with numeric data → embedding_link(threshold=0.7, top_k=1) → get_relationships to inspect → visualize links.
+            
+            Compare to: temporal_link_by_time (uses timestamps), filter_documents (uses metadata/links).
+            Tip: Start with top_k=1 and adjust based on results. Higher threshold=stricter matching.
             """,
                 inputSchema={
                     "type": "object",
                     "properties": {
                         "similarity_metric": {
                             "type": "string",
-                            "description": "Similarity metric: 'cosine' or 'euclidean'",
+                            "description": "Similarity metric: 'cosine' (default) or 'euclidean'",
                             "enum": ["cosine", "euclidean"],
                             "default": "cosine",
                         },
                         "top_k": {
                             "type": "integer",
-                            "description": "Number of top similar rows to link per document",
+                            "description": "Number of top similar rows to link per document (default: 1, try 1-5)",
                             "default": 1,
                         },
                         "threshold": {
                             "type": "number",
-                            "description": "Minimum similarity threshold (0-1). If not set, no filtering",
+                            "description": "Minimum similarity threshold 0-1 (e.g., 0.7 for high; optional, filters low matches)",
                         },
                         "numeric_columns": {
                             "type": "string",
-                            "description": "Comma-separated list of numeric columns to use for embeddings",
+                            "description": "Comma-separated numeric columns for embeddings (optional, default: all numeric)",
                         },
                     },
                 },
@@ -1209,8 +1341,12 @@ async def list_tools() -> list[Tool]:
             Tool(
                 name="embedding_link_stats",
                 description="""
-            Get statistics about embedding-based links in the corpus.
-            Shows how many documents are linked, average similarity scores, etc.
+            Get statistics about embedding-based links already created. Shows: document count linked, average similarity scores, distribution of links. Essential for: Validating embedding_link results, Understanding link quality (similarity score ranges), Reporting linking coverage.
+            
+            Returns: Number of linked documents, linking statistics (average similarity, etc.).
+            
+            Workflow: embedding_link(...) → embedding_link_stats → review statistics → if poor quality, re-run with different threshold/top_k → get_relationships for detailed links.
+            Tip: Average similarity scores show link quality (0.7+ = good semantic alignment).
             """,
                 inputSchema={
                     "type": "object",
