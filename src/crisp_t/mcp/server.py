@@ -321,7 +321,8 @@ async def list_tools() -> list[Tool]:
             description="""
             Assign documents to their dominant topics, themes and keywords with contribution percentages.
             These topic assignments can be used as keywords to filter or categorize documents.
-            IMPORTANT: This operation creates a cache when used the first time. If you are using --filters with this tool, you should --clear the cache when changing filters.
+            IMPORTANT: This operation creates a cache when used the first time. If you are using filters with this tool,
+            you should use clear_cache tool to clear the cache when changing filters.
             Note: Use the results to create keywords for filtering/categorization.
             """,
             inputSchema={
