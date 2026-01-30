@@ -12,8 +12,14 @@ from typing import Any, cast
 
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
-from mcp.types import (GetPromptResult, Prompt, PromptMessage, Resource,
-                       TextContent, Tool)
+from mcp.types import (
+    GetPromptResult,
+    Prompt,
+    PromptMessage,
+    Resource,
+    TextContent,
+    Tool,
+)
 
 from ..cluster import Cluster
 from ..helpers.analyzer import get_csv_analyzer, get_text_analyzer
@@ -21,8 +27,12 @@ from ..helpers.clib import clear_cache
 from ..helpers.initializer import initialize_corpus
 from ..read_data import ReadData
 from ..sentiment import Sentiment
-from .utils.responses import (error_response, no_corpus_response,
-                              no_csv_analyzer_response, success_response)
+from .utils.responses import (
+    error_response,
+    no_corpus_response,
+    no_csv_analyzer_response,
+    success_response,
+)
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -260,16 +270,16 @@ async def list_tools() -> list[Tool]:
             - Verbs (actions/processes)
             - Nouns (properties/concepts)
             - Adjectives/Adverbs (dimensions/qualities)
-            
+
             Reveals main themes and constructs in corpus. Excellent for grounded theory and thematic analysis.
             IMPORTANT: This analyzes CORPUS-LEVEL patterns. Use assign_topics for document-level coding.
-            
+
             Configuration tips:
             - num: Increase (5-10) for exploratory analysis, decrease (3) for focused analysis
             - top_n: Show 3-5 items per category for balanced view
             - ignore: Exclude stop words and domain-specific noise words
             - filters: Use key=value to analyze subsets (e.g., sentiment=positive)
-            
+
             Workflow: Usually second step after load_corpus for understanding corpus structure.
             """,
             inputSchema={
@@ -303,16 +313,16 @@ async def list_tools() -> list[Tool]:
             description="""
             Discover latent topics in corpus using Latent Dirichlet Allocation (LDA). Returns probabilistic topic distributions.
             Each topic is represented as a weighted set of keywords, useful for understanding corpus themes and patterns.
-            
+
             IMPORTANT: This discovers corpus-level topics. Follow with assign_topics to label documents with their dominant topics.
-            
+
             Parameter guidance:
             - num_topics: Start with 3-5 for initial exploration. Increase for large/diverse corpora.
               - Low (2-3): High-level themes
               - Medium (5-10): Detailed topic breakdown
               - High (15+): Fine-grained distinction (needs large corpus)
             - num_words: 5-10 recommended for interpretability
-            
+
             Workflow:
             1. Run topic_modeling to discover topics
             2. Review topic keywords to validate they're meaningful
@@ -340,18 +350,18 @@ async def list_tools() -> list[Tool]:
             description="""
             Assign each document to its dominant topics with contribution percentages. Provides document-level topic labels.
             Results can be used for filtering, categorization, and adding relationships to numeric outcomes.
-            
+
             IMPORTANT CACHE BEHAVIOR:
             - First run creates cache (may take time for large corpora)
             - Subsequent runs use cache (fast)
             - When changing filters: MUST call clear_cache first, then rerun
             - If you change num_topics after initial analysis: clear_cache first
-            
+
             Workflow:
             1. Run topic_modeling first (discovers corpus topics)
             2. Call assign_topics to label documents
             3. Use results in filter_documents or add_relationship
-            
+
             Tip: Check topic keywords from topic_modeling before assigning to ensure they're meaningful.
             """,
             inputSchema={
@@ -370,12 +380,12 @@ async def list_tools() -> list[Tool]:
             description="""
             Extract distinct categories/concepts from corpus as weighted bag-of-terms. Similar to topic modeling but
             provides category-level (rather than document-level) analysis.
-            
+
             Use for: Quick overview of major concepts, validation of topic modeling results, creating concept hierarchies, understanding corpus vocabulary.
-            
+
             Configuration:
             - num: 5-15 recommended. Higher values reveal more fine-grained distinctions.
-            
+
             Comparison to topic_modeling:
             - extract_categories: Faster, corpus-level only, simpler interpretation
             - topic_modeling: Probabilistic, document-level mapping possible
@@ -396,15 +406,15 @@ async def list_tools() -> list[Tool]:
             description="""
             Generate extractive summary (key sentences from original documents) representing entire corpus.
             Useful for quick overviews, stakeholder reports, and understanding dominant themes.
-            
+
             Use for: Executive summaries of corpus content, understanding key passages, report generation, identifying representative quotes.
-            
+
             Configuration:
             - weight: 5-15 for most corpora
               - Low (5): Concise 1-2 sentence summary
               - Medium (10): Balanced overview
               - High (20+): Comprehensive summary with many key points
-            
+
             Note: This is extractive (using original sentences), not generative (creating new text).
             """,
             inputSchema={
@@ -423,21 +433,21 @@ async def list_tools() -> list[Tool]:
             description="""
             Analyze emotional tone in corpus using VADER (Valence Aware Dictionary and sEntiment Reasoner).
             Returns: positive, negative, neutral proportions + compound sentiment score (-1 to +1).
-            
+
             VADER is optimized for:
             - Social media text and informal language
             - Texts with emojis, contractions, slang
             - Mixed sentiment (not strictly positive/negative)
-            
+
             Output options:
             - documents=false (default): Corpus-level sentiment (useful for: Overall tone, trend analysis, outcome prediction)
             - documents=true: Document-level sentiment (useful for: Tracking individual perspectives, document categorization)
-            
+
             Workflow:
             1. Run sentiment_analysis(documents=false) for corpus overview
             2. If interesting pattern found, run with documents=true to drill down
             3. Use results to add relationships: text:sentiment_category|num:outcome_metric|correlates
-            
+
             Tip: For more rigorous NLP, combine with topic_modeling for aspect-based sentiment.
             """,
             inputSchema={
@@ -619,14 +629,14 @@ async def list_tools() -> list[Tool]:
                     name="kmeans_clustering",
                     description="""
                 Perform K-Means clustering on numeric features to segment data into groups. Essential for: Unsupervised exploratory analysis, Finding natural groupings in data, Creating clusters for mixed-methods linking to text themes.
-                
+
                 Workflow: get_df_columns → retain_numeric_columns_only (if needed) → kmeans_clustering (start with num_clusters=3) → use cluster assignments to add_relationship linking clusters to text topics or coded categories.
-                
+
                 Parameters:
                 - num_clusters: Start with 3-5 for exploratory analysis; use elbow method (try 2-10) to find optimal k
                 - include: Specify numeric columns for clustering (e.g., "age,income,satisfaction")
                 - outcome: Optional column to exclude from clustering features
-                
+
                 Tip: Normalize/scale columns first for best results; clustering is sensitive to feature magnitude.
                 """,
                     inputSchema={
@@ -653,16 +663,16 @@ async def list_tools() -> list[Tool]:
                     name="decision_tree_classification",
                     description="""
                 Train decision tree classifier to identify predictive features. Returns variable importance rankings. Essential for: Understanding feature importance (what predicts outcome?), Creating interpretable ML models, Validating qualitative coding against numeric outcomes.
-                
+
                 Workflow: filter_documents + filter_rows_by_column_value (subset to key groups) → decision_tree_classification (outcome=target_column) → Examine top features → Add relationships linking top predictors to text themes.
-                
+
                 Parameters:
                 - outcome: Target variable (DataFrame column or text metadata field if linkage_method specified)
                 - include: Feature columns for model (comma-separated)
                 - top_n: Number of important features to return (default: 10, typical: 5-20)
                 - linkage_method: For text metadata outcomes: "id" (document level), "embedding" (semantic), "temporal" (time-based), "keyword" (link-based)
                 - aggregation: When multiple documents per outcome: "majority" (most common), "mean" (average), "mode", "first"
-                
+
                 Tip: Binary classification (2 classes) more reliable than multi-class; start simple.
                 """,
                     inputSchema={
@@ -700,19 +710,19 @@ async def list_tools() -> list[Tool]:
                     name="svm_classification",
                     description="""
                 Perform SVM (Support Vector Machine) classification. Returns confusion matrix and accuracy. Essential for: Binary/multiclass classification problems, Finding decision boundaries in high-dimensional data, Validating text coding against numeric outcomes.
-                
+
                 Workflow: prepare numeric features → bin outcome if needed (e.g., satisfaction_score → high/low) → svm_classification → validate results → create relationships linking predictions to text themes.
-                
+
                 Parameters:
                 - outcome: Target variable (DataFrame column or text metadata)
                 - include: Feature columns (comma-separated)
                 - linkage_method: For text outcomes: "id", "embedding", "temporal", "keyword"
                 - aggregation: Strategy for multiple documents
-                
-                Use cases: 
+
+                Use cases:
                 - Binary (2 classes): Most reliable, typical use case
                 - Multiclass (3+ classes): Possible but more challenging
-                
+
                 Compare to: decision_tree_classification (more interpretable) vs svm_classification (better for complex boundaries)
                 Tip: Normalize/scale features for better SVM performance.
                 """,
@@ -746,16 +756,16 @@ async def list_tools() -> list[Tool]:
                     name="neural_network_classification",
                     description="""
                 Train neural network (deep learning) classifier for complex pattern detection. Returns predictions and accuracy. Best for: Large datasets (1000+ rows), Complex non-linear relationships, Multiclass problems (3+ outcomes).
-                
+
                 Workflow: prepare data with bin_a_column (categorize outcome) → one_hot_encode_column (for features) → neural_network_classification → evaluate results.
-                
+
                 Parameters:
                 - outcome: Target variable (binary or multiclass)
                 - include: Feature columns (comma-separated)
                 - linkage_method/aggregation: Same as SVM
-                
+
                 Warning: Requires more data than decision_tree or SVM. Small datasets (<100 rows) may overfit.
-                
+
                 Compare to: decision_tree (interpretable), svm (good baseline), neural_network (handles complex patterns).
                 Tip: Start with simpler models (decision_tree) first; use neural networks when simpler models underperform.
                 """,
@@ -789,19 +799,19 @@ async def list_tools() -> list[Tool]:
                     name="regression_analysis",
                     description="""
                 Perform linear (numeric outcome) or logistic (binary outcome) regression. Returns coefficients showing relationship strength/direction for each predictor. Essential for: Testing hypotheses about what predicts outcome, Quantifying predictor effects (which factors matter most?), Validating relationships found in text analysis.
-                
+
                 Workflow: filter by groups → regression_analysis(outcome=target, include="factor1,factor2") → Extract coefficients → Add relationships linking significant factors to text themes.
-                
+
                 Auto-detects regression type:
                 - Numeric outcome: Linear regression (continuous prediction)
                 - Binary/categorical: Logistic regression (probability prediction)
-                
+
                 Parameters:
                 - outcome: Target variable (numeric or binary categorical)
                 - include: Predictor columns (comma-separated)
                 - linkage_method: For text outcomes
                 - aggregation: Default="mean" for regression (numeric aggregation)
-                
+
                 Interpretation: Larger coefficient = stronger effect on outcome (positive/negative direction).
                 Tip: Start with top factors from decision_tree_classification for focused regression.
                 """,
@@ -835,16 +845,16 @@ async def list_tools() -> list[Tool]:
                     name="pca_analysis",
                     description="""
                 Perform Principal Component Analysis for dimensionality reduction and visualization. Combines correlated features into uncorrelated principal components. Essential for: Visualizing high-dimensional data, Reducing feature count before ML (noise reduction), Exploratory analysis (which feature groups cluster together?).
-                
+
                 Workflow: retain_numeric_columns_only → pca_analysis(n_components=2 or 3) → visualize/create relationships linking principal components to text themes/clusters.
-                
+
                 Parameters:
                 - n_components: Number of dimensions to keep (default: 3, typical: 2-5 for visualization, 50%+ of original features for data reduction)
                 - outcome: Variable to exclude from analysis
                 - include: Features for PCA (comma-separated, typically all numeric columns)
-                
+
                 Interpretation: Each principal component is weighted combination of original features. Explained variance % shows how much information each component captures.
-                
+
                 Workflow example: Do documents with topic X differ on measured variables Y,Z? PCA(n_components=2) on Y,Z → check if topic X documents separate in PCA space.
                 Tip: Normalize/scale features first; PCA sensitive to feature magnitude.
                 """,
@@ -1092,9 +1102,9 @@ async def list_tools() -> list[Tool]:
             name="tdabm_analysis",
             description="""
             Perform Topological Data Analysis Ball Mapper (TDABM) to discover hidden patterns in multidimensional data. Creates point cloud revealing topological structure and variable relationships. Essential for: Exploratory multidimensional analysis (many variables simultaneously), Discovering non-linear patterns, Model-free data understanding (no assumptions about relationships).
-            
+
             TDABM algorithm: Creates balls (overlapping regions) covering data points, reveals topological connectivity and clusters. Complements statistical methods (which assume distributions) and ML (which needs outcome labels).
-            
+
             Parameters:
             - y_variable: Target/outcome continuous variable
             - x_variables: Predictor variables comma-separated (should be numeric/ordinal)
@@ -1102,9 +1112,9 @@ async def list_tools() -> list[Tool]:
               - 0.1-0.2: Fine granularity, more balls, detailed patterns
               - 0.3-0.5: Balanced, typical use
               - 0.5+: Coarse aggregation, fewer balls
-            
+
             Workflow: get_df_columns → retain_numeric_columns_only → tdabm_analysis(y_variable='outcome', x_variables='factor1,factor2,factor3', radius=0.3) → explore results.
-            
+
             Use when: Decision trees/regression don't capture patterns, need global structure understanding, data is high-dimensional.
             Tip: Start with radius=0.3; adjust if too sparse (increase) or too dense (decrease).
             """,
@@ -1137,18 +1147,18 @@ async def list_tools() -> list[Tool]:
                 name="temporal_link_by_time",
                 description="""
             Link documents to dataframe rows based on timestamps to create text↔numeric relationships over time. Essential for: Studying how text themes evolve (sentiment over time), Validating numeric trends with qualitative context (what happened during spike?), Mixed-methods temporal analysis.
-            
+
             Three linking methods:
             - 'nearest': Document links to closest timestamp (best for: sparse data, one event per period)
             - 'window': Document links to all rows within time window (best for: capturing events in time range, default window=300 seconds)
             - 'sequence': Documents grouped by period then linked (best for: regular periods like D/W/M/Y)
-            
+
             Parameters:
             - method: One of nearest, window, sequence
             - time_column: DataFrame column with timestamps (default: 'timestamp')
             - window_seconds: Time range in seconds for 'window' (default: 300=5 min)
             - period: For 'sequence': 'D' (day), 'W' (week), 'M' (month), 'Y' (year) - affects grouping granularity
-            
+
             Workflow: Ensure documents have doc.time field → temporal_link_by_time(method='sequence', period='W') → get_relationships to validate links → Analyze text+numeric patterns over time.
             Tip: Use temporal_sentiment_trend after linking to see sentiment evolution.
             """,
@@ -1182,14 +1192,14 @@ async def list_tools() -> list[Tool]:
             Tool(
                 name="temporal_filter",
                 description="""
-            Filter corpus by time range (ISO 8601 format). Removes documents/rows outside range. Essential for: Studying specific time periods, Validating temporal patterns, Reducing scope for focused analysis. 
-            
+            Filter corpus by time range (ISO 8601 format). Removes documents/rows outside range. Essential for: Studying specific time periods, Validating temporal patterns, Reducing scope for focused analysis.
+
             Parameters:
             - start_time, end_time: ISO format '2025-01-01T00:00:00'
             - time_column: DataFrame timestamp column (default: 'timestamp')
-            
-            Workflow: temporal_summary (initial exploration) → identify interesting period → temporal_filter(start_time, end_time) → analyze subset → temporal_sentiment_trend to see patterns in period. 
-            
+
+            Workflow: temporal_summary (initial exploration) → identify interesting period → temporal_filter(start_time, end_time) → analyze subset → temporal_sentiment_trend to see patterns in period.
+
             Returns: Filtered corpus with documents/rows only in time range. Use temporal_sentiment_trend or temporal_topics after filtering.
             """,
                 inputSchema={
@@ -1215,7 +1225,7 @@ async def list_tools() -> list[Tool]:
                 name="temporal_summary",
                 description="""
             Generate temporal summary showing aggregated statistics and document counts per time period. Essential for: Exploratory temporal analysis (what happened when?), Identifying interesting periods for deeper analysis, Validating temporal patterns in data.
-            
+
             Parameters:
             - period: 'D' (day), 'W' (week), 'M' (month), 'Y' (year) - choose granularity matching your data
               - Daily (D): For fine-grained events, real-time data
@@ -1223,10 +1233,10 @@ async def list_tools() -> list[Tool]:
               - Monthly (M): For long-term trends
               - Yearly (Y): For multi-year studies
             - time_column: DataFrame timestamp column (default: 'timestamp')
-            
+
             Output: Counts and statistics per period (e.g., document count, numeric means).
-            
-            Workflow: temporal_summary(period='W') to see overall pattern → temporal_filter to zoom into interesting period → temporal_sentiment_trend to analyze mood. 
+
+            Workflow: temporal_summary(period='W') to see overall pattern → temporal_filter to zoom into interesting period → temporal_sentiment_trend to analyze mood.
             Tip: If too sparse, try longer period (M instead of W). If too aggregated, try shorter (W instead of M).
             """,
                 inputSchema={
@@ -1299,17 +1309,17 @@ async def list_tools() -> list[Tool]:
                 name="embedding_link",
                 description="""
             Link documents to dataframe rows using semantic embedding similarity. Essential for: Mixed-methods triangulation when explicit IDs/timestamps unavailable, Fuzzy matching based on content meaning, Validating qualitative themes against numeric patterns.
-            
+
             Uses vector embeddings to create text↔numeric relationships based on semantic similarity (how conceptually similar are they?).
-            
+
             Parameters:
             - similarity_metric: 'cosine' (default, most common for embeddings) or 'euclidean'
             - top_k: Number of DataFrame rows to link per document (default: 1, try 1-5)
             - threshold: Minimum similarity score 0-1 (e.g., 0.7 = high similarity; optional, filters low matches)
             - numeric_columns: Specific columns for embedding (default: all numeric)
-            
+
             Workflow: Load corpus with numeric data → embedding_link(threshold=0.7, top_k=1) → get_relationships to inspect → visualize links.
-            
+
             Compare to: temporal_link_by_time (uses timestamps), filter_documents (uses metadata/links).
             Tip: Start with top_k=1 and adjust based on results. Higher threshold=stricter matching.
             """,
@@ -1342,9 +1352,9 @@ async def list_tools() -> list[Tool]:
                 name="embedding_link_stats",
                 description="""
             Get statistics about embedding-based links already created. Shows: document count linked, average similarity scores, distribution of links. Essential for: Validating embedding_link results, Understanding link quality (similarity score ranges), Reporting linking coverage.
-            
+
             Returns: Number of linked documents, linking statistics (average similarity, etc.).
-            
+
             Workflow: embedding_link(...) → embedding_link_stats → review statistics → if poor quality, re-run with different threshold/top_k → get_relationships for detailed links.
             Tip: Average similarity scores show link quality (0.7+ = good semantic alignment).
             """,
@@ -1374,7 +1384,9 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
 
             if _init_corpus(inp, source, text_columns, ignore_words):
                 doc_count = len(_corpus.documents) if _corpus else 0
-                return success_response(f"Corpus loaded successfully with {doc_count} document(s)")
+                return success_response(
+                    f"Corpus loaded successfully with {doc_count} document(s)"
+                )
             else:
                 return error_response("Failed to load corpus")
 
@@ -1417,7 +1429,9 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
 
             doc = _corpus.get_document_by_id(arguments["doc_id"])
             if doc:
-                return success_response(json.dumps(doc.model_dump(), indent=2, default=str))
+                return success_response(
+                    json.dumps(doc.model_dump(), indent=2, default=str)
+                )
             return error_response("Document not found")
 
         elif name == "list_documents":
@@ -1552,7 +1566,9 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
 
             row = _corpus.get_row_by_index(arguments["index"])
             if row is not None:
-                return success_response(json.dumps(row.to_dict(), indent=2, default=str))
+                return success_response(
+                    json.dumps(row.to_dict(), indent=2, default=str)
+                )
             return error_response("Row not found")
 
         # CSV Column/DataFrame operations
@@ -1658,7 +1674,9 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                 _ml_analyzer = ML(csv=_csv_analyzer)
 
             result = _ml_analyzer.get_decision_tree_classes(
-                y=arguments["outcome"], top_n=arguments.get("top_n", 10), mcp=True,
+                y=arguments["outcome"],
+                top_n=arguments.get("top_n", 10),
+                mcp=True,
                 linkage_method=arguments.get("linkage_method"),
                 aggregation=arguments.get("aggregation", "majority"),
             )
@@ -1683,7 +1701,11 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
             aggregation = arguments.get("aggregation", "majority")
 
             result = _ml_analyzer.svm_confusion_matrix(
-                y=arguments["outcome"], test_size=0.25, mcp=True, linkage_method=linkage_method, aggregation=aggregation
+                y=arguments["outcome"],
+                test_size=0.25,
+                mcp=True,
+                linkage_method=linkage_method,
+                aggregation=aggregation,
             )
             return success_response(str(result))
 
@@ -1705,7 +1727,12 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
             linkage_method = arguments.get("linkage_method")
             aggregation = arguments.get("aggregation", "majority")
 
-            result = _ml_analyzer.get_nnet_predictions(y=arguments["outcome"], mcp=True, linkage_method=linkage_method, aggregation=aggregation)
+            result = _ml_analyzer.get_nnet_predictions(
+                y=arguments["outcome"],
+                mcp=True,
+                linkage_method=linkage_method,
+                aggregation=aggregation,
+            )
             return success_response(str(result))
 
         elif name == "regression_analysis":
@@ -1724,9 +1751,16 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                 _ml_analyzer = ML(csv=_csv_analyzer)
 
             linkage_method = arguments.get("linkage_method")
-            aggregation = arguments.get("aggregation", "mean")  # Default to mean for regression
+            aggregation = arguments.get(
+                "aggregation", "mean"
+            )  # Default to mean for regression
 
-            result = _ml_analyzer.get_regression(y=arguments["outcome"], mcp=True, linkage_method=linkage_method, aggregation=aggregation)
+            result = _ml_analyzer.get_regression(
+                y=arguments["outcome"],
+                mcp=True,
+                linkage_method=linkage_method,
+                aggregation=aggregation,
+            )
             return success_response(str(result))
 
         elif name == "pca_analysis":
@@ -1745,7 +1779,9 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                 _ml_analyzer = ML(csv=_csv_analyzer)
 
             result = _ml_analyzer.get_pca(
-                y=arguments["outcome"], n=arguments.get("n_components", 3), mcp=True,
+                y=arguments["outcome"],
+                n=arguments.get("n_components", 3),
+                mcp=True,
                 linkage_method=arguments.get("linkage_method"),
                 aggregation=arguments.get("aggregation", "majority"),
             )
@@ -1867,7 +1903,9 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                 return success_response(response_text)
 
             except ImportError:
-                return error_response("chromadb is not installed. Install with: pip install chromadb")
+                return error_response(
+                    "chromadb is not installed. Install with: pip install chromadb"
+                )
             except Exception as e:
                 return error_response(f"Error during semantic search: {e}")
 
@@ -1918,7 +1956,9 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                 return success_response(response_text)
 
             except ImportError:
-                return error_response("chromadb is not installed. Install with: pip install chromadb")
+                return error_response(
+                    "chromadb is not installed. Install with: pip install chromadb"
+                )
             except Exception as e:
                 return error_response(f"Error finding similar documents: {e}")
 
@@ -1976,7 +2016,9 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                 return success_response(response_text)
 
             except ImportError:
-                return error_response("chromadb is not installed. Install with: pip install chromadb")
+                return error_response(
+                    "chromadb is not installed. Install with: pip install chromadb"
+                )
             except Exception as e:
                 return error_response(f"Error during semantic chunk search: {e}")
 
@@ -2015,7 +2057,9 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                     return error_response("No DataFrame created")
 
             except ImportError:
-                return error_response("chromadb is not installed. Install with: pip install chromadb")
+                return error_response(
+                    "chromadb is not installed. Install with: pip install chromadb"
+                )
             except Exception as e:
                 return error_response(f"Error exporting metadata: {e}")
 
@@ -2031,7 +2075,9 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                 radius = arguments.get("radius", 0.3)
 
                 if not y_variable or not x_variables:
-                    return error_response("Both y_variable and x_variables are required")
+                    return error_response(
+                        "Both y_variable and x_variables are required"
+                    )
 
                 tdabm_analyzer = Tdabm(_corpus)
                 result = tdabm_analyzer.generate_tdabm(
@@ -2073,7 +2119,9 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
 
                 if method == "nearest":
                     _corpus = analyzer.link_by_nearest_time(time_column=time_column)
-                    return success_response("Documents linked to nearest dataframe rows by time")
+                    return success_response(
+                        "Documents linked to nearest dataframe rows by time"
+                    )
 
                 elif method == "window":
                     window_seconds = arguments.get("window_seconds", 300)
@@ -2083,7 +2131,9 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                         window_before=window,
                         window_after=window,
                     )
-                    return success_response(f"Documents linked within ±{window_seconds}s time window")
+                    return success_response(
+                        f"Documents linked within ±{window_seconds}s time window"
+                    )
 
                 elif method == "sequence":
                     period = arguments.get("period", "W")
@@ -2168,7 +2218,9 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                     response_text += trend.to_string()
                     return success_response(response_text)
                 else:
-                    return error_response("No sentiment data available. Run sentiment analysis first.")
+                    return error_response(
+                        "No sentiment data available. Run sentiment analysis first."
+                    )
 
             except Exception as e:
                 return error_response(f"Error in temporal sentiment: {e}")
@@ -2194,7 +2246,9 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                         response_text += f"{period_key}: {', '.join(topic_list)}\n"
                     return success_response(response_text)
                 else:
-                    return error_response("No temporal data available for topic extraction")
+                    return error_response(
+                        "No temporal data available for topic extraction"
+                    )
 
             except Exception as e:
                 return error_response(f"Error in temporal topics: {e}")
@@ -2237,7 +2291,9 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                 return success_response(response_text)
 
             except ImportError:
-                return error_response("ChromaDB is not installed. Install with: pip install chromadb")
+                return error_response(
+                    "ChromaDB is not installed. Install with: pip install chromadb"
+                )
             except Exception as e:
                 return error_response(f"Error in embedding linking: {e}")
 
@@ -2256,7 +2312,9 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                 )
 
                 if not has_links:
-                    return error_response("No embedding links found. Run embedding_link first.")
+                    return error_response(
+                        "No embedding links found. Run embedding_link first."
+                    )
 
                 linker = EmbeddingLinker(_corpus, use_simple_embeddings=True)
                 stats = linker.get_link_statistics()
