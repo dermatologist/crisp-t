@@ -1,6 +1,5 @@
 import logging
 import pathlib
-import shutil
 import warnings
 from pathlib import Path
 
@@ -9,6 +8,7 @@ import click
 from . import __version__
 from .cluster import Cluster
 from .helpers.analyzer import get_analyzers
+from .helpers.clib import clear_cache
 from .helpers.clib.ui import (
     format_error,
     format_info,
@@ -317,18 +317,18 @@ def main(
     ml_analyzer = None
 
     if clear:
-        _clear_cache()
+        clear_cache()
 
     try:
         # Handle COVID data download
         if covid:
             if not source:
                 raise click.ClickException(
-                    format_error("--source (output folder) is required when using --covid.")
+                    format_error(
+                        "--source (output folder) is required when using --covid."
+                    )
                 )
-            click.echo(
-                click.style("\n📥 Downloading COVID narratives...", fg="yellow")
-            )
+            click.echo(click.style("\n📥 Downloading COVID narratives...", fg="yellow"))
             click.echo(f"   From: {click.style(covid, fg='cyan')}")
             click.echo(f"   To: {click.style(source, fg='cyan')}")
             try:
@@ -336,12 +336,12 @@ def main(
 
                 QRUtils.read_covid_narratives(source, covid)
                 click.echo(
-                    format_success(f"Successfully downloaded COVID narratives to {source}")
+                    format_success(
+                        f"Successfully downloaded COVID narratives to {source}"
+                    )
                 )
             except Exception as e:
-                raise click.ClickException(
-                    format_error(f"Download failed: {e}")
-                ) from e
+                raise click.ClickException(format_error(f"Download failed: {e}")) from e
 
         # Build corpus using helpers (source preferred over inp)
         # if not source or inp, use default folders or env vars
@@ -359,10 +359,12 @@ def main(
                 max_csv_rows=max_csv_rows,
             )
             # If filters were provided with ':' while using --source, emit guidance message
-            if source and filters and any(":" in flt and "=" not in flt for flt in filters):
-                click.echo(
-                    format_info("Filters are not supported when using --source")
-                )
+            if (
+                source
+                and filters
+                and any(":" in flt and "=" not in flt for flt in filters)
+            ):
+                click.echo(format_info("Filters are not supported when using --source"))
         except click.ClickException:
             raise
         except Exception as e:
@@ -503,7 +505,9 @@ def main(
         # Text Analysis Operations
         if text_analyzer:
             if nlp or codedict:
-                print_section_header("CODING DICTIONARY GENERATION", emoji="📖", color="blue")
+                print_section_header(
+                    "CODING DICTIONARY GENERATION", emoji="📖", color="blue"
+                )
                 click.echo(
                     click.style("\nWhat is a Coding Dictionary?", fg="cyan", bold=True)
                 )
@@ -595,16 +599,14 @@ def main(
                     )
                     if out:
                         _save_output(topics_result, out, "topics")
-                        click.echo(
-                            format_success("Topics saved successfully")
-                        )
+                        click.echo(format_success("Topics saved successfully"))
                 except Exception as e:
-                    click.echo(
-                        format_error(f"Error generating topics: {e}")
-                    )
+                    click.echo(format_error(f"Error generating topics: {e}"))
 
             if nlp or assign:
-                print_section_header("DOCUMENT-TOPIC ASSIGNMENTS", emoji="📌", color="blue")
+                print_section_header(
+                    "DOCUMENT-TOPIC ASSIGNMENTS", emoji="📌", color="blue"
+                )
                 click.echo(click.style("\nWhat does this do?", fg="cyan", bold=True))
                 click.echo(
                     "   Assigns each document to its most relevant topic based on content similarity."
@@ -630,13 +632,9 @@ def main(
                     )
                     if out:
                         _save_output(assignments, out, "topic_assignments")
-                        click.echo(
-                            format_success("Assignments saved successfully")
-                        )
+                        click.echo(format_success("Assignments saved successfully"))
                 except Exception as e:
-                    click.echo(
-                        format_error(f"Error assigning topics: {e}")
-                    )
+                    click.echo(format_error(f"Error assigning topics: {e}"))
 
             if nlp or cat:
                 print_section_header("CATEGORY ANALYSIS", emoji="🏷️", color="blue")
@@ -659,9 +657,7 @@ def main(
                     categories = text_analyzer.print_categories(num=num)
                     if out:
                         _save_output(categories, out, "categories")
-                        click.echo(
-                            format_success("Categories saved successfully")
-                        )
+                        click.echo(format_success("Categories saved successfully"))
                 except Exception as e:
                     click.echo(
                         click.style(
@@ -692,16 +688,14 @@ def main(
                     click.echo(summary_result)
                     if out:
                         _save_output(summary_result, out, "summary")
-                        click.echo(
-                            format_success("Summary saved successfully")
-                        )
+                        click.echo(format_success("Summary saved successfully"))
                 except Exception as e:
-                    click.echo(
-                        format_error(f"Error generating summary: {e}")
-                    )
+                    click.echo(format_error(f"Error generating summary: {e}"))
 
             if nlp or sentiment:
-                print_section_header("SENTIMENT ANALYSIS (VADER)", emoji="😊", color="blue")
+                print_section_header(
+                    "SENTIMENT ANALYSIS (VADER)", emoji="😊", color="blue"
+                )
                 click.echo(
                     click.style("\nWhat is Sentiment Analysis?", fg="cyan", bold=True)
                 )
@@ -789,7 +783,9 @@ def main(
                     click.echo(format_success("Results saved successfully"))
 
             if (cls or ml) and target_col:
-                print_section_header("CLASSIFICATION MODELS", emoji="🎯", color="magenta")
+                print_section_header(
+                    "CLASSIFICATION MODELS", emoji="🎯", color="magenta"
+                )
                 click.echo(
                     click.style(
                         "\nWhat are Classification Models?", fg="cyan", bold=True
@@ -826,22 +822,21 @@ def main(
                 )
                 try:
                     confusion_matrix = ml_analyzer.svm_confusion_matrix(
-                        y=target_col, test_size=0.25, linkage_method=linkage, aggregation=aggregation
+                        y=target_col,
+                        test_size=0.25,
+                        linkage_method=linkage,
+                        aggregation=aggregation,
                     )
                     click.echo(
                         ml_analyzer.format_confusion_matrix_to_human_readable(
                             confusion_matrix
                         )
                     )
-                    click.echo(
-                        format_success("SVM classification complete", indent=2)
-                    )
+                    click.echo(format_success("SVM classification complete", indent=2))
                     if out:
                         _save_output(confusion_matrix, out, "svm_results")
                 except Exception as e:
-                    click.echo(
-                        format_error(f"Error in SVM: {e}", indent=2)
-                    )
+                    click.echo(format_error(f"Error in SVM: {e}", indent=2))
                 click.echo(
                     click.style(
                         "\n▸ Running Decision Tree Classification...", fg="yellow"
@@ -849,7 +844,10 @@ def main(
                 )
                 try:
                     cm, importance = ml_analyzer.get_decision_tree_classes(
-                        y=target_col, top_n=rec, linkage_method=linkage, aggregation=aggregation
+                        y=target_col,
+                        top_n=rec,
+                        linkage_method=linkage,
+                        aggregation=aggregation,
                     )
                     click.echo(
                         "\n" + click.style("Feature Importance:", fg="cyan", bold=True)
@@ -858,14 +856,14 @@ def main(
                         ml_analyzer.format_confusion_matrix_to_human_readable(cm)
                     )
                     click.echo(
-                        format_success("Decision tree classification complete", indent=2)
+                        format_success(
+                            "Decision tree classification complete", indent=2
+                        )
                     )
                     if out:
                         _save_output(cm, out, "decision_tree_results")
                 except Exception as e:
-                    click.echo(
-                        format_error(f"Error in Decision Tree: {e}", indent=2)
-                    )
+                    click.echo(format_error(f"Error in Decision Tree: {e}", indent=2))
 
             if nnet or ml:
                 click.echo("\n=== Neural Network Classification Accuracy ===")
@@ -881,7 +879,9 @@ def main(
                         "--outcome is required for neural network tasks"
                     )
                 try:
-                    predictions = ml_analyzer.get_nnet_predictions(y=target_col, linkage_method=linkage, aggregation=aggregation)
+                    predictions = ml_analyzer.get_nnet_predictions(
+                        y=target_col, linkage_method=linkage, aggregation=aggregation
+                    )
                     if out:
                         _save_output(predictions, out, "nnet_results")
                 except Exception as e:
@@ -907,7 +907,13 @@ def main(
                         "--rec must be a positive integer (1-based index)"
                     )
                 try:
-                    knn_results = ml_analyzer.knn_search(y=target_col, n=num, r=rec, linkage_method=linkage, aggregation=aggregation)
+                    knn_results = ml_analyzer.knn_search(
+                        y=target_col,
+                        n=num,
+                        r=rec,
+                        linkage_method=linkage,
+                        aggregation=aggregation,
+                    )
                     if out:
                         _save_output(knn_results, out, "knn_results")
                 except Exception as e:
@@ -964,7 +970,12 @@ def main(
                 """
                 )
                 try:
-                    pca_results = ml_analyzer.get_pca(y=target_col, n=num, linkage_method=linkage, aggregation=aggregation)
+                    pca_results = ml_analyzer.get_pca(
+                        y=target_col,
+                        n=num,
+                        linkage_method=linkage,
+                        aggregation=aggregation,
+                    )
                     if out:
                         _save_output(pca_results, out, "pca_results")
                 except Exception as e:
@@ -982,7 +993,9 @@ def main(
                 """
                 )
                 try:
-                    regression_results = ml_analyzer.get_regression(y=target_col, linkage_method=linkage, aggregation=aggregation)
+                    regression_results = ml_analyzer.get_regression(
+                        y=target_col, linkage_method=linkage, aggregation=aggregation
+                    )
                     if out:
                         _save_output(regression_results, out, "regression_results")
                 except Exception as e:
@@ -1036,7 +1049,9 @@ def main(
                 )
             if filters and ((not inp) or (not out)):
                 raise click.ClickException(
-                    format_error("Both --inp and --out must be specified when using --filters.")
+                    format_error(
+                        "Both --inp and --out must be specified when using --filters."
+                    )
                 )
             output_path = pathlib.Path(out)
             # Allow both directory and a file path '.../corpus.json'
@@ -1049,7 +1064,9 @@ def main(
                 save_base = output_path / "corpus.json"
             read_data.write_corpus_to_json(str(save_base), corpus=corpus)
             click.echo(
-                format_success(f"Corpus saved to: {click.style(str(save_base), fg='cyan')}")
+                format_success(
+                    f"Corpus saved to: {click.style(str(save_base), fg='cyan')}"
+                )
             )
 
         if print_args and corpus:
@@ -1108,7 +1125,9 @@ def _save_output(data, base_path: str, suffix: str):
                     f.write(str(data))
 
         click.echo(
-            format_success(f"Results saved to: {click.style(str(save_path), fg='cyan')}", indent=3)
+            format_success(
+                f"Results saved to: {click.style(str(save_path), fg='cyan')}", indent=3
+            )
         )
 
     except Exception as e:
@@ -1119,16 +1138,6 @@ def _save_output(data, base_path: str, suffix: str):
             )
             + str(e)
         )
-
-
-def _clear_cache():
-    """Delete cache folder if it exists."""
-    cache_dir = Path("cache")
-    if cache_dir.exists() and cache_dir.is_dir():
-        shutil.rmtree(cache_dir)
-        click.echo(click.style("✓ Cache cleared successfully", fg="green"))
-    else:
-        click.echo(click.style("ℹ️  No cache found to clear", fg="blue"))
 
 
 def _process_csv(csv_analyzer, unstructured, ignore, filters):

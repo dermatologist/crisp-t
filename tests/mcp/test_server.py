@@ -83,8 +83,7 @@ async def test_get_prompt_analysis_workflow():
     assert result.description
     assert len(result.messages) > 0
     assert result.messages[0].role == "user"
-    assert "Phase 1" in result.messages[0].content.text
-    assert "Phase 2" in result.messages[0].content.text
+    assert "Follow these steps" in result.messages[0].content.text
 
 
 @pytest.mark.asyncio
