@@ -452,6 +452,9 @@ def main(
             and csv_analyzer
         ):
             if include:
+                # Ensure outcome variable is included in the filter if specified
+                if outcome and outcome not in include:
+                    include = include + "," + outcome
                 csv_analyzer.comma_separated_include_columns(include)
             ml_analyzer = ML(csv=csv_analyzer)  # type: ignore
         else:
