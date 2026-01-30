@@ -13,7 +13,7 @@ class DummyCorpus:
             Document(id="doc1", text="test document 1", metadata={}),
             Document(id="doc2", text="test document 2", metadata={}),
         ]
-        self.df = None  # type: ignore
+        self.df: pd.DataFrame | None = None  # type: ignore
 
 
 class DummyCsv:
@@ -35,6 +35,12 @@ class DummyCsv:
         # Dummy method for test compatibility
         pass
 
+    def prepare_data(self, y: str, oversample=False, one_hot_encode_all=False):
+        # Dummy method for test compatibility - returns empty arrays
+        import numpy as np
+
+        return np.array([]), np.array([])
+
 
 class DummyText:
     def __init__(self, corpus=None):
@@ -50,8 +56,16 @@ class DummyText:
 
 
 # Patch imports for analyzer
-analyzer.Text = DummyText
-analyzer.Csv = DummyCsv
+@pytest.fixture(autouse=False)
+def mock_analyzers():
+    """Fixture to temporarily patch analyzer classes for testing."""
+    original_text = analyzer.Text
+    original_csv = analyzer.Csv
+    analyzer.Text = DummyText
+    analyzer.Csv = DummyCsv
+    yield
+    analyzer.Text = original_text
+    analyzer.Csv = original_csv
 
 
 # initializer.py tests
@@ -92,19 +106,17 @@ def test_initialize_corpus_inp(monkeypatch):
 
 
 # analyzer.py tests
-def test_get_text_analyzer_filters():
+def test_get_text_analyzer_filters(mock_analyzers):
     corpus = DummyCorpus()
     filters = ["key=value", "foo:bar"]
-    analyzer.Text = DummyText
     ta = analyzer.get_text_analyzer(corpus, filters=filters)
     assert isinstance(ta, DummyText)
     assert ta.corpus == corpus
 
 
-def test_get_csv_analyzer(monkeypatch):
+def test_get_csv_analyzer(mock_analyzers):
     corpus = DummyCorpus()
     corpus.df = pd.DataFrame({"col1": [1, 2, 3], "col2": [4, 5, 6]})
-    analyzer.Csv = DummyCsv
     csv_analyzer = analyzer.get_csv_analyzer(
         corpus, "text_col", "ignore_col", filters=["a=b"]
     )
@@ -113,12 +125,10 @@ def test_get_csv_analyzer(monkeypatch):
     assert csv_analyzer.comma_separated_ignore_columns == "ignore_col"
 
 
-def test_get_analyzers_basic():
+def test_get_analyzers_basic(mock_analyzers):
     """Test get_analyzers returns both analyzers."""
     corpus = DummyCorpus()
     corpus.df = pd.DataFrame({"col1": [1, 2, 3], "col2": [4, 5, 6]})
-    analyzer.Text = DummyText
-    analyzer.Csv = DummyCsv
 
     text_analyzer, csv_analyzer = analyzer.get_analyzers(corpus)
 
@@ -128,14 +138,12 @@ def test_get_analyzers_basic():
     assert csv_analyzer.corpus == corpus
 
 
-def test_get_analyzers_with_regular_filters():
+def test_get_analyzers_with_regular_filters(mock_analyzers):
     """Test get_analyzers with regular key=value filters."""
     corpus = DummyCorpus()
     corpus.df = pd.DataFrame(
         {"keywords": ["mask", "vaccine", "mask"], "value": [1, 2, 3]}
     )
-    analyzer.Text = DummyText
-    analyzer.Csv = DummyCsv
 
     filters = ["keywords=mask"]
     text_analyzer, csv_analyzer = analyzer.get_analyzers(corpus, filters=filters)
@@ -144,7 +152,7 @@ def test_get_analyzers_with_regular_filters():
     assert isinstance(csv_analyzer, DummyCsv)
 
 
-def test_get_analyzers_with_embedding_filter():
+def test_get_analyzers_with_embedding_filter(mock_analyzers):
     """Test get_analyzers with =embedding filter (legacy)."""
     corpus = DummyCorpus()
     # Add embedding_links to documents
@@ -153,8 +161,6 @@ def test_get_analyzers_with_embedding_filter():
         {"df_index": 2, "similarity": 0.8},
     ]
     corpus.df = pd.DataFrame({"col1": [1, 2, 3], "col2": [4, 5, 6]})
-    analyzer.Text = DummyText
-    analyzer.Csv = DummyCsv
 
     filters = ["=embedding"]
     text_analyzer, csv_analyzer = analyzer.get_analyzers(corpus, filters=filters)
@@ -167,7 +173,7 @@ def test_get_analyzers_with_embedding_filter():
     assert 2 in csv_analyzer.df.index
 
 
-def test_get_analyzers_with_embedding_text_filter():
+def test_get_analyzers_with_embedding_text_filter(mock_analyzers):
     """Test get_analyzers with embedding:text filter (explicit text→df direction)."""
     corpus = DummyCorpus()
     # Add embedding_links to documents
@@ -176,8 +182,6 @@ def test_get_analyzers_with_embedding_text_filter():
         {"df_index": 2, "similarity": 0.8},
     ]
     corpus.df = pd.DataFrame({"col1": [1, 2, 3], "col2": [4, 5, 6]})
-    analyzer.Text = DummyText
-    analyzer.Csv = DummyCsv
 
     filters = ["embedding:text"]
     text_analyzer, csv_analyzer = analyzer.get_analyzers(corpus, filters=filters)
@@ -190,7 +194,7 @@ def test_get_analyzers_with_embedding_text_filter():
     assert 2 in csv_analyzer.df.index
 
 
-def test_get_analyzers_with_embedding_df_filter():
+def test_get_analyzers_with_embedding_df_filter(mock_analyzers):
     """Test get_analyzers with embedding:df filter (df→text direction)."""
     corpus = DummyCorpus()
     corpus.documents[0].id = "doc1"
@@ -203,8 +207,6 @@ def test_get_analyzers_with_embedding_df_filter():
         {"df_index": 1, "similarity": 0.8}
     ]
     corpus.df = pd.DataFrame({"col1": [1, 2, 3], "col2": [4, 5, 6]}, index=[0, 1, 2])
-    analyzer.Text = DummyText
-    analyzer.Csv = DummyCsv
 
     filters = ["embedding:df"]
     text_analyzer, csv_analyzer = analyzer.get_analyzers(corpus, filters=filters)
@@ -217,7 +219,7 @@ def test_get_analyzers_with_embedding_df_filter():
     assert text_analyzer.corpus.documents[1].id == "doc2"
 
 
-def test_get_analyzers_with_temporal_filter():
+def test_get_analyzers_with_temporal_filter(mock_analyzers):
     """Test get_analyzers with :temporal filter (legacy)."""
     corpus = DummyCorpus()
     # Add temporal_links to documents
@@ -225,8 +227,6 @@ def test_get_analyzers_with_temporal_filter():
         {"df_index": 1, "time_gap_seconds": 10}
     ]
     corpus.df = pd.DataFrame({"col1": [1, 2, 3], "col2": [4, 5, 6]})
-    analyzer.Text = DummyText
-    analyzer.Csv = DummyCsv
 
     filters = [":temporal"]
     text_analyzer, csv_analyzer = analyzer.get_analyzers(corpus, filters=filters)
@@ -238,7 +238,7 @@ def test_get_analyzers_with_temporal_filter():
     assert 1 in csv_analyzer.df.index
 
 
-def test_get_analyzers_with_temporal_text_filter():
+def test_get_analyzers_with_temporal_text_filter(mock_analyzers):
     """Test get_analyzers with temporal:text filter (explicit text→df direction)."""
     corpus = DummyCorpus()
     # Add temporal_links to documents
@@ -246,8 +246,6 @@ def test_get_analyzers_with_temporal_text_filter():
         {"df_index": 1, "time_gap_seconds": 10}
     ]
     corpus.df = pd.DataFrame({"col1": [1, 2, 3], "col2": [4, 5, 6]})
-    analyzer.Text = DummyText
-    analyzer.Csv = DummyCsv
 
     filters = ["temporal:text"]
     text_analyzer, csv_analyzer = analyzer.get_analyzers(corpus, filters=filters)
@@ -259,7 +257,7 @@ def test_get_analyzers_with_temporal_text_filter():
     assert 1 in csv_analyzer.df.index
 
 
-def test_get_analyzers_with_temporal_df_filter():
+def test_get_analyzers_with_temporal_df_filter(mock_analyzers):
     """Test get_analyzers with temporal:df filter (df→text direction)."""
     corpus = DummyCorpus()
     corpus.documents[0].id = "doc1"
@@ -272,8 +270,6 @@ def test_get_analyzers_with_temporal_df_filter():
         {"df_index": 2, "time_gap_seconds": 10}
     ]
     corpus.df = pd.DataFrame({"col1": [1, 2, 3], "col2": [4, 5, 6]}, index=[0, 1, 2])
-    analyzer.Text = DummyText
-    analyzer.Csv = DummyCsv
 
     filters = ["temporal:df"]
     text_analyzer, csv_analyzer = analyzer.get_analyzers(corpus, filters=filters)
@@ -286,7 +282,7 @@ def test_get_analyzers_with_temporal_df_filter():
     assert text_analyzer.corpus.documents[1].id == "doc2"
 
 
-def test_get_analyzers_with_combined_filters():
+def test_get_analyzers_with_combined_filters(mock_analyzers):
     """Test get_analyzers with both regular and link filters."""
     corpus = DummyCorpus()
     corpus.documents[0].metadata["embedding_links"] = [
@@ -296,8 +292,6 @@ def test_get_analyzers_with_combined_filters():
     corpus.df = pd.DataFrame(
         {"keywords": ["mask", "vaccine", "mask"], "value": [1, 2, 3]}
     )
-    analyzer.Text = DummyText
-    analyzer.Csv = DummyCsv
 
     filters = ["keywords=mask", "=embedding"]
     text_analyzer, csv_analyzer = analyzer.get_analyzers(corpus, filters=filters)
@@ -306,12 +300,10 @@ def test_get_analyzers_with_combined_filters():
     assert isinstance(csv_analyzer, DummyCsv)
 
 
-def test_get_analyzers_no_dataframe():
+def test_get_analyzers_no_dataframe(mock_analyzers):
     """Test get_analyzers when corpus has no dataframe."""
     corpus = DummyCorpus()
     corpus.df = None
-    analyzer.Text = DummyText
-    analyzer.Csv = DummyCsv
 
     text_analyzer, csv_analyzer = analyzer.get_analyzers(corpus)
 
@@ -319,13 +311,11 @@ def test_get_analyzers_no_dataframe():
     assert csv_analyzer is None
 
 
-def test_get_analyzers_no_documents():
+def test_get_analyzers_no_documents(mock_analyzers):
     """Test get_analyzers when corpus has no documents."""
     corpus = DummyCorpus()
     corpus.documents = []
     corpus.df = pd.DataFrame({"col1": [1, 2, 3]})
-    analyzer.Text = DummyText
-    analyzer.Csv = DummyCsv
 
     text_analyzer, csv_analyzer = analyzer.get_analyzers(corpus)
 
@@ -343,14 +333,12 @@ def test__process_csv():
     assert ignore == "i1"
 
 
-def test_get_analyzers_with_id_filter():
+def test_get_analyzers_with_id_filter(mock_analyzers):
     """Test get_analyzers with id filter for synchronized ID linkage."""
     corpus = DummyCorpus()
     corpus.documents[0].id = "doc1"
     corpus.documents[1].id = "doc2"
     corpus.df = pd.DataFrame({"id": ["doc1", "doc2", "doc3"], "col1": [1, 2, 3]})
-    analyzer.Text = DummyText
-    analyzer.Csv = DummyCsv
 
     filters = ["id=doc1"]
     text_analyzer, csv_analyzer = analyzer.get_analyzers(corpus, filters=filters)
@@ -362,14 +350,12 @@ def test_get_analyzers_with_id_filter():
     assert csv_analyzer.df.iloc[0]["id"] == "doc1"
 
 
-def test_get_analyzers_with_id_filter_colon_separator():
+def test_get_analyzers_with_id_filter_colon_separator(mock_analyzers):
     """Test get_analyzers with id filter using colon separator."""
     corpus = DummyCorpus()
     corpus.documents[0].id = "doc1"
     corpus.documents[1].id = "doc2"
     corpus.df = pd.DataFrame({"id": ["doc1", "doc2", "doc3"], "col1": [1, 2, 3]})
-    analyzer.Text = DummyText
-    analyzer.Csv = DummyCsv
 
     filters = ["id:doc2"]
     text_analyzer, csv_analyzer = analyzer.get_analyzers(corpus, filters=filters)
@@ -381,14 +367,12 @@ def test_get_analyzers_with_id_filter_colon_separator():
     assert csv_analyzer.df.iloc[0]["id"] == "doc2"
 
 
-def test_get_analyzers_with_id_filter_no_id_column():
+def test_get_analyzers_with_id_filter_no_id_column(mock_analyzers):
     """Test get_analyzers with id filter when DataFrame has no id column."""
     corpus = DummyCorpus()
     corpus.documents[0].id = "doc1"
     corpus.documents[1].id = "doc2"
     corpus.df = pd.DataFrame({"col1": [1, 2, 3], "col2": [4, 5, 6]})
-    analyzer.Text = DummyText
-    analyzer.Csv = DummyCsv
 
     filters = ["id=doc1"]
     text_analyzer, csv_analyzer = analyzer.get_analyzers(corpus, filters=filters)
@@ -399,14 +383,12 @@ def test_get_analyzers_with_id_filter_no_id_column():
     assert len(csv_analyzer.df) == 3
 
 
-def test_get_analyzers_with_id_filter_no_value_colon():
+def test_get_analyzers_with_id_filter_no_value_colon(mock_analyzers):
     """Test get_analyzers with id: filter (no value) - should sync after other filters."""
     corpus = DummyCorpus()
     corpus.documents[0].id = "doc1"
     corpus.documents[1].id = "doc2"
     corpus.df = pd.DataFrame({"id": ["doc1", "doc2", "doc3"], "col1": [1, 2, 3]})
-    analyzer.Text = DummyText
-    analyzer.Csv = DummyCsv
 
     # Apply id: with no value (syncs documents to df)
     filters = ["id:"]
@@ -419,14 +401,12 @@ def test_get_analyzers_with_id_filter_no_value_colon():
     assert len(csv_analyzer.df) == 2
 
 
-def test_get_analyzers_with_id_filter_no_value_equals():
+def test_get_analyzers_with_id_filter_no_value_equals(mock_analyzers):
     """Test get_analyzers with id= filter (no value) - should sync after other filters."""
     corpus = DummyCorpus()
     corpus.documents[0].id = "doc1"
     corpus.documents[1].id = "doc2"
     corpus.df = pd.DataFrame({"id": ["doc1", "doc2", "doc3"], "col1": [1, 2, 3]})
-    analyzer.Text = DummyText
-    analyzer.Csv = DummyCsv
 
     # Apply id= with no value (syncs documents to df)
     filters = ["id="]
