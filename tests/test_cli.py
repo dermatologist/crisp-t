@@ -319,7 +319,7 @@ def test_cli_regression_outcome_auto_included(create_test_corpus):
         )
 
         # Check that command succeeds and regression runs
-        assert "=== Regression Analysis ===" in result.output
+        assert "Intercept" in result.output
         assert (
             "Error performing regression analysis" not in result.output
             or result.exit_code == 0
@@ -353,7 +353,7 @@ def test_cli_regression_outcome_already_included(create_test_corpus):
             ],
         )
 
-        assert "=== Regression Analysis ===" in result.output
+        assert "Intercept" in result.output
         assert (
             "Error performing regression analysis" not in result.output
             or result.exit_code == 0
