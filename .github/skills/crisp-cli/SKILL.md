@@ -8,7 +8,20 @@ This skill enables agents to perform qualitative and mixed-methods research anal
 - **`crispt`** - Corpus management (document manipulation, semantic search, relationships)
 - **`crispviz`** - Visualization generation (charts, word clouds, graphs, LDA)
 
+
 ## Core Commands
+
+* **If the command is not found in your environment, try prefixing with `uv run`**
+* If it still fails, ensure CRISP-T is installed: `pip install crisp-t[ml]`
+
+## Tips
+* Perform multi-step workflows step-by-step, saving intermediate results with `--out` for analytical flexibility.
+* If analysis results seem off, clear cache with `--clear` before re-running.
+* If a particular analysis fails or takes too long, try reducing dataset size with filters or `--num` or `--rec` or both.
+* If errors persist or if it still takes too long, skip the step and proceed to the next analysis.
+* Use `--clear` when switching datasets or modifying filters before `--assign`
+
+
 
 ### 1. CRISP - Main Analysis Engine
 
