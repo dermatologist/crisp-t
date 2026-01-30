@@ -17,6 +17,25 @@
         },
 
         {
+
+            "name": "Command Debugger",
+            "type": "debugpy",
+            "request": "launch",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "purpose": ["debug-test"],
+            "module": "crisp_t.cli",
+            "args": [
+                "--inp",
+                "downloads/covid_corpus_2000",
+                "--regression",
+                "--include",
+                "user_favourites,user_friends",
+                "--outcome",
+                "user_followers"
+            ],
+        },
+        {
             "type": "debugpy",
             "name": "Python: Debug Elixir",
             "request": "launch",
