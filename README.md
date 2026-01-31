@@ -35,7 +35,7 @@ Give us a star ⭐️ if you find this useful!
 - Leverage **GenAI** through our MCP server for agentic analysis.
 
 ### Key Features
-*   ✅ **No Python required** - Full CLI support.
+*   ✅ **No Python knowledge required** - Full CLI support.
 *   ✅ **Interpretivist approach** - Designed for sense-making, not just data science.
 *   ✅ **GenAI Ready** - Augments LLMs with agentic tools.
 *   ✅ **Open Source** - GPL-3.0 License.
@@ -118,6 +118,12 @@ CRISP-T includes a **Model Context Protocol (MCP)** server, allowing AI agents (
 ```
 
 The MCP server provides tools for semantic search, topic modeling, clustering, and more, allowing you to ask your AI assistant to "analyze the trends in this corpus" directly. **Most of the CLI commands are available as MCP tools.**
+
+---
+
+## 🤖 Skills (Agentic AI)
+
+CRISP-T also provides **[Skills](/.claude/skills/crisp-cli/SKILL.md)** for use with Claude Desktop, [AntiGravity](https://antigravity.google/), VSCODE and other AI coding platforms.
 
 ---
 
