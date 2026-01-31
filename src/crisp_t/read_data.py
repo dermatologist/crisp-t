@@ -421,7 +421,7 @@ class ReadData:
                 )
 
         if comma_separated_text_columns:
-            text_columns = comma_separated_text_columns.split(",")
+            text_columns = [col.strip() for col in comma_separated_text_columns.split(",")]
         else:
             text_columns = []
         # remove text columns from the dataframe
@@ -445,7 +445,8 @@ class ReadData:
             text_parts = [
                 (
                     str(row[column])
-                    if row[column] is not None
+                    if column in original_df.columns
+                    and row[column] is not None
                     and not (
                         isinstance(row[column], float) and row[column] != row[column]
                     )
