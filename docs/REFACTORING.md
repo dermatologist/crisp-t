@@ -32,8 +32,9 @@ src/crisp_t/mcp/
 │   ├── corpus_management.py (9 tools)
 │   ├── nlp_analysis.py (6 tools)
 │   ├── corpus_filtering.py (2 tools)
-│   ├── dataframe_operations.py (3 tools)
-│   ├── column_operations.py (8 tools)
+│   ├── dataframe_operations.py (8 tools) ⭐ Extended
+│   ├── column_operations.py (10 tools) ⭐ Extended
+│   ├── data_analysis.py (5 tools) ⭐ NEW
 │   ├── ml_tools.py (9 tools, conditional)
 │   ├── semantic_search.py (4 tools)
 │   ├── topological_analysis.py (1 tool)
@@ -45,6 +46,8 @@ src/crisp_t/mcp/
     ├── responses.py
     └── validators.py
 ```
+
+**Note**: ⭐ indicates modules that were extended or newly created to expose all csv.py functionality.
 
 ### Tool Categories
 
@@ -64,41 +67,55 @@ src/crisp_t/mcp/
 - **Key Tools**: `filter_documents`, `document_count`
 
 #### 4. DataFrame Operations (`dataframe_operations.py`)
-- **Tools**: 3
-- **Purpose**: Basic DataFrame inspection and access
-- **Key Tools**: `get_df_columns`, `get_df_row_count`, `get_df_row`
+- **Tools**: 8 (Extended from 3)
+- **Purpose**: DataFrame inspection, cleaning, and management
+- **Key Tools**: `get_df_columns`, `get_df_row_count`, `get_df_row`, `get_df_shape`, `mark_missing`, `mark_duplicates`, `restore_df`, `drop_na`
+- **New**: Data cleaning tools (mark_missing, mark_duplicates, restore_df, drop_na) and shape inspection
 
 #### 5. Column Operations (`column_operations.py`)
-- **Tools**: 8
+- **Tools**: 10 (Extended from 8)
 - **Purpose**: DataFrame column manipulation and transformation
-- **Key Tools**: `bin_a_column`, `one_hot_encode_column`, `filter_rows_by_column_value`, `oversample`, `restore_oversample`, `get_column_types`, `get_column_values`, `retain_numeric_columns_only`
+- **Key Tools**: `bin_a_column`, `one_hot_encode_column`, `filter_rows_by_column_value`, `oversample`, `restore_oversample`, `get_column_types`, `get_column_values`, `retain_numeric_columns_only`, `one_hot_encode_strings_in_df`, `one_hot_encode_all_columns`
+- **New**: Advanced batch encoding tools for handling multiple categorical columns
 
-#### 6. ML Tools (`ml_tools.py`)
+#### 6. Data Analysis (`data_analysis.py`) ⭐ NEW MODULE
+- **Tools**: 5
+- **Purpose**: Statistical analysis, correlation detection, and dynamic queries
+- **Key Tools**: `compute_correlation`, `find_significant_correlations`, `execute_query`, `get_column_statistics`, `get_unique_values_summary`
+- **Purpose**: Exposes advanced data analysis capabilities from csv.py for statistical research and pattern discovery
+
+#### 6. Data Analysis (`data_analysis.py`) ⭐ NEW MODULE
+- **Tools**: 5
+- **Purpose**: Statistical analysis, correlation detection, and dynamic queries
+- **Key Tools**: `compute_correlation`, `find_significant_correlations`, `execute_query`, `get_column_statistics`, `get_unique_values_summary`
+- **Purpose**: Exposes advanced data analysis capabilities from csv.py for statistical research and pattern discovery
+
+#### 7. ML Tools (`ml_tools.py`)
 - **Tools**: 9 (conditional on ML dependencies)
 - **Purpose**: Machine learning algorithms and analysis
 - **Key Tools**: `kmeans_clustering`, `decision_tree_classification`, `svm_classification`, `neural_network_classification`, `regression_analysis`, `pca_analysis`, `association_rules`, `knn_search`, `lstm_text_classification`
 
-#### 7. Semantic Search (`semantic_search.py`)
+#### 8. Semantic Search (`semantic_search.py`)
 - **Tools**: 4
 - **Purpose**: Embedding-based semantic search operations
 - **Key Tools**: `semantic_search`, `find_similar_documents`, `semantic_chunk_search`, `export_metadata_df`
 
-#### 8. Topological Analysis (`topological_analysis.py`)
+#### 9. Topological Analysis (`topological_analysis.py`)
 - **Tools**: 1
 - **Purpose**: Topological data analysis using Ball Mapper
 - **Key Tools**: `tdabm_analysis`
 
-#### 9. Temporal Analysis (`temporal_analysis.py`)
+#### 10. Temporal Analysis (`temporal_analysis.py`)
 - **Tools**: 5
 - **Purpose**: Time-based analysis and temporal linking
 - **Key Tools**: `temporal_link_by_time`, `temporal_filter`, `temporal_summary`, `temporal_sentiment_trend`, `temporal_topics`
 
-#### 10. Embedding Linking (`embedding_linking.py`)
+#### 11. Embedding Linking (`embedding_linking.py`)
 - **Tools**: 2
 - **Purpose**: Linking documents to dataframe rows using embeddings
 - **Key Tools**: `embedding_link`, `embedding_link_stats`
 
-#### 11. Miscellaneous Tools (`misc_tools.py`)
+#### 12. Miscellaneous Tools (`misc_tools.py`)
 - **Tools**: 2
 - **Purpose**: Utility operations (state management, cache clearing)
 - **Key Tools**: `reset_corpus_state`, `clear_cache`

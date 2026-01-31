@@ -83,12 +83,22 @@ def test_dataframe_operations_module():
     )
     
     tools = get_dataframe_operations_tools()
-    assert len(tools) == 3
+    assert len(tools) == 8  # Updated from 3 to 8
     
     tool_names = [tool.name for tool in tools]
-    assert "get_df_columns" in tool_names
-    assert "get_df_row_count" in tool_names
-    assert "get_df_row" in tool_names
+    expected_names = [
+        "get_df_columns",
+        "get_df_row_count",
+        "get_df_row",
+        "get_df_shape",
+        "mark_missing",
+        "mark_duplicates",
+        "restore_df",
+        "drop_na",
+    ]
+    
+    for name in expected_names:
+        assert name in tool_names, f"Missing tool: {name}"
 
 
 def test_column_operations_module():
@@ -99,7 +109,7 @@ def test_column_operations_module():
     )
     
     tools = get_column_operations_tools()
-    assert len(tools) == 8
+    assert len(tools) == 10  # Updated from 8 to 10
     
     tool_names = [tool.name for tool in tools]
     expected_names = [
@@ -111,6 +121,8 @@ def test_column_operations_module():
         "get_column_types",
         "get_column_values",
         "retain_numeric_columns_only",
+        "one_hot_encode_strings_in_df",
+        "one_hot_encode_all_columns",
     ]
     
     for name in expected_names:
@@ -206,6 +218,29 @@ def test_misc_tools_module():
     assert "clear_cache" in tool_names
 
 
+def test_data_analysis_module():
+    """Test data analysis module structure."""
+    from src.crisp_t.mcp.tools.data_analysis import (
+        get_data_analysis_tools,
+        handle_data_analysis_tool,
+    )
+    
+    tools = get_data_analysis_tools()
+    assert len(tools) == 5
+    
+    tool_names = [tool.name for tool in tools]
+    expected_names = [
+        "compute_correlation",
+        "find_significant_correlations",
+        "execute_query",
+        "get_column_statistics",
+        "get_unique_values_summary",
+    ]
+    
+    for name in expected_names:
+        assert name in tool_names, f"Missing tool: {name}"
+
+
 def test_ml_tools_module():
     """Test ML tools module structure (if available)."""
     try:
@@ -253,7 +288,7 @@ def test_tools_init_module():
     
     # Test that get_all_tools combines all tools
     all_tools = get_all_tools()
-    assert len(all_tools) >= 42  # At least 42 tools (non-ML)
+    assert len(all_tools) >= 54  # At least 54 tools (non-ML), updated from 42
     
     # Check that all expected tool names are present
     tool_names = [tool.name for tool in all_tools]
@@ -265,6 +300,10 @@ def test_tools_init_module():
     assert "get_df_columns" in tool_names
     assert "semantic_search" in tool_names
     assert "temporal_summary" in tool_names
+    # Check new tools
+    assert "compute_correlation" in tool_names
+    assert "get_df_shape" in tool_names
+    assert "one_hot_encode_strings_in_df" in tool_names
     
     # Test that handle_tool_call returns None for unknown tools
     result = handle_tool_call(
