@@ -296,7 +296,7 @@ def main(
     • TDABM and graph features require prior analysis
 
     \b
-    📖 For more examples, see: notes/DEMO.md
+    📖 For more examples, see: docs/DEMO.md
     """
     logging.basicConfig(level=(logging.DEBUG if verbose else logging.WARNING))
     logger = logging.getLogger(__name__)

@@ -12,9 +12,20 @@ This skill enables agents to perform qualitative and mixed-methods research anal
 ## Core Commands
 
 * **If the command is not found in your environment, try prefixing with `uv run`**
+* If it fails use the python environment in .venv folder.
 * If it still fails, ensure CRISP-T is installed: `pip install crisp-t[ml]`
 
 ## Tips
+* Use the `--help` flag with any command to see available options.
+* Start by importing data with `--source` to create a corpus.
+* Use `--unstructured` to specify free-text columns in CSV files. Ask the use for the text column to be imported as text data, if not specified.
+* Use `--num` and `--rec` to limit dataset size for faster processing during testing.
+* Use `--filters` to analyze subsets of data before full analysis.
+* After text analysis, use `--assign` to assign documents to topics.
+* When performing ML tasks, specify the outcome variable with `--outcome` and the linkage method with `--linkage`.
+* Use `--aggregation` to define how to combine multiple documents for a single outcome.
+* Use `--include` and `--ignore` to control which features are used in ML analyses.
+* Use `--clear` to clear cache when switching datasets or modifying filters.
 * Perform multi-step workflows STEP-BY-STEP, saving intermediate results with `--out` for analytical flexibility.
 * Do not run all analyses at once; break into smaller steps to isolate issues.
 * If analysis results seem off, clear cache with `--clear` before re-running.
@@ -27,7 +38,6 @@ This skill enables agents to perform qualitative and mixed-methods research anal
 * If the folder has no text or PDF files, warn the user that at least one text or PDF file is required.
 
 ## Important steps
-Collect data (e.g. in crisp_source folder). Data includes multiple text documents (txt or pdf) and ONE numeric CSV file with (optional) timestamps.
 Import data into CRISP-T corpus and dataframe.
 Perform linking between text and numeric data using various methods (id based, keyword based, time based, embedding based).
 Explore text data using various methods (e.g., topic modeling, keyword extraction, sentiment analysis, visualizations).

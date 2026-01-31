@@ -368,6 +368,7 @@ class ReadData:
     ):
         """
         Read the corpus from a csv file. Parallelizes document creation for large CSVs.
+        Handles invalid UTF-8 byte sequences by skipping bad lines.
 
         Args:
             file_name: Path to CSV file
@@ -383,12 +384,14 @@ class ReadData:
         if not file_name.exists():
             raise ValueError(f"File not found: {file_name}")
 
-        # Read CSV with optional row limit
+        # Read CSV with optional row limit, handling encoding errors
         if max_rows is not None:
-            df = pd.read_csv(file_name, nrows=max_rows)
+            df = pd.read_csv(
+                file_name, nrows=max_rows, encoding="utf-8", on_bad_lines="skip"
+            )
             logger.info(f"Limited CSV reading to first {max_rows} rows")
         else:
-            df = pd.read_csv(file_name)
+            df = pd.read_csv(file_name, encoding="utf-8", on_bad_lines="skip")
         original_df = df.copy()
 
         # Auto-detect timestamp column if not specified
@@ -612,7 +615,7 @@ class ReadData:
                     break
 
                 file_path = source_path / file_name
-                with open(file_path) as f:
+                with open(file_path, encoding="utf-8", errors="ignore") as f:
                     read_from_file = f.read()
                     read_from_file = apply_ignore_patterns(read_from_file)
                     # Extract timestamp from content
@@ -656,7 +659,13 @@ class ReadData:
                         leave=False,
                         disable=len(reader.pages) < 10,
                     ):
-                        page_texts.append(page.extract_text())
+                        page_text = page.extract_text()
+                        # Decode and re-encode to remove invalid UTF-8 sequences
+                        if isinstance(page_text, str):
+                            page_text = page_text.encode(
+                                "utf-8", errors="ignore"
+                            ).decode("utf-8")
+                        page_texts.append(page_text)
                     read_from_file = "".join(page_texts)
                     read_from_file = apply_ignore_patterns(read_from_file)
                     # Extract timestamp from content
