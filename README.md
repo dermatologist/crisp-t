@@ -13,7 +13,7 @@
 
 **TL;DR** 🚀 *CRISP-T is a qualitative research method and a toolkit to perform textual (e.g. topic modelling) and numeric (e.g. decision trees) analysis of mixed datasets for computational triangulation and sense-making (optionally) using large language models.*
 
-👉 **[CLI Cheatsheet](docs/cheatsheet.md)** | **[Demo & Examples](notes/DEMO.md)** | **[Documentation](https://dermatologist.github.io/crisp-t/)**
+👉 **[CLI Cheatsheet](docs/cheatsheet.md)** | **[Demo & Examples](docs/DEMO.md)** | **[Documentation](https://dermatologist.github.io/crisp-t/)**
 
 <p align="center">
   <img src="https://github.com/dermatologist/crisp-t/blob/develop/notes/crisp-logo.jpg" />
@@ -91,7 +91,7 @@ Manages corpus structure and detailed queries.
 *   **Semantic Search:** `crispt --inp ./corpus --semantic "query" --num 5`
 *   **Metadata:** `crispt --inp ./corpus --meta "project=phase1"`
 
-👉 **[View the Step-by-Step Demo](notes/DEMO.md)**
+👉 **[View the Step-by-Step Demo](docs/DEMO.md)**
 
 ---
 
@@ -127,7 +127,7 @@ The MCP server provides tools for semantic search, topic modeling, clustering, a
 ## 📚 Documentation & References
 
 *   **[CLI Cheatsheet](docs/cheatsheet.md)**
-*   **[Demo / Tutorial](notes/DEMO.md)**
+*   **[Demo / Tutorial](docs/DEMO.md)**
 *   [Full Documentation](https://dermatologist.github.io/crisp-t/)
 *   [Mettler et al. (2025)](https://aisel.aisnet.org/cais/vol56/iss1/14/) - Methodological Reflection
 

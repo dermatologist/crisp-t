@@ -292,7 +292,7 @@ def main(
     • Results can be saved at any stage using --out
 
     \b
-    📖 For detailed examples, see: notes/DEMO.md
+    📖 For detailed examples, see: docs/DEMO.md
     📖 For complete documentation, visit: https://github.com/dermatologist/crisp-t/wiki
     """
 
