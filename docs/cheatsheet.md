@@ -20,6 +20,7 @@ Used to bring data into the CRISP-T environment.
 | `crisp --source <path>` | Import data from a directory (PDFs, TXT, CSV) or URL. | `crisp --source ./raw_data --out ./crisp_input` |
 | `crisp --sources <path> --sources <path2>` | Import from multiple sources. | `crisp --sources ./data1 --sources ./data2` |
 | `crisp --unstructured <col>` | Specify CSV columns containing free text to treat as documents. | `crisp --source ./data --unstructured "comments"` |
+| `crisp -t <col1> -t <col2>` | Import multiple text columns from CSV (can also use comma-separated: `-t "col1,col2,col3"`). | `crisp --source ./data -t note1 -t note2 -t note3` |
 
 **Common Options:**
 *   `--out <path>`: Directory to save the imported corpus (required). Recommended value `crisp_input`.
@@ -189,8 +190,16 @@ crispviz --inp ./corpus_analyzed --wordcloud --ldavis --out ./viz
 
 ### 2. Mixed Methods (Text + CSV)
 ```bash
-# Import CSV with text column
+# Import CSV with single text column
 crisp --source ./survey_data --unstructured "comments" --out ./survey_corpus
+
+# Import CSV with multiple text columns (two approaches)
+# Approach 1: Multiple flags
+crisp --source ./survey_data -t note1 -t note2 -t note3 --out ./survey_corpus
+
+# Approach 2: Comma-separated
+crisp --source ./survey_data -t "note1,note2,note3" --out ./survey_corpus
+
 # Cluster numeric data & analyze text options
 crisp --inp ./survey_corpus --kmeans --num 5 --topics --num 5
 ```
@@ -204,7 +213,11 @@ crispt --inp ./corpus --semantic "patient anxiety" --num 10
 ### 4. Cross-Modal Analysis (Text + CSV)
 ```bash
 # Import CSV that contains free-text comments and numeric outcomes
+# Single text column
 crisp --source ./survey_data --unstructured "comments" --out ./survey_corpus
+
+# Multiple text columns - concatenated into single document per row
+crisp --source ./survey_data -t "response1,response2,response3" --out ./survey_corpus
 
 # Link documents to rows by ID, then run classification using linked text as features
 crisp --inp ./survey_corpus --linkage id --outcome satisfaction_score --cls --aggregation majority

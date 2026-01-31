@@ -80,7 +80,10 @@ except ImportError:
     "--unstructured",
     "-t",
     multiple=True,
-    help="Specify CSV columns containing free-form text (e.g., open-ended survey responses). Can be used multiple times.",
+    help="Specify CSV columns containing free-form text (e.g., open-ended survey responses). "
+         "Multiple columns can be specified by using this flag multiple times (e.g., -t col1 -t col2) "
+         "or by providing comma-separated column names (e.g., -t 'col1,col2,col3'). "
+         "All specified text columns will be concatenated into a single document per row.",
 )
 @click.option(
     "--filters",
@@ -287,6 +290,7 @@ def main(
     \b
     💡 TIPS:
     • For CSV files with free-text columns, use --unstructured <column_name>
+    • For multiple text columns, use: -t col1 -t col2 or -t "col1,col2,col3"
     • Use --help to see all available analysis options
     • Use --clear when switching between different datasets
     • Results can be saved at any stage using --out
