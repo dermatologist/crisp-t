@@ -32,7 +32,7 @@ crisp-t/
 Key files you should familiarize yourself with:
 - README.md - Main documentation
 - notes/INSTRUCTION.md - Detailed function reference and workflows
-- notes/DEMO.md - Practical usage examples
+- docs/DEMO.md - Practical usage examples
 - docs/MCP_SERVER.md - MCP server documentation
 - src/crisp_t/mcp/server.py - MCP server implementation
 ```
@@ -99,7 +99,7 @@ For new CLI features in `crisp`, `crispviz`, or `crispt`:
 3. **Update documentation**:
    - README.md for main features
    - notes/INSTRUCTION.md for detailed instructions
-   - notes/DEMO.md for examples
+   - docs/DEMO.md for examples
 
 ### 3. Fixing Bugs
 
@@ -115,7 +115,7 @@ When updating documentation:
 
 - **README.md**: High-level overview, installation, basic usage
 - **notes/INSTRUCTION.md**: Detailed function reference, workflows, best practices
-- **notes/DEMO.md**: Step-by-step examples with commands
+- **docs/DEMO.md**: Step-by-step examples with commands
 - **docs/MCP_SERVER.md**: MCP server tools, resources, prompts
 
 ## Testing Strategy

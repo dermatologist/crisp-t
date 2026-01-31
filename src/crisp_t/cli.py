@@ -292,7 +292,7 @@ def main(
     • Results can be saved at any stage using --out
 
     \b
-    📖 For detailed examples, see: notes/DEMO.md
+    📖 For detailed examples, see: docs/DEMO.md
     📖 For complete documentation, visit: https://github.com/dermatologist/crisp-t/wiki
     """
 
@@ -452,6 +452,9 @@ def main(
             and csv_analyzer
         ):
             if include:
+                # Ensure outcome variable is included in the filter if specified
+                if outcome and outcome not in include:
+                    include = include + "," + outcome
                 csv_analyzer.comma_separated_include_columns(include)
             ml_analyzer = ML(csv=csv_analyzer)  # type: ignore
         else:

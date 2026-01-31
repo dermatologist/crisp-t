@@ -133,9 +133,10 @@ class Csv:
     def read_csv(self, file_path: str):
         """
         Read a CSV file and create a DataFrame.
+        Handles invalid UTF-8 byte sequences by ignoring them.
         """
         try:
-            self._df = pd.read_csv(file_path)
+            self._df = pd.read_csv(file_path, encoding="utf-8", on_bad_lines="skip")
             logger.info(f"CSV file {file_path} read successfully.")
             logger.debug(f"DataFrame content: {self._df.head()}")
             logger.debug(f"DataFrame shape: {self._df.shape}")
@@ -415,9 +416,7 @@ class Csv:
 
             self._df = self._df.applymap(to_one_hot)  # type: ignore
 
-    def filter_rows_by_column_value(
-        self, column_name: str, value, mcp: bool = False
-    ):
+    def filter_rows_by_column_value(self, column_name: str, value, mcp: bool = False):
         """Select rows from the DataFrame where the specified column matches the given value.
         Additionally, filter self._corpus.documents by id_column if present in DataFrame.
         """
@@ -455,7 +454,9 @@ class Csv:
                     ]
                     self._corpus.documents = filtered_docs
             else:
-                logger.warning(f"id_column '{self._id_column}' does not exist in DataFrame.")
+                logger.warning(
+                    f"id_column '{self._id_column}' does not exist in DataFrame."
+                )
 
             if mcp:
                 return f"Selected {selected_df.shape[0]} rows where {column_name} == {value}."

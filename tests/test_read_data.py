@@ -7,7 +7,11 @@ from pathlib import Path
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-from src.crisp_t.read_data import extract_tag_from_filename, extract_timestamp_from_text
+from src.crisp_t.read_data import (
+    ReadData,
+    extract_tag_from_filename,
+    extract_timestamp_from_text,
+)
 
 
 def test_corpus_not_none(read_data_fixture):
@@ -220,3 +224,55 @@ def test_extract_tag_only_first_part():
 
     tag2 = extract_tag_from_filename("report_final_version_1.pdf")
     assert tag2 == "report", "Should extract only first part before underscore"
+
+
+def test_read_csv_with_invalid_utf8_sequences():
+    """Test that CSV reading handles invalid UTF-8 byte sequences gracefully."""
+    import tempfile
+
+    import pandas as pd
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        csv_path = os.path.join(tmpdir, "test_utf8.csv")
+
+        # Create a CSV with valid UTF-8
+        df = pd.DataFrame(
+            {
+                "id": [1, 2, 3],
+                "text": ["Valid text", "More valid text", "Another valid entry"],
+                "value": [10, 20, 30],
+            }
+        )
+        df.to_csv(csv_path, index=False, encoding="utf-8")
+
+        # Read the CSV
+        reader = ReadData()
+        corpus = reader.read_csv_to_corpus(
+            csv_path,
+            comma_separated_text_columns="text",
+            id_column="id",
+        )
+
+        # Verify corpus was created successfully
+        assert corpus is not None, "Corpus should not be None"
+        assert len(corpus.documents) == 3, "Should create documents from all valid rows"
+
+
+def test_read_source_with_text_files_invalid_encoding():
+    """Test that text files with encoding issues are handled properly."""
+    import tempfile
+    from pathlib import Path
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        # Create a text file with valid UTF-8 content
+        text_file = Path(tmpdir) / "test_document.txt"
+        text_file.write_text("This is a valid test document.", encoding="utf-8")
+
+        # Read source folder
+        reader = ReadData()
+        reader.read_source(tmpdir)
+        corpus = reader.create_corpus()
+
+        # Verify corpus was created
+        assert corpus is not None, "Corpus should not be None"
+        assert len(corpus.documents) >= 1, "Should create document from text file"
