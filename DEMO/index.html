@@ -1,0 +1,1455 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="OMOP CDM utils in Python">
+      
+      
+        <meta name="author" content="Bell Eapen">
+      
+      
+        <link rel="canonical" href="https://dermatologist.github.io/crisp-t/DEMO/">
+      
+      
+        <link rel="prev" href="../cheatsheet/">
+      
+      
+        <link rel="next" href="../MCP_SERVER/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+    
+    
+      
+        <title>Demo - crisp-t</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="deep-orange">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#demo" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="crisp-t" class="md-header__button md-logo" aria-label="crisp-t" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            crisp-t
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Demo
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="deep-orange"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="black" data-md-color-accent="deep-orange"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/dermatologist/crisp-t" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    dermatologist/crisp-t
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="crisp-t" class="md-nav__button md-logo" aria-label="crisp-t" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    crisp-t
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/dermatologist/crisp-t" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    dermatologist/crisp-t
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../modules/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Modules
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../contributing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cheatsheet/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cheat Sheet
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Demo
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Demo
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Setup
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#import-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Import data
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#perform-exploratory-tasks-using-nlp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Perform Exploratory tasks using NLP
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#explore-results" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Explore results
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#quantitative-exploratory-analysis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quantitative exploratory analysis
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#confirmation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Confirmation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Confirmation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#topological-data-analysis-rudkin-s-dlotko-p-2024" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Topological Data Analysis Rudkin, S., &amp; Dlotko, P. (2024)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sense-making-by-triangulation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sense-making by triangulation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#now-let-us-try-out-a-csv-dataset-with-text-and-numeric-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Now let us try out a csv dataset with text and numeric data.
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mcp-server-for-agentic-ai-optional-but-llms-may-be-better-at-sense-making" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MCP Server for agentic AI. (Optional, but LLMs may be better at sense-making!)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="MCP Server for agentic AI. (Optional, but LLMs may be better at sense-making!)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#try-out-the-mcp-server-with-the-following-command-llms-will-offer-course-corrections-and-suggestions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Try out the MCP server with the following command. (LLMs will offer course corrections and suggestions)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#visualization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Visualization
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Visualization">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#lets-visualize-the-clusters-in-2d-space-using-pca" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Let's visualize the clusters in 2D space using PCA.
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#lets-generate-a-word-cloud-of-keywords-in-the-corpus" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Let's generate a word cloud of keywords in the corpus.
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#more-examples-comprehensive-cli-usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        More examples — comprehensive CLI usage
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="More examples — comprehensive CLI usage">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#a-data-import-basic-workflow-crisp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A. Data import &amp; basic workflow (crisp)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../MCP_SERVER/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MCP
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../SEMANTIC_SEARCH/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Semantic Search
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../GRAPH/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GRAPH
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../TDABM/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    TDABM
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Setup
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#import-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Import data
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#perform-exploratory-tasks-using-nlp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Perform Exploratory tasks using NLP
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#explore-results" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Explore results
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#quantitative-exploratory-analysis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quantitative exploratory analysis
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#confirmation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Confirmation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Confirmation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#topological-data-analysis-rudkin-s-dlotko-p-2024" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Topological Data Analysis Rudkin, S., &amp; Dlotko, P. (2024)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sense-making-by-triangulation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sense-making by triangulation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#now-let-us-try-out-a-csv-dataset-with-text-and-numeric-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Now let us try out a csv dataset with text and numeric data.
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mcp-server-for-agentic-ai-optional-but-llms-may-be-better-at-sense-making" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MCP Server for agentic AI. (Optional, but LLMs may be better at sense-making!)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="MCP Server for agentic AI. (Optional, but LLMs may be better at sense-making!)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#try-out-the-mcp-server-with-the-following-command-llms-will-offer-course-corrections-and-suggestions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Try out the MCP server with the following command. (LLMs will offer course corrections and suggestions)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#visualization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Visualization
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Visualization">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#lets-visualize-the-clusters-in-2d-space-using-pca" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Let's visualize the clusters in 2D space using PCA.
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#lets-generate-a-word-cloud-of-keywords-in-the-corpus" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Let's generate a word cloud of keywords in the corpus.
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#more-examples-comprehensive-cli-usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        More examples — comprehensive CLI usage
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="More examples — comprehensive CLI usage">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#a-data-import-basic-workflow-crisp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A. Data import &amp; basic workflow (crisp)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="demo">Demo<a class="headerlink" href="#demo" title="Permanent link">&para;</a></h1>
+<h2 id="setup">Setup<a class="headerlink" href="#setup" title="Permanent link">&para;</a></h2>
+<ul>
+<li>CRISP-T is a python package that can be installed using pip and used from the command line. Your system should have python 3.11 or higher and pip installed. You can download and install Python for your operating system <a href="https://www.python.org/downloads/">here</a>. Optionally, CRISP-T can be imported in python scripts or jupyter notebooks, but this is not covered in this demo. See <a href="https://dermatologist.github.io/crisp-t/">documentation</a> for more details.</li>
+<li>Install <a href="https://github.com/dermatologist/crisp-t">Crisp-T</a> with <code>pip install crisp-t[ml]</code> or <code>uv pip install crisp-t[ml]</code></li>
+<li>(Optional) Download covid narratives data to  <code>crisp_source</code> folder in home directory or current directory using <code>crisp --covid covidstories.omeka.net --source crisp_source</code>. You may use any other source of textual data (e.g. journal articles, interview transcripts) in .txt or .pdf format in the <code>crisp_source</code> folder or the folder you specify with --source option.</li>
+<li>(Optional) Download <a href="https://www.kaggle.com/datasets/hemanthhari/psycological-effects-of-covid">Psycological Effects of COVID</a> dataset to <code>crisp_source</code> folder. You may use any other numeric dataset in .csv format in the <code>crisp_source</code> folder or the folder you specify with --source option.</li>
+<li>Create a <code>crisp_input</code> folder in home directory or current directory for keeping imported data for analysis.</li>
+</ul>
+<h2 id="import-data">Import data<a class="headerlink" href="#import-data" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Run the following command to import data from <code>crisp_source</code> folder to <code>crisp_input</code> folder.</li>
+<li><code>--source</code> reads data from a directory (reads .txt, .pdf and a single .csv) or from a URL</li>
+</ul>
+<pre><code class="language-bash">crisp --source crisp_source --out crisp_input
+</code></pre>
+<ul>
+<li>Ignore warnings related to pdf files.</li>
+</ul>
+<h2 id="perform-exploratory-tasks-using-nlp">Perform Exploratory tasks using NLP<a class="headerlink" href="#perform-exploratory-tasks-using-nlp" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Run the following command to perform a topic modelling and assign topics(keywords) to each narrative.</li>
+<li><em>--inp crisp_input</em> below is optional as it defaults to <code>crisp_input</code> folder.</li>
+</ul>
+<pre><code class="language-bash">crisp --inp crisp_input --assign --out crisp_input
+</code></pre>
+<ul>
+<li>The results will be saved in the same <code>crisp_input</code> folder, overwriting the corpus file.</li>
+<li>You may run several other analyses (<a href="https://dermatologist.github.io/crisp-t/">see documentation</a> for details) and tweak parameters as needed.</li>
+<li>Hints will be provided in the terminal.</li>
+</ul>
+<p><strong>From now on, we will use <code>crisp_input</code> folder as input folder unless specified otherwise as that is the default.</strong></p>
+<h2 id="explore-results">Explore results<a class="headerlink" href="#explore-results" title="Permanent link">&para;</a></h2>
+<pre><code class="language-bash">crisp --print &quot;documents 10&quot;
+</code></pre>
+<ul>
+<li>Notice that we have omitted --inp as it defaults to <code>crisp_input</code> folder. If you want to use a different folder, use --inp to specify it. The <em>--out</em> option helps to save intermediate results in a different folder.</li>
+<li>
+<p>The above command prints first 10 documents in the corpus.</p>
+</li>
+<li>
+<p>Next, let us see the metadata assigned to each document.</p>
+</li>
+</ul>
+<pre><code class="language-bash">crisp --print &quot;documents metadata&quot;
+</code></pre>
+<ul>
+<li>Notice keywords/topics assigned to each narrative.</li>
+<li>You will notice <em>interviewee</em> and <em>interviewer</em> keywords. These are assigned based on the presence of these words in the narratives and may not be useful.</li>
+<li>You may remove these keywords by using --ignore with assign and check the results again.</li>
+</ul>
+<pre><code class="language-bash">crisp --clear --assign --ignore interviewee,interviewer --out crisp_input
+crisp --print &quot;documents metadata&quot;
+</code></pre>
+<ul>
+<li><em>--clear</em> option clears the cache before running the analysis.
+⚠️ <strong>While analysing multiple datasets, use <code>crisp --clear</code> option to clear cache before switching datasets.</strong> ⚠️</li>
+<li>Now you will see that these keywords are removed from the results.</li>
+<li>It prints the first 5 documents by default.</li>
+</ul>
+<pre><code class="language-bash">crisp --print &quot;metadata clusters&quot;
+</code></pre>
+<ul>
+<li>Prints the clusters assigned to each document based on keywords.</li>
+<li>There are many other options to explore the results. See documentation for details.</li>
+<li>Let us choose narratives that contain 'mask' keyword and show the concepts/topics in these narratives.</li>
+</ul>
+<pre><code class="language-bash">crisp --inp crisp_input --clear --filters keywords=mask --topics
+</code></pre>
+<ul>
+<li>The above results will not be saved as --out is not specified.</li>
+<li>Notice <em>time</em>, <em>people</em> as topics in this subset of narratives.</li>
+<li>If --filters is used, only the filtered documents are used for the analysis. When using filters you should explicitly specify --inp and --out options with different folders to avoid overwriting the input data.</li>
+</ul>
+<h2 id="quantitative-exploratory-analysis">Quantitative exploratory analysis<a class="headerlink" href="#quantitative-exploratory-analysis" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Let us see do a kmeans clustering of the csv dataset of covid data.</li>
+</ul>
+<pre><code class="language-bash">crisp --include relaxed,self_time,sleep_bal,time_dp,travel_time,home_env --kmeans
+</code></pre>
+<ul>
+<li>Notice 3 clusters with different centroids. (number of clusters can be changed with --num option).</li>
+</ul>
+<h2 id="confirmation">Confirmation<a class="headerlink" href="#confirmation" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Let us add a relationship between numb:self_time and text:work in the corpus for future confirmation with LLMs.</li>
+</ul>
+<pre><code class="language-bash">crispt --add-rel &quot;text:work|numb:self_time|correlates&quot;
+</code></pre>
+<ul>
+<li>Let us do a regression analysis to see how <code>relaxed</code> is affected by other variables.</li>
+</ul>
+<pre><code class="language-bash">crisp --include relaxed,self_time,sleep_bal,time_dp,travel_time,home_env --regression --outcome relaxed
+</code></pre>
+<ul>
+<li>self_time has a positive correlation with relaxed.</li>
+<li>What about a decision tree analysis?</li>
+</ul>
+<pre><code class="language-bash">crisp --include relaxed,self_time,sleep_bal,time_dp,travel_time,home_env --cls --outcome relaxed
+</code></pre>
+<ul>
+<li>Relaxed is converted to binary variable internally for classification.</li>
+<li>Ideally, you should do the binary conversion externally based on domain knowledge.</li>
+<li>Notice that self_time is the most important variable in predicting relaxed.</li>
+</ul>
+<h3 id="topological-data-analysis-rudkin-s-dlotko-p-2024"><a href="https://www.arxiv.org/abs/2504.14081">Topological Data Analysis</a> Rudkin, S., &amp; Dlotko, P. (2024)<a class="headerlink" href="#topological-data-analysis-rudkin-s-dlotko-p-2024" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Let us do a TDA analysis to see the shape of the data.</li>
+<li>parameters to --tdabm are specified as follows: <em>outcome:varables:radius</em></li>
+</ul>
+<pre><code class="language-bash">
+crispt --tdabm relaxed:self_time,sleep_bal,time_dp,travel_time:0.6 --out crisp_input
+
+</code></pre>
+<ul>
+<li>Let us visualize the TDA network.</li>
+</ul>
+<pre><code class="language-bash">crispviz --tdabm --out viz_out/
+</code></pre>
+<p align="center">
+  <img src="https://github.com/dermatologist/crisp-t/blob/develop/notes/tdabm.jpg" />
+</p>
+
+<h2 id="sense-making-by-triangulation"><a href="INSTRUCTION.md">Sense-making by triangulation</a><a class="headerlink" href="#sense-making-by-triangulation" title="Permanent link">&para;</a></h2>
+<h2 id="now-let-us-try-out-a-csv-dataset-with-text-and-numeric-data">Now let us try out a csv dataset with text and numeric data.<a class="headerlink" href="#now-let-us-try-out-a-csv-dataset-with-text-and-numeric-data" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Download SMS Smishing Collection Data Set from <a href="https://www.kaggle.com/datasets/galactus007/sms-smishing-collection-data-set">Kaggle</a> and convert the text file to csv adding the headers id, <strong>CLASS</strong> and <strong>SMS</strong>. Convert CLASS to numeric 0 and 1 for ham and smish respectively and add id as serial numbers.</li>
+<li>Place the csv file in a <strong>new</strong> <code>crisp_source</code> folder.</li>
+<li>Import the csv file to <code>crisp_input</code> folder using the following command.</li>
+</ul>
+<pre><code class="language-bash">crisp --source crisp_source/ --unstructured SMS
+</code></pre>
+<ul>
+<li>Notice that the text column SMS is specified with --unstructured option. This creates CRISP documents from the text column.</li>
+<li>Now assign topics to the documents. Note that this also assigns clusters.</li>
+</ul>
+<pre><code class="language-bash">crisp --assign
+</code></pre>
+<ul>
+<li>Now print the results to examine.</li>
+</ul>
+<pre><code class="language-bash">crisp --print &quot;metadata clusters&quot;
+</code></pre>
+<ul>
+<li>Let us choose the cluster 1 and see the SMS classes in this cluster. (0=ham, 1=smish)</li>
+</ul>
+<pre><code class="language-bash">crisp --filters cluster=1 --print &quot;dataframe stats&quot;
+</code></pre>
+<ul>
+<li>Next, let us check if the SMS texts converge towards predicting the CLASS (ham/ smish) variable with LSTM model.</li>
+</ul>
+<pre><code class="language-bash">crisp --lstm --outcome CLASS
+</code></pre>
+<h2 id="mcp-server-for-agentic-ai-optional-but-llms-may-be-better-at-sense-making">MCP Server for agentic AI. (Optional, but LLMs may be better at sense-making!)<a class="headerlink" href="#mcp-server-for-agentic-ai-optional-but-llms-may-be-better-at-sense-making" title="Permanent link">&para;</a></h2>
+<h3 id="try-out-the-mcp-server-with-the-following-command-llms-will-offer-course-corrections-and-suggestions">Try out the MCP server with the following command. (LLMs will offer course corrections and suggestions)<a class="headerlink" href="#try-out-the-mcp-server-with-the-following-command-llms-will-offer-course-corrections-and-suggestions" title="Permanent link">&para;</a></h3>
+<ul>
+<li>load corpus from /Users/your-user-id/crisp_input</li>
+<li>use available tools</li>
+<li>What are the columns in df?</li>
+<li>Do a regression using time_bp,time_dp,travel_time,self_time with relaxed as outcome</li>
+<li>Interpret the results</li>
+<li>Is self_time or related concepts occur frequently in documents?</li>
+<li>can you ignore "interviewer,interviewee" and assign topics again? Yes.</li>
+<li>What are the topics in documents with keyword "work"?</li>
+</ul>
+<p align="center">
+  <img src="https://github.com/dermatologist/crisp-t/blob/develop/notes/crisp.gif" />
+</p>
+
+<h2 id="visualization">Visualization<a class="headerlink" href="#visualization" title="Permanent link">&para;</a></h2>
+<h3 id="lets-visualize-the-clusters-in-2d-space-using-pca">Let's <a href="https://htmlpreview.github.io/?https://github.com/dermatologist/crisp-t/blob/develop/notes/lda_visualization.html">visualize the clusters in 2D space using PCA.</a><a class="headerlink" href="#lets-visualize-the-clusters-in-2d-space-using-pca" title="Permanent link">&para;</a></h3>
+<pre><code class="language-bash">crispviz --ldavis --out viz_out/
+</code></pre>
+<ul>
+<li>The visualization will be saved in <code>viz_out</code> folder. Open the html file in a browser to explore.</li>
+</ul>
+<h3 id="lets-generate-a-word-cloud-of-keywords-in-the-corpus">Let's generate a word cloud of keywords in the corpus.<a class="headerlink" href="#lets-generate-a-word-cloud-of-keywords-in-the-corpus" title="Permanent link">&para;</a></h3>
+<pre><code class="language-bash">crispviz --wordcloud --out viz_out/
+</code></pre>
+<ul>
+<li>The word cloud will be saved in <code>viz_out</code> folder.</li>
+</ul>
+<p align="center">
+  <img src="https://github.com/dermatologist/crisp-t/blob/develop/notes/wordcloud.jpg" />
+</p>
+
+<h2 id="more-examples-comprehensive-cli-usage">More examples — comprehensive CLI usage<a class="headerlink" href="#more-examples-comprehensive-cli-usage" title="Permanent link">&para;</a></h2>
+<p>The following grouped examples show common and advanced usage patterns for the three CLIs: <code>crisp</code>, <code>crispt</code>, and <code>crispviz</code>. These are practical, copy-pasteable command lines that demonstrate option combinations and formats discussed in this demo and cheatsheet.</p>
+<h3 id="a-data-import-basic-workflow-crisp">A. Data import &amp; basic workflow (<code>crisp</code>)<a class="headerlink" href="#a-data-import-basic-workflow-crisp" title="Permanent link">&para;</a></h3>
+<h1 id="import-a-folder-with-text-files-and-a-csv-specify-unstructured-text-column">Import a folder with text files and a CSV; specify unstructured text column<a class="headerlink" href="#import-a-folder-with-text-files-and-a-csv-specify-unstructured-text-column" title="Permanent link">&para;</a></h1>
+<pre><code class="language-bash">crisp --source ./raw_data --unstructured &quot;comments&quot; --out ./crisp_input
+</code></pre>
+<h1 id="import-but-limit-text-files-and-csv-rows-when-ingesting-large-sources">Import but limit text files and CSV rows when ingesting large sources<a class="headerlink" href="#import-but-limit-text-files-and-csv-rows-when-ingesting-large-sources" title="Permanent link">&para;</a></h1>
+<pre><code class="language-bash">crisp --source ./raw_data --out ./crisp_input --num 10 --rec 500
+</code></pre>
+<h1 id="import-csv-placed-in-the-source-folder-ignore-specific-stopwordscolumns">Import CSV placed in the source folder; ignore specific stopwords/columns<a class="headerlink" href="#import-csv-placed-in-the-source-folder-ignore-specific-stopwordscolumns" title="Permanent link">&para;</a></h1>
+<pre><code class="language-bash">crisp --source ./survey --unstructured &quot;comments&quot; --ignore &quot;interviewer,interviewee&quot; --out ./survey_corpus
+</code></pre>
+<h3 id="b-filtering-and-linking-crisp-crispt-examples">B. Filtering and linking (<code>crisp</code> + <code>crispt</code>) — examples<a class="headerlink" href="#b-filtering-and-linking-crisp-crispt-examples" title="Permanent link">&para;</a></h3>
+<h1 id="exact-match-filters-both-and-separators-supported">Exact-match filters (both <code>=</code> and <code>:</code> separators supported)<a class="headerlink" href="#exact-match-filters-both-and-separators-supported" title="Permanent link">&para;</a></h1>
+<pre><code class="language-bash">crisp --inp ./crisp_input --filters category=Health --topics
+crisp --inp ./crisp_input --filters category:Health --topics
+</code></pre>
+<h1 id="special-link-filters-textdf-and-dftext">Special link filters (text→df and df→text)<a class="headerlink" href="#special-link-filters-textdf-and-dftext" title="Permanent link">&para;</a></h1>
+<pre><code class="language-bash"># Filter dataframe rows that are linked from documents via embeddings
+crispt --inp ./crisp_input --filters embedding:text --out ./linked_by_embedding
+
+# Filter documents that are linked from dataframe rows via temporal links
+crispt --inp ./crisp_input --filters temporal:df --out ./linked_docs
+</code></pre>
+<h1 id="legacy-shorthand-mappings-both-map-to-embeddingtext-or-temporaltext">Legacy shorthand mappings — both map to <code>embedding:text</code> or <code>temporal:text</code><a class="headerlink" href="#legacy-shorthand-mappings-both-map-to-embeddingtext-or-temporaltext" title="Permanent link">&para;</a></h1>
+<pre><code class="language-bash">crispt --inp ./crisp_input --filters =embedding
+crispt --inp ./crisp_input --filters :temporal
+</code></pre>
+<h1 id="id-linkage-filter-to-a-single-id-or-sync-remaining-docsrows-with-blank-value">ID linkage: filter to a single ID, or sync remaining docs↔rows with blank value<a class="headerlink" href="#id-linkage-filter-to-a-single-id-or-sync-remaining-docsrows-with-blank-value" title="Permanent link">&para;</a></h1>
+<pre><code class="language-bash"># Filter to specific id
+crisp --inp ./crisp_input --filters id=12345 --nlp
+
+# Sync documents and dataframe rows by ID after other filters
+crisp --inp ./crisp_input --filters id: --out ./synced_output
+</code></pre>
+<h3 id="c-text-analysis-quick-examples-crisp">C. Text analysis quick examples (<code>crisp</code>)<a class="headerlink" href="#c-text-analysis-quick-examples-crisp" title="Permanent link">&para;</a></h3>
+<h1 id="topic-modeling-and-then-assign-topics-to-documents">Topic modeling and then assign topics to documents<a class="headerlink" href="#topic-modeling-and-then-assign-topics-to-documents" title="Permanent link">&para;</a></h1>
+<pre><code class="language-bash">crisp --inp ./crisp_input --topics --assign --out ./crisp_input_analyzed
+</code></pre>
+<h1 id="run-sentiment-and-summary-together">Run sentiment and summary together<a class="headerlink" href="#run-sentiment-and-summary-together" title="Permanent link">&para;</a></h1>
+<pre><code class="language-bash">crisp --inp ./crisp_input --sentiment --summary --num 5
+</code></pre>
+<h1 id="run-all-nlp-analyses-coding-dictionary-topics-categories-summary-sentiment">Run all NLP analyses (coding dictionary, topics, categories, summary, sentiment)<a class="headerlink" href="#run-all-nlp-analyses-coding-dictionary-topics-categories-summary-sentiment" title="Permanent link">&para;</a></h1>
+<pre><code class="language-bash">crisp --inp ./crisp_input --nlp
+</code></pre>
+<h3 id="d-machine-learning-cross-modal-examples-crisp">D. Machine learning &amp; cross-modal examples (<code>crisp</code>)<a class="headerlink" href="#d-machine-learning-cross-modal-examples-crisp" title="Permanent link">&para;</a></h3>
+<h1 id="run-k-means-clustering-on-numeric-csv-columns">Run k-means clustering on numeric CSV columns<a class="headerlink" href="#run-k-means-clustering-on-numeric-csv-columns" title="Permanent link">&para;</a></h1>
+<pre><code class="language-bash">crisp --inp ./survey_corpus --kmeans --num 4 --include age,income,score
+</code></pre>
+<h1 id="classification-svm-decision-tree-using-a-dataframe-outcome-column">Classification (SVM + Decision Tree) using a DataFrame outcome column<a class="headerlink" href="#classification-svm-decision-tree-using-a-dataframe-outcome-column" title="Permanent link">&para;</a></h1>
+<pre><code class="language-bash">crisp --inp ./survey_corpus --cls --outcome satisfaction_binary --include a,b,c --aggregation majority
+</code></pre>
+<h1 id="neural-net-requires-crisp-tml">Neural net (requires <code>crisp-t[ml]</code>)<a class="headerlink" href="#neural-net-requires-crisp-tml" title="Permanent link">&para;</a></h1>
+<pre><code class="language-bash">crisp --inp ./survey_corpus --nnet --outcome target_col --include feat1,feat2
+</code></pre>
+<h1 id="lstm-using-text-documents-aligned-by-id-column-in-csv">LSTM using text documents aligned by <code>id</code> column in CSV<a class="headerlink" href="#lstm-using-text-documents-aligned-by-id-column-in-csv" title="Permanent link">&para;</a></h1>
+<pre><code class="language-bash">crisp --inp ./survey_corpus --lstm --outcome CLASS
+</code></pre>
+<h3 id="e-corpus-management-inspection-crispt-examples">E. Corpus management &amp; inspection (<code>crispt</code>) — examples<a class="headerlink" href="#e-corpus-management-inspection-crispt-examples" title="Permanent link">&para;</a></h3>
+<h1 id="create-a-new-corpus-and-add-documents">Create a new corpus and add documents<a class="headerlink" href="#create-a-new-corpus-and-add-documents" title="Permanent link">&para;</a></h1>
+<pre><code class="language-bash">crispt --id my_corpus --name &quot;Study A&quot; --doc &quot;1|Intro|This is the first document&quot; --out ./my_corpus
+</code></pre>
+<h1 id="add-metadata-and-a-relationship">Add metadata and a relationship<a class="headerlink" href="#add-metadata-and-a-relationship" title="Permanent link">&para;</a></h1>
+<pre><code class="language-bash">crispt --inp ./my_corpus --meta &quot;source=field&quot; --add-rel &quot;text:work|numb:self_time|correlates&quot; --out ./my_corpus
+</code></pre>
+<h1 id="remove-a-document-and-clear-relationships">Remove a document and clear relationships<a class="headerlink" href="#remove-a-document-and-clear-relationships" title="Permanent link">&para;</a></h1>
+<pre><code class="language-bash">crispt --inp ./my_corpus --remove-doc 1 --clear-rel --out ./my_corpus
+</code></pre>
+<h1 id="inspect-dataset-columns-row-counts-or-specific-rows">Inspect dataset columns, row counts, or specific rows<a class="headerlink" href="#inspect-dataset-columns-row-counts-or-specific-rows" title="Permanent link">&para;</a></h1>
+<pre><code class="language-bash">crispt --inp ./my_corpus --df-cols
+crispt --inp ./my_corpus --df-row-count
+crispt --inp ./my_corpus --df-row 12
+</code></pre>
+<h1 id="print-usage-two-supported-formats">Print usage: two supported formats<a class="headerlink" href="#print-usage-two-supported-formats" title="Permanent link">&para;</a></h1>
+<pre><code class="language-bash"># Multi-flag form
+crispt --inp ./my_corpus --print documents --print 10
+
+# Single-string form
+crispt --inp ./my_corpus --print &quot;dataframe metadata&quot;
+</code></pre>
+<h3 id="f-semantic-embedding-features-crispt-examples">F. Semantic &amp; embedding features (<code>crispt</code>) — examples<a class="headerlink" href="#f-semantic-embedding-features-crispt-examples" title="Permanent link">&para;</a></h3>
+<h1 id="semantic-search-for-similar-documents-requires-embedding-backend">Semantic search for similar documents (requires embedding backend)<a class="headerlink" href="#semantic-search-for-similar-documents-requires-embedding-backend" title="Permanent link">&para;</a></h1>
+<pre><code class="language-bash">crispt --inp ./my_corpus --semantic &quot;patient anxiety&quot; --num 8 --rec 0.45
+</code></pre>
+<h1 id="find-documents-similar-to-a-list-of-document-ids">Find documents similar to a list of document IDs<a class="headerlink" href="#find-documents-similar-to-a-list-of-document-ids" title="Permanent link">&para;</a></h1>
+<pre><code class="language-bash">crispt --inp ./my_corpus --similar-docs &quot;1,2,3&quot; --num 5
+</code></pre>
+<h1 id="semantic-chunks-search-within-specific-document-chunks-use-with-doc-id">Semantic-chunks: search within specific document chunks (use with --doc-id)<a class="headerlink" href="#semantic-chunks-search-within-specific-document-chunks-use-with-doc-id" title="Permanent link">&para;</a></h1>
+<pre><code class="language-bash">crispt --inp ./my_corpus --doc-id 5 --semantic-chunks &quot;query phrase&quot; --rec 0.6
+</code></pre>
+<h1 id="embedding-linking-and-stats">Embedding linking and stats<a class="headerlink" href="#embedding-linking-and-stats" title="Permanent link">&para;</a></h1>
+<pre><code class="language-bash">crispt --inp ./my_corpus --embedding-link &quot;cosine:3:0.7&quot; --embedding-stats --out ./emb_links
+crispt --inp ./emb_links --filters embedding:df --out ./docs_linked_to_rows
+</code></pre>
+<h3 id="g-temporal-utilities-crispt-examples">G. Temporal utilities (<code>crispt</code>) — examples<a class="headerlink" href="#g-temporal-utilities-crispt-examples" title="Permanent link">&para;</a></h3>
+<h1 id="link-by-time-nearest-window-with-seconds-or-sequence">Link by time (nearest, window with seconds, or sequence)<a class="headerlink" href="#link-by-time-nearest-window-with-seconds-or-sequence" title="Permanent link">&para;</a></h1>
+<pre><code class="language-bash">crispt --inp ./my_corpus --temporal-link &quot;nearest:timestamp&quot;
+crispt --inp ./my_corpus --temporal-link &quot;window:timestamp:300&quot;  # ±300 seconds
+</code></pre>
+<h1 id="temporal-summaries-sentiment-trends-and-topics-over-periods">Temporal summaries, sentiment trends, and topics over periods<a class="headerlink" href="#temporal-summaries-sentiment-trends-and-topics-over-periods" title="Permanent link">&para;</a></h1>
+<pre><code class="language-bash">crispt --inp ./my_corpus --temporal-summary W
+crispt --inp ./my_corpus --temporal-sentiment W:mean
+crispt --inp ./my_corpus --temporal-topics W:5
+</code></pre>
+<h3 id="h-visualization-examples-crispviz">H. Visualization examples (<code>crispviz</code>)<a class="headerlink" href="#h-visualization-examples-crispviz" title="Permanent link">&para;</a></h3>
+<h1 id="word-frequency-topic-wordcloud-lda-interactive-visualization">Word frequency + topic wordcloud + LDA interactive visualization<a class="headerlink" href="#word-frequency-topic-wordcloud-lda-interactive-visualization" title="Permanent link">&para;</a></h1>
+<pre><code class="language-bash">crispviz --inp ./crisp_input_analyzed --out viz_out --freq --wordcloud --ldavis
+</code></pre>
+<h1 id="top-terms-with-custom-top-n-and-bins">Top terms with custom top-n and bins<a class="headerlink" href="#top-terms-with-custom-top-n-and-bins" title="Permanent link">&para;</a></h1>
+<pre><code class="language-bash">crispviz --inp ./crisp_input --out viz_out --top-terms --top-n 30 --bins 80
+</code></pre>
+<h1 id="correlation-heatmap-with-selected-numeric-columns">Correlation heatmap with selected numeric columns<a class="headerlink" href="#correlation-heatmap-with-selected-numeric-columns" title="Permanent link">&para;</a></h1>
+<pre><code class="language-bash">crispviz --inp ./survey_corpus --out viz_out --corr-heatmap --corr-columns &quot;age,income,score&quot;
+</code></pre>
+<h1 id="graph-visualization-filtered-by-node-types-and-a-different-layout">Graph visualization filtered by node types and a different layout<a class="headerlink" href="#graph-visualization-filtered-by-node-types-and-a-different-layout" title="Permanent link">&para;</a></h1>
+<pre><code class="language-bash">crispviz --inp ./my_corpus --out viz_out --graph --graph-nodes document,keyword --graph-layout circular
+</code></pre>
+<h3 id="i-small-tips-parameter-semantics">I. Small tips &amp; parameter semantics<a class="headerlink" href="#i-small-tips-parameter-semantics" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>--rec</code> for <code>crispt</code> semantic commands can be a similarity threshold (float, default 0.4), while <code>--rec</code> for some <code>crisp</code> commands is used as an integer count — check the command context.</li>
+<li><code>--num</code> defaults differ by context (e.g., <code>crispt</code> search default is 5; <code>crisp</code> analysis default is 3).</li>
+<li><code>--aggregation</code> accepts <code>majority|mean|first|mode</code> and controls how multiple documents map to one numeric row are aggregated for ML tasks.</li>
+</ul>
+<h3 id="j-full-run-example-import-analyze-visualize">J. Full-run example (import → analyze → visualize)<a class="headerlink" href="#j-full-run-example-import-analyze-visualize" title="Permanent link">&para;</a></h3>
+<pre><code class="language-bash"># 1) Import
+crisp --source ./raw_data --unstructured &quot;comments&quot; --out ./crisp_input
+
+# 2) Run NLP + sentiment + save
+crisp --inp ./crisp_input --topics --assign --sentiment --out ./crisp_input_analyzed
+
+# 3) Link by embedding and run regression on linked set
+crispt --inp ./crisp_input_analyzed --embedding-link &quot;cosine:1:0.7&quot; --out ./linked
+crisp --inp ./linked --outcome satisfaction_score --regression --out ./final_results
+
+# 4) Create visualizations
+crispviz --inp ./final_results --out viz_out --ldavis --wordcloud --corr-heatmap
+</code></pre>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Maintained by <a href="https://github.com/dermatologist">dermatologist</a>.
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/dermatologist/crisp-t" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://pypi.org/project/crisp-t" target="_blank" rel="noopener" title="pypi.org" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.8 200.5c-7.7-30.9-22.3-54.2-53.4-54.2h-40.1v47.4c0 36.8-31.2 67.8-66.8 67.8H172.7c-29.2 0-53.4 25-53.4 54.3v101.8c0 29 25.2 46 53.4 54.3 33.8 9.9 66.3 11.7 106.8 0 26.9-7.8 53.4-23.5 53.4-54.3v-40.7H226.2v-13.6h160.2c31.1 0 42.6-21.7 53.4-54.2 11.2-33.5 10.7-65.7 0-108.6M286.2 444.7a20.4 20.4 0 1 1 0-40.7 20.4 20.4 0 1 1 0 40.7M167.8 248.1h106.8c29.7 0 53.4-24.5 53.4-54.3V91.9c0-29-24.4-50.7-53.4-55.6-35.8-5.9-74.7-5.6-106.8.1-45.2 8-53.4 24.7-53.4 55.6v40.7h106.9v13.6h-147c-31.1 0-58.3 18.7-66.8 54.2-9.8 40.7-10.2 66.1 0 108.6 7.6 31.6 25.7 54.2 56.8 54.2H101v-48.8c0-35.3 30.5-66.4 66.8-66.4m-6.6-183.4a20.4 20.4 0 1 1 0 40.8 20.4 20.4 0 1 1 0-40.8"/></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://www.linkedin.com/in/beapen" target="_blank" rel="noopener" title="www.linkedin.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M416 32H31.9C14.3 32 0 46.5 0 64.3v383.4C0 465.5 14.3 480 31.9 480H416c17.6 0 32-14.5 32-32.3V64.3c0-17.8-14.4-32.3-32-32.3M135.4 416H69V202.2h66.5V416zM102.2 96a38.5 38.5 0 1 1 0 77 38.5 38.5 0 1 1 0-77m282.1 320h-66.4V312c0-24.8-.5-56.7-34.5-56.7-34.6 0-39.9 27-39.9 54.9V416h-66.4V202.2h63.7v29.2h.9c8.9-16.8 30.6-34.5 62.9-34.5 67.2 0 79.7 44.3 79.7 101.9z"/></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://nuchange.ca" target="_blank" rel="noopener" title="nuchange.ca" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M277.8 8.6c-12.3-11.4-31.3-11.4-43.5 0l-224 208c-9.6 9-12.8 22.9-8 35.1S18.8 272 32 272h16v176c0 35.3 28.7 64 64 64h288c35.3 0 64-28.7 64-64V272h16c13.2 0 25-8.1 29.8-20.3s1.6-26.2-8-35.1zM240 320h32c26.5 0 48 21.5 48 48v96H192v-96c0-26.5 21.5-48 48-48"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": [], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

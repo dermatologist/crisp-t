@@ -1,0 +1,2576 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="OMOP CDM utils in Python">
+      
+      
+        <meta name="author" content="Bell Eapen">
+      
+      
+        <link rel="canonical" href="https://dermatologist.github.io/crisp-t/MCP_SERVER/">
+      
+      
+        <link rel="prev" href="../DEMO/">
+      
+      
+        <link rel="next" href="../SEMANTIC_SEARCH/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+    
+    
+      
+        <title>MCP - crisp-t</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="deep-orange">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#crisp-t-mcp-server-guide" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="crisp-t" class="md-header__button md-logo" aria-label="crisp-t" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            crisp-t
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              MCP
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="deep-orange"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="black" data-md-color-accent="deep-orange"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/dermatologist/crisp-t" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    dermatologist/crisp-t
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="crisp-t" class="md-nav__button md-logo" aria-label="crisp-t" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    crisp-t
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/dermatologist/crisp-t" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    dermatologist/crisp-t
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../modules/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Modules
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../contributing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cheatsheet/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cheat Sheet
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../DEMO/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Demo
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MCP
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MCP
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Overview
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#installation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Installation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#starting-the-server" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Starting the Server
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#client-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Client Configuration
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Client Configuration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#claude-desktop" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Claude Desktop
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#other-mcp-clients" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Other MCP Clients
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#available-tools" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Available Tools
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Available Tools">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#corpus-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Corpus Management
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Corpus Management">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#load_corpus" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        load_corpus
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#save_corpus" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        save_corpus
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#add_document" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        add_document
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#remove_document" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        remove_document
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get_document" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        get_document
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#list_documents" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        list_documents
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#add_relationship" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        add_relationship
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get_relationships" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        get_relationships
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get_relationships_for_keyword" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        get_relationships_for_keyword
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nlptext-analysis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        NLP/Text Analysis
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="NLP/Text Analysis">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#generate_coding_dictionary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        generate_coding_dictionary
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#topic_modeling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        topic_modeling
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#assign_topics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        assign_topics
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#extract_categories" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        extract_categories
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#generate_summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        generate_summary
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sentiment_analysis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        sentiment_analysis
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#semantic-search-requires-chromadb" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Semantic Search (requires chromadb)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Semantic Search (requires chromadb)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#semantic_search" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        semantic_search
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#find_similar_documents" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        find_similar_documents
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#semantic_chunk_search" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        semantic_chunk_search
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#export_metadata_df" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        export_metadata_df
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tdabm-topological-data-analysis-ball-mapper" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        TDABM (Topological Data Analysis Ball Mapper)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="TDABM (Topological Data Analysis Ball Mapper)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#tdabm_analysis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        tdabm_analysis
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dataframecsv-operations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DataFrame/CSV Operations
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="DataFrame/CSV Operations">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#get_df_columns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        get_df_columns
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get_df_row_count" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        get_df_row_count
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get_df_row" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        get_df_row
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#machine-learning-requires-crisp-tml" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Machine Learning (requires crisp-t[ml])
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Machine Learning (requires crisp-t[ml])">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#kmeans_clustering" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        kmeans_clustering
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#decision_tree_classification" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        decision_tree_classification
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#svm_classification" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        svm_classification
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#neural_network_classification" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        neural_network_classification
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#regression_analysis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        regression_analysis
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pca_analysis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        pca_analysis
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#association_rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        association_rules
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#knn_search" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        knn_search
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#resources" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Resources
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#prompts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Prompts
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Prompts">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#analysis_workflow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        analysis_workflow
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#triangulation_guide" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        triangulation_guide
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#example-workflow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example Workflow
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#key-features" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Key Features
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Key Features">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#topic-modeling-creates-keywords" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Topic Modeling Creates Keywords
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#regression-shows-coefficients" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Regression Shows Coefficients
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#decision-trees-show-importance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Decision Trees Show Importance
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#relationships-link-data-types" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Relationships Link Data Types
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tips-for-effective-use" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tips for Effective Use
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#troubleshooting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Troubleshooting
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Troubleshooting">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#no-corpus-loaded-error" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        "No corpus loaded" error
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ml-dependencies-not-available-error" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        "ML dependencies not available" error
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#server-not-appearing-in-claude-desktop" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Server not appearing in Claude Desktop
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#additional-resources" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Additional Resources
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../SEMANTIC_SEARCH/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Semantic Search
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../GRAPH/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GRAPH
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../TDABM/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    TDABM
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Overview
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#installation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Installation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#starting-the-server" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Starting the Server
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#client-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Client Configuration
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Client Configuration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#claude-desktop" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Claude Desktop
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#other-mcp-clients" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Other MCP Clients
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#available-tools" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Available Tools
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Available Tools">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#corpus-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Corpus Management
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Corpus Management">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#load_corpus" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        load_corpus
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#save_corpus" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        save_corpus
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#add_document" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        add_document
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#remove_document" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        remove_document
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get_document" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        get_document
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#list_documents" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        list_documents
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#add_relationship" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        add_relationship
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get_relationships" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        get_relationships
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get_relationships_for_keyword" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        get_relationships_for_keyword
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nlptext-analysis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        NLP/Text Analysis
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="NLP/Text Analysis">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#generate_coding_dictionary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        generate_coding_dictionary
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#topic_modeling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        topic_modeling
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#assign_topics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        assign_topics
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#extract_categories" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        extract_categories
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#generate_summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        generate_summary
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sentiment_analysis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        sentiment_analysis
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#semantic-search-requires-chromadb" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Semantic Search (requires chromadb)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Semantic Search (requires chromadb)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#semantic_search" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        semantic_search
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#find_similar_documents" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        find_similar_documents
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#semantic_chunk_search" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        semantic_chunk_search
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#export_metadata_df" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        export_metadata_df
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tdabm-topological-data-analysis-ball-mapper" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        TDABM (Topological Data Analysis Ball Mapper)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="TDABM (Topological Data Analysis Ball Mapper)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#tdabm_analysis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        tdabm_analysis
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dataframecsv-operations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DataFrame/CSV Operations
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="DataFrame/CSV Operations">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#get_df_columns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        get_df_columns
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get_df_row_count" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        get_df_row_count
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get_df_row" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        get_df_row
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#machine-learning-requires-crisp-tml" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Machine Learning (requires crisp-t[ml])
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Machine Learning (requires crisp-t[ml])">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#kmeans_clustering" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        kmeans_clustering
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#decision_tree_classification" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        decision_tree_classification
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#svm_classification" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        svm_classification
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#neural_network_classification" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        neural_network_classification
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#regression_analysis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        regression_analysis
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pca_analysis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        pca_analysis
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#association_rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        association_rules
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#knn_search" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        knn_search
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#resources" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Resources
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#prompts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Prompts
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Prompts">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#analysis_workflow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        analysis_workflow
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#triangulation_guide" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        triangulation_guide
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#example-workflow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example Workflow
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#key-features" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Key Features
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Key Features">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#topic-modeling-creates-keywords" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Topic Modeling Creates Keywords
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#regression-shows-coefficients" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Regression Shows Coefficients
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#decision-trees-show-importance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Decision Trees Show Importance
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#relationships-link-data-types" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Relationships Link Data Types
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tips-for-effective-use" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tips for Effective Use
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#troubleshooting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Troubleshooting
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Troubleshooting">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#no-corpus-loaded-error" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        "No corpus loaded" error
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ml-dependencies-not-available-error" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        "ML dependencies not available" error
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#server-not-appearing-in-claude-desktop" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Server not appearing in Claude Desktop
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#additional-resources" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Additional Resources
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="crisp-t-mcp-server-guide">CRISP-T MCP Server Guide<a class="headerlink" href="#crisp-t-mcp-server-guide" title="Permanent link">&para;</a></h1>
+<h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
+<p>The CRISP-T MCP (Model Context Protocol) server exposes all CRISP-T functionality through a standardized interface that can be used by AI assistants and other MCP-compatible clients.</p>
+<h2 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link">&para;</a></h2>
+<p>Install CRISP-T with MCP support:</p>
+<pre><code class="language-bash">pip install crisp-t
+</code></pre>
+<p>For machine learning features:</p>
+<pre><code class="language-bash">pip install crisp-t[ml]
+</code></pre>
+<h2 id="starting-the-server">Starting the Server<a class="headerlink" href="#starting-the-server" title="Permanent link">&para;</a></h2>
+<p>The MCP server runs via stdio and can be started with:</p>
+<pre><code class="language-bash">crisp-mcp
+</code></pre>
+<p>Or using Python directly:</p>
+<pre><code class="language-bash">python -m crisp_t.mcp
+</code></pre>
+<h2 id="client-configuration">Client Configuration<a class="headerlink" href="#client-configuration" title="Permanent link">&para;</a></h2>
+<h3 id="claude-desktop">Claude Desktop<a class="headerlink" href="#claude-desktop" title="Permanent link">&para;</a></h3>
+<p>Add the following to your Claude Desktop configuration file:</p>
+<p><strong>macOS</strong>: <code>~/Library/Application Support/Claude/claude_desktop_config.json</code></p>
+<p><strong>Windows</strong>: <code>%APPDATA%\Claude\claude_desktop_config.json</code></p>
+<pre><code class="language-json">{
+  &quot;mcpServers&quot;: {
+    &quot;crisp-t&quot;: {
+      &quot;command&quot;: &quot;crisp-mcp&quot;
+    }
+  }
+}
+</code></pre>
+<p>After adding the configuration, restart Claude Desktop. The CRISP-T tools will be available in the MCP menu.</p>
+<h3 id="other-mcp-clients">Other MCP Clients<a class="headerlink" href="#other-mcp-clients" title="Permanent link">&para;</a></h3>
+<p>Configure your MCP client to run the <code>crisp-mcp</code> command via stdio. Consult your client's documentation for specific configuration instructions.</p>
+<h2 id="available-tools">Available Tools<a class="headerlink" href="#available-tools" title="Permanent link">&para;</a></h2>
+<h3 id="corpus-management">Corpus Management<a class="headerlink" href="#corpus-management" title="Permanent link">&para;</a></h3>
+<h4 id="load_corpus"><code>load_corpus</code><a class="headerlink" href="#load_corpus" title="Permanent link">&para;</a></h4>
+<p>Load a corpus from a folder or source directory.</p>
+<p><strong>Arguments:</strong>
+- <code>inp</code> (optional): Path to folder containing corpus.json
+- <code>source</code> (optional): Source directory or URL to read data from
+- <code>text_columns</code> (optional): Comma-separated text column names for CSV data
+- <code>ignore_words</code> (optional): Comma-separated words to ignore during analysis</p>
+<p><strong>Example:</strong></p>
+<pre><code class="language-json">{
+  &quot;inp&quot;: &quot;/path/to/corpus_folder&quot;
+}
+</code></pre>
+<h4 id="save_corpus"><code>save_corpus</code><a class="headerlink" href="#save_corpus" title="Permanent link">&para;</a></h4>
+<p>Save the current corpus to a folder.</p>
+<p><strong>Arguments:</strong>
+- <code>out</code> (required): Output folder path</p>
+<h4 id="add_document"><code>add_document</code><a class="headerlink" href="#add_document" title="Permanent link">&para;</a></h4>
+<p>Add a new document to the corpus.</p>
+<p><strong>Arguments:</strong>
+- <code>doc_id</code> (required): Unique document ID
+- <code>text</code> (required): Document text content
+- <code>name</code> (optional): Document name</p>
+<h4 id="remove_document"><code>remove_document</code><a class="headerlink" href="#remove_document" title="Permanent link">&para;</a></h4>
+<p>Remove a document by ID.</p>
+<p><strong>Arguments:</strong>
+- <code>doc_id</code> (required): Document ID to remove</p>
+<h4 id="get_document"><code>get_document</code><a class="headerlink" href="#get_document" title="Permanent link">&para;</a></h4>
+<p>Get document details by ID.</p>
+<p><strong>Arguments:</strong>
+- <code>doc_id</code> (required): Document ID</p>
+<h4 id="list_documents"><code>list_documents</code><a class="headerlink" href="#list_documents" title="Permanent link">&para;</a></h4>
+<p>List all document IDs in the corpus.</p>
+<h4 id="add_relationship"><code>add_relationship</code><a class="headerlink" href="#add_relationship" title="Permanent link">&para;</a></h4>
+<p>Add a relationship between text keywords and numeric columns.</p>
+<p><strong>Arguments:</strong>
+- <code>first</code> (required): First entity (e.g., "text:healthcare")
+- <code>second</code> (required): Second entity (e.g., "num:age_group")
+- <code>relation</code> (required): Relationship type (e.g., "correlates")</p>
+<p><strong>Example:</strong></p>
+<pre><code class="language-json">{
+  &quot;first&quot;: &quot;text:satisfaction&quot;,
+  &quot;second&quot;: &quot;num:rating_score&quot;,
+  &quot;relation&quot;: &quot;predicts&quot;
+}
+</code></pre>
+<h4 id="get_relationships"><code>get_relationships</code><a class="headerlink" href="#get_relationships" title="Permanent link">&para;</a></h4>
+<p>Get all relationships in the corpus.</p>
+<h4 id="get_relationships_for_keyword"><code>get_relationships_for_keyword</code><a class="headerlink" href="#get_relationships_for_keyword" title="Permanent link">&para;</a></h4>
+<p>Get relationships involving a specific keyword.</p>
+<p><strong>Arguments:</strong>
+- <code>keyword</code> (required): Keyword to search for</p>
+<h3 id="nlptext-analysis">NLP/Text Analysis<a class="headerlink" href="#nlptext-analysis" title="Permanent link">&para;</a></h3>
+<h4 id="generate_coding_dictionary"><code>generate_coding_dictionary</code><a class="headerlink" href="#generate_coding_dictionary" title="Permanent link">&para;</a></h4>
+<p>Generate a qualitative coding dictionary with categories, properties, and dimensions.</p>
+<p><strong>Arguments:</strong>
+- <code>num</code> (optional): Number of categories to extract (default: 3)
+- <code>top_n</code> (optional): Top N items per category (default: 3)</p>
+<p><strong>Returns:</strong>
+- Categories (verbs representing main actions/themes)
+- Properties (nouns associated with categories)
+- Dimensions (adjectives/adverbs describing properties)</p>
+<h4 id="topic_modeling"><code>topic_modeling</code><a class="headerlink" href="#topic_modeling" title="Permanent link">&para;</a></h4>
+<p>Perform LDA topic modeling to discover latent topics.</p>
+<p><strong>Arguments:</strong>
+- <code>num_topics</code> (optional): Number of topics to generate (default: 3)
+- <code>num_words</code> (optional): Number of words per topic (default: 5)</p>
+<p><strong>Returns:</strong>
+Topics with keywords and weights showing word importance within each topic.</p>
+<h4 id="assign_topics"><code>assign_topics</code><a class="headerlink" href="#assign_topics" title="Permanent link">&para;</a></h4>
+<p>Assign documents to their dominant topics.</p>
+<p><strong>Arguments:</strong>
+- <code>num_topics</code> (optional): Number of topics (should match topic_modeling, default: 3)</p>
+<p><strong>Returns:</strong>
+Document-topic assignments with contribution percentages. These assignments create keyword labels that can be used to filter or categorize documents.</p>
+<h4 id="extract_categories"><code>extract_categories</code><a class="headerlink" href="#extract_categories" title="Permanent link">&para;</a></h4>
+<p>Extract common categories/concepts from the corpus.</p>
+<p><strong>Arguments:</strong>
+- <code>num</code> (optional): Number of categories (default: 10)</p>
+<h4 id="generate_summary"><code>generate_summary</code><a class="headerlink" href="#generate_summary" title="Permanent link">&para;</a></h4>
+<p>Generate an extractive text summary of the corpus.</p>
+<p><strong>Arguments:</strong>
+- <code>weight</code> (optional): Summary length parameter (default: 10)</p>
+<h4 id="sentiment_analysis"><code>sentiment_analysis</code><a class="headerlink" href="#sentiment_analysis" title="Permanent link">&para;</a></h4>
+<p>Perform VADER sentiment analysis.</p>
+<p><strong>Arguments:</strong>
+- <code>documents</code> (optional): Analyze at document level (default: false)
+- <code>verbose</code> (optional): Verbose output (default: true)</p>
+<p><strong>Returns:</strong>
+Sentiment scores (negative, neutral, positive, compound).</p>
+<h3 id="semantic-search-requires-chromadb">Semantic Search (requires chromadb)<a class="headerlink" href="#semantic-search-requires-chromadb" title="Permanent link">&para;</a></h3>
+<h4 id="semantic_search"><code>semantic_search</code><a class="headerlink" href="#semantic_search" title="Permanent link">&para;</a></h4>
+<p>Find documents similar to a query using semantic similarity.</p>
+<p><strong>Arguments:</strong>
+- <code>query</code> (required): Search query text
+- <code>n_results</code> (optional): Number of similar documents to return (default: 5)</p>
+<p><strong>Returns:</strong>
+List of similar documents with their IDs and names, ranked by semantic similarity.</p>
+<p><strong>Example:</strong></p>
+<pre><code class="language-json">{
+  &quot;query&quot;: &quot;machine learning and AI&quot;,
+  &quot;n_results&quot;: 5
+}
+</code></pre>
+<h4 id="find_similar_documents"><code>find_similar_documents</code><a class="headerlink" href="#find_similar_documents" title="Permanent link">&para;</a></h4>
+<p>Find documents similar to a given set of reference documents based on semantic similarity. This tool is particularly useful for <strong>literature reviews</strong> and <strong>qualitative research</strong> where you want to find additional documents that are similar to a set of known relevant documents. It can also be used to identify documents with similar themes, topics, or content for grouping and analysis purposes.</p>
+<p><strong>Arguments:</strong>
+- <code>document_ids</code> (required): A single document ID or comma-separated list of document IDs to use as reference
+- <code>n_results</code> (optional): Number of similar documents to return (default: 5)
+- <code>threshold</code> (optional): Minimum similarity threshold 0-1 (default: 0.7). Only documents above this threshold are returned</p>
+<p><strong>Returns:</strong>
+List of document IDs similar to the reference documents, excluding the reference documents themselves.</p>
+<p><strong>Example:</strong></p>
+<pre><code class="language-json">{
+  &quot;document_ids&quot;: &quot;doc1,doc5,doc12&quot;,
+  &quot;n_results&quot;: 10,
+  &quot;threshold&quot;: 0.7
+}
+</code></pre>
+<p><strong>Use Cases:</strong>
+- Literature reviews: Find papers similar to known relevant papers
+- Qualitative research: Identify documents with similar themes
+- Content grouping: Group similar documents for analysis
+- Document recommendation: Suggest related documents to researchers</p>
+<h4 id="semantic_chunk_search"><code>semantic_chunk_search</code><a class="headerlink" href="#semantic_chunk_search" title="Permanent link">&para;</a></h4>
+<p>Perform semantic search on chunks of a specific document. This tool is useful for <strong>coding and annotating documents</strong> by identifying relevant sections that match specific concepts or themes.</p>
+<p><strong>Arguments:</strong>
+- <code>query</code> (required): Search query text (concept or set of concepts)
+- <code>doc_id</code> (required): Document ID to search within
+- <code>threshold</code> (optional): Minimum similarity threshold 0-1 (default: 0.5). Only chunks above this threshold are returned
+- <code>n_results</code> (optional): Maximum number of chunks to retrieve before filtering (default: 10)</p>
+<p><strong>Returns:</strong>
+List of matching text chunks from the specified document that can be used for qualitative analysis or document annotation.</p>
+<p><strong>Example:</strong></p>
+<pre><code class="language-json">{
+  &quot;query&quot;: &quot;patient satisfaction&quot;,
+  &quot;doc_id&quot;: &quot;interview_01&quot;,
+  &quot;threshold&quot;: 0.6,
+  &quot;n_results&quot;: 10
+}
+</code></pre>
+<p><strong>Use Cases:</strong>
+- Coding qualitative interview transcripts for specific themes
+- Identifying sections of documents relevant to research questions
+- Annotating documents with concept labels
+- Finding evidence for theoretical constructs within texts</p>
+<h4 id="export_metadata_df"><code>export_metadata_df</code><a class="headerlink" href="#export_metadata_df" title="Permanent link">&para;</a></h4>
+<p>Export ChromaDB collection metadata as a pandas DataFrame.</p>
+<p><strong>Arguments:</strong>
+- <code>metadata_keys</code> (optional): Comma-separated list of metadata keys to include</p>
+<p><strong>Returns:</strong>
+DataFrame with document metadata that can be merged with numeric data for mixed-methods analysis.</p>
+<h3 id="tdabm-topological-data-analysis-ball-mapper">TDABM (Topological Data Analysis Ball Mapper)<a class="headerlink" href="#tdabm-topological-data-analysis-ball-mapper" title="Permanent link">&para;</a></h3>
+<h4 id="tdabm_analysis"><code>tdabm_analysis</code><a class="headerlink" href="#tdabm_analysis" title="Permanent link">&para;</a></h4>
+<p>Perform Topological Data Analysis Ball Mapper (TDABM) analysis to uncover hidden, global patterns in complex, noisy, or high-dimensional data.</p>
+<p>Based on the algorithm by Rudkin and Dlotko (2024), TDABM creates a point cloud from multidimensional data and covers it with overlapping balls, revealing topological structure and relationships between variables.</p>
+<p><strong>Arguments:</strong>
+- <code>y_variable</code> (required): Name of the continuous Y variable to analyze
+- <code>x_variables</code> (required): Comma-separated list of ordinal/numeric X variable names
+- <code>radius</code> (optional): Radius for ball coverage (default: 0.3). Smaller values create more detailed mappings.</p>
+<p><strong>Example:</strong></p>
+<pre><code class="language-json">{
+  &quot;y_variable&quot;: &quot;satisfaction&quot;,
+  &quot;x_variables&quot;: &quot;age,income,education&quot;,
+  &quot;radius&quot;: 0.3
+}
+</code></pre>
+<p><strong>Returns:</strong>
+Analysis results in JSON format including landmark points, their locations, connections, and mean Y values. Results are stored in corpus metadata['tdabm'].</p>
+<p><strong>Use Cases:</strong>
+- Discovering hidden patterns in multidimensional data
+- Visualizing relationships between multiple variables
+- Identifying clusters and connections in complex datasets
+- Performing model-free exploratory data analysis
+- Understanding global structure in high-dimensional data</p>
+<p><strong>Note:</strong> After running TDABM analysis, use <code>save_corpus</code> to persist results, then visualize with <code>crispviz --tdabm</code>.</p>
+<p><strong>Reference:</strong>
+Rudkin, S., &amp; Dlotko, P. (2024). Topological Data Analysis Ball Mapper for multidimensional data visualization. <em>Paper reference to be added - algorithm implementation based on the TDABM methodology described by the authors.</em></p>
+<h3 id="dataframecsv-operations">DataFrame/CSV Operations<a class="headerlink" href="#dataframecsv-operations" title="Permanent link">&para;</a></h3>
+<h4 id="get_df_columns"><code>get_df_columns</code><a class="headerlink" href="#get_df_columns" title="Permanent link">&para;</a></h4>
+<p>Get all column names from the DataFrame.</p>
+<h4 id="get_df_row_count"><code>get_df_row_count</code><a class="headerlink" href="#get_df_row_count" title="Permanent link">&para;</a></h4>
+<p>Get the number of rows in the DataFrame.</p>
+<h4 id="get_df_row"><code>get_df_row</code><a class="headerlink" href="#get_df_row" title="Permanent link">&para;</a></h4>
+<p>Get a specific row by index.</p>
+<p><strong>Arguments:</strong>
+- <code>index</code> (required): Row index</p>
+<h3 id="machine-learning-requires-crisp-tml">Machine Learning (requires crisp-t[ml])<a class="headerlink" href="#machine-learning-requires-crisp-tml" title="Permanent link">&para;</a></h3>
+<h4 id="kmeans_clustering"><code>kmeans_clustering</code><a class="headerlink" href="#kmeans_clustering" title="Permanent link">&para;</a></h4>
+<p>Perform K-Means clustering on numeric data.</p>
+<p><strong>Arguments:</strong>
+- <code>num_clusters</code> (optional): Number of clusters (default: 3)
+- <code>outcome</code> (optional): Outcome variable to exclude</p>
+<p><strong>Returns:</strong>
+Cluster assignments and membership information.</p>
+<h4 id="decision_tree_classification"><code>decision_tree_classification</code><a class="headerlink" href="#decision_tree_classification" title="Permanent link">&para;</a></h4>
+<p>Train a decision tree classifier and return variable importance.</p>
+<p><strong>Arguments:</strong>
+- <code>outcome</code> (required): Target/outcome variable
+- <code>top_n</code> (optional): Top N important features (default: 10)</p>
+<p><strong>Returns:</strong>
+- Confusion matrix
+- Feature importance rankings (shows which variables are most predictive)</p>
+<h4 id="svm_classification"><code>svm_classification</code><a class="headerlink" href="#svm_classification" title="Permanent link">&para;</a></h4>
+<p>Perform SVM classification.</p>
+<p><strong>Arguments:</strong>
+- <code>outcome</code> (required): Target/outcome variable</p>
+<p><strong>Returns:</strong>
+Confusion matrix showing classification performance.</p>
+<h4 id="neural_network_classification"><code>neural_network_classification</code><a class="headerlink" href="#neural_network_classification" title="Permanent link">&para;</a></h4>
+<p>Train a neural network classifier.</p>
+<p><strong>Arguments:</strong>
+- <code>outcome</code> (required): Target/outcome variable</p>
+<p><strong>Returns:</strong>
+Predictions and accuracy metrics.</p>
+<h4 id="regression_analysis"><code>regression_analysis</code><a class="headerlink" href="#regression_analysis" title="Permanent link">&para;</a></h4>
+<p>Perform linear or logistic regression (auto-detects based on outcome type).</p>
+<p><strong>Arguments:</strong>
+- <code>outcome</code> (required): Target/outcome variable</p>
+<p><strong>Returns:</strong>
+- Model type (linear or logistic)
+- Coefficients for each factor (showing strength and direction of relationships)
+- Intercept
+- Performance metrics (R², accuracy, etc.)</p>
+<h4 id="pca_analysis"><code>pca_analysis</code><a class="headerlink" href="#pca_analysis" title="Permanent link">&para;</a></h4>
+<p>Perform Principal Component Analysis.</p>
+<p><strong>Arguments:</strong>
+- <code>outcome</code> (required): Variable to exclude from PCA
+- <code>n_components</code> (optional): Number of components (default: 3)</p>
+<h4 id="association_rules"><code>association_rules</code><a class="headerlink" href="#association_rules" title="Permanent link">&para;</a></h4>
+<p>Generate association rules using Apriori algorithm.</p>
+<p><strong>Arguments:</strong>
+- <code>outcome</code> (required): Variable to exclude
+- <code>min_support</code> (optional): Minimum support 1-99 (default: 50)
+- <code>min_threshold</code> (optional): Minimum threshold 1-99 (default: 50)</p>
+<h4 id="knn_search"><code>knn_search</code><a class="headerlink" href="#knn_search" title="Permanent link">&para;</a></h4>
+<p>Find K-nearest neighbors for a specific record.</p>
+<p><strong>Arguments:</strong>
+- <code>outcome</code> (required): Target variable
+- <code>n</code> (optional): Number of neighbors (default: 3)
+- <code>record</code> (optional): Record index, 1-based (default: 1)</p>
+<h2 id="resources">Resources<a class="headerlink" href="#resources" title="Permanent link">&para;</a></h2>
+<p>The server exposes corpus documents as resources that can be read:</p>
+<ul>
+<li><code>corpus://document/{id}</code> - Access document text content by ID</li>
+</ul>
+<h2 id="prompts">Prompts<a class="headerlink" href="#prompts" title="Permanent link">&para;</a></h2>
+<h3 id="analysis_workflow"><code>analysis_workflow</code><a class="headerlink" href="#analysis_workflow" title="Permanent link">&para;</a></h3>
+<p>Complete step-by-step guide for conducting a CRISP-T analysis based on INSTRUCTIONS.md.</p>
+<p>This prompt provides:
+- Data preparation steps
+- Descriptive analysis workflow
+- Advanced pattern discovery techniques
+- Predictive modeling approaches
+- Validation and triangulation strategies</p>
+<h3 id="triangulation_guide"><code>triangulation_guide</code><a class="headerlink" href="#triangulation_guide" title="Permanent link">&para;</a></h3>
+<p>Guide for triangulating qualitative and quantitative findings.</p>
+<p>This prompt explains:
+- How to link topic keywords with numeric variables
+- Strategies for comparing patterns across data types
+- Using relationships to document connections
+- Best practices for validation</p>
+<h2 id="example-workflow">Example Workflow<a class="headerlink" href="#example-workflow" title="Permanent link">&para;</a></h2>
+<p>Here's a typical analysis workflow using the MCP server:</p>
+<ol>
+<li>
+<p><strong>Load data</strong>
+   <code>load_corpus(inp="/path/to/corpus")</code></p>
+</li>
+<li>
+<p><strong>Explore the data</strong>
+   <code>list_documents()
+   get_df_columns()
+   get_df_row_count()</code></p>
+</li>
+<li>
+<p><strong>Perform text analysis</strong>
+   <code>generate_coding_dictionary(num=10, top_n=5)
+   topic_modeling(num_topics=5, num_words=10)
+   assign_topics(num_topics=5)
+   sentiment_analysis(documents=true)</code></p>
+</li>
+<li>
+<p><strong>Perform numeric analysis</strong>
+   <code>regression_analysis(outcome="satisfaction_score")
+   decision_tree_classification(outcome="readmission", top_n=10)</code></p>
+</li>
+<li>
+<p><strong>Link findings</strong>
+   <code>add_relationship(
+     first="text:healthcare_access",
+     second="num:insurance_status",
+     relation="correlates"
+   )</code></p>
+</li>
+<li>
+<p><strong>Save results</strong>
+   <code>save_corpus(out="/path/to/output")</code></p>
+</li>
+</ol>
+<h2 id="key-features">Key Features<a class="headerlink" href="#key-features" title="Permanent link">&para;</a></h2>
+<h3 id="topic-modeling-creates-keywords">Topic Modeling Creates Keywords<a class="headerlink" href="#topic-modeling-creates-keywords" title="Permanent link">&para;</a></h3>
+<p>When you use <code>topic_modeling</code> and <code>assign_topics</code>, the tool assigns topic keywords to documents. These keywords can then be used to:
+- Filter documents by theme
+- Create relationships with numeric columns
+- Categorize documents for further analysis</p>
+<h3 id="regression-shows-coefficients">Regression Shows Coefficients<a class="headerlink" href="#regression-shows-coefficients" title="Permanent link">&para;</a></h3>
+<p>The <code>regression_analysis</code> tool returns coefficients for each predictor variable, showing:
+- Strength of relationship (larger absolute value = stronger)
+- Direction of relationship (positive or negative)
+- Statistical significance</p>
+<h3 id="decision-trees-show-importance">Decision Trees Show Importance<a class="headerlink" href="#decision-trees-show-importance" title="Permanent link">&para;</a></h3>
+<p>The <code>decision_tree_classification</code> tool returns variable importance rankings, indicating which features are most predictive of the outcome.</p>
+<h3 id="relationships-link-data-types">Relationships Link Data Types<a class="headerlink" href="#relationships-link-data-types" title="Permanent link">&para;</a></h3>
+<p>Use <code>add_relationship</code> to document connections between:
+- Text findings (keywords from topics)
+- Numeric variables (DataFrame columns)
+- Theoretical constructs</p>
+<p>Example: Link "healthcare_quality" keyword to "patient_satisfaction" column with relation "predicts".</p>
+<h2 id="tips-for-effective-use">Tips for Effective Use<a class="headerlink" href="#tips-for-effective-use" title="Permanent link">&para;</a></h2>
+<ol>
+<li>
+<p><strong>Always load corpus first</strong>: Most tools require a loaded corpus to function.</p>
+</li>
+<li>
+<p><strong>Use prompts for guidance</strong>: Request the <code>analysis_workflow</code> or <code>triangulation_guide</code> prompts for step-by-step instructions.</p>
+</li>
+<li>
+<p><strong>Save frequently</strong>: Use <code>save_corpus</code> to preserve analysis metadata and relationships.</p>
+</li>
+<li>
+<p><strong>Document relationships</strong>: Use <code>add_relationship</code> to link textual findings with numeric variables based on your theoretical framework.</p>
+</li>
+<li>
+<p><strong>Iterate and refine</strong>: Analysis is iterative. Load your saved corpus and continue refining based on new insights.</p>
+</li>
+</ol>
+<h2 id="troubleshooting">Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permanent link">&para;</a></h2>
+<h3 id="no-corpus-loaded-error">"No corpus loaded" error<a class="headerlink" href="#no-corpus-loaded-error" title="Permanent link">&para;</a></h3>
+<p>Make sure to call <code>load_corpus</code> before using other tools.</p>
+<h3 id="ml-dependencies-not-available-error">"ML dependencies not available" error<a class="headerlink" href="#ml-dependencies-not-available-error" title="Permanent link">&para;</a></h3>
+<p>Install the ML extras:</p>
+<pre><code class="language-bash">pip install crisp-t[ml]
+</code></pre>
+<h3 id="server-not-appearing-in-claude-desktop">Server not appearing in Claude Desktop<a class="headerlink" href="#server-not-appearing-in-claude-desktop" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Check that the configuration file is in the correct location</li>
+<li>Verify the JSON syntax is valid</li>
+<li>Restart Claude Desktop after adding the configuration</li>
+<li>Check that <code>crisp-mcp</code> command is in your PATH</li>
+</ol>
+<h2 id="additional-resources">Additional Resources<a class="headerlink" href="#additional-resources" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="https://dermatologist.github.io/crisp-t/">CRISP-T Documentation</a></li>
+<li><a href="/notes/INSTRUCTION.md">INSTRUCTION.md</a> - Detailed function reference</li>
+<li><a href="/examples/mcp_workflow_example.py">Example Workflow</a></li>
+<li><a href="https://github.com/dermatologist/crisp-t">GitHub Repository</a></li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Maintained by <a href="https://github.com/dermatologist">dermatologist</a>.
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/dermatologist/crisp-t" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://pypi.org/project/crisp-t" target="_blank" rel="noopener" title="pypi.org" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.8 200.5c-7.7-30.9-22.3-54.2-53.4-54.2h-40.1v47.4c0 36.8-31.2 67.8-66.8 67.8H172.7c-29.2 0-53.4 25-53.4 54.3v101.8c0 29 25.2 46 53.4 54.3 33.8 9.9 66.3 11.7 106.8 0 26.9-7.8 53.4-23.5 53.4-54.3v-40.7H226.2v-13.6h160.2c31.1 0 42.6-21.7 53.4-54.2 11.2-33.5 10.7-65.7 0-108.6M286.2 444.7a20.4 20.4 0 1 1 0-40.7 20.4 20.4 0 1 1 0 40.7M167.8 248.1h106.8c29.7 0 53.4-24.5 53.4-54.3V91.9c0-29-24.4-50.7-53.4-55.6-35.8-5.9-74.7-5.6-106.8.1-45.2 8-53.4 24.7-53.4 55.6v40.7h106.9v13.6h-147c-31.1 0-58.3 18.7-66.8 54.2-9.8 40.7-10.2 66.1 0 108.6 7.6 31.6 25.7 54.2 56.8 54.2H101v-48.8c0-35.3 30.5-66.4 66.8-66.4m-6.6-183.4a20.4 20.4 0 1 1 0 40.8 20.4 20.4 0 1 1 0-40.8"/></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://www.linkedin.com/in/beapen" target="_blank" rel="noopener" title="www.linkedin.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M416 32H31.9C14.3 32 0 46.5 0 64.3v383.4C0 465.5 14.3 480 31.9 480H416c17.6 0 32-14.5 32-32.3V64.3c0-17.8-14.4-32.3-32-32.3M135.4 416H69V202.2h66.5V416zM102.2 96a38.5 38.5 0 1 1 0 77 38.5 38.5 0 1 1 0-77m282.1 320h-66.4V312c0-24.8-.5-56.7-34.5-56.7-34.6 0-39.9 27-39.9 54.9V416h-66.4V202.2h63.7v29.2h.9c8.9-16.8 30.6-34.5 62.9-34.5 67.2 0 79.7 44.3 79.7 101.9z"/></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://nuchange.ca" target="_blank" rel="noopener" title="nuchange.ca" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M277.8 8.6c-12.3-11.4-31.3-11.4-43.5 0l-224 208c-9.6 9-12.8 22.9-8 35.1S18.8 272 32 272h16v176c0 35.3 28.7 64 64 64h288c35.3 0 64-28.7 64-64V272h16c13.2 0 25-8.1 29.8-20.3s1.6-26.2-8-35.1zM240 320h32c26.5 0 48 21.5 48 48v96H192v-96c0-26.5 21.5-48 48-48"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": [], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>
