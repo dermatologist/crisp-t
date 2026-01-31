@@ -1,5 +1,5 @@
 {
-    "id": "corpus_20260128232307",
+    "id": "corpus_20260131152712",
     "name": "Test Corpus",
     "description": "This is a test corpus",
     "score": 0.0,
@@ -13,7 +13,8 @@
             "timestamp": null,
             "metadata": {
                 "source": "/home/runner/work/crisp-t/crisp-t/tests/resources/interview-3.txt",
-                "file_name": "interview-3.txt"
+                "file_name": "interview-3.txt",
+                "tag": "interview"
             }
         },
         {
@@ -25,7 +26,8 @@
             "timestamp": null,
             "metadata": {
                 "source": "/home/runner/work/crisp-t/crisp-t/tests/resources/interview-2.txt",
-                "file_name": "interview-2.txt"
+                "file_name": "interview-2.txt",
+                "tag": "interview"
             }
         },
         {
@@ -37,7 +39,8 @@
             "timestamp": null,
             "metadata": {
                 "source": "/home/runner/work/crisp-t/crisp-t/tests/resources/interview-5.txt",
-                "file_name": "interview-5.txt"
+                "file_name": "interview-5.txt",
+                "tag": "interview"
             }
         },
         {
@@ -49,7 +52,8 @@
             "timestamp": null,
             "metadata": {
                 "source": "/home/runner/work/crisp-t/crisp-t/tests/resources/interview-4.txt",
-                "file_name": "interview-4.txt"
+                "file_name": "interview-4.txt",
+                "tag": "interview"
             }
         },
         {
@@ -61,7 +65,8 @@
             "timestamp": "2026-01-26T10:30:00+00:00",
             "metadata": {
                 "source": "/home/runner/work/crisp-t/crisp-t/tests/resources/interview-1.txt",
-                "file_name": "interview-1.txt"
+                "file_name": "interview-1.txt",
+                "tag": "interview"
             }
         },
         {
@@ -73,7 +78,8 @@
             "timestamp": "2025-01-15T10:30:00+00:00",
             "metadata": {
                 "source": "/home/runner/work/crisp-t/crisp-t/tests/resources/interview-with-date.txt",
-                "file_name": "interview-with-date.txt"
+                "file_name": "interview-with-date.txt",
+                "tag": "interview"
             }
         }
     ],

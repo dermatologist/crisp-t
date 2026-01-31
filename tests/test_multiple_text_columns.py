@@ -90,8 +90,11 @@ def test_multiple_text_columns_with_spaces():
 
         assert corpus is not None, "Corpus should be created"
         assert len(corpus.documents) == 2, "Should create documents"
-        # Note: Current implementation doesn't strip spaces from column names,
-        # so "note2" with space prefix won't match. This tests current behavior.
+        # Verify that both columns are included (spaces should be stripped)
+        assert "Text 1" in corpus.documents[0].text, "Should contain text from note1"
+        assert "Info 1" in corpus.documents[0].text, "Should contain text from note2"
+        assert "Text 2" in corpus.documents[1].text, "Should contain text from note1"
+        assert "Info 2" in corpus.documents[1].text, "Should contain text from note2"
 
 
 def test_single_text_column_backward_compatibility():
