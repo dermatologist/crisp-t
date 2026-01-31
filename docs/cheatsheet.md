@@ -62,6 +62,28 @@ Used to bring data into the CRISP-T environment.
 | **Nearest Neighbors**| `--knn` | K-Nearest Neighbors search. |
 | **All ML** | `--ml` | Run *all* above ML analyses (requires `crisp-t[ml]`). |
 
+### DataFrame Query & Analysis
+
+| Action | Flag | Description |
+| :--- | :--- | :--- |
+| **Execute Query** | `--query` | Execute pandas DataFrame operations (e.g., groupby, filter, sort). |
+| **Save Query Result** | `--save-query-result` | Save query result back to corpus DataFrame (use with `--query`). |
+| **Correlation Analysis** | `--correlation` | Compute correlation matrix for numeric columns. |
+| **Correlation Threshold** | `--correlation-threshold` | Minimum correlation coefficient (default: 0.5). |
+| **Correlation Method** | `--correlation-method` | Method: `pearson`, `kendall`, or `spearman` (default: pearson). |
+
+*Example queries:*
+```bash
+# Sort by column
+crisp --inp ./corpus --query "sort_values('score', ascending=False)"
+
+# Filter rows
+crisp --inp ./corpus --query "query('age > 30')"
+
+# Group and aggregate
+crisp --inp ./corpus --query "groupby('category')['value'].mean()"
+```
+
 **Common Analysis Options:**
 *   `--num <n>`: Parameter for analysis (e.g., number of clusters, topics, or summary sentences). Default: 3.
 *   `--rec <n>`: Number of results/rows to display. Default: 3.
@@ -225,6 +247,36 @@ crisp --inp ./survey_corpus --linkage id --outcome satisfaction_score --cls --ag
 # Use embedding linking to aggregate document embeddings to rows then run regression
 crispt --inp ./survey_corpus --filters embedding:text --out ./linked && \
 crisp --inp ./linked --outcome satisfaction_score --regression
+```
+
+### 5. Data Exploration with Queries and Correlation
+```bash
+# Import survey data
+crisp --source ./survey_data -t "comments" --out ./survey_corpus
+
+# Check correlations between numeric variables
+crisp --inp ./survey_corpus --correlation --correlation-threshold 0.6
+
+# Filter high-scoring responses
+crisp --inp ./survey_corpus --query "query('satisfaction > 4')" --save-query-result --out ./high_satisfaction
+
+# Analyze filtered data
+crisp --inp ./high_satisfaction --topics --sentiment
+
+# Group analysis by category
+crisp --inp ./survey_corpus --query "groupby('department')['satisfaction'].agg(['mean', 'count', 'std'])"
+```
+
+### 6. Time-Series Analysis with Automatic Date Parsing
+```bash
+# Import data with date columns (automatically parsed)
+crisp --source ./longitudinal_data -t "observations" --out ./time_corpus
+
+# Sort by date and analyze trends
+crisp --inp ./time_corpus --query "sort_values('assessment_date')"
+
+# Calculate correlations over time
+crisp --inp ./time_corpus --correlation --correlation-method spearman
 ```
 
 ---
