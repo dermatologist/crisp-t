@@ -80,7 +80,10 @@ except ImportError:
     "--unstructured",
     "-t",
     multiple=True,
-    help="Specify CSV columns containing free-form text (e.g., open-ended survey responses). Can be used multiple times.",
+    help="Specify CSV columns containing free-form text (e.g., open-ended survey responses). "
+         "Multiple columns can be specified by using this flag multiple times (e.g., -t col1 -t col2) "
+         "or by providing comma-separated column names (e.g., -t 'col1,col2,col3'). "
+         "All specified text columns will be concatenated into a single document per row.",
 )
 @click.option(
     "--filters",
@@ -225,6 +228,32 @@ except ImportError:
     is_flag=True,
     help="Clear the cache before running analysis. Use when switching between datasets.",
 )
+@click.option(
+    "--query",
+    help="Execute a pandas query on the DataFrame (e.g., \"groupby('topic')['rating'].agg(['mean', 'count'])\"). Results are displayed but not saved unless --save-query-result is used.",
+)
+@click.option(
+    "--save-query-result",
+    is_flag=True,
+    help="Save the query result back to the corpus DataFrame. Use with --query.",
+)
+@click.option(
+    "--correlation",
+    is_flag=True,
+    help="Compute and display correlation matrix for numeric columns.",
+)
+@click.option(
+    "--correlation-threshold",
+    type=float,
+    default=0.5,
+    help="Minimum correlation coefficient threshold for significant correlations (default: 0.5).",
+)
+@click.option(
+    "--correlation-method",
+    type=click.Choice(['pearson', 'kendall', 'spearman'], case_sensitive=False),
+    default='pearson',
+    help="Method for computing correlation: pearson, kendall, or spearman (default: pearson).",
+)
 def main(
     verbose,
     covid,
@@ -262,6 +291,11 @@ def main(
     sources,
     print_args,
     clear,
+    query,
+    save_query_result,
+    correlation,
+    correlation_threshold,
+    correlation_method,
 ):
     """CRISP-T: Cross Industry Standard Process for Triangulation.
 
@@ -287,6 +321,7 @@ def main(
     \b
     💡 TIPS:
     • For CSV files with free-text columns, use --unstructured <column_name>
+    • For multiple text columns, use: -t col1 -t col2 or -t "col1,col2,col3"
     • Use --help to see all available analysis options
     • Use --clear when switching between different datasets
     • Results can be saved at any stage using --out
@@ -1041,6 +1076,71 @@ def main(
                 click.style("   Install with: ", fg="white")
                 + click.style("pip install crisp-t[ml]", fg="cyan", bold=True)
             )
+
+        # Handle query execution
+        if query and csv_analyzer:
+            print_section_header("QUERY EXECUTION", emoji="🔍", color="cyan")
+            try:
+                result = csv_analyzer.execute_query(query, save_result=save_query_result)
+                click.echo(click.style("\n📊 Query Result:", fg="cyan", bold=True))
+                click.echo(result.to_string())
+                if save_query_result:
+                    click.echo(
+                        format_success(
+                            "\n✓ Query result saved to corpus DataFrame"
+                        )
+                    )
+                else:
+                    click.echo(
+                        format_info(
+                            "\nℹ️  Result displayed only. Use --save-query-result to save."
+                        )
+                    )
+            except Exception as e:
+                click.echo(
+                    click.style("❌ Error executing query: ", fg="red", bold=True)
+                    + str(e),
+                    err=True,
+                )
+
+        # Handle correlation analysis
+        if correlation and csv_analyzer:
+            print_section_header("CORRELATION ANALYSIS", emoji="📈", color="magenta")
+            try:
+                # Get significant correlations
+                sig_corrs = csv_analyzer.find_significant_correlations(
+                    threshold=correlation_threshold,
+                    method=correlation_method
+                )
+                
+                if not sig_corrs.empty:
+                    click.echo(
+                        click.style(
+                            f"\n🔗 Significant Correlations (threshold={correlation_threshold}, method={correlation_method}):",
+                            fg="magenta",
+                            bold=True,
+                        )
+                    )
+                    click.echo(sig_corrs.to_string(index=False))
+                    
+                    # Also compute and display full correlation matrix
+                    corr_matrix = csv_analyzer.compute_correlation(method=correlation_method)
+                    click.echo(
+                        click.style("\n📊 Full Correlation Matrix:", fg="magenta", bold=True)
+                    )
+                    click.echo(corr_matrix.to_string())
+                else:
+                    click.echo(
+                        format_info(
+                            f"No significant correlations found above threshold {correlation_threshold}"
+                        )
+                    )
+            except Exception as e:
+                click.echo(
+                    click.style("❌ Error computing correlation: ", fg="red", bold=True)
+                    + str(e),
+                    err=True,
+                )
 
         # Save corpus and csv if output path is specified
         if out and corpus:

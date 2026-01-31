@@ -394,6 +394,26 @@ class ReadData:
             df = pd.read_csv(file_name, encoding="utf-8", on_bad_lines="skip")
         original_df = df.copy()
 
+        # Parse all date-like columns as datetime with errors='coerce'
+        for col in df.columns:
+            # Skip if it's a text column or already processed
+            if df[col].dtype == 'object':
+                # Try to parse as datetime
+                try:
+                    parsed = pd.to_datetime(df[col], errors='coerce')
+                    # If more than 50% of values were successfully parsed, consider it a date column
+                    if parsed.notna().sum() / len(df) > 0.5:
+                        df[col] = parsed
+                        logger.info(f"Parsed column '{col}' as datetime (coerce mode)")
+                except Exception:
+                    pass  # Not a date column, continue
+
+        # Create ID column from index if it doesn't exist
+        if id_column and id_column not in df.columns:
+            df[id_column] = df.index
+            original_df[id_column] = original_df.index
+            logger.info(f"Created ID column '{id_column}' from index")
+
         # Auto-detect timestamp column if not specified
         if not timestamp_column:
             timestamp_candidates = [
@@ -410,18 +430,18 @@ class ReadData:
                     logger.info(f"Auto-detected timestamp column: {timestamp_column}")
                     break
 
-        # Parse timestamp column to datetime if it exists
+        # Parse timestamp column to datetime if it exists (with errors='coerce')
         if timestamp_column and timestamp_column in df.columns:
             try:
-                df[timestamp_column] = pd.to_datetime(df[timestamp_column])
-                logger.info(f"Parsed timestamp column '{timestamp_column}' to datetime")
+                df[timestamp_column] = pd.to_datetime(df[timestamp_column], errors='coerce')
+                logger.info(f"Parsed timestamp column '{timestamp_column}' to datetime (coerce mode)")
             except Exception as e:
                 logger.warning(
                     f"Could not parse timestamp column '{timestamp_column}': {e}"
                 )
 
         if comma_separated_text_columns:
-            text_columns = comma_separated_text_columns.split(",")
+            text_columns = [col.strip() for col in comma_separated_text_columns.split(",")]
         else:
             text_columns = []
         # remove text columns from the dataframe
@@ -445,7 +465,8 @@ class ReadData:
             text_parts = [
                 (
                     str(row[column])
-                    if row[column] is not None
+                    if column in original_df.columns
+                    and row[column] is not None
                     and not (
                         isinstance(row[column], float) and row[column] != row[column]
                     )

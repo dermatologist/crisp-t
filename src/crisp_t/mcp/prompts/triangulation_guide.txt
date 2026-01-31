@@ -1,0 +1,57 @@
+# Triangulation Guide for CRISP-T
+
+## What is Triangulation?
+
+Triangulation involves validating findings by comparing and contrasting results from different analytical methods or data sources. In CRISP-T, this means linking textual insights with numeric patterns.
+
+## Key Strategies
+
+### Cross-Modal Linking
+- Use `temporal_link_by_time` to align text documents with time-stamped numeric data
+- Use `embedding_link` to connect documents with similar semantic content to numeric records
+- If id columns exist, use them to directly link text and numeric data
+- If keywords exist in both text and numeric data (as columns), use them for linking
+
+### Link Topic Keywords to Variables
+
+After topic modeling:
+- Topics generate keywords representing themes
+- Use `add_relationship` to link keywords to relevant dataframe columns
+- Example: If topic discusses "satisfaction", link to satisfaction score column
+
+### Compare Patterns
+
+- Cross-reference sentiment with numeric outcomes
+- Compare topic distributions across demographic groups
+- Validate clustering results using both text and numbers
+
+### Use Relationships
+
+- `add_relationship("text:keyword", "num:column", "correlates")`
+- `get_relationships_for_keyword` to explore connections
+- Document theoretical justifications for relationships
+
+### Validate Findings
+
+- Check if text-based themes align with numeric clusters
+- Test if sentiment patterns predict outcomes
+- Use regression to quantify relationships
+- Decision trees reveal which factors matter most
+
+## Example Workflow
+
+1. Topic model reveals "healthcare access" theme
+2. Assign documents to topics (creates keyword labels)
+3. Link "healthcare access" keyword to "insurance_status" column
+4. Run regression with insurance_status as outcome
+5. Compare topic prevalence across insurance groups
+6. Add relationships to document connections
+7. Validate using classification models
+
+## Best Practices
+
+- Document all relationships you create
+- Test relationships statistically
+- Use multiple analytical approaches
+- Save corpus frequently to preserve metadata
+- Revisit and refine relationships as analysis progresses

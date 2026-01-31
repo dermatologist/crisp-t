@@ -1,0 +1,91 @@
+# CRISP-T Analysis Workflow
+
+Follow these steps to conduct a comprehensive analysis:
+
+## Data Preparation and Exploration
+
+* **Load your data**
+   - Use `load_corpus` tool with either `inp` (existing corpus) or `source` (directory/URL)
+   - For CSV data with text columns, specify `text_columns` parameter
+
+* **Inspect the data**
+   - Use `list_documents` to see all documents
+   - Use `get_df_columns` and `get_df_row_count` if you have numeric data
+   - Use `get_document` to examine specific documents
+
+* **Link text to numeric data**
+   - Use `temporal_link_by_time` if you have timestamps
+   - Use `embedding_link` to link based on semantic similarity, if applicable
+
+## Descriptive Analysis
+
+* **Generate coding dictionary for entire corpus**
+   - Use `generate_coding_dictionary` with appropriate `num` and `top_n` parameters
+   - This reveals categories (verbs), properties (nouns), and dimensions (adjectives)
+
+* **Perform sentiment analysis**
+   - Use `sentiment_analysis` to understand emotional tone
+   - Set `documents=true` for document-level analysis
+
+* **Basic statistical exploration**
+   - Use `get_df_row` to examine specific data points
+   - Review column distributions
+
+## Advanced Pattern Discovery
+
+* **Topic modeling**
+   - Use `topic_modeling` to discover latent themes for entire corpus (set appropriate `num_topics`)
+   - Use `assign_topics` to assign documents to their dominant topics. PERFORM THIS STEP ALWAYS.
+   - Use `clear_cache` before `assign_topics` if you change filters
+   - Topics generate keywords that can be used to categorize documents
+
+* **Numerical clustering** (if you have numeric data)
+   - Use `kmeans_clustering` to segment your data
+   - Review cluster profiles to understand groupings
+
+* **Association rules** (if applicable)
+   - Use `extract_categories` for text-based associations
+   - Use `association_rules` for numeric pattern mining
+
+## Predictive Modeling (if you have an outcome variable)
+* **Classification**
+   - Use `decision_tree_classification` to get feature importance rankings
+   - Use `svm_classification` for robust classification
+   - Use `neural_network_classification` for complex patterns
+
+* **Regression analysis**
+    - Use `regression_analysis` to understand factor relationships
+    - It auto-detects binary outcomes (logistic) vs continuous (linear)
+    - Returns coefficients showing strength and direction of relationships
+
+* **Dimensionality reduction**
+    - Use `pca_analysis` to reduce feature space
+
+## Validation and Triangulation
+
+* **Cross-modal analysis**
+    - Use linkage and aggregation methods in ML tools to combine text and numeric data
+    - Experiment with different linkage methods: nearest, window, sequence
+    - Experiment with aggregation methods: majority, mean, median
+    - With linked data the outcome variable can be in the text or numeric side
+
+* **Create relationships**
+    - Use `add_relationship` to link text keywords (from topics) with numeric columns
+    - Example: link topic keywords to demographic or outcome variables
+    - Use format like: first="text:healthcare", second="num:age_group", relation="correlates"
+
+* **Validate findings**
+    - Compare topic assignments with numerical clusters
+    - Validate sentiment patterns with outcome variables
+    - Use `get_relationships_for_keyword` to explore connections
+
+* **Save your work**
+    - Use `save_corpus` to persist all analyses and metadata
+    - The corpus retains all transformations and relationships
+
+## Tips
+- Always load corpus first
+- Topic modeling creates keywords useful for filtering/categorizing documents
+- Decision trees and regression provide variable importance and coefficients
+- Link text findings (topics) with numeric data using relationships
+- Save frequently to preserve your analysis state

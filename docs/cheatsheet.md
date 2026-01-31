@@ -20,6 +20,7 @@ Used to bring data into the CRISP-T environment.
 | `crisp --source <path>` | Import data from a directory (PDFs, TXT, CSV) or URL. | `crisp --source ./raw_data --out ./crisp_input` |
 | `crisp --sources <path> --sources <path2>` | Import from multiple sources. | `crisp --sources ./data1 --sources ./data2` |
 | `crisp --unstructured <col>` | Specify CSV columns containing free text to treat as documents. | `crisp --source ./data --unstructured "comments"` |
+| `crisp -t <col1> -t <col2>` | Import multiple text columns from CSV (can also use comma-separated: `-t "col1,col2,col3"`). | `crisp --source ./data -t note1 -t note2 -t note3` |
 
 **Common Options:**
 *   `--out <path>`: Directory to save the imported corpus (required). Recommended value `crisp_input`.
@@ -60,6 +61,28 @@ Used to bring data into the CRISP-T environment.
 | **PCA** | `--pca` | Principal Component Analysis dimensionality reduction. |
 | **Nearest Neighbors**| `--knn` | K-Nearest Neighbors search. |
 | **All ML** | `--ml` | Run *all* above ML analyses (requires `crisp-t[ml]`). |
+
+### DataFrame Query & Analysis
+
+| Action | Flag | Description |
+| :--- | :--- | :--- |
+| **Execute Query** | `--query` | Execute pandas DataFrame operations (e.g., groupby, filter, sort). |
+| **Save Query Result** | `--save-query-result` | Save query result back to corpus DataFrame (use with `--query`). |
+| **Correlation Analysis** | `--correlation` | Compute correlation matrix for numeric columns. |
+| **Correlation Threshold** | `--correlation-threshold` | Minimum correlation coefficient (default: 0.5). |
+| **Correlation Method** | `--correlation-method` | Method: `pearson`, `kendall`, or `spearman` (default: pearson). |
+
+*Example queries:*
+```bash
+# Sort by column
+crisp --inp ./corpus --query "sort_values('score', ascending=False)"
+
+# Filter rows
+crisp --inp ./corpus --query "query('age > 30')"
+
+# Group and aggregate
+crisp --inp ./corpus --query "groupby('category')['value'].mean()"
+```
 
 **Common Analysis Options:**
 *   `--num <n>`: Parameter for analysis (e.g., number of clusters, topics, or summary sentences). Default: 3.
@@ -189,8 +212,16 @@ crispviz --inp ./corpus_analyzed --wordcloud --ldavis --out ./viz
 
 ### 2. Mixed Methods (Text + CSV)
 ```bash
-# Import CSV with text column
+# Import CSV with single text column
 crisp --source ./survey_data --unstructured "comments" --out ./survey_corpus
+
+# Import CSV with multiple text columns (two approaches)
+# Approach 1: Multiple flags
+crisp --source ./survey_data -t note1 -t note2 -t note3 --out ./survey_corpus
+
+# Approach 2: Comma-separated
+crisp --source ./survey_data -t "note1,note2,note3" --out ./survey_corpus
+
 # Cluster numeric data & analyze text options
 crisp --inp ./survey_corpus --kmeans --num 5 --topics --num 5
 ```
@@ -204,7 +235,11 @@ crispt --inp ./corpus --semantic "patient anxiety" --num 10
 ### 4. Cross-Modal Analysis (Text + CSV)
 ```bash
 # Import CSV that contains free-text comments and numeric outcomes
+# Single text column
 crisp --source ./survey_data --unstructured "comments" --out ./survey_corpus
+
+# Multiple text columns - concatenated into single document per row
+crisp --source ./survey_data -t "response1,response2,response3" --out ./survey_corpus
 
 # Link documents to rows by ID, then run classification using linked text as features
 crisp --inp ./survey_corpus --linkage id --outcome satisfaction_score --cls --aggregation majority
@@ -212,6 +247,36 @@ crisp --inp ./survey_corpus --linkage id --outcome satisfaction_score --cls --ag
 # Use embedding linking to aggregate document embeddings to rows then run regression
 crispt --inp ./survey_corpus --filters embedding:text --out ./linked && \
 crisp --inp ./linked --outcome satisfaction_score --regression
+```
+
+### 5. Data Exploration with Queries and Correlation
+```bash
+# Import survey data
+crisp --source ./survey_data -t "comments" --out ./survey_corpus
+
+# Check correlations between numeric variables
+crisp --inp ./survey_corpus --correlation --correlation-threshold 0.6
+
+# Filter high-scoring responses
+crisp --inp ./survey_corpus --query "query('satisfaction > 4')" --save-query-result --out ./high_satisfaction
+
+# Analyze filtered data
+crisp --inp ./high_satisfaction --topics --sentiment
+
+# Group analysis by category
+crisp --inp ./survey_corpus --query "groupby('department')['satisfaction'].agg(['mean', 'count', 'std'])"
+```
+
+### 6. Time-Series Analysis with Automatic Date Parsing
+```bash
+# Import data with date columns (automatically parsed)
+crisp --source ./longitudinal_data -t "observations" --out ./time_corpus
+
+# Sort by date and analyze trends
+crisp --inp ./time_corpus --query "sort_values('assessment_date')"
+
+# Calculate correlations over time
+crisp --inp ./time_corpus --correlation --correlation-method spearman
 ```
 
 ---
