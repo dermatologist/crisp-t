@@ -12,12 +12,12 @@ from typing import Any, Dict, List
 
 from mcp.types import Tool
 
-from .utils.responses import error_response, no_corpus_response, success_response
+from ..utils.responses import error_response, no_corpus_response, success_response
 
 
 def get_dataframe_operations_tools() -> List[Tool]:
     """Get list of DataFrame operations tools.
-    
+
     Returns:
         List of Tool objects for DataFrame operations
     """
@@ -46,42 +46,52 @@ def get_dataframe_operations_tools() -> List[Tool]:
     ]
 
 
+from typing import Optional
+
+
 def handle_dataframe_operations_tool(
-    name: str, arguments: Dict[str, Any], _corpus: Any
-) -> List[Any]:
+    name: str,
+    arguments: Dict[str, Any],
+    corpus: Any,
+    text_analyzer: Any = None,
+    csv_analyzer: Any = None,
+    ml_analyzer: Any = None,
+) -> Optional[tuple[list[Any], Any, Any]]:
     """Handle DataFrame operations tool calls.
-    
+
     Args:
         name: Tool name
         arguments: Tool arguments
         _corpus: Corpus instance
-        
+
     Returns:
         List containing response content
     """
     if name == "get_df_columns":
-        if not _corpus:
-            return no_corpus_response()
+        if not corpus:
+            return no_corpus_response(), corpus, None
 
-        cols = _corpus.get_all_df_column_names()
-        return success_response(json.dumps(cols, indent=2))
+        cols = corpus.get_all_df_column_names()
+        return success_response(json.dumps(cols, indent=2)), corpus, None
 
     elif name == "get_df_row_count":
-        if not _corpus:
-            return no_corpus_response()
+        if not corpus:
+            return no_corpus_response(), corpus, None
 
-        count = _corpus.get_row_count()
-        return success_response(f"Row count: {count}")
+        count = corpus.get_row_count()
+        return success_response(f"Row count: {count}"), corpus, None
 
     elif name == "get_df_row":
-        if not _corpus:
-            return no_corpus_response()
+        if not corpus:
+            return no_corpus_response(), corpus, None
 
-        row = _corpus.get_row_by_index(arguments["index"])
+        row = corpus.get_row_by_index(arguments["index"])
         if row is not None:
-            return success_response(
-                json.dumps(row.to_dict(), indent=2, default=str)
+            return (
+                success_response(json.dumps(row.to_dict(), indent=2, default=str)),
+                corpus,
+                None,
             )
-        return error_response("Row not found")
+        return error_response("Row not found"), corpus, None
 
-    return error_response(f"Unknown tool: {name}")
+    return None

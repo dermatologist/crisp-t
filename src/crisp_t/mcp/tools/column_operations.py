@@ -11,10 +11,7 @@ from typing import Any
 
 from mcp.types import TextContent, Tool
 
-from ..utils.responses import (
-    no_csv_analyzer_response,
-    success_response,
-)
+from ..utils.responses import no_csv_analyzer_response, success_response
 
 logger = logging.getLogger(__name__)
 
@@ -110,82 +107,94 @@ def get_column_operations_tools() -> list[Tool]:
     ]
 
 
+from typing import Any, Optional, Tuple
+
+
 def handle_column_operations_tool(
     name: str,
     arguments: dict[str, Any],
-    csv_analyzer: Any,
-) -> list[TextContent] | None:
+    corpus: Any = None,
+    text_analyzer: Any = None,
+    csv_analyzer: Any = None,
+    ml_analyzer: Any = None,
+) -> Optional[Tuple[list[TextContent], Any, Any]]:
     """Handle column operations tool calls.
-    
+
     Args:
         name: Tool name
         arguments: Tool arguments
         csv_analyzer: Current CSV analyzer
-        
+
     Returns:
         Response as list of TextContent or None if tool not handled
     """
     if name == "bin_a_column":
         if not csv_analyzer:
-            return no_csv_analyzer_response()
+            return no_csv_analyzer_response(), csv_analyzer, None
 
         msg = csv_analyzer.bin_a_column(
             column_name=arguments["column_name"], bins=arguments.get("bins", 2)
         )
-        return success_response(str(msg))
+        return success_response(str(msg)), csv_analyzer, None
 
     elif name == "one_hot_encode_column":
         if not csv_analyzer:
-            return no_csv_analyzer_response()
+            return no_csv_analyzer_response(), csv_analyzer, None
 
-        msg = csv_analyzer.one_hot_encode_column(
-            column_name=arguments["column_name"]
-        )
-        return success_response(str(msg))
+        msg = csv_analyzer.one_hot_encode_column(column_name=arguments["column_name"])
+        return success_response(str(msg)), csv_analyzer, None
 
     elif name == "filter_rows_by_column_value":
         if not csv_analyzer:
-            return no_csv_analyzer_response()
+            return no_csv_analyzer_response(), csv_analyzer, None
 
         msg = csv_analyzer.filter_rows_by_column_value(
             column_name=arguments["column_name"], value=arguments["value"], mcp=True
         )
-        return success_response(str(msg))
+        return success_response(str(msg)), csv_analyzer, None
 
     elif name == "oversample":
         if not csv_analyzer:
-            return no_csv_analyzer_response()
+            return no_csv_analyzer_response(), csv_analyzer, None
 
         result = csv_analyzer.oversample(mcp=True)
-        return success_response(str(result))
+        return success_response(str(result)), csv_analyzer, None
 
     elif name == "restore_oversample":
         if not csv_analyzer:
-            return no_csv_analyzer_response()
+            return no_csv_analyzer_response(), csv_analyzer, None
 
         result = csv_analyzer.restore_oversample(mcp=True)
-        return success_response(str(result))
+        return success_response(str(result)), csv_analyzer, None
 
     elif name == "get_column_types":
         if not csv_analyzer:
-            return no_csv_analyzer_response()
+            return no_csv_analyzer_response(), csv_analyzer, None
 
         types = csv_analyzer.get_column_types()
-        return success_response(json.dumps(types, indent=2, default=str))
+        return (
+            success_response(json.dumps(types, indent=2, default=str)),
+            csv_analyzer,
+            None,
+        )
 
     elif name == "get_column_values":
         if not csv_analyzer:
-            return no_csv_analyzer_response()
+            return no_csv_analyzer_response(), csv_analyzer, None
 
         values = csv_analyzer.get_column_values(arguments["column_name"])
-        return success_response(json.dumps(values, indent=2, default=str))
+        return (
+            success_response(json.dumps(values, indent=2, default=str)),
+            csv_analyzer,
+            None,
+        )
 
     elif name == "retain_numeric_columns_only":
         if not csv_analyzer:
-            return no_csv_analyzer_response()
+            return no_csv_analyzer_response(), csv_analyzer, None
 
         csv_analyzer.retain_numeric_columns_only()
-        return success_response("Retained numeric columns only.")
+        return success_response("Retained numeric columns only."), csv_analyzer, None
 
     # Tool not handled by this module
     return None

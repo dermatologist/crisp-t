@@ -11,8 +11,8 @@ from typing import Any
 
 from mcp.types import TextContent, Tool
 
-from ...helpers.cluster import Cluster
-from ...helpers.sentiment import Sentiment
+from ...cluster import Cluster
+from ...sentiment import Sentiment
 from ..utils.responses import (
     no_corpus_response,
     success_response,
@@ -239,7 +239,7 @@ def handle_nlp_analysis_tool(
     ml_analyzer: Any,
 ) -> tuple[list[TextContent], Any, Any] | None:
     """Handle NLP/Text Analysis tool calls.
-    
+
     Args:
         name: Tool name
         arguments: Tool arguments
@@ -247,7 +247,7 @@ def handle_nlp_analysis_tool(
         text_analyzer: Current text analyzer
         csv_analyzer: Current CSV analyzer
         ml_analyzer: Current ML analyzer
-        
+
     Returns:
         Tuple of (response, updated_corpus, updated_ml_analyzer) or None if tool not handled
     """
