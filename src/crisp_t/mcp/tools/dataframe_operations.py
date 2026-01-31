@@ -43,6 +43,31 @@ def get_dataframe_operations_tools() -> List[Tool]:
                 "required": ["index"],
             },
         ),
+        Tool(
+            name="get_df_shape",
+            description="Get DataFrame dimensions (rows, columns). Provides quick overview of dataset size. Essential for: Understanding data scale before analysis, Validating transformations (compare before/after), Checking memory requirements for ML. Workflow: get_df_shape → note dimensions → apply transformations → get_df_shape again to verify. Returns tuple (n_rows, n_columns).",
+            inputSchema={"type": "object", "properties": {}},
+        ),
+        Tool(
+            name="mark_missing",
+            description="Remove rows containing empty strings or NaN values from DataFrame. Essential data cleaning step for: Removing incomplete records before analysis, Ensuring ML models don't encounter missing data, Improving data quality. Permanently modifies the DataFrame. Workflow: get_df_row_count (before) → mark_missing → get_df_row_count (after) to see how many rows removed. Tip: Use before ML training to avoid errors.",
+            inputSchema={"type": "object", "properties": {}},
+        ),
+        Tool(
+            name="mark_duplicates",
+            description="Remove duplicate rows from DataFrame based on all columns. Essential for: Data deduplication before analysis, Ensuring unique records for statistical validity, Preventing bias from repeated entries. Permanently modifies the DataFrame. Workflow: get_df_row_count (before) → mark_duplicates → get_df_row_count (after) to see duplicates removed. Tip: Run after data import to ensure clean dataset.",
+            inputSchema={"type": "object", "properties": {}},
+        ),
+        Tool(
+            name="restore_df",
+            description="Restore DataFrame to its original state (before any transformations). Useful for: Undoing transformations and starting fresh, Comparing original vs. transformed data, Recovering from errors. Workflow: Load data → make transformations → if unsatisfied → restore_df → try different approach. Tip: This cannot be undone - any changes after restore are permanent.",
+            inputSchema={"type": "object", "properties": {}},
+        ),
+        Tool(
+            name="drop_na",
+            description="Remove all rows with any NA/NaN values from DataFrame. More aggressive than mark_missing - removes any row with even a single NA value. Essential for: Strict data quality requirements, Preparing for algorithms that don't handle NaN, Ensuring complete cases only. Workflow: get_df_row_count → drop_na → get_df_row_count to see impact. Warning: Can significantly reduce dataset size if many columns have scattered NAs.",
+            inputSchema={"type": "object", "properties": {}},
+        ),
     ]
 
 
@@ -62,11 +87,16 @@ def handle_dataframe_operations_tool(
     Args:
         name: Tool name
         arguments: Tool arguments
-        _corpus: Corpus instance
+        corpus: Corpus instance
+        text_analyzer: Text analyzer instance
+        csv_analyzer: CSV analyzer instance
+        ml_analyzer: ML analyzer instance
 
     Returns:
-        List containing response content
+        Tuple of (response, updated_corpus, updated_ml_analyzer) or None
     """
+    from ..utils.responses import no_csv_analyzer_response
+    
     if name == "get_df_columns":
         if not corpus:
             return no_corpus_response(), corpus, None
@@ -93,5 +123,43 @@ def handle_dataframe_operations_tool(
                 None,
             )
         return error_response("Row not found"), corpus, None
+
+    elif name == "get_df_shape":
+        if not csv_analyzer:
+            return no_csv_analyzer_response(), corpus, None
+        
+        shape = csv_analyzer.get_shape()
+        return success_response(f"DataFrame shape: {shape[0]} rows × {shape[1]} columns"), corpus, None
+
+    elif name == "mark_missing":
+        if not csv_analyzer:
+            return no_csv_analyzer_response(), corpus, None
+        
+        csv_analyzer.mark_missing()
+        new_count = csv_analyzer.df.shape[0]
+        return success_response(f"Removed rows with missing values. New row count: {new_count}"), corpus, None
+
+    elif name == "mark_duplicates":
+        if not csv_analyzer:
+            return no_csv_analyzer_response(), corpus, None
+        
+        csv_analyzer.mark_duplicates()
+        new_count = csv_analyzer.df.shape[0]
+        return success_response(f"Removed duplicate rows. New row count: {new_count}"), corpus, None
+
+    elif name == "restore_df":
+        if not csv_analyzer:
+            return no_csv_analyzer_response(), corpus, None
+        
+        csv_analyzer.restore_df()
+        return success_response("DataFrame restored to original state"), corpus, None
+
+    elif name == "drop_na":
+        if not csv_analyzer:
+            return no_csv_analyzer_response(), corpus, None
+        
+        csv_analyzer.drop_na()
+        new_count = csv_analyzer.df.shape[0]
+        return success_response(f"Removed all rows with NA values. New row count: {new_count}"), corpus, None
 
     return None

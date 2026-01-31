@@ -104,6 +104,48 @@ def get_column_operations_tools() -> list[Tool]:
             description="Keep only numeric columns in DataFrame; remove string/object columns. Essential preprocessing for: Preparing data for ML algorithms (most require numeric input), PCA analysis, Regression/classification with numeric features. Workflow: get_column_types → identify categorical columns (if needed: one_hot_encode first) → retain_numeric_columns_only → use in ML model. Warning: This removes all non-numeric data permanently from active corpus; consider encoding categoricals to numeric before using. Tip: Compare with get_column_types first to understand what will be removed.",
             inputSchema={"type": "object", "properties": {}},
         ),
+        Tool(
+            name="one_hot_encode_strings_in_df",
+            description="""
+            One-hot encode all string/object columns in DataFrame with automatic high-cardinality filtering. More advanced than one_hot_encode_column.
+            Essential for: Batch encoding multiple categorical columns, Handling mixed-type DataFrames, Automated preprocessing pipelines.
+            
+            Parameters:
+            - n: Number of top categories to encode per column (default: 10). Others grouped as 'Other'.
+            - filter_high_cardinality: If true, skips columns with >100 unique values (default: false)
+            
+            Workflow: get_column_types → identify object columns → one_hot_encode_strings_in_df → use in ML.
+            Tip: Use filter_high_cardinality=true to avoid creating too many columns from high-cardinality features.
+            """,
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "n": {
+                        "type": "integer",
+                        "description": "Number of top categories to encode per column (default: 10)",
+                        "default": 10,
+                    },
+                    "filter_high_cardinality": {
+                        "type": "boolean",
+                        "description": "Skip columns with >100 unique values (default: false)",
+                        "default": False,
+                    },
+                },
+            },
+        ),
+        Tool(
+            name="one_hot_encode_all_columns",
+            description="""
+            Convert all DataFrame values to boolean (0/1) for association rules mining. Specialized encoding for Apriori algorithm.
+            Essential for: Preparing data for association_rules tool, Market basket analysis, Pattern mining on transactional data.
+            
+            Warning: This is a specialized transformation. All numeric values become binary (True/False). Use only for association rules analysis.
+            
+            Workflow: Prepare transactional data → one_hot_encode_all_columns → association_rules to find patterns.
+            Tip: This is irreversible without restore_df. Make sure you need boolean encoding before using.
+            """,
+            inputSchema={"type": "object", "properties": {}},
+        ),
     ]
 
 
@@ -195,6 +237,23 @@ def handle_column_operations_tool(
 
         csv_analyzer.retain_numeric_columns_only()
         return success_response("Retained numeric columns only."), csv_analyzer, None
+
+    elif name == "one_hot_encode_strings_in_df":
+        if not csv_analyzer:
+            return no_csv_analyzer_response(), csv_analyzer, None
+
+        n = arguments.get("n", 10)
+        filter_high_cardinality = arguments.get("filter_high_cardinality", False)
+        
+        csv_analyzer.one_hot_encode_strings_in_df(n=n, filter_high_cardinality=filter_high_cardinality)
+        return success_response(f"One-hot encoded string columns (top {n} categories per column)"), csv_analyzer, None
+
+    elif name == "one_hot_encode_all_columns":
+        if not csv_analyzer:
+            return no_csv_analyzer_response(), csv_analyzer, None
+
+        csv_analyzer.one_hot_encode_all_columns()
+        return success_response("Converted all columns to boolean encoding for association rules"), csv_analyzer, None
 
     # Tool not handled by this module
     return None
