@@ -11,7 +11,10 @@
 [![Wiki](https://img.shields.io/badge/CRISP-wiki-demo)](https://github.com/dermatologist/crisp-t/wiki)
 [![Documentation](https://badgen.net/badge/icon/documentation?icon=libraries&label)](https://dermatologist.github.io/crisp-t/)
 
-**TL;DR** 🚀 *CRISP-T is a qualitative research method and a toolkit to perform textual (e.g. topic modelling) and numeric (e.g. decision trees) analysis of mixed datasets for computational triangulation and sense-making (optionally) using large language models.*
+<!-- CRISP reference -->
+> ✨ Have you been co-creating reality with adaptive AI vibes?
+
+**TL;DR** CRISP-T is a qualitative research method and a toolkit to perform mixed data (text + numeric) analytics for computational triangulation and sense-making. More importantly, CRISP is a platform for **[vibe analytics](https://sloanreview.mit.edu/article/vibe-analytics-vibe-codings-new-cousin-unlocks-insights/)** of mixed data with an AI agent, adopting an [adaptive epistomology](https://www.mdpi.com/2075-4698/15/7/205).
 
 👉 **[CLI Cheatsheet](docs/cheatsheet.md)** | **[Demo & Examples](docs/DEMO.md)** | **[Documentation](https://dermatologist.github.io/crisp-t/)**
 
