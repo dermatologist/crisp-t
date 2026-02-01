@@ -469,3 +469,150 @@ class Csv:
                     f"Column {column_name} not found in DataFrame or DataFrame is None."
                 )
             return pd.DataFrame()
+
+    def execute_query(self, query: str, save_result: bool = False) -> pd.DataFrame:
+        """
+        Execute a pandas query on the DataFrame.
+
+        Args:
+            query: A string containing valid pandas DataFrame operations
+                   (e.g., "groupby('topic')['rating'].agg(['mean', 'count'])")
+            save_result: If True, saves the result back to self._df
+
+        Returns:
+            pd.DataFrame: Result of the query execution
+
+        Examples:
+            >>> csv.execute_query("groupby('category')['value'].mean()")
+            >>> csv.execute_query("sort_values('score', ascending=False).head(10)")
+            >>> csv.execute_query("query('age > 30 and score < 50')")
+        """
+        if self._df is None or self._df.empty:
+            logger.error("DataFrame is None or empty. Cannot execute query.")
+            return pd.DataFrame()
+
+        try:
+            # Execute the query by evaluating it on the DataFrame
+            result = eval(f"self._df.{query}")
+
+            # If result is a Series, convert to DataFrame
+            if isinstance(result, pd.Series):
+                result = result.to_frame()
+
+            logger.info(f"Query executed successfully: {query}")
+            logger.info(f"Result shape: {result.shape}")
+
+            if save_result:
+                self._df = result
+                logger.info("Query result saved to DataFrame.")
+
+            return result
+
+        except Exception as e:
+            logger.error(f"Error executing query '{query}': {e}")
+            raise ValueError(f"Invalid query: {e}") from e
+
+    def compute_correlation(
+        self, 
+        columns: list[str] | None = None, 
+        threshold: float = 0.5,
+        method: str = 'pearson'
+    ) -> pd.DataFrame:
+        """
+        Compute correlation matrix for numeric columns.
+
+        Args:
+            columns: List of column names to include. If None, uses all numeric columns.
+            threshold: Minimum correlation coefficient to consider significant (default: 0.5)
+            method: Correlation method - 'pearson', 'kendall', or 'spearman' (default: 'pearson')
+
+        Returns:
+            pd.DataFrame: Correlation matrix
+
+        Examples:
+            >>> csv.compute_correlation()
+            >>> csv.compute_correlation(columns=['age', 'score', 'rating'])
+            >>> csv.compute_correlation(threshold=0.7, method='spearman')
+        """
+        if self._df is None or self._df.empty:
+            logger.error("DataFrame is None or empty. Cannot compute correlation.")
+            return pd.DataFrame()
+
+        try:
+            # Select numeric columns
+            if columns:
+                numeric_df = self._df[columns].select_dtypes(include=[np.number])
+            else:
+                numeric_df = self._df.select_dtypes(include=[np.number])
+
+            if numeric_df.empty:
+                logger.warning("No numeric columns found for correlation analysis.")
+                return pd.DataFrame()
+
+            # Compute correlation matrix
+            corr_matrix = numeric_df.corr(method=method)
+
+            logger.info(f"Computed {method} correlation matrix for {len(numeric_df.columns)} columns")
+
+            return corr_matrix
+
+        except Exception as e:
+            logger.error(f"Error computing correlation: {e}")
+            raise ValueError(f"Failed to compute correlation: {e}") from e
+
+    def find_significant_correlations(
+        self,
+        columns: list[str] | None = None,
+        threshold: float = 0.5,
+        method: str = 'pearson'
+    ) -> pd.DataFrame:
+        """
+        Find significant correlations above the threshold.
+
+        Args:
+            columns: List of column names to include. If None, uses all numeric columns.
+            threshold: Minimum absolute correlation coefficient (default: 0.5)
+            method: Correlation method - 'pearson', 'kendall', or 'spearman' (default: 'pearson')
+
+        Returns:
+            pd.DataFrame: DataFrame with columns ['Variable 1', 'Variable 2', 'Correlation']
+                         containing only significant correlations
+
+        Examples:
+            >>> csv.find_significant_correlations(threshold=0.7)
+            >>> csv.find_significant_correlations(columns=['age', 'score'], threshold=0.6)
+        """
+        corr_matrix = self.compute_correlation(columns=columns, threshold=threshold, method=method)
+
+        if corr_matrix.empty:
+            return pd.DataFrame(columns=['Variable 1', 'Variable 2', 'Correlation'])
+
+        # Extract upper triangle to avoid duplicates
+        upper_triangle = np.triu(np.ones_like(corr_matrix, dtype=bool), k=1)
+        corr_upper = corr_matrix.where(upper_triangle)
+
+        # Find correlations above threshold
+        significant_corrs = []
+        for col in corr_upper.columns:
+            for idx in corr_upper.index:
+                corr_value = corr_upper.loc[idx, col]
+                if pd.notna(corr_value) and abs(corr_value) >= threshold:
+                    significant_corrs.append({
+                        'Variable 1': idx,
+                        'Variable 2': col,
+                        'Correlation': corr_value
+                    })
+
+        # Create DataFrame with explicit columns to handle empty case
+        result_df = pd.DataFrame(
+            significant_corrs, 
+            columns=['Variable 1', 'Variable 2', 'Correlation']
+        )
+
+        if not result_df.empty:
+            result_df = result_df.sort_values('Correlation', key=abs, ascending=False)
+            logger.info(f"Found {len(result_df)} significant correlations above threshold {threshold}")
+        else:
+            logger.info(f"No significant correlations found above threshold {threshold}")
+
+        return result_df

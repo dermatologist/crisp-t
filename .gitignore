@@ -16,6 +16,8 @@ build/
 develop-eggs/
 dist/
 downloads/
+workspace/
+work/
 corpus/
 eggs/
 .eggs/
