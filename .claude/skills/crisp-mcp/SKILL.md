@@ -8,7 +8,7 @@ Use the CRISP‑T MCP server to run a full, *documented* qualitative analysis wo
 This skill assumes:
 
 - The **CRISP‑T MCP server** is available as an MCP server (e.g., `crisp-t`)
-- The server exposes tools for **project management, text coding, numeric analysis, triangulation, and export**
+- The server exposes tools for **corpus management, text coding, numeric analysis, triangulation, and export**
 - The model can **discover tools at runtime** and adapt to the actual tool list
 
 Use this skill when the user wants to:
@@ -22,8 +22,6 @@ Use this skill when the user wants to:
 ## Intended users and scenarios
 
 - **Qualitative / mixed‑methods researchers** working with text + numeric data
-- **Small‑to‑medium research teams** (e.g., teaching‑focused universities) who need reproducible workflows
-- **Students** learning computational grounded theory, CRISP‑T, or computational triangulation
 
 Typical scenarios:
 
@@ -41,10 +39,20 @@ Typical scenarios:
 - **Protocol:** Model Context Protocol (MCP) via stdio (e.g., `crisp-mcp`)
 
 > **Important:**
+> Use ./workspace as the working directory for all artifacts, if not explicitly specified. Create it if it does not exist.
 > Always **discover** the available tools from the CRISP‑T MCP server first, then map them to the workflow below.
 > Tool names in this file are **illustrative**; prefer the *actual* tool names and schemas exposed by the server.
 
-### Expected tool capabilities
+## Recommended steps
+* Import data into CRISP-T corpus and dataframe.
+* Perform linking between text and numeric data using various methods (id based, keyword based, time based, embedding based).
+* Explore text data using various methods (e.g., topic modeling, keyword extraction, sentiment analysis, visualizations).
+* Explore numeric data using various methods (e.g., summary statistics, classification, clustering, regression, association, visualizations, TDA, etc.).
+* Perform cross modal analysis using linked text and numeric data (e.g., text features as predictors for numeric outcomes, numeric features as predictors for text outcomes, etc.).
+* Add manual connections between text documents and numeric rows if needed to support theory driven analysis.
+* Derive insights from the analysis and document them.
+
+### Expected tool capabilities (illustrative)
 
 When you discover tools from the `crisp-t` MCP server, look for tools that correspond to the following capabilities:
 
@@ -287,7 +295,6 @@ When using this skill, you should:
 
 ## Limitations and cautions
 
-- This skill **does not replace** human qualitative judgment; it supports and documents it.
 - Triangulation results should be treated as **aids to interpretation**, not definitive proof.
 - Always encourage the user to:
   - Review codes and categories

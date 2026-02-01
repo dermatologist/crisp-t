@@ -2,49 +2,61 @@
 
 ## Overview
 
-This skill enables agents to perform qualitative and mixed-methods research analysis using **CRISP-T command-line tools**. Three main CLI commands are available:
+This skill enables agents to perform qualitative mixed data (text and numeric) research analysis using **CRISP-T command-line tools**.
+
+## Core Commands
+
+### Three main CLI commands are available:
 
 - **`crisp`** - Main analysis engine (text/NLP, ML, visualization workflows)
 - **`crispt`** - Corpus management (document manipulation, semantic search, relationships)
 - **`crispviz`** - Visualization generation (charts, word clouds, graphs, LDA)
 
-
-## Core Commands
-
-* **If the command is not found in your environment, try prefixing with `uv run`**
-* If it fails use the python environment in .venv folder.
+* If the command is not found in your environment, try prefixing with `uv run`
+* If it fails use the python environment in .venv folder, if available.
 * If it still fails, ensure CRISP-T is installed: `pip install crisp-t[ml]`
 
-## Tips
-* Use the `--help` flag with any command to see available options.
-* Start by importing data with `--source` to create a corpus.
-* Use `--unstructured` to specify free-text columns in CSV files. Ask the use for the text column to be imported as text data, if not specified.
-* Use `--num` and `--rec` to limit dataset size for faster processing during testing.
-* Use `--filters` to analyze subsets of data before full analysis.
-* After text analysis, use `--assign` to assign documents to topics.
-* When performing ML tasks, specify the outcome variable with `--outcome` and the linkage method with `--linkage`.
-* Use `--aggregation` to define how to combine multiple documents for a single outcome.
-* Use `--include` and `--ignore` to control which features are used in ML analyses.
-* Use `--clear` to clear cache when switching datasets or modifying filters.
+## Tips for Effective Use
+* **Use ./workspace** as the working directory for all artifacts, if not explicitly specified. Create it if it does not exist.
+* **Use `--help`** with any command to see available options
+* **Always start with `--source`** to import data into a corpus structure, if not already done
+* **Use `--unstructured`** to specify free-text columns in CSV files
+* **Limit dataset size** during testing with `--num` (documents) and `--rec` (rows)
+* **Use `--clear`** when switching datasets or modifying filters
+* **Use --assign** after `--topics` to assign documents to topics always. REMEMBER to use `--clear` before `--assign` if the corpus or filters have changed. THIS STEP MUST be done for TEXT DATA.
+* **Combine `--nlp`** to run all text analyses at once. NOTE: May be slow for large corpora.
+* **For ML tasks**, always specify the outcome variable with `--outcome`
+* **Use `--linkage`** to connect text metadata to numeric outcomes in ML analyses
+* **Do cross-modal linkage** when needed with `--linkage`.
+* **Use `--aggregation`** to define how to combine multiple documents for a single outcome
+* **Use `--include` and `--ignore`** to control features used in ML analyses
+* **Use `crispt`** to manage corpus structure, add/remove documents, and define relationships
+* **Use `crispviz`** to generate visualizations after analysis steps
+* **Save intermediate results** using `--out` at each major step
+* **Use filtering** (`--filters`) to analyze subsets.
+* **Link early**: Add relationships after text analysis for mixed-methods validation
+* **Visualize often**: Use `crispviz` after each major analysis step
+* **Check metadata**: Use `crispt --print` to inspect corpus structure
+
+## Important Guidelines for Agents
 * Perform multi-step workflows STEP-BY-STEP, saving intermediate results with `--out` for analytical flexibility.
 * Do not run all analyses at once; break into smaller steps to isolate issues.
 * If analysis results seem off, clear cache with `--clear` before re-running.
 * If a particular analysis fails or takes too long, try reducing dataset size with filters or `--num` or `--rec` or both.
 * If errors persist or if it still takes too long, skip the step and proceed to the next analysis.
 * Document level TOPIC assignment using `--assign` is a VERY important step different from just running `--topics`. THIS STEP MUST be for TEXT DATA.
-* Use `--clear` when switching datasets or modifying filters before `--assign`
 * Generate a report as you go, documenting insights from each step.
 * If the source folder contains multiple CSV files, warn the user that only one CSV file is supported.
-* If the folder has no text or PDF files, warn the user that at least one text or PDF file is required.
+
 
 ## Important steps
-Import data into CRISP-T corpus and dataframe.
-Perform linking between text and numeric data using various methods (id based, keyword based, time based, embedding based).
-Explore text data using various methods (e.g., topic modeling, keyword extraction, sentiment analysis, visualizations).
-Explore numeric data using various methods (e.g., summary statistics, classification, clustering, regression, association, visualizations, TDA, etc.).
-Perform cross modal analysis using linked text and numeric data (e.g., text features as predictors for numeric outcomes, numeric features as predictors for text outcomes, etc.).
-Add manual connections between text documents and numeric rows if needed to support theory driven analysis.
-Derive insights from the analysis and document them.
+* Import data into CRISP-T corpus and dataframe.
+* Perform linking between text and numeric data using various methods (id based, keyword based, time based, embedding based).
+* Explore text data using various methods (e.g., topic modeling, keyword extraction, sentiment analysis, visualizations).
+* Explore numeric data using various methods (e.g., summary statistics, classification, clustering, regression, association, visualizations, TDA, etc.).
+* Perform cross modal analysis using linked text and numeric data (e.g., text features as predictors for numeric outcomes, numeric features as predictors for text outcomes, etc.).
+* Add manual connections between text documents and numeric rows if needed to support theory driven analysis.
+* Derive insights from the analysis and document them.
 ---
 
 ### Reference Guide: https://r.jina.ai/https://github.com/dermatologist/crisp-t/wiki
@@ -103,11 +115,13 @@ crisp --source interview_data --unstructured responses --unstructured notes \
 
 **Example**:
 ```bash
-# Run all text analysis
+# Run all text analysis at once (not recommended for large corpora)
 crisp --inp my_corpus --nlp --out results
 
 # Topic analysis workflow
 crisp --inp my_corpus --topics --num 5 --assign --out results
+crisp --inp results --clear --assign --out results_v2
+crisp --inp results_v2 --clear --filters "region=North" --assign --out results_filtered
 
 # Sentiment with document-level scores
 crisp --inp my_corpus --sentiment --sentence --out results
@@ -137,13 +151,13 @@ crisp --inp my_corpus --sentiment --sentence --out results
 **Example**:
 ```bash
 # Classification with text metadata outcome
-crisp --inp my_corpus --cls --outcome topic_name --linkage keyword --outcome outcome_column
-
+crisp --inp my_corpus --cls --outcome topic_name
+crisp --inp my_corpus --cls --outcome topic_name --linkage keyword --aggregation majority
 # Regression with numeric outcome
 crisp --inp my_corpus --regression --outcome satisfaction_score --include age,income
 
 # Neural network with auto-detected outcome type
-crisp --inp my_corpus --nnet --outcome survey_response --aggregation mean
+crisp --inp my_corpus --nnet --outcome survey_response --linkage temporal:df --aggregation mean
 
 # K-Means clustering with specific features
 crisp --inp my_corpus --kmeans --num 4 --include age,income,years_experience
@@ -554,20 +568,6 @@ crispviz --inp classifier_results --out viz --corr-heatmap --graph
 - **Corpus files**: `corpus.json` + `corpus_df.csv` (created in `--out` folder)
 - **Visualizations**: PNG/HTML (saved to `--out` folder)
 - **Metadata**: Embedded in corpus.json (view with `--print`)
-
----
-
-## Tips for Effective Use
-
-1. **Always start with `--source`** to import data into a corpus structure
-2. **Use `--clear`** when switching datasets or modifying filters
-3. **Combine `--nlp`** to run all text analyses at once
-4. **Save intermediate results** using `--out` at each major step
-5. **Use filtering** (`--filters`) to analyze subsets before full analysis
-6. **Link early**: Add relationships after text analysis for mixed-methods validation
-7. **Visualize often**: Use `crispviz` after each major analysis step
-8. **Check metadata**: Use `crispt --print` to inspect corpus structure
-
 ---
 
 ## Error Handling

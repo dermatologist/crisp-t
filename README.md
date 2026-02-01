@@ -16,6 +16,14 @@
 
 **TL;DR** CRISP-T is a qualitative research method and a toolkit to perform mixed data (text + numeric) analytics for computational triangulation and sense-making. More importantly, CRISP brings **["vibe analytics"](https://sloanreview.mit.edu/article/vibe-analytics-vibe-codings-new-cousin-unlocks-insights/)** **["SKILLS"](/.claude/skills/crisp-cli/SKILL.md)** for mixed data with an AI agent, adopting an [adaptive epistomology](https://www.mdpi.com/2075-4698/15/7/205).
 
+✨ [Download this or a similar dataset](https://www.kaggle.com/datasets/schmoyote/coffee-reviews-dataset?select=simplified_coffee.csv), clone this repo, and try a prompt like 👇 in your [vibe analytics platform](https://antigravity.google/).
+
+```text
+Import the csv file from ./downloads folder using the crisp-cli skill with “review” as the text column. Do a comprehensive analysis, integrating both its numeric and textual features, and show the key patterns, relationships, and insights that emerge.
+```
+* **MCP SERVER** will give more agentic power to your vibe analytics experience (See below).
+* **Interpretivist approach**: CRISP-T enforces the **agentic researcher** to adopt an interpretivist approach, rather than a data-science one.
+
 👉 **[CLI Cheatsheet](docs/cheatsheet.md)** | **[Demo & Examples](docs/DEMO.md)** | **[Documentation](https://dermatologist.github.io/crisp-t/)**
 
 <p align="center">
