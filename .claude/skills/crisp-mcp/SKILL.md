@@ -7,8 +7,9 @@ Use the CRISP‑T MCP server to run a full, *documented* qualitative analysis wo
 
 This skill assumes:
 
-- The **CRISP‑T MCP server** is available as an MCP server (e.g., `crisp-t`)
-- The server exposes tools for **corpus management, text coding, numeric analysis, triangulation, and export**
+- The **CRISP‑T MCP server** is available as an MCP server called crisp.
+- **If you do not find the crisp MCP server, inform the user and use crisp-cli skill instead.**
+- The server exposes several tools for **corpus management, text coding, numeric analysis, triangulation, and export**
 - The model can **discover tools at runtime** and adapt to the actual tool list
 
 Use this skill when the user wants to:

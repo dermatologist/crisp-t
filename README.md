@@ -108,24 +108,7 @@ Manages corpus structure and detailed queries.
 
 ## 🤖 MCP Server (Agentic AI)
 
-CRISP-T includes a **Model Context Protocol (MCP)** server, allowing AI agents (like Claude Desktop) to interact directly with your data.
-
-### Configuration (Claude Desktop)
-
-**MacOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
-**Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
-
-```json
-{
-  "mcpServers": {
-    "crisp-t": {
-      "command": "<python-path>crisp-mcp"
-    }
-  }
-}
-```
-
-The MCP server provides tools for semantic search, topic modeling, clustering, and more, allowing you to ask your AI assistant to "analyze the trends in this corpus" directly. **Most of the CLI commands are available as MCP tools.**
+CRISP-T includes a **Model Context Protocol (MCP)** server, allowing AI agents (like Claude Desktop) to interact directly with your data. If you have opened this repository in [VSCODE](https://code.visualstudio.com/docs/copilot/customization/mcp-servers) or [AntiGravity](https://antigravity.google/), you can start the MCP server using the [configuration file](/.vscode/mcp.json) provided. This [configuration file](/.vscode/mcp.json) provides the necessary details for configuring other AI coding platforms such as [Claude Desktop](https://claude.ai/desktop) to connect to the CRISP-T MCP server as well.
 
 ---
 
