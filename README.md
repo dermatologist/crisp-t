@@ -18,9 +18,9 @@
 
 ✨ [Download this or a similar dataset](https://www.kaggle.com/datasets/schmoyote/coffee-reviews-dataset?select=simplified_coffee.csv), clone this repo, and try a prompt like 👇 in your [vibe analytics platform](https://antigravity.google/).
 
-```text
-Import the csv file from ./downloads folder using the crisp-cli skill with “review” as the text column. Do a comprehensive analysis, integrating both its numeric and textual features, and show the key patterns, relationships, and insights that emerge.
-```
+
+> Import the csv file from ./downloads folder using the crisp-cli skill with “review” as the text column. Do a comprehensive analysis, integrating both its numeric and textual features, and show the key patterns, relationships, and insights that emerge.
+
 * **MCP SERVER** will give more agentic power to your vibe analytics experience (See below).
 * **Interpretivist approach**: CRISP-T enforces the **agentic researcher** to adopt an interpretivist approach, rather than a data-science one.
 
