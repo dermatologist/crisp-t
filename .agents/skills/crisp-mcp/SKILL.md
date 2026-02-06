@@ -1,4 +1,8 @@
-# Skill: crisp-mcp
+---
+name: crisp-mcp
+description: Use the CRISP‑T MCP server to run a full qualitative analysis workflow linking textual narratives and numeric data.
+---
+
 
 ## Summary
 

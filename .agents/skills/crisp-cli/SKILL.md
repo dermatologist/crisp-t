@@ -1,4 +1,7 @@
-# CRISP-T CLI Skill
+---
+name: crisp-cli
+description: Skill for qualitative mixed data research analysis using CRISP-T command-line tools.
+---
 
 ## Overview
 
