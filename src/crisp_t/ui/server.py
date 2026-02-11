@@ -1,4 +1,28 @@
-"""Flask web server for CRISP-T UI with Copilot SDK integration."""
+"""Flask web server for CRISP-T UI with Copilot SDK integration.
+
+This module provides a web-based interface for CRISP-T qualitative research tools,
+powered by the GitHub Copilot SDK. It allows researchers to interact with CRISP-T
+through natural language conversations with AI assistants.
+
+Key Features:
+- REST API for session management
+- Real-time chat interface with streaming responses
+- Integration with CRISP-T CLI tools (crisp, crispt, crispviz)
+- Support for multiple AI models (GPT-5, Claude, etc.)
+- Custom provider support (Ollama, Azure OpenAI, etc.)
+
+Architecture:
+- Flask web server handles HTTP requests
+- Copilot SDK manages AI sessions with custom tools
+- execute_crisp_command tool allows AI to run CRISP-T commands
+- Frontend polls for message updates in real-time
+
+Dependencies:
+- flask: Web framework
+- flask-cors: Cross-origin resource sharing
+- github-copilot-sdk: AI integration (optional)
+- pydantic: Type validation (optional, used with copilot)
+"""
 
 import asyncio
 import json
@@ -28,52 +52,54 @@ clients: Dict[str, dict] = {}
 clients_lock = threading.Lock()
 
 
-class CrispCommandParams(BaseModel):
-    """Parameters for CRISP command execution."""
+# Define tool and model classes only if Copilot is available
+if COPILOT_AVAILABLE:
 
-    command: str = Field(description="The CRISP CLI command to execute (crisp, crispt, or crispviz)")
-    args: str = Field(description="Command line arguments for the CRISP command")
+    class CrispCommandParams(BaseModel):
+        """Parameters for CRISP command execution."""
 
+        command: str = Field(description="The CRISP CLI command to execute (crisp, crispt, or crispviz)")
+        args: str = Field(description="Command line arguments for the CRISP command")
 
-@define_tool(description="Execute CRISP-T CLI commands for qualitative research analysis")
-async def execute_crisp_command(params: CrispCommandParams) -> str:
-    """
-    Execute CRISP-T CLI commands.
+    @define_tool(description="Execute CRISP-T CLI commands for qualitative research analysis")
+    async def execute_crisp_command(params: CrispCommandParams) -> str:
+        """
+        Execute CRISP-T CLI commands.
 
-    This tool allows the agent to run CRISP-T commands for qualitative and mixed-methods research.
-    Available commands: crisp, crispt, crispviz
-    """
-    import subprocess
+        This tool allows the agent to run CRISP-T commands for qualitative and mixed-methods research.
+        Available commands: crisp, crispt, crispviz
+        """
+        import subprocess
 
-    valid_commands = ["crisp", "crispt", "crispviz"]
-    if params.command not in valid_commands:
-        return f"Error: Invalid command '{params.command}'. Must be one of: {', '.join(valid_commands)}"
+        valid_commands = ["crisp", "crispt", "crispviz"]
+        if params.command not in valid_commands:
+            return f"Error: Invalid command '{params.command}'. Must be one of: {', '.join(valid_commands)}"
 
-    try:
-        # Build the full command
-        full_command = [params.command] + params.args.split()
+        try:
+            # Build the full command
+            full_command = [params.command] + params.args.split()
 
-        # Execute the command
-        result = subprocess.run(
-            full_command, capture_output=True, text=True, timeout=300  # 5 minute timeout
-        )
+            # Execute the command
+            result = subprocess.run(
+                full_command, capture_output=True, text=True, timeout=300  # 5 minute timeout
+            )
 
-        # Combine stdout and stderr for complete output
-        output = result.stdout
-        if result.stderr:
-            output += f"\n\nErrors/Warnings:\n{result.stderr}"
+            # Combine stdout and stderr for complete output
+            output = result.stdout
+            if result.stderr:
+                output += f"\n\nErrors/Warnings:\n{result.stderr}"
 
-        if result.returncode != 0:
-            return f"Command failed with exit code {result.returncode}:\n{output}"
+            if result.returncode != 0:
+                return f"Command failed with exit code {result.returncode}:\n{output}"
 
-        return output or "Command executed successfully (no output)"
+            return output or "Command executed successfully (no output)"
 
-    except subprocess.TimeoutExpired:
-        return "Error: Command execution timed out (exceeded 5 minutes)"
-    except FileNotFoundError:
-        return f"Error: Command '{params.command}' not found. Is CRISP-T installed?"
-    except Exception as e:
-        return f"Error executing command: {str(e)}"
+        except subprocess.TimeoutExpired:
+            return "Error: Command execution timed out (exceeded 5 minutes)"
+        except FileNotFoundError:
+            return f"Error: Command '{params.command}' not found. Is CRISP-T installed?"
+        except Exception as e:
+            return f"Error executing command: {str(e)}"
 
 
 async def create_copilot_session(session_id: str, model: str, config: dict) -> dict:
