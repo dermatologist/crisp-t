@@ -77,6 +77,12 @@ pip install crisp-t[xg]
 # Mac users: brew install libomp
 ```
 
+**Optional (for Web UI with Copilot SDK):**
+```bash
+pip install crisp-t[copilot]
+# Also requires GitHub Copilot CLI: https://docs.github.com/en/copilot/how-tos/set-up/install-copilot-cli
+```
+
 ---
 
 ## 🚀 Usage
@@ -101,6 +107,22 @@ Manages corpus structure and detailed queries.
 
 *   **Semantic Search:** `crispt --inp ./corpus --semantic "query" --num 5`
 *   **Metadata:** `crispt --inp ./corpus --meta "project=phase1"`
+
+### 4. `crisp-ui` (Web UI - NEW!)
+Browser-based interface powered by GitHub Copilot SDK.
+
+*   **Start Web Server:** `crisp-ui`
+*   **Custom Port:** `crisp-ui --port 8080`
+*   **Open browser to:** `http://127.0.0.1:5000`
+
+The Web UI provides a conversational AI interface for CRISP-T, allowing you to:
+- Interact with CRISP-T through natural language
+- Execute CLI commands through an AI assistant
+- Visualize results in real-time
+- Choose from multiple AI models (GPT-5, Claude, etc.)
+- Use local models via Ollama or custom providers
+
+**📖 See [Web UI Documentation](docs/ui.md) for detailed instructions.**
 
 👉 **[View the Step-by-Step Demo](docs/DEMO.md)**
 
