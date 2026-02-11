@@ -258,11 +258,10 @@ async def send_message(session_id: str):
     try:
         session = session_data["session"]
         await session.send({"prompt": prompt})
-
-        return jsonify({"status": "ok"})
-
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+    return jsonify({"status": "ok"})
 
 
 @app.route("/api/session/<session_id>/messages", methods=["GET"])
@@ -287,10 +286,10 @@ async def destroy_session(session_id: str):
     try:
         await session_data["session"].destroy()
         await session_data["client"].stop()
-        return jsonify({"status": "ok"})
-
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+    return jsonify({"status": "ok"})
 
 
 def start_server(host: str = "127.0.0.1", port: int = 5000, debug: bool = False):
