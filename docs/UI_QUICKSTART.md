@@ -10,7 +10,7 @@ pip install crisp-t[copilot]
 
 This installs:
 - CRISP-T core package
-- Flask web framework
+- Quart web framework
 - GitHub Copilot SDK
 - All necessary dependencies
 
@@ -89,7 +89,7 @@ AI: Creating visualization...
 ### Advanced Analysis
 
 ```
-You: Import CSV data from ./survey with "feedback" as the text column, 
+You: Import CSV data from ./survey with "feedback" as the text column,
      run sentiment analysis, and link it to the satisfaction_score variable
 
 AI: I'll perform a comprehensive mixed-methods analysis...
