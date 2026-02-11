@@ -146,17 +146,9 @@ async def create_copilot_session(session_id: str, model: str, config: dict) -> d
     }
     session_config["system_message"] = system_message
 
-    # Add temperature if specified
-    if config.get("temperature"):
-        # Note: Temperature is typically set at the provider level, not session level
-        # We'll store it for potential future use
-        pass
-
-    # Add max tokens if specified
-    if config.get("max_tokens"):
-        # Note: Max tokens is typically controlled at the provider level
-        # We'll store it for potential future use
-        pass
+    # Note: Temperature and max_tokens are typically controlled at the provider/model level
+    # These settings from the config are captured but not currently used
+    # Future enhancement: Pass these to the provider configuration if supported
 
     # Create session
     session = await client.create_session(session_config)

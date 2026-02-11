@@ -37,7 +37,7 @@ def test_ui_static_files_exist():
 
 
 @pytest.mark.skipif(
-    "flask" not in sys.modules and not pytest.importorskip("flask", reason="flask not installed"),
+    not pytest.importorskip("flask", reason="flask not installed"),
     reason="Flask not installed"
 )
 def test_ui_server_module_structure():
@@ -51,7 +51,7 @@ def test_ui_server_module_structure():
 
 
 @pytest.mark.skipif(
-    "flask" not in sys.modules and not pytest.importorskip("flask", reason="flask not installed"),
+    not pytest.importorskip("flask", reason="flask not installed"),
     reason="Flask not installed"
 )
 def test_flask_routes_registered():
@@ -68,7 +68,7 @@ def test_flask_routes_registered():
 
 
 @pytest.mark.skipif(
-    "flask" not in sys.modules and not pytest.importorskip("flask", reason="flask not installed"),
+    not pytest.importorskip("flask", reason="flask not installed"),
     reason="Flask not installed"
 )
 def test_flask_app_configuration():
@@ -81,7 +81,7 @@ def test_flask_app_configuration():
 
 
 @pytest.mark.skipif(
-    "flask" not in sys.modules and not pytest.importorskip("flask", reason="flask not installed"),
+    not pytest.importorskip("flask", reason="flask not installed"),
     reason="Flask not installed"
 )
 def test_copilot_import_graceful_failure():
@@ -93,11 +93,11 @@ def test_copilot_import_graceful_failure():
 
 
 @pytest.mark.skipif(
-    "flask" not in sys.modules and not pytest.importorskip("flask", reason="flask not installed"),
+    not pytest.importorskip("flask", reason="flask not installed"),
     reason="Flask not installed"
 )
 @pytest.mark.skipif(
-    "copilot" not in sys.modules and not pytest.importorskip("copilot", reason="copilot not installed"),
+    not pytest.importorskip("copilot", reason="copilot not installed"),
     reason="Copilot SDK not installed"
 )
 def test_copilot_tool_definition():
@@ -107,7 +107,7 @@ def test_copilot_tool_definition():
 
 
 @pytest.mark.skipif(
-    "flask" not in sys.modules and not pytest.importorskip("flask", reason="flask not installed"),
+    not pytest.importorskip("flask", reason="flask not installed"),
     reason="Flask not installed"
 )
 def test_health_endpoint_response():
@@ -127,7 +127,7 @@ def test_health_endpoint_response():
 
 
 @pytest.mark.skipif(
-    "flask" not in sys.modules and not pytest.importorskip("flask", reason="flask not installed"),
+    not pytest.importorskip("flask", reason="flask not installed"),
     reason="Flask not installed"
 )
 def test_index_route_serves_html():
@@ -142,7 +142,7 @@ def test_index_route_serves_html():
 
 
 @pytest.mark.skipif(
-    "flask" not in sys.modules and not pytest.importorskip("flask", reason="flask not installed"),
+    not pytest.importorskip("flask", reason="flask not installed"),
     reason="Flask not installed"
 )
 def test_get_messages_requires_session():
