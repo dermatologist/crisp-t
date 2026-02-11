@@ -92,6 +92,7 @@ crisp = "crisp_t.cli:main"
 crispviz = "crisp_t.vizcli:main"
 crispt = "crisp_t.corpuscli:main"
 crisp-mcp = "crisp_t.mcp.__main__:run_server"
+crisp-ui = "crisp_t.ui.cli:main"
 
 [project.optional-dependencies]
 ml = [
@@ -101,6 +102,11 @@ ml = [
 ]
 xg = [
     "xgboost",
+]
+copilot = [
+    "github-copilot-sdk",
+    "flask",
+    "flask-cors",
 ]
 
 [tool.hatch.build.targets.wheel]
