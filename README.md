@@ -24,6 +24,14 @@
 * **MCP SERVER** will give more agentic power to your vibe analytics experience (See below).
 * **Interpretivist approach**: CRISP-T enforces the **agentic researcher** to adopt an interpretivist approach, rather than a data-science one.
 
+## 😎 UI using GitHub Copilot SDK - Work in progress!
+* Set up [copilot sdk](https://github.com/github/copilot-sdk)
+* [Watch this video for context](https://www.youtube.com/watch?v=GsEPS1yHaHQ)
+* Check out the branch `feature/build-ui-for-crisp-1`
+* `pip install -e .[ml,copilot]`
+* `crisp-ui`
+* `Access the UI at http://127.0.0.1:5000/`
+
 👉 **[CLI Cheatsheet](docs/cheatsheet.md)** | **[Demo & Examples](docs/DEMO.md)** | **[Documentation](https://dermatologist.github.io/crisp-t/)**
 
 <p align="center">
