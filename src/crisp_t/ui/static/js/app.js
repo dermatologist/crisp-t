@@ -5,6 +5,7 @@ class CrispUI {
         this.sessionId = null;
         this.messagePollingInterval = null;
         this.lastMessageCount = 0;
+        this.displayedMessageIds = new Set(); // Track which messages have been displayed
         this.isProcessing = false;
         
         this.initializeElements();
@@ -121,8 +122,11 @@ class CrispUI {
             this.chatInput.disabled = false;
             this.sendMessageBtn.disabled = false;
             
-            // Clear welcome message and add initial assistant message
+            // Clear welcome message and reset tracking
             this.chatMessages.innerHTML = '';
+            this.displayedMessageIds.clear(); // Reset displayed messages tracking
+            this.lastMessageCount = 0;
+            
             this.addMessage('assistant', `Hello! I'm your CRISP-T research assistant using ${model}. ` +
                 `I'm ready to help you analyze your qualitative research data at ${config.data_path}. ` +
                 `What would you like to do?`);
@@ -153,6 +157,7 @@ class CrispUI {
 
             // Reset UI
             this.sessionId = null;
+            this.displayedMessageIds.clear(); // Clear displayed messages
             this.updateStatus(false, 'Not connected');
             this.startSessionBtn.style.display = 'block';
             this.stopSessionBtn.style.display = 'none';
@@ -237,31 +242,50 @@ class CrispUI {
             const data = await response.json();
             const messages = data.messages || [];
             
-            // Check if there are new messages
-            if (messages.length > this.lastMessageCount) {
-                // Get only new messages
-                const newMessages = messages.slice(this.lastMessageCount);
+            console.log('Polled messages:', messages.length, 'displayed:', this.displayedMessageIds.size);
+            
+            // Process all messages
+            for (let i = 0; i < messages.length; i++) {
+                const msg = messages[i];
+                const msgId = `${msg.role}-${i}`;
                 
-                for (const msg of newMessages) {
-                    // Skip user messages (we already display them)
-                    if (msg.role === 'user') continue;
-                    
-                    // Hide typing indicator before showing message
-                    this.hideTypingIndicator();
-                    
-                    // Add assistant message
-                    if (msg.role === 'assistant' && msg.complete !== false) {
-                        this.addMessage('assistant', msg.content);
+                // Skip user messages (we already display them)
+                if (msg.role === 'user') {
+                    this.displayedMessageIds.add(msgId);
+                    continue;
+                }
+                
+                // Only process assistant messages
+                if (msg.role === 'assistant') {
+                    // Check if this message has been displayed
+                    if (!this.displayedMessageIds.has(msgId)) {
+                        console.log('New assistant message:', msg.content?.substring(0, 50) + '...');
                         
-                        // Re-enable input after assistant responds
+                        // Hide typing indicator before showing message
+                        this.hideTypingIndicator();
+                        
+                        // Add the message if it has content
+                        if (msg.content && msg.content.trim()) {
+                            this.addMessage('assistant', msg.content);
+                            this.displayedMessageIds.add(msgId);
+                            
+                            // Only re-enable input after message is complete
+                            if (msg.complete !== false) {
+                                this.isProcessing = false;
+                                this.chatInput.disabled = false;
+                                this.sendMessageBtn.disabled = false;
+                            }
+                        }
+                    } else if (msg.complete !== false && this.isProcessing) {
+                        // Message is complete, re-enable input
                         this.isProcessing = false;
                         this.chatInput.disabled = false;
                         this.sendMessageBtn.disabled = false;
                     }
                 }
-                
-                this.lastMessageCount = messages.length;
             }
+            
+            this.lastMessageCount = messages.length;
             
         } catch (error) {
             console.error('Error polling messages:', error);
