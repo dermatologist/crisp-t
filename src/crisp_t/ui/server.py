@@ -319,15 +319,26 @@ app.route("/api/session/<session_id>/destroy", methods=["POST"])(destroy_session
 
 
 def start_server(host: str = "127.0.0.1", port: int = 5000, debug: bool = False):
-    """Start the Flask web server."""
+    """Start the Flask web server.
+    
+    Args:
+        host: Host to bind to (default: 127.0.0.1 for localhost only)
+        port: Port to bind to (default: 5000)
+        debug: Run in debug mode (WARNING: Only use in development, not production)
+    """
     if not COPILOT_AVAILABLE:
         print("WARNING: Copilot SDK is not installed. Install with: pip install crisp-t[copilot]")
         print("The server will start but Copilot features will not be available.")
+
+    if debug:
+        print("\n⚠️  WARNING: Debug mode is enabled. This should only be used in development!")
+        print("    Debug mode allows arbitrary code execution and should NEVER be used in production.")
 
     print(f"\n🚀 CRISP-T Web UI starting on http://{host}:{port}")
     print(f"📖 Open your browser and navigate to: http://{host}:{port}")
     print("Press Ctrl+C to stop the server\n")
 
+    # Never use debug mode in production - only enable if explicitly requested
     app.run(host=host, port=port, debug=debug, threaded=True)
 
 
