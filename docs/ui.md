@@ -302,11 +302,11 @@ If you're running the Web UI behind a reverse proxy (like nginx):
 
 The CRISP-T Web UI consists of three main components:
 
-### 1. Flask Web Server (`server.py`)
-- Serves the HTML interface
-- Provides REST API endpoints for session management
-- Manages Copilot SDK client instances
-- Handles async operations in a synchronous Flask context
+### 1. Quart Web Server (`server.py`)
+- Async ASGI web server using Quart (migrated from Flask)
+- Session management with Copilot SDK
+- REST API endpoints for frontend communication
+- Properly handles async operations with native event loop support
 
 ### 2. Frontend Interface (`templates/index.html`, `static/*`)
 - Configuration panel for settings

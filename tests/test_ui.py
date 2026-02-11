@@ -37,25 +37,25 @@ def test_ui_static_files_exist():
 
 
 @pytest.mark.skipif(
-    not pytest.importorskip("flask", reason="flask not installed"),
-    reason="Flask not installed"
+    not pytest.importorskip("quart", reason="quart not installed"),
+    reason="Quart not installed"
 )
 def test_ui_server_module_structure():
-    """Test that the server module has expected structure (when Flask is available)."""
+    """Test that the server module has expected structure (when Quart is available)."""
     from crisp_t.ui import server
     
     # Check that key components exist
-    assert hasattr(server, 'app'), "Flask app should exist"
+    assert hasattr(server, 'app'), "Quart app should exist"
     assert hasattr(server, 'start_server'), "start_server function should exist"
     assert hasattr(server, 'COPILOT_AVAILABLE'), "COPILOT_AVAILABLE flag should exist"
 
 
 @pytest.mark.skipif(
-    not pytest.importorskip("flask", reason="flask not installed"),
-    reason="Flask not installed"
+    not pytest.importorskip("quart", reason="quart not installed"),
+    reason="Quart not installed"
 )
-def test_flask_routes_registered():
-    """Test that Flask routes are properly registered (when Flask is available)."""
+def test_quart_routes_registered():
+    """Test that Quart routes are properly registered (when Quart is available)."""
     from crisp_t.ui.server import app
     
     # Get list of registered routes
@@ -68,24 +68,24 @@ def test_flask_routes_registered():
 
 
 @pytest.mark.skipif(
-    not pytest.importorskip("flask", reason="flask not installed"),
-    reason="Flask not installed"
+    not pytest.importorskip("quart", reason="quart not installed"),
+    reason="Quart not installed"
 )
-def test_flask_app_configuration():
-    """Test that Flask app is configured correctly (when Flask is available)."""
+def test_quart_app_configuration():
+    """Test that Quart app is configured correctly (when Quart is available)."""
     from crisp_t.ui.server import app
     
-    assert app is not None, "Flask app should be initialized"
+    assert app is not None, "Quart app should be initialized"
     assert app.static_folder == "static", "Static folder should be configured"
     assert app.template_folder == "templates", "Template folder should be configured"
 
 
 @pytest.mark.skipif(
-    not pytest.importorskip("flask", reason="flask not installed"),
-    reason="Flask not installed"
+    not pytest.importorskip("quart", reason="quart not installed"),
+    reason="Quart not installed"
 )
 def test_copilot_import_graceful_failure():
-    """Test that missing copilot SDK is handled gracefully (when Flask is available)."""
+    """Test that missing copilot SDK is handled gracefully (when Quart is available)."""
     from crisp_t.ui import server
     
     # Should not crash, just set COPILOT_AVAILABLE = False or True
@@ -93,32 +93,33 @@ def test_copilot_import_graceful_failure():
 
 
 @pytest.mark.skipif(
-    not pytest.importorskip("flask", reason="flask not installed"),
-    reason="Flask not installed"
+    not pytest.importorskip("quart", reason="quart not installed"),
+    reason="Quart not installed"
 )
 @pytest.mark.skipif(
     not pytest.importorskip("copilot", reason="copilot not installed"),
     reason="Copilot SDK not installed"
 )
 def test_copilot_tool_definition():
-    """Test that the CRISP command tool is properly defined (when both Flask and Copilot are available)."""
+    """Test that the CRISP command tool is properly defined (when both Quart and Copilot are available)."""
     from crisp_t.ui.server import execute_crisp_command
     assert callable(execute_crisp_command), "execute_crisp_command should be callable"
 
 
 @pytest.mark.skipif(
-    not pytest.importorskip("flask", reason="flask not installed"),
-    reason="Flask not installed"
+    not pytest.importorskip("quart", reason="quart not installed"),
+    reason="Quart not installed"
 )
-def test_health_endpoint_response():
-    """Test the health check endpoint response format (when Flask is available)."""
+@pytest.mark.asyncio
+async def test_health_endpoint_response():
+    """Test the health check endpoint response format (when Quart is available)."""
     from crisp_t.ui.server import app
     
     client = app.test_client()
-    response = client.get('/api/health')
+    response = await client.get('/api/health')
     
     assert response.status_code == 200
-    data = response.get_json()
+    data = await response.get_json()
     
     assert "status" in data
     assert "copilot_available" in data
@@ -127,33 +128,35 @@ def test_health_endpoint_response():
 
 
 @pytest.mark.skipif(
-    not pytest.importorskip("flask", reason="flask not installed"),
-    reason="Flask not installed"
+    not pytest.importorskip("quart", reason="quart not installed"),
+    reason="Quart not installed"
 )
-def test_index_route_serves_html():
-    """Test that the index route serves HTML (when Flask is available)."""
+@pytest.mark.asyncio
+async def test_index_route_serves_html():
+    """Test that the index route serves HTML (when Quart is available)."""
     from crisp_t.ui.server import app
     
     client = app.test_client()
-    response = client.get('/')
+    response = await client.get('/')
     
     assert response.status_code == 200
     assert response.content_type.startswith('text/html')
 
 
 @pytest.mark.skipif(
-    not pytest.importorskip("flask", reason="flask not installed"),
-    reason="Flask not installed"
+    not pytest.importorskip("quart", reason="quart not installed"),
+    reason="Quart not installed"
 )
-def test_get_messages_requires_session():
-    """Test that getting messages requires a valid session (when Flask is available)."""
+@pytest.mark.asyncio
+async def test_get_messages_requires_session():
+    """Test that getting messages requires a valid session (when Quart is available)."""
     from crisp_t.ui.server import app
     
     client = app.test_client()
-    response = client.get('/api/session/nonexistent/messages')
+    response = await client.get('/api/session/nonexistent/messages')
     
     assert response.status_code == 404
-    data = response.get_json()
+    data = await response.get_json()
     assert "error" in data
 
 

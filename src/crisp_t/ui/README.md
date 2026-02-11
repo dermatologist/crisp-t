@@ -8,7 +8,7 @@ This directory contains the web-based user interface for CRISP-T, powered by the
 ui/
 ├── __init__.py           # Package initialization
 ├── cli.py                # CLI command for starting the server
-├── server.py             # Flask web server and API endpoints
+├── server.py             # Quart ASGI web server and API endpoints
 ├── templates/            # HTML templates
 │   └── index.html        # Main UI page
 └── static/               # Static assets
@@ -20,11 +20,13 @@ ui/
 
 ## Features
 
-- **Flask Web Server**: Provides REST API and serves the UI
+- **Quart ASGI Web Server**: Async web framework for proper async/await support
 - **Copilot SDK Integration**: Creates sessions with custom tools
 - **CRISP-T CLI Tool**: Allows AI to execute CRISP commands
 - **Real-time Chat**: Streaming responses from AI models
 - **Multi-Model Support**: GPT-5, GPT-4.1, Claude, and custom providers
+
+**Note**: Migrated from Flask to Quart to fix event loop issues with async operations.
 
 ## Development
 
@@ -59,7 +61,7 @@ crisp-ui --port 5000
 
 ### Backend (server.py)
 
-The Flask server provides these endpoints:
+The Quart ASGI server provides these endpoints:
 
 - `GET /` - Serves the main UI
 - `GET /api/health` - Health check
@@ -86,8 +88,8 @@ The `execute_crisp_command` tool allows the AI to run:
 
 ## Dependencies
 
-- `flask` - Web server
-- `flask-cors` - CORS support
+- `quart` - Async web framework (ASGI)
+- `quart-cors` - CORS support
 - `github-copilot-sdk` - Copilot integration
 - `pydantic` - Type validation
 

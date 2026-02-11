@@ -7,7 +7,7 @@ This implementation adds a web-based user interface to CRISP-T, powered by the G
 ## What Was Implemented
 
 ### 1. Core Web Server (`src/crisp_t/ui/server.py`)
-- Flask-based REST API server
+- Quart ASGI-based REST API server (migrated from Flask)
 - Session management with Copilot SDK
 - Custom tool (`execute_crisp_command`) for running CRISP-T CLI commands
 - Real-time message handling with streaming support
@@ -16,10 +16,12 @@ This implementation adds a web-based user interface to CRISP-T, powered by the G
 - Graceful handling of missing dependencies
 
 **Key Features:**
-- Async/sync bridge for Flask integration
-- Thread-safe session management
+- Native async/await support (no event loop hacks needed)
+- Async lock for thread-safe session management
 - 5-minute command timeout protection
 - Comprehensive error handling
+
+**Migration Note:** The server was migrated from Flask to Quart to resolve "Event loop is closed" errors that occurred with Flask's synchronous architecture when handling async Copilot SDK operations.
 
 ### 2. Frontend Interface
 
@@ -98,9 +100,9 @@ This implementation adds a web-based user interface to CRISP-T, powered by the G
                         │ HTTP/REST
                         ▼
 ┌─────────────────────────────────────────────────────────┐
-│              Flask Web Server (server.py)               │
+│           Quart ASGI Web Server (server.py)             │
 │  ┌──────────────────────────────────────────────────┐  │
-│  │  REST API Endpoints                              │  │
+│  │  Async REST API Endpoints                        │  │
 │  │  - /api/health                                   │  │
 │  │  - /api/models                                   │  │
 │  │  - /api/session/create                           │  │
@@ -109,7 +111,7 @@ This implementation adds a web-based user interface to CRISP-T, powered by the G
 │  │  - /api/session/<id>/destroy                     │  │
 │  └──────────────────────────────────────────────────┘  │
 └───────────────────────┬─────────────────────────────────┘
-                        │ Async Bridge
+                        │ Native Async/Await
                         ▼
 ┌─────────────────────────────────────────────────────────┐
 │           GitHub Copilot SDK (copilot.py)               │
@@ -140,7 +142,7 @@ This implementation adds a web-based user interface to CRISP-T, powered by the G
 src/crisp_t/ui/
 ├── __init__.py           # Package initialization
 ├── cli.py                # CLI command (28 lines)
-├── server.py             # Flask server (337 lines)
+├── server.py             # Quart ASGI server (280 lines)
 ├── README.md             # Developer documentation
 ├── templates/
 │   └── index.html        # Main UI page (126 lines)
@@ -201,8 +203,8 @@ examples/
 
 ### Optional (Copilot Group)
 - github-copilot-sdk
-- flask
-- flask-cors
+- quart (ASGI async web framework)
+- quart-cors
 - pydantic (included with copilot-sdk)
 
 ### External
@@ -229,8 +231,8 @@ examples/
 ### Implemented Tests
 1. Module import validation
 2. Static file existence
-3. Flask route registration
-4. API endpoint behavior
+3. Quart route registration
+4. API endpoint behavior (async)
 5. Graceful degradation (missing deps)
 
 ### Manual Testing Checklist

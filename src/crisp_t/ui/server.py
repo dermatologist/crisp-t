@@ -1,39 +1,37 @@
-"""Flask web server for CRISP-T UI with Copilot SDK integration.
+"""Quart web server for CRISP-T UI with Copilot SDK integration.
 
 This module provides a web-based interface for CRISP-T qualitative research tools,
 powered by the GitHub Copilot SDK. It allows researchers to interact with CRISP-T
 through natural language conversations with AI assistants.
 
 Key Features:
-- REST API for session management
+- Async REST API for session management (using Quart/ASGI)
 - Real-time chat interface with streaming responses
 - Integration with CRISP-T CLI tools (crisp, crispt, crispviz)
 - Support for multiple AI models (GPT-5, Claude, etc.)
 - Custom provider support (Ollama, Azure OpenAI, etc.)
 
 Architecture:
-- Flask web server handles HTTP requests
+- Quart ASGI web server handles HTTP requests asynchronously
 - Copilot SDK manages AI sessions with custom tools
 - execute_crisp_command tool allows AI to run CRISP-T commands
 - Frontend polls for message updates in real-time
 
 Dependencies:
-- flask: Web framework
-- flask-cors: Cross-origin resource sharing
+- quart: Async web framework (ASGI)
+- quart-cors: Cross-origin resource sharing
 - github-copilot-sdk: AI integration (optional)
 - pydantic: Type validation (optional, used with copilot)
+
+Note: Migrated from Flask to Quart to resolve event loop issues with async operations.
 """
 
 import asyncio
-import json
-import os
-import sys
-import threading
-from pathlib import Path
-from typing import Dict, Optional
+import subprocess
+from typing import Dict
 
-from flask import Flask, jsonify, render_template, request, send_from_directory
-from flask_cors import CORS
+from quart import Quart, jsonify, render_template, request
+from quart_cors import cors
 
 # Check if copilot SDK is available
 try:
@@ -44,12 +42,12 @@ try:
 except ImportError:
     COPILOT_AVAILABLE = False
 
-app = Flask(__name__, static_folder="static", template_folder="templates")
-CORS(app)
+app = Quart(__name__, static_folder="static", template_folder="templates")
+app = cors(app)
 
 # Global state for managing copilot clients and sessions
 clients: Dict[str, dict] = {}
-clients_lock = threading.Lock()
+clients_lock = asyncio.Lock()
 
 
 # Define tool and model classes only if Copilot is available
@@ -69,8 +67,6 @@ if COPILOT_AVAILABLE:
         This tool allows the agent to run CRISP-T commands for qualitative and mixed-methods research.
         Available commands: crisp, crispt, crispviz
         """
-        import subprocess
-
         valid_commands = ["crisp", "crispt", "crispviz"]
         if params.command not in valid_commands:
             return f"Error: Invalid command '{params.command}'. Must be one of: {', '.join(valid_commands)}"
@@ -179,13 +175,13 @@ async def create_copilot_session(session_id: str, model: str, config: dict) -> d
 
 
 @app.route("/")
-def index():
+async def index():
     """Serve the main UI page."""
-    return render_template("index.html")
+    return await render_template("index.html")
 
 
 @app.route("/api/health", methods=["GET"])
-def health_check():
+async def health_check():
     """Health check endpoint."""
     return jsonify(
         {
@@ -196,32 +192,31 @@ def health_check():
     )
 
 
-def list_models_sync():
+@app.route("/api/models", methods=["GET"])
+async def list_models():
     """List available models from Copilot."""
     if not COPILOT_AVAILABLE:
         return jsonify({"error": "Copilot SDK not available"}), 500
 
-    async def _list_models():
+    try:
         # Create a temporary client to get model list
         client = CopilotClient()
         await client.start()
         models = await client.list_models()
         await client.stop()
-        return models
 
-    try:
-        models = run_async(_list_models())
         return jsonify({"models": [model["id"] for model in models]})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 
-def create_session_sync():
+@app.route("/api/session/create", methods=["POST"])
+async def create_session():
     """Create a new Copilot session."""
     if not COPILOT_AVAILABLE:
         return jsonify({"error": "Copilot SDK not available. Install with: pip install crisp-t[copilot]"}), 500
 
-    data = request.json
+    data = await request.json
     session_id = data.get("session_id")
     model = data.get("model", "gpt-5")
     config = data.get("config", {})
@@ -231,10 +226,10 @@ def create_session_sync():
 
     try:
         # Create the session asynchronously
-        session_data = run_async(create_copilot_session(session_id, model, config))
+        session_data = await create_copilot_session(session_id, model, config)
 
         # Store in global state
-        with clients_lock:
+        async with clients_lock:
             clients[session_id] = session_data
 
         return jsonify({"status": "ok", "session_id": session_id, "model": model})
@@ -243,28 +238,27 @@ def create_session_sync():
         return jsonify({"error": str(e)}), 500
 
 
-def send_message_sync(session_id: str):
+@app.route("/api/session/<session_id>/send", methods=["POST"])
+async def send_message(session_id: str):
     """Send a message to a Copilot session."""
     if not COPILOT_AVAILABLE:
         return jsonify({"error": "Copilot SDK not available"}), 500
 
-    with clients_lock:
+    async with clients_lock:
         if session_id not in clients:
             return jsonify({"error": "Session not found"}), 404
         session_data = clients[session_id]
 
-    data = request.json
+    data = await request.json
     prompt = data.get("prompt")
 
     if not prompt:
         return jsonify({"error": "prompt is required"}), 400
 
-    async def _send_message():
+    try:
         session = session_data["session"]
         await session.send({"prompt": prompt})
 
-    try:
-        run_async(_send_message())
         return jsonify({"status": "ok"})
 
     except Exception as e:
@@ -272,9 +266,9 @@ def send_message_sync(session_id: str):
 
 
 @app.route("/api/session/<session_id>/messages", methods=["GET"])
-def get_messages(session_id: str):
+async def get_messages(session_id: str):
     """Get message history for a session."""
-    with clients_lock:
+    async with clients_lock:
         if session_id not in clients:
             return jsonify({"error": "Session not found"}), 404
         session_data = clients[session_id]
@@ -282,44 +276,25 @@ def get_messages(session_id: str):
     return jsonify({"messages": session_data["messages"]})
 
 
-def destroy_session_sync(session_id: str):
+@app.route("/api/session/<session_id>/destroy", methods=["POST"])
+async def destroy_session(session_id: str):
     """Destroy a Copilot session."""
-    with clients_lock:
+    async with clients_lock:
         if session_id not in clients:
             return jsonify({"error": "Session not found"}), 404
         session_data = clients.pop(session_id)
 
-    async def _destroy_session():
+    try:
         await session_data["session"].destroy()
         await session_data["client"].stop()
-
-    try:
-        run_async(_destroy_session())
         return jsonify({"status": "ok"})
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 
-def run_async(coro):
-    """Helper to run async functions in Flask routes."""
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    try:
-        return loop.run_until_complete(coro)
-    finally:
-        loop.close()
-
-
-# Register routes
-app.route("/api/models", methods=["GET"])(list_models_sync)
-app.route("/api/session/create", methods=["POST"])(create_session_sync)
-app.route("/api/session/<session_id>/send", methods=["POST"])(send_message_sync)
-app.route("/api/session/<session_id>/destroy", methods=["POST"])(destroy_session_sync)
-
-
 def start_server(host: str = "127.0.0.1", port: int = 5000, debug: bool = False):
-    """Start the Flask web server.
+    """Start the Quart web server.
     
     Args:
         host: Host to bind to (default: 127.0.0.1 for localhost only)
@@ -338,8 +313,8 @@ def start_server(host: str = "127.0.0.1", port: int = 5000, debug: bool = False)
     print(f"📖 Open your browser and navigate to: http://{host}:{port}")
     print("Press Ctrl+C to stop the server\n")
 
-    # Never use debug mode in production - only enable if explicitly requested
-    app.run(host=host, port=port, debug=debug, threaded=True)
+    # Run the Quart app using the built-in ASGI server
+    app.run(host=host, port=port, debug=debug)
 
 
 if __name__ == "__main__":

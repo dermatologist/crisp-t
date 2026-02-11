@@ -105,8 +105,8 @@ xg = [
 ]
 copilot = [
     "github-copilot-sdk",
-    "flask",
-    "flask-cors",
+    "quart",
+    "quart-cors",
 ]
 
 [tool.hatch.build.targets.wheel]
