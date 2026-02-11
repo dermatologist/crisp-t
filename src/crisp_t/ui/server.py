@@ -36,6 +36,7 @@ from quart_cors import cors
 # Check if copilot SDK is available
 try:
     from copilot import CopilotClient, define_tool
+    from copilot.generated.session_events import SessionEventType
     from pydantic import BaseModel, Field
 
     COPILOT_AVAILABLE = True
@@ -56,10 +57,14 @@ if COPILOT_AVAILABLE:
     class CrispCommandParams(BaseModel):
         """Parameters for CRISP command execution."""
 
-        command: str = Field(description="The CRISP CLI command to execute (crisp, crispt, or crispviz)")
+        command: str = Field(
+            description="The CRISP CLI command to execute (crisp, crispt, or crispviz)"
+        )
         args: str = Field(description="Command line arguments for the CRISP command")
 
-    @define_tool(description="Execute CRISP-T CLI commands for qualitative research analysis")
+    @define_tool(
+        description="Execute CRISP-T CLI commands for qualitative research analysis"
+    )
     async def execute_crisp_command(params: CrispCommandParams) -> str:
         """
         Execute CRISP-T CLI commands.
@@ -77,7 +82,10 @@ if COPILOT_AVAILABLE:
 
             # Execute the command
             result = subprocess.run(
-                full_command, capture_output=True, text=True, timeout=300  # 5 minute timeout
+                full_command,
+                capture_output=True,
+                text=True,
+                timeout=300,  # 5 minute timeout
             )
 
             # Combine stdout and stderr for complete output
@@ -101,10 +109,17 @@ if COPILOT_AVAILABLE:
 async def create_copilot_session(session_id: str, model: str, config: dict) -> dict:
     """Create a new Copilot client and session."""
     if not COPILOT_AVAILABLE:
-        raise RuntimeError("Copilot SDK is not installed. Install with: pip install crisp-t[copilot]")
+        raise RuntimeError(
+            "Copilot SDK is not installed. Install with: pip install crisp-t[copilot]"
+        )
 
     # Create client
-    client_config = {"log_level": "info", "auto_start": True, "auto_restart": True}
+    client_config = {
+        "log_level": "info",
+        "auto_start": True,
+        "auto_restart": True,
+        "streaming": True,
+    }
 
     # Add GitHub token if provided
     if config.get("github_token"):
@@ -114,11 +129,18 @@ async def create_copilot_session(session_id: str, model: str, config: dict) -> d
     await client.start()
 
     # Prepare session configuration
-    session_config = {"model": model, "tools": [execute_crisp_command], "streaming": True}
+    session_config = {
+        "model": model,
+        "tools": [execute_crisp_command],
+        "streaming": True,
+    }
 
     # Add custom provider if specified
     if config.get("use_custom_provider"):
-        provider_config = {"type": config.get("provider_type", "openai"), "base_url": config.get("provider_base_url")}
+        provider_config = {
+            "type": config.get("provider_type", "openai"),
+            "base_url": config.get("provider_base_url"),
+        }
 
         if config.get("provider_api_key"):
             provider_config["api_key"] = config["provider_api_key"]
@@ -128,16 +150,16 @@ async def create_copilot_session(session_id: str, model: str, config: dict) -> d
     # Add system message emphasizing CRISP-T expertise
     system_message = {
         "role": "system",
-        "content": """You are an expert CRISP-T qualitative research assistant. You help researchers perform 
+        "content": """You are an expert CRISP-T qualitative research assistant. You help researchers perform
         mixed-methods analysis using CRISP-T CLI tools (crisp, crispt, crispviz).
-        
+
         You have access to the execute_crisp_command tool to run CRISP-T commands. Use this tool to:
         - Import and analyze qualitative and quantitative data
         - Generate coding dictionaries and perform topic modeling
         - Create visualizations
         - Link textual findings to numeric outcomes
         - Perform semantic search and temporal analysis
-        
+
         Always explain what you're doing and interpret the results for the user in the context of their research.""",
     }
     session_config["system_message"] = system_message
@@ -151,36 +173,50 @@ async def create_copilot_session(session_id: str, model: str, config: dict) -> d
 
     # Store message history
     messages = []
+    last_delta_time = [0]  # Track last delta timestamp to detect stalls
 
     # Event handler for session events
     def on_event(event):
-        event_type = event.type.value
-        print(f"[DEBUG] Event received: {event_type}")
-        if event_type == "assistant.message":
-            content = event.data.content
-            print(f"[DEBUG] assistant.message: content_length={len(content)}")
-            messages.append({"role": "assistant", "content": content, "timestamp": event.data.created_at})
-        elif event_type == "user.message":
-            content = event.data.content
-            print(f"[DEBUG] user.message: content={content[:50]}...")
-            messages.append({"role": "user", "content": content, "timestamp": event.data.created_at})
-        elif event_type == "assistant.message_delta":
-            # Handle streaming chunks
+        import time
+
+        print(f"[DEBUG] Event received: {event.type}")
+
+        # Handle streaming delta chunks
+        if event.type == SessionEventType.ASSISTANT_MESSAGE_DELTA:
             delta = event.data.delta_content or ""
             print(f"[DEBUG] assistant.message_delta: delta_length={len(delta)}")
-            if not messages or messages[-1].get("role") != "assistant" or messages[-1].get("complete"):
+            last_delta_time[0] = time.time()
+
+            # Create new message if needed
+            if (
+                not messages
+                or messages[-1].get("role") != "assistant"
+                or messages[-1].get("complete")
+            ):
                 messages.append({"role": "assistant", "content": "", "complete": False})
+
+            # Append delta to current message
             messages[-1]["content"] += delta
-        elif event_type == "session.idle":
-            # Mark last message as complete
+            print(f"[DEBUG] Updated assistant message content: {delta}")
+
+        # Handle session idle (conversation complete)
+        elif event.type == SessionEventType.SESSION_IDLE:
             print(f"[DEBUG] session.idle: messages_count={len(messages)}")
             if messages and messages[-1].get("role") == "assistant":
                 messages[-1]["complete"] = True
-                print(f"[DEBUG] Marked message as complete, content_length={len(messages[-1]['content'])}")
+                print(
+                    f"[DEBUG] Marked message as complete, content_length={len(messages[-1]['content'])}"
+                )
 
     session.on(on_event)
 
-    return {"client": client, "session": session, "messages": messages, "model": model, "config": config}
+    return {
+        "client": client,
+        "session": session,
+        "messages": messages,
+        "model": model,
+        "config": config,
+    }
 
 
 @app.route("/")
@@ -223,11 +259,18 @@ async def list_models():
 async def create_session():
     """Create a new Copilot session."""
     if not COPILOT_AVAILABLE:
-        return jsonify({"error": "Copilot SDK not available. Install with: pip install crisp-t[copilot]"}), 500
+        return (
+            jsonify(
+                {
+                    "error": "Copilot SDK not available. Install with: pip install crisp-t[copilot]"
+                }
+            ),
+            500,
+        )
 
     data = await request.json
     session_id = data.get("session_id")
-    model = data.get("model", "gpt-5")
+    model = data.get("model", "gpt-4.1")
     config = data.get("config", {})
 
     if not session_id:
@@ -265,8 +308,15 @@ async def send_message(session_id: str):
         return jsonify({"error": "prompt is required"}), 400
 
     try:
+        # Add user message to history
+        session_data["messages"].append(
+            {"role": "user", "content": prompt, "complete": True}
+        )
+
+        # Send message asynchronously (don't wait - let event handler capture response)
+        # The frontend will poll for messages as they arrive
         session = session_data["session"]
-        await session.send({"prompt": prompt})
+        session.send({"prompt": prompt})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -280,12 +330,15 @@ async def get_messages(session_id: str):
         if session_id not in clients:
             return jsonify({"error": "Session not found"}), 404
         session_data = clients[session_id]
-    
+
     messages = session_data["messages"]
     print(f"[DEBUG] get_messages: session={session_id}, count={len(messages)}")
     if messages:
-        print(f"[DEBUG] Latest message: role={messages[-1].get('role')}, content_length={len(messages[-1].get('content', ''))}, complete={messages[-1].get('complete')}")
-    
+        print(
+            f"[DEBUG] Latest message: role={messages[-1].get('role')}, content_length={len(messages[-1].get('content', ''))}, complete={messages[-1].get('complete')}"
+        )
+        print(f"[DEBUG] Full messages: {messages}")
+
     return jsonify({"messages": messages})
 
 
@@ -302,25 +355,31 @@ async def destroy_session(session_id: str):
         await session_data["client"].stop()
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-    
+
     return jsonify({"status": "ok"})
 
 
 def start_server(host: str = "127.0.0.1", port: int = 5000, debug: bool = False):
     """Start the Quart web server.
-    
+
     Args:
         host: Host to bind to (default: 127.0.0.1 for localhost only)
         port: Port to bind to (default: 5000)
         debug: Run in debug mode (WARNING: Only use in development, not production)
     """
     if not COPILOT_AVAILABLE:
-        print("WARNING: Copilot SDK is not installed. Install with: pip install crisp-t[copilot]")
+        print(
+            "WARNING: Copilot SDK is not installed. Install with: pip install crisp-t[copilot]"
+        )
         print("The server will start but Copilot features will not be available.")
 
     if debug:
-        print("\n⚠️  WARNING: Debug mode is enabled. This should only be used in development!")
-        print("    Debug mode allows arbitrary code execution and should NEVER be used in production.")
+        print(
+            "\n⚠️  WARNING: Debug mode is enabled. This should only be used in development!"
+        )
+        print(
+            "    Debug mode allows arbitrary code execution and should NEVER be used in production."
+        )
 
     print(f"\n🚀 CRISP-T Web UI starting on http://{host}:{port}")
     print(f"📖 Open your browser and navigate to: http://{host}:{port}")
