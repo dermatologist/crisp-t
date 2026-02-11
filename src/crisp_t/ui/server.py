@@ -164,7 +164,6 @@ This skill enables agents to perform qualitative mixed data (text and numeric) r
 * If it still fails, ensure CRISP-T is installed: `pip install crisp-t[ml]`
 
 ## Tips for Effective Use
-* **Use ./workspace** as the working directory for all artifacts, if not explicitly specified. Create it if it does not exist.
 * **Use `--help`** with any command to see available options
 * **Always start with `--source`** to import data into a corpus structure, if not already done
 * **Use `--unstructured`** to specify free-text columns in CSV files
@@ -739,6 +738,9 @@ crispviz --inp classifier_results --out viz --corr-heatmap --graph
 
 """,
     }
+
+    data_path = config.get("data_path", "./workspace")
+    system_message["content"] += f"\n\nAll data files should be read from and saved to the '{data_path}' directory. Create it if it does not exist."
     session_config["system_message"] = system_message
 
     # Note: Temperature and max_tokens are typically controlled at the provider/model level
