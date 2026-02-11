@@ -155,19 +155,28 @@ async def create_copilot_session(session_id: str, model: str, config: dict) -> d
     # Event handler for session events
     def on_event(event):
         event_type = event.type.value
+        print(f"[DEBUG] Event received: {event_type}")
         if event_type == "assistant.message":
-            messages.append({"role": "assistant", "content": event.data.content, "timestamp": event.data.created_at})
+            content = event.data.content
+            print(f"[DEBUG] assistant.message: content_length={len(content)}")
+            messages.append({"role": "assistant", "content": content, "timestamp": event.data.created_at})
         elif event_type == "user.message":
-            messages.append({"role": "user", "content": event.data.content, "timestamp": event.data.created_at})
+            content = event.data.content
+            print(f"[DEBUG] user.message: content={content[:50]}...")
+            messages.append({"role": "user", "content": content, "timestamp": event.data.created_at})
         elif event_type == "assistant.message_delta":
             # Handle streaming chunks
+            delta = event.data.delta_content or ""
+            print(f"[DEBUG] assistant.message_delta: delta_length={len(delta)}")
             if not messages or messages[-1].get("role") != "assistant" or messages[-1].get("complete"):
                 messages.append({"role": "assistant", "content": "", "complete": False})
-            messages[-1]["content"] += event.data.delta_content or ""
+            messages[-1]["content"] += delta
         elif event_type == "session.idle":
             # Mark last message as complete
+            print(f"[DEBUG] session.idle: messages_count={len(messages)}")
             if messages and messages[-1].get("role") == "assistant":
                 messages[-1]["complete"] = True
+                print(f"[DEBUG] Marked message as complete, content_length={len(messages[-1]['content'])}")
 
     session.on(on_event)
 
@@ -271,8 +280,13 @@ async def get_messages(session_id: str):
         if session_id not in clients:
             return jsonify({"error": "Session not found"}), 404
         session_data = clients[session_id]
-
-    return jsonify({"messages": session_data["messages"]})
+    
+    messages = session_data["messages"]
+    print(f"[DEBUG] get_messages: session={session_id}, count={len(messages)}")
+    if messages:
+        print(f"[DEBUG] Latest message: role={messages[-1].get('role')}, content_length={len(messages[-1].get('content', ''))}, complete={messages[-1].get('complete')}")
+    
+    return jsonify({"messages": messages})
 
 
 @app.route("/api/session/<session_id>/destroy", methods=["POST"])
