@@ -304,6 +304,6 @@ The UI maintains the power and flexibility of CRISP-T's CLI tools while making t
 ## References
 
 - GitHub Copilot SDK: https://github.com/github/copilot-sdk
-- Flask Documentation: https://flask.palletsprojects.com/
+- Quart Documentation: https://quart.palletsprojects.com/
 - CRISP-T: https://github.com/dermatologist/crisp-t
 - CRISP-T CLI Skill: `.agents/skills/crisp-cli/SKILL.md`
