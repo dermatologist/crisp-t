@@ -51,7 +51,7 @@ This implementation adds a web-based user interface to CRISP-T, powered by the G
 ### 3. CLI Command (`src/crisp_t/ui/cli.py`)
 - `crisp-ui` command for starting the server
 - Options: --host, --port, --debug
-- Integration with Flask server
+- Integration with Quart server
 - User-friendly help messages
 
 ### 4. Documentation
@@ -77,7 +77,7 @@ This implementation adds a web-based user interface to CRISP-T, powered by the G
 - Module structure validation
 - Import tests
 - Static file existence checks
-- Flask route registration tests
+- Quart route registration tests
 - API endpoint tests
 - Graceful degradation tests (missing dependencies)
 
@@ -88,7 +88,7 @@ This implementation adds a web-based user interface to CRISP-T, powered by the G
 
 ### 7. Package Configuration
 - Added `copilot` optional dependency group to `pyproject.toml`
-- Includes: `github-copilot-sdk`, `flask`, `flask-cors`
+- Includes: `github-copilot-sdk`, `quart`, `quart-cors`
 - Added `crisp-ui` script entry point
 
 ## Technical Architecture
