@@ -2,16 +2,14 @@
 
 ## [Unreleased](https://github.com/dermatologist/crisp-t/tree/HEAD)
 
-[Full Changelog](https://github.com/dermatologist/crisp-t/compare/v2.2.0...HEAD)
-
-**Closed issues:**
-
-- Refactor mcp/server.py by modularizing tools into separate files and organizing prompt templates. [\#79](https://github.com/dermatologist/crisp-t/issues/79)
-- Feature request: Support multiple text columns while importing documents from CSV. [\#77](https://github.com/dermatologist/crisp-t/issues/77)
-- Add time‑based analysis to CRISP-T [\#66](https://github.com/dermatologist/crisp-t/issues/66)
+[Full Changelog](https://github.com/dermatologist/crisp-t/compare/v2.2.1...HEAD)
 
 **Merged pull requests:**
 
+- Feature/build UI for crisp 1 [\#89](https://github.com/dermatologist/crisp-t/pull/89) ([dermatologist](https://github.com/dermatologist))
+- feat: add SKILL.md metadata for crisp-cli and crisp-mcp skills; intro… [\#84](https://github.com/dermatologist/crisp-t/pull/84) ([dermatologist](https://github.com/dermatologist))
+- Feature/agents 1 [\#83](https://github.com/dermatologist/crisp-t/pull/83) ([dermatologist](https://github.com/dermatologist))
+- Refactor code structure for improved readability and maintainability [\#82](https://github.com/dermatologist/crisp-t/pull/82) ([dermatologist](https://github.com/dermatologist))
 - Refactor MCP server into modular tool architecture and extend with advanced data analysis capabilities [\#80](https://github.com/dermatologist/crisp-t/pull/80) ([Copilot](https://github.com/apps/copilot-swe-agent))
 - Support multiple text columns in CSV import with advanced data analysis features and MCP refactoring [\#78](https://github.com/dermatologist/crisp-t/pull/78) ([Copilot](https://github.com/apps/copilot-swe-agent))
 - fix: update README for clarity and add skills section [\#76](https://github.com/dermatologist/crisp-t/pull/76) ([dermatologist](https://github.com/dermatologist))
@@ -19,6 +17,7 @@
 - Feature/fix mcp 1 [\#74](https://github.com/dermatologist/crisp-t/pull/74) ([dermatologist](https://github.com/dermatologist))
 - Time embedding Linkage [\#70](https://github.com/dermatologist/crisp-t/pull/70) ([dermatologist](https://github.com/dermatologist))
 - Bump pyasn1 from 0.6.1 to 0.6.2 [\#64](https://github.com/dermatologist/crisp-t/pull/64) ([dependabot[bot]](https://github.com/apps/dependabot))
+- Bump virtualenv from 20.36.0 to 20.36.1 [\#62](https://github.com/dermatologist/crisp-t/pull/62) ([dependabot[bot]](https://github.com/apps/dependabot))
 - Enhance CLI UX with colored output and improved messaging for non-technical users [\#61](https://github.com/dermatologist/crisp-t/pull/61) ([Copilot](https://github.com/apps/copilot-swe-agent))
 - Add --import flag synonym for --source and enhance help with data preparation steps [\#56](https://github.com/dermatologist/crisp-t/pull/56) ([Copilot](https://github.com/apps/copilot-swe-agent))
 - Bump peter-evans/create-pull-request from 7 to 8 [\#55](https://github.com/dermatologist/crisp-t/pull/55) ([dependabot[bot]](https://github.com/apps/dependabot))
@@ -58,6 +57,16 @@
 - Feature/uv 1 [\#8](https://github.com/dermatologist/crisp-t/pull/8) ([dermatologist](https://github.com/dermatologist))
 - Feature/readme 1 [\#4](https://github.com/dermatologist/crisp-t/pull/4) ([dermatologist](https://github.com/dermatologist))
 - Bump astral-sh/setup-uv from 5 to 6 [\#2](https://github.com/dermatologist/crisp-t/pull/2) ([dependabot[bot]](https://github.com/apps/dependabot))
+
+## [v2.2.1](https://github.com/dermatologist/crisp-t/tree/v2.2.1) (2026-02-01)
+
+[Full Changelog](https://github.com/dermatologist/crisp-t/compare/v2.2.0...v2.2.1)
+
+**Closed issues:**
+
+- Refactor mcp/server.py by modularizing tools into separate files and organizing prompt templates. [\#79](https://github.com/dermatologist/crisp-t/issues/79)
+- Feature request: Support multiple text columns while importing documents from CSV. [\#77](https://github.com/dermatologist/crisp-t/issues/77)
+- Add time‑based analysis to CRISP-T [\#66](https://github.com/dermatologist/crisp-t/issues/66)
 
 ## [v2.2.0](https://github.com/dermatologist/crisp-t/tree/v2.2.0) (2026-01-31)
 
