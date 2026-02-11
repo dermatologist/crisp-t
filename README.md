@@ -26,9 +26,6 @@
 
 ## 😎 UI using GitHub Copilot SDK - Work in progress!
 * Set up [copilot sdk](https://github.com/github/copilot-sdk)
-* [Watch this video for context](https://www.youtube.com/watch?v=GsEPS1yHaHQ)
-* Check out the branch `feature/build-ui-for-crisp-1`
-* `pip install -e .[ml,copilot]`
 * `crisp-ui`
 * `Access the UI at http://127.0.0.1:5000/`
 
