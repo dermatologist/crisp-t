@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRISP-T Web UI</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔍 CRISP-T Web UI</h1>
+            <p class="subtitle">Qualitative Research with AI-Powered Analysis</p>
+        </header>
+
+        <div class="main-content">
+            <!-- Configuration Panel -->
+            <div class="config-panel" id="configPanel">
+                <h2>Configuration</h2>
+                
+                <div class="config-section">
+                    <h3>Model Selection</h3>
+                    <select id="modelSelect" class="input-field">
+                        <option value="gpt-5">GPT-5</option>
+                        <option value="gpt-4.1">GPT-4.1</option>
+                        <option value="claude-sonnet-4.5">Claude Sonnet 4.5</option>
+                        <option value="claude-opus-4">Claude Opus 4</option>
+                    </select>
+                </div>
+
+                <div class="config-section">
+                    <h3>Data Source</h3>
+                    <input type="text" id="dataPath" class="input-field" placeholder="Path to data files (e.g., ./data)" value="./data">
+                    <small>Path to folder containing .txt, .pdf, or .csv files for CRISP-T analysis</small>
+                </div>
+
+                <div class="config-section">
+                    <h3>Advanced Settings</h3>
+                    <details>
+                        <summary>Optional Parameters</summary>
+                        <div class="advanced-settings">
+                            <label>
+                                <input type="checkbox" id="useCustomProvider">
+                                Use Custom Provider
+                            </label>
+                            
+                            <div id="providerSettings" class="provider-settings" style="display: none;">
+                                <select id="providerType" class="input-field">
+                                    <option value="openai">OpenAI</option>
+                                    <option value="azure">Azure OpenAI</option>
+                                    <option value="anthropic">Anthropic</option>
+                                </select>
+                                
+                                <input type="text" id="providerBaseUrl" class="input-field" placeholder="Base URL (e.g., http://localhost:11434/v1)">
+                                
+                                <input type="password" id="providerApiKey" class="input-field" placeholder="API Key (optional for local)">
+                            </div>
+
+                            <label>
+                                GitHub Token (optional):
+                                <input type="password" id="githubToken" class="input-field" placeholder="ghp_...">
+                            </label>
+                        </div>
+                    </details>
+                </div>
+
+                <button id="startSession" class="btn btn-primary">Start Session</button>
+                <button id="stopSession" class="btn btn-secondary" style="display: none;">Stop Session</button>
+                
+                <div class="status" id="status">
+                    <span class="status-indicator" id="statusIndicator">●</span>
+                    <span id="statusText">Not connected</span>
+                </div>
+            </div>
+
+            <!-- Chat Interface -->
+            <div class="chat-panel">
+                <div class="chat-header">
+                    <h2>Chat with CRISP-T</h2>
+                    <small>Ask questions about your qualitative research data</small>
+                </div>
+                
+                <div class="chat-messages" id="chatMessages">
+                    <div class="welcome-message">
+                        <h3>Welcome to CRISP-T! 👋</h3>
+                        <p>I'm your AI-powered qualitative research assistant. I can help you:</p>
+                        <ul>
+                            <li>Import and analyze text and numeric data</li>
+                            <li>Generate coding dictionaries and perform topic modeling</li>
+                            <li>Create visualizations (word clouds, graphs, heatmaps)</li>
+                            <li>Link textual findings to numeric outcomes</li>
+                            <li>Perform semantic search and temporal analysis</li>
+                        </ul>
+                        <p><strong>Example prompts:</strong></p>
+                        <ul>
+                            <li>"Import data from ./data folder and show me what's in the corpus"</li>
+                            <li>"Perform topic modeling with 5 topics on the imported data"</li>
+                            <li>"Generate a word cloud visualization"</li>
+                            <li>"Analyze sentiment in the documents"</li>
+                        </ul>
+                        <p class="note">Configure your settings above and click "Start Session" to begin!</p>
+                    </div>
+                </div>
+                
+                <div class="chat-input-container">
+                    <textarea id="chatInput" class="chat-input" placeholder="Ask me about your research data..." rows="3" disabled></textarea>
+                    <button id="sendMessage" class="btn btn-send" disabled>Send</button>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p>CRISP-T Web UI | Powered by <a href="https://github.com/github/copilot-sdk" target="_blank">GitHub Copilot SDK</a></p>
+        </footer>
+    </div>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>

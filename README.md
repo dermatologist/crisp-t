@@ -18,11 +18,16 @@
 
 ✨ [Download this or a similar dataset](https://www.kaggle.com/datasets/schmoyote/coffee-reviews-dataset?select=simplified_coffee.csv), clone this repo, and try a prompt like 👇 in your [vibe analytics platform](https://antigravity.google/).
 
-```text
-Import the csv file from ./downloads folder using the crisp-cli skill with “review” as the text column. Do a comprehensive analysis, integrating both its numeric and textual features, and show the key patterns, relationships, and insights that emerge.
-```
+
+> Import the csv file from ./downloads folder using the crisp-cli skill with “review” as the text column. Do a comprehensive analysis, integrating both its numeric and textual features, and show the key patterns, relationships, and insights that emerge.
+
 * **MCP SERVER** will give more agentic power to your vibe analytics experience (See below).
 * **Interpretivist approach**: CRISP-T enforces the **agentic researcher** to adopt an interpretivist approach, rather than a data-science one.
+
+## 😎 UI using GitHub Copilot SDK - Work in progress!
+* Set up [copilot sdk](https://github.com/github/copilot-sdk)
+* `crisp-ui`
+* `Access the UI at http://127.0.0.1:5000/`
 
 👉 **[CLI Cheatsheet](docs/cheatsheet.md)** | **[Demo & Examples](docs/DEMO.md)** | **[Documentation](https://dermatologist.github.io/crisp-t/)**
 
@@ -77,6 +82,12 @@ pip install crisp-t[xg]
 # Mac users: brew install libomp
 ```
 
+**Optional (for Web UI with Copilot SDK):**
+```bash
+pip install crisp-t[copilot]
+# Also requires GitHub Copilot CLI: https://docs.github.com/en/copilot/how-tos/set-up/install-copilot-cli
+```
+
 ---
 
 ## 🚀 Usage
@@ -102,30 +113,29 @@ Manages corpus structure and detailed queries.
 *   **Semantic Search:** `crispt --inp ./corpus --semantic "query" --num 5`
 *   **Metadata:** `crispt --inp ./corpus --meta "project=phase1"`
 
+### 4. `crisp-ui` (Web UI - NEW!)
+Browser-based interface powered by GitHub Copilot SDK.
+
+*   **Start Web Server:** `crisp-ui`
+*   **Custom Port:** `crisp-ui --port 8080`
+*   **Open browser to:** `http://127.0.0.1:5000`
+
+The Web UI provides a conversational AI interface for CRISP-T, allowing you to:
+- Interact with CRISP-T through natural language
+- Execute CLI commands through an AI assistant
+- Visualize results in real-time
+- Choose from multiple AI models (GPT-5, Claude, etc.)
+- Use local models via Ollama or custom providers
+
+**📖 See [Web UI Documentation](docs/ui.md) for detailed instructions.**
+
 👉 **[View the Step-by-Step Demo](docs/DEMO.md)**
 
 ---
 
 ## 🤖 MCP Server (Agentic AI)
 
-CRISP-T includes a **Model Context Protocol (MCP)** server, allowing AI agents (like Claude Desktop) to interact directly with your data.
-
-### Configuration (Claude Desktop)
-
-**MacOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
-**Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
-
-```json
-{
-  "mcpServers": {
-    "crisp-t": {
-      "command": "<python-path>crisp-mcp"
-    }
-  }
-}
-```
-
-The MCP server provides tools for semantic search, topic modeling, clustering, and more, allowing you to ask your AI assistant to "analyze the trends in this corpus" directly. **Most of the CLI commands are available as MCP tools.**
+CRISP-T includes a **Model Context Protocol (MCP)** server, allowing AI agents (like Claude Desktop) to interact directly with your data. If you have opened this repository in [VSCODE](https://code.visualstudio.com/docs/copilot/customization/mcp-servers) or [AntiGravity](https://antigravity.google/), you can start the MCP server using the [configuration file](/.vscode/mcp.json) provided. This [configuration file](/.vscode/mcp.json) provides the necessary details for configuring other AI coding platforms such as [Claude Desktop](https://claude.ai/desktop) to connect to the CRISP-T MCP server as well.
 
 ---
 
