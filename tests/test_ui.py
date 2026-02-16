@@ -179,5 +179,48 @@ async def test_get_messages_requires_session():
     assert "error" in data
 
 
+@pytest.mark.skipif(
+    not pytest.importorskip("quart", reason="quart not installed"),
+    reason="Quart not installed",
+)
+@pytest.mark.asyncio
+async def test_models_endpoint_exists():
+    """Test that the models endpoint returns a response (when Quart is available)."""
+    from crisp_t.ui.server import app
+
+    client = app.test_client()
+    response = await client.get("/api/models")
+
+    # Should return 200 if copilot available, or 500 if not
+    assert response.status_code in [200, 500]
+    data = await response.get_json()
+    
+    # Should have either models list or error
+    assert "models" in data or "error" in data
+
+
+@pytest.mark.skipif(
+    not pytest.importorskip("quart", reason="quart not installed"),
+    reason="Quart not installed",
+)
+@pytest.mark.asyncio
+async def test_index_html_has_dynamic_model_loading():
+    """Test that the index.html template supports dynamic model loading (when Quart is available)."""
+    from crisp_t.ui.server import app
+
+    client = app.test_client()
+    response = await client.get("/")
+
+    assert response.status_code == 200
+    html_content = await response.get_data(as_text=True)
+    
+    # Check that the dropdown exists
+    assert 'id="modelSelect"' in html_content
+    
+    # Should not have hardcoded model options like before
+    # (or should have only a loading placeholder)
+    assert "Loading models..." in html_content or '<option value="">Loading models...</option>' in html_content
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
