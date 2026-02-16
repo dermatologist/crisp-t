@@ -122,7 +122,7 @@ The Web UI provides a conversational AI interface for CRISP-T, allowing you to:
 - Interact with CRISP-T through natural language
 - Execute CLI commands through an AI assistant
 - Visualize results in real-time
-- Choose from multiple AI models (GPT-5, Claude, etc.)
+- Choose from multiple AI models (GPT-5.2, GPT-5.1, GPT-4.1, Claude Opus/Sonnet, o-series, and more)
 - Use local models via Ollama or custom providers
 
 **📖 See [Web UI Documentation](docs/ui.md) for detailed instructions.**

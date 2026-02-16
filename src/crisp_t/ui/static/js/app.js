@@ -10,6 +10,7 @@ class CrispUI {
         
         this.initializeElements();
         this.attachEventListeners();
+        this.loadAvailableModels();
         this.checkHealth();
     }
 
@@ -34,6 +35,89 @@ class CrispUI {
         this.chatMessages = document.getElementById('chatMessages');
         this.chatInput = document.getElementById('chatInput');
         this.sendMessageBtn = document.getElementById('sendMessage');
+    }
+
+    async loadAvailableModels() {
+        /**
+         * Load available models from the API or use fallback list.
+         * Dynamically populates the model selection dropdown.
+         */
+        const fallbackModels = [
+            // GPT Models
+            { id: 'gpt-5.2', name: 'GPT-5.2' },
+            { id: 'gpt-5.1', name: 'GPT-5.1' },
+            { id: 'gpt-5.1-codex', name: 'GPT-5.1 Codex' },
+            { id: 'gpt-5.1-codex-mini', name: 'GPT-5.1 Codex Mini' },
+            { id: 'gpt-5', name: 'GPT-5' },
+            { id: 'gpt-5-codex', name: 'GPT-5 Codex' },
+            { id: 'gpt-4.1', name: 'GPT-4.1' },
+            { id: 'gpt-4o', name: 'GPT-4o' },
+            { id: 'gpt-4o-mini', name: 'GPT-4o Mini' },
+            { id: 'gpt-4', name: 'GPT-4' },
+            // Claude Models
+            { id: 'claude-opus-4.6', name: 'Claude Opus 4.6' },
+            { id: 'claude-opus-4', name: 'Claude Opus 4' },
+            { id: 'claude-sonnet-4.5', name: 'Claude Sonnet 4.5' },
+            { id: 'claude-sonnet-4', name: 'Claude Sonnet 4' },
+            { id: 'claude-sonnet-3.5', name: 'Claude Sonnet 3.5' },
+            { id: 'claude-haiku-3.5', name: 'Claude Haiku 3.5' },
+            // OpenAI o-series Models
+            { id: 'o3-mini', name: 'o3-mini (preview)' },
+            { id: 'o1-preview', name: 'o1-preview' },
+            { id: 'o1-mini', name: 'o1-mini' },
+        ];
+
+        let models = fallbackModels;
+        
+        try {
+            // Try to fetch models from the API
+            const response = await fetch('/api/models');
+            if (response.ok) {
+                const data = await response.json();
+                if (data.models && Array.isArray(data.models) && data.models.length > 0) {
+                    // Use API models if available
+                    models = data.models.map(id => ({ id, name: this.formatModelName(id) }));
+                    console.log('Loaded models from API:', models.length);
+                }
+            }
+        } catch (error) {
+            console.log('Could not fetch models from API, using fallback list:', error.message);
+        }
+
+        // Populate the dropdown
+        const currentValue = this.modelSelect.value;
+        this.modelSelect.innerHTML = '';
+        
+        models.forEach(model => {
+            const option = document.createElement('option');
+            option.value = model.id;
+            option.textContent = model.name;
+            this.modelSelect.appendChild(option);
+        });
+
+        // Restore previous selection if it exists in the new list
+        if (currentValue && Array.from(this.modelSelect.options).some(opt => opt.value === currentValue)) {
+            this.modelSelect.value = currentValue;
+        } else {
+            // Default to first model (likely gpt-5.2 or gpt-5.1)
+            this.modelSelect.selectedIndex = 0;
+        }
+    }
+
+    formatModelName(modelId) {
+        /**
+         * Format model ID into a human-readable name.
+         * Converts IDs like 'gpt-5.2' to 'GPT-5.2'.
+         */
+        const parts = modelId.split('-');
+        return parts.map(part => {
+            // Keep version numbers as-is
+            if (/^\d+(\.\d+)?$/.test(part)) {
+                return part;
+            }
+            // Capitalize first letter of each word
+            return part.charAt(0).toUpperCase() + part.slice(1);
+        }).join(' ');
     }
 
     attachEventListeners() {
