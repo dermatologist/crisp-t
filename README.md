@@ -24,10 +24,8 @@
 * **MCP SERVER** will give more agentic power to your vibe analytics experience (See below).
 * **Interpretivist approach**: CRISP-T enforces the **agentic researcher** to adopt an interpretivist approach, rather than a data-science one.
 
-## 😎 UI using GitHub Copilot SDK - Work in progress!
-* Set up [copilot sdk](https://github.com/github/copilot-sdk)
-* `crisp-ui`
-* `Access the UI at http://127.0.0.1:5000/`
+## 😎 UI using GitHub Copilot SDK!
+* scroll 👇 for details
 
 👉 **[CLI Cheatsheet](docs/cheatsheet.md)** | **[Demo & Examples](docs/DEMO.md)** | **[Documentation](https://dermatologist.github.io/crisp-t/)**
 
@@ -120,12 +118,9 @@ Browser-based interface powered by GitHub Copilot SDK.
 *   **Custom Port:** `crisp-ui --port 8080`
 *   **Open browser to:** `http://127.0.0.1:5000`
 
-The Web UI provides a conversational AI interface for CRISP-T, allowing you to:
-- Interact with CRISP-T through natural language
-- Execute CLI commands through an AI assistant
-- Visualize results in real-time
-- Choose from multiple AI models (GPT-5, Claude, etc.)
-- Use local models via Ollama or custom providers
+<p align="center">
+  <img src="https://private-user-images.githubusercontent.com/6259644/550438396-74b113fc-426d-4f50-a008-127b2bba8b92.png?jwt=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3NzEyNDYzMzUsIm5iZiI6MTc3MTI0NjAzNSwicGF0aCI6Ii82MjU5NjQ0LzU1MDQzODM5Ni03NGIxMTNmYy00MjZkLTRmNTAtYTAwOC0xMjdiMmJiYThiOTIucG5nP1gtQW16LUFsZ29yaXRobT1BV1M0LUhNQUMtU0hBMjU2JlgtQW16LUNyZWRlbnRpYWw9QUtJQVZDT0RZTFNBNTNQUUs0WkElMkYyMDI2MDIxNiUyRnVzLWVhc3QtMSUyRnMzJTJGYXdzNF9yZXF1ZXN0JlgtQW16LURhdGU9MjAyNjAyMTZUMTI0NzE1WiZYLUFtei1FeHBpcmVzPTMwMCZYLUFtei1TaWduYXR1cmU9OTg1MzdiNDhlZGUwNDhhMGI5NTNlNDMwYTc5NWNhYWMxNGIwNWM3YjZkNmVlNjc1YTE0NWU0ODRiMjQyNWQ2NyZYLUFtei1TaWduZWRIZWFkZXJzPWhvc3QifQ.QCPNkPg_4ge9Piei63HTZWBA1oAeaW7P1yjMY1QjZQc" />
+</p>
 
 **📖 See [Web UI Documentation](docs/ui.md) for detailed instructions.**
 

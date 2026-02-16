@@ -7,7 +7,7 @@ The CRISP-T Web UI provides a browser-based interface for interacting with CRISP
 ## Features
 
 - **AI-Powered Chat Interface**: Interact with CRISP-T through natural language conversations
-- **Multiple Model Support**: Choose from various AI models (GPT-5, GPT-4.1, Claude Sonnet 4.5, Claude Opus 4)
+- **Multiple Model Support**: Dynamically loads all available models from GitHub Copilot SDK (GPT-5.2, GPT-5.1, GPT-4.1, Claude Opus 4.6, Claude Sonnet 4.5, o-series, and more)
 - **Custom Provider Support**: Use local models (Ollama) or custom OpenAI-compatible APIs
 - **Real-time Streaming**: Get responses as they're generated
 - **CRISP-T CLI Integration**: Full access to all CRISP-T commands (crisp, crispt, crispviz)
@@ -75,11 +75,23 @@ crisp-ui --debug
 The left panel contains configuration options:
 
 #### 1. Model Selection
-Choose the AI model to use for your research assistant:
-- **GPT-5**: Latest OpenAI model with advanced reasoning
-- **GPT-4.1**: Improved GPT-4 with better context handling
-- **Claude Sonnet 4.5**: Anthropic's balanced model
-- **Claude Opus 4**: Anthropic's most capable model
+Choose the AI model to use for your research assistant. The Web UI dynamically loads all available models from the GitHub Copilot SDK, including:
+
+**GPT Models:**
+- GPT-5.2, GPT-5.1, GPT-5 (latest models with advanced reasoning)
+- GPT-5.1 Codex, GPT-5 Codex (optimized for code)
+- GPT-4.1, GPT-4o, GPT-4 (proven reliable models)
+- GPT-4o Mini (faster, cost-effective)
+
+**Claude Models:**
+- Claude Opus 4.6, Claude Opus 4 (most capable)
+- Claude Sonnet 4.5, 4, 3.5 (balanced performance)
+- Claude Haiku 3.5 (fast responses)
+
+**OpenAI o-series:**
+- o3-mini, o1-preview, o1-mini (specialized reasoning models)
+
+The available models depend on your GitHub Copilot subscription and may vary over time. The UI automatically fetches the current list of supported models from the Copilot SDK.
 
 #### 2. Data Source
 Specify the path to your research data:

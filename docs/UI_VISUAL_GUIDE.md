@@ -40,10 +40,12 @@ The Web UI consists of two main panels:
 The left panel contains:
 
 1. **Model Selection Dropdown**
-   - GPT-5 (default)
-   - GPT-4.1
-   - Claude Sonnet 4.5
-   - Claude Opus 4
+   - Dynamically populated with all available models from GitHub Copilot SDK
+   - Includes GPT-5.2, GPT-5.1, GPT-5, GPT-4.1, GPT-4o, and more
+   - Claude models: Opus 4.6, Opus 4, Sonnet 4.5, Sonnet 4, Sonnet 3.5, Haiku 3.5
+   - OpenAI o-series: o3-mini, o1-preview, o1-mini
+   - Models are loaded from the API or fallback to comprehensive list
+   - Available models depend on your GitHub Copilot subscription
 
 2. **Data Source Input**
    - Text field for path to data files

@@ -18,6 +18,8 @@ nav:
   - Semantic Search: SEMANTIC_SEARCH.md
   - GRAPH: GRAPH.md
   - TDABM: TDABM.md
+  - UI: UI_QUICKSTART.md
+  
 plugins:
   - search
   - mkdocstrings:
