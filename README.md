@@ -117,7 +117,7 @@ Browser-based interface powered by GitHub Copilot SDK.
 *   **Open browser to:** `http://127.0.0.1:5000`
 
 <p align="center">
-  <img src="https://private-user-images.githubusercontent.com/6259644/550438396-74b113fc-426d-4f50-a008-127b2bba8b92.png?jwt=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3NzEyNDYzMzUsIm5iZiI6MTc3MTI0NjAzNSwicGF0aCI6Ii82MjU5NjQ0LzU1MDQzODM5Ni03NGIxMTNmYy00MjZkLTRmNTAtYTAwOC0xMjdiMmJiYThiOTIucG5nP1gtQW16LUFsZ29yaXRobT1BV1M0LUhNQUMtU0hBMjU2JlgtQW16LUNyZWRlbnRpYWw9QUtJQVZDT0RZTFNBNTNQUUs0WkElMkYyMDI2MDIxNiUyRnVzLWVhc3QtMSUyRnMzJTJGYXdzNF9yZXF1ZXN0JlgtQW16LURhdGU9MjAyNjAyMTZUMTI0NzE1WiZYLUFtei1FeHBpcmVzPTMwMCZYLUFtei1TaWduYXR1cmU9OTg1MzdiNDhlZGUwNDhhMGI5NTNlNDMwYTc5NWNhYWMxNGIwNWM3YjZkNmVlNjc1YTE0NWU0ODRiMjQyNWQ2NyZYLUFtei1TaWduZWRIZWFkZXJzPWhvc3QifQ.QCPNkPg_4ge9Piei63HTZWBA1oAeaW7P1yjMY1QjZQc" />
+  <img src="https://github.com/dermatologist/crisp-t/blob/develop/notes/crisp-webui.jpg" />
 </p>
 
 **📖 See [Web UI Documentation](docs/ui.md) for detailed instructions.**
