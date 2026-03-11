@@ -36,7 +36,7 @@ from quart_cors import cors
 
 # Check if copilot SDK is available
 try:
-    from copilot import CopilotClient, define_tool
+    from copilot import CopilotClient, PermissionHandler, define_tool
     from pydantic import BaseModel, Field
 
     COPILOT_AVAILABLE = True
@@ -128,6 +128,7 @@ async def create_copilot_session(session_id: str, model: str, config: dict) -> d
         "model": model,
         "tools": [execute_crisp_command],
         "streaming": True,
+        "on_permission_request": PermissionHandler.approve_all,
     }
 
     # Add custom provider if specified
