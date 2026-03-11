@@ -29,14 +29,14 @@ Note: Migrated from Flask to Quart to resolve event loop issues with async opera
 import asyncio
 import subprocess
 from typing import Dict
-import requests
 
+import requests
 from quart import Quart, jsonify, render_template, request
 from quart_cors import cors
 
 # Check if copilot SDK is available
 try:
-    from copilot import CopilotClient, define_tool
+    from copilot import CopilotClient, PermissionHandler, define_tool
     from pydantic import BaseModel, Field
 
     COPILOT_AVAILABLE = True
@@ -128,6 +128,7 @@ async def create_copilot_session(session_id: str, model: str, config: dict) -> d
         "model": model,
         "tools": [execute_crisp_command],
         "streaming": True,
+        "on_permission_request": PermissionHandler.approve_all,
     }
 
     # Add custom provider if specified
@@ -155,7 +156,9 @@ async def create_copilot_session(session_id: str, model: str, config: dict) -> d
         "content": skill_content,
     }
     data_path = config.get("data_path", "./workspace")
-    system_message["content"] += f"\n\nAll data files should be read from and saved to the '{data_path}' directory. Create it if it does not exist."
+    system_message[
+        "content"
+    ] += f"\n\nAll data files should be read from and saved to the '{data_path}' directory. Create it if it does not exist."
     session_config["system_message"] = system_message
 
     # Note: Temperature and max_tokens are typically controlled at the provider/model level
@@ -163,7 +166,7 @@ async def create_copilot_session(session_id: str, model: str, config: dict) -> d
     # Future enhancement: Pass these to the provider configuration if supported
 
     # Create session
-    session = await client.create_session(session_config) # type: ignore
+    session = await client.create_session(session_config)  # type: ignore
 
     # Store message history
     messages = []
@@ -248,7 +251,7 @@ async def list_models():
         models = await client.list_models()
         await client.stop()
 
-        return jsonify({"models": [model["id"] for model in models]})
+        return jsonify({"models": [model.id for model in models]})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
