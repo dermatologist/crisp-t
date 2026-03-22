@@ -128,6 +128,37 @@ Browser-based interface powered by GitHub Copilot SDK.
 
 ---
 
+### 5. Microsoft Teams Bot (Integration)
+Run CRISP-T commands directly from a Microsoft Teams chat using the
+[Chat SDK](https://www.npmjs.com/package/chat) Teams adapter.
+
+```bash
+# 1. Install CRISP-T CLI tools
+pip install crisp-t
+
+# 2. Install the bot's Node.js dependencies
+cd src/crisp_t/integration
+npm install && npm run build
+
+# 3. Configure credentials (copy .env.example → .env and fill in values)
+cp .env.example .env
+
+# 4. Start the webhook server
+npm start
+```
+
+**In Teams:** @mention the bot or send a DM with a CRISP command:
+
+```
+@crisp-bot crisp --help
+@crisp-bot crispt load-corpus --path data/study.csv
+@crisp-bot crispviz --wordcloud --out results/
+```
+
+**📖 See [Teams Integration Documentation](docs/integration.md) for the full setup guide.**
+
+---
+
 ## 🤖 MCP Server (Agentic AI)
 
 CRISP-T includes a **Model Context Protocol (MCP)** server, allowing AI agents (like Claude Desktop) to interact directly with your data. If you have opened this repository in [VSCODE](https://code.visualstudio.com/docs/copilot/customization/mcp-servers) or [AntiGravity](https://antigravity.google/), you can start the MCP server using the [configuration file](/.vscode/mcp.json) provided. This [configuration file](/.vscode/mcp.json) provides the necessary details for configuring other AI coding platforms, such as [Claude Desktop](https://claude.ai/desktop) to connect to the CRISP-T MCP server as well.

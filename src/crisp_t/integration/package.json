@@ -1,0 +1,35 @@
+{
+  "name": "crisp-t-teams-integration",
+  "version": "1.0.0",
+  "description": "Microsoft Teams bot integration for CRISP-T qualitative research toolkit",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "ts-node src/index.ts",
+    "lint": "eslint src --ext .ts",
+    "test": "jest"
+  },
+  "keywords": ["crisp-t", "teams", "bot", "qualitative-research"],
+  "author": "Bell Eapen",
+  "license": "GPL-3.0",
+  "dependencies": {
+    "chat": "^1.0.0",
+    "@chat-adapter/teams": "^1.0.0",
+    "@chat-adapter/state-memory": "^1.0.0",
+    "dotenv": "^16.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0",
+    "ts-node": "^10.9.0",
+    "jest": "^29.0.0",
+    "@types/jest": "^29.0.0",
+    "ts-jest": "^29.0.0"
+  },
+  "jest": {
+    "preset": "ts-jest",
+    "testEnvironment": "node",
+    "testMatch": ["**/__tests__/**/*.ts", "**/*.test.ts"]
+  }
+}
