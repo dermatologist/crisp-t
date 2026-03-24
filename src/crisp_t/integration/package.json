@@ -1,0 +1,30 @@
+{
+  "name": "crisp-t-teams-bot",
+  "version": "1.0.0",
+  "description": "Microsoft Teams bot for CRISP-T using Chat SDK",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsx src/index.ts",
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@chat-adapter/state-memory": "^4.21.0",
+    "@chat-adapter/teams": "^4.21.0",
+    "axios": "^1.13.6",
+    "chat": "^4.21.0",
+    "express": "^5.2.1"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.3",
+    "@types/node": "^22.0.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "license": "GPL-3.0"
+}

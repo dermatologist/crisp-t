@@ -146,6 +146,49 @@ See usage #4 above.
 
 ---
 
+## 💬 Microsoft Teams Integration
+
+CRISP-T can be used directly from **Microsoft Teams** via a bot built with the [Chat SDK](https://www.npmjs.com/package/chat) (`@chat-adapter/teams`).
+
+### Quick start
+
+```bash
+# 1. Install the bot dependencies
+cd src/crisp_t/integration
+npm install && npm run build
+
+# 2. Start the crisp-ui server (in a separate terminal)
+crisp-ui
+
+# 3. Configure credentials (Azure Bot App ID and Password)
+cp .env.example .env
+# Edit .env and fill in TEAMS_APP_ID and TEAMS_APP_PASSWORD
+
+# 4. Start the Teams bot
+npm start
+```
+
+### Supported commands
+
+| Command | Description |
+|---------|-------------|
+| `@list` | List available AI models |
+| `@switch <model>` | Switch to a different AI model |
+| `@crisp <message>` | Send a message to CRISP-T |
+| `@clear` | Clear the current session |
+| `@help` | Show all commands |
+
+### Setup instructions
+
+1. Register an **Azure Bot** resource in the [Azure Portal](https://portal.azure.com).
+2. Enable the **Microsoft Teams** channel.
+3. Expose the bot webhook via [ngrok](https://ngrok.com) or a public server.
+4. Set the **Messaging endpoint** to `https://<your-domain>/api/messages`.
+
+**📖 Full setup guide: [docs/integration.md](docs/integration.md)**
+
+---
+
 ### Data model
 
 [![crisp-t](https://github.com/dermatologist/crisp-t/blob/develop/notes/arch.drawio.svg)](https://github.com/dermatologist/crisp-t/blob/develop/notes/arch.drawio.svg)
