@@ -1,9 +1,9 @@
 /**
- * CRISP-T Microsoft Teams Bot
+ * CRISP-T Chat Bot — Microsoft Teams + Slack
  *
- * This module implements a Microsoft Teams bot for CRISP-T using the Chat SDK
- * (@chat-adapter/teams). It bridges the Teams chat interface with the CRISP-T
- * web UI server (crisp-ui), letting researchers run analyses directly from Teams.
+ * This module implements a chat bot for CRISP-T using the Chat SDK.  It
+ * bridges both the Microsoft Teams and Slack interfaces with the CRISP-T web
+ * UI server (crisp-ui), letting researchers run analyses from either platform.
  *
  * Supported commands (mention the bot or use in DMs):
  *   @list / /list         — List available AI models
@@ -12,13 +12,17 @@
  *   @clear / /clear       — Clear the current CRISP-T session
  *   @help / /help         — Show available commands
  *
+ * Webhook endpoints:
+ *   POST /api/messages    — Microsoft Teams webhook
+ *   POST /slack/events    — Slack Events API webhook
+ *
  * Setup:
  *   1. Set environment variables (see .env.example)
  *   2. npm install && npm run build
  *   3. Start crisp-ui: crisp-ui (or let the bot attempt to start it)
  *   4. npm start
  *
- * @module crisp-t-teams-bot
+ * @module crisp-t-bot
  */
 
 import { spawn } from "child_process";
@@ -28,6 +32,7 @@ import { fileURLToPath } from "url";
 import axios, { AxiosError } from "axios";
 import { Chat } from "chat";
 import { createTeamsAdapter } from "@chat-adapter/teams";
+import { createSlackAdapter } from "@chat-adapter/slack";
 import { createMemoryState } from "@chat-adapter/state-memory";
 import express, { Request as ExpressRequest, Response as ExpressResponse } from "express";
 
@@ -41,10 +46,10 @@ const CRISP_UI_BASE_URL = process.env.CRISP_UI_URL ?? "http://127.0.0.1:5000";
 /** Default AI model for new sessions */
 const DEFAULT_MODEL = process.env.CRISP_DEFAULT_MODEL ?? "gpt-4.1";
 
-/** Unique session ID used for the Teams bot's CRISP-T session */
-const SESSION_ID = "teams-bot-session";
+/** Unique session ID used for the bot's CRISP-T session */
+const SESSION_ID = "crisp-bot-session";
 
-/** Port the Teams bot HTTP server listens on */
+/** Port the bot HTTP server listens on */
 const PORT = parseInt(process.env.PORT ?? "3978", 10);
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -254,10 +259,14 @@ export async function clearSession(): Promise<string> {
 
 /**
  * Return the help message listing all supported commands.
+ * @param platform - Optional platform name included in the header ('Teams' | 'Slack')
  */
-export function getHelpText(): string {
+export function getHelpText(platform?: string): string {
+  const header = platform
+    ? `**CRISP-T ${platform} Bot — available commands:**`
+    : "**CRISP-T Bot — available commands:**";
   return [
-    "**CRISP-T Teams Bot — available commands:**",
+    header,
     "",
     "• `@list` or `/list` — List available AI models",
     "• `@switch <model>` or `/switch <model>` — Switch to a different AI model",
@@ -304,9 +313,10 @@ function extractPayload(text: string, regex: RegExp): string | null {
  * All handler errors are caught and returned as user-visible error strings
  * (never thrown), so the caller can always post the returned string safely.
  *
- * @param rawText - The full text of the incoming message
+ * @param rawText  - The full text of the incoming message
+ * @param platform - Optional platform name for contextual help text ('Teams' | 'Slack')
  */
-export async function routeMessage(rawText: string): Promise<string | null> {
+export async function routeMessage(rawText: string, platform?: string): Promise<string | null> {
   // Normalise: strip Teams HTML tags and collapse whitespace
   const text = rawText
     .replace(/<[^>]+>/g, " ")
@@ -346,7 +356,7 @@ export async function routeMessage(rawText: string): Promise<string | null> {
 
     // ── @help / /help ─────────────────────────────────────────────────────
     if (/(?:^|[\s,])(?:@help|\/help)\b/i.test(lower)) {
-      return getHelpText();
+      return getHelpText(platform);
     }
   } catch (err) {
     const detail =
@@ -364,18 +374,43 @@ export async function routeMessage(rawText: string): Promise<string | null> {
 // Chat SDK bot setup
 // ─────────────────────────────────────────────────────────────────────────────
 
-/** The Chat SDK instance (created lazily so we can export for tests). */
+/** The Chat SDK instance — both Teams and Slack adapters registered. */
 export const bot = new Chat({
   userName: "crisp-t-bot",
   adapters: {
     teams: createTeamsAdapter(),
+    slack: createSlackAdapter(),
   },
   state: createMemoryState(),
 });
 
 /**
+ * Detect which platform a message originated from by inspecting the raw payload.
+ *
+ * - Teams (Azure Bot Framework) messages contain `channelId` or `serviceUrl`.
+ * - Slack messages contain an `event` wrapper or `team_id`.
+ *
+ * Returns a human-readable platform name for use in contextual help, or
+ * `undefined` if the platform cannot be determined.
+ */
+function detectPlatform(
+  message: Parameters<Parameters<typeof bot.onNewMention>[0]>[1],
+): string | undefined {
+  const raw = message.raw as Record<string, unknown> | undefined;
+  if (!raw) return undefined;
+  if (typeof raw["channelId"] === "string" || typeof raw["serviceUrl"] === "string") {
+    return "Teams";
+  }
+  if (typeof raw["event"] === "object" || typeof raw["team_id"] === "string") {
+    return "Slack";
+  }
+  return undefined;
+}
+
+/**
  * Shared handler for all incoming messages (mentions and DMs).
  * Checks crisp-ui health, routes the command, and posts the reply.
+ * The platform is detected dynamically from the raw message payload.
  */
 async function handleMessage(
   thread: Parameters<Parameters<typeof bot.onNewMention>[0]>[0],
@@ -395,9 +430,10 @@ async function handleMessage(
   }
 
   const rawText = message.text ?? "";
+  const platform = detectPlatform(message);
 
   try {
-    const reply = await routeMessage(rawText);
+    const reply = await routeMessage(rawText, platform);
 
     if (reply !== null) {
       await thread.post(reply);
@@ -408,12 +444,13 @@ async function handleMessage(
       err instanceof AxiosError
         ? `HTTP ${err.response?.status ?? "?"}: ${JSON.stringify(err.response?.data)}`
         : String(err);
-    console.error("[crisp-t-bot] Error handling message:", detail);
+    const platformLabel = platform ?? "bot";
+    console.error(`[crisp-t-bot][${platformLabel}] Error handling message:`, detail);
     await thread.post(`❌ An error occurred: ${detail}`);
   }
 }
 
-// Register event handlers
+// Register event handlers for both Teams and Slack
 bot.onNewMention(handleMessage);
 bot.onDirectMessage(handleMessage);
 
@@ -425,43 +462,67 @@ const app = express();
 app.use(express.json());
 
 /**
- * Teams webhook endpoint.
- *
- * The Chat SDK webhook handler uses the Web Fetch API (Request / Response).
- * Express provides Node.js-style req/res, so we bridge them here.
+ * Bridge a Web Fetch API Response back to an Express response.
+ */
+async function sendWebResponse(webResponse: Response, res: ExpressResponse): Promise<void> {
+  res.status(webResponse.status);
+  webResponse.headers.forEach((value: string, key: string) => {
+    res.setHeader(key, value);
+  });
+  const body = await webResponse.text();
+  res.send(body);
+}
+
+/**
+ * Build a Web Fetch API Request from an Express request.
+ * The Chat SDK webhook handlers require the standard Web Fetch Request type.
+ */
+function buildWebRequest(req: ExpressRequest): Request {
+  const url = `http://${req.headers.host ?? `localhost:${PORT}`}${req.url}`;
+  return new Request(url, {
+    method: req.method,
+    headers: Object.entries(req.headers).reduce<Record<string, string>>(
+      (acc, [key, value]) => {
+        if (value !== undefined) {
+          acc[key] = Array.isArray(value) ? value.join(", ") : value;
+        }
+        return acc;
+      },
+      {},
+    ),
+    body: JSON.stringify(req.body),
+  });
+}
+
+/**
+ * Microsoft Teams webhook endpoint.
+ * Receives activity payloads from the Azure Bot Service.
  */
 app.post(
   "/api/messages",
   async (req: ExpressRequest, res: ExpressResponse): Promise<void> => {
     try {
-      // Build a Web Fetch API Request from the Express request
-      const url = `http://${req.headers.host ?? `localhost:${PORT}`}${req.url}`;
-      const webRequest = new Request(url, {
-        method: req.method,
-        headers: Object.entries(req.headers).reduce<Record<string, string>>(
-          (acc, [key, value]) => {
-            if (value !== undefined) {
-              acc[key] = Array.isArray(value) ? value.join(", ") : value;
-            }
-            return acc;
-          },
-          {},
-        ),
-        body: JSON.stringify(req.body),
-      });
-
-      const webResponse = await bot.webhooks.teams(webRequest);
-
-      // Forward status and headers back to Express
-      res.status(webResponse.status);
-      webResponse.headers.forEach((value: string, key: string) => {
-        res.setHeader(key, value);
-      });
-
-      const responseBody = await webResponse.text();
-      res.send(responseBody);
+      const webResponse = await bot.webhooks.teams(buildWebRequest(req));
+      await sendWebResponse(webResponse, res);
     } catch (err) {
-      console.error("[crisp-t-bot] Webhook error:", err);
+      console.error("[crisp-t-bot] Teams webhook error:", err);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  },
+);
+
+/**
+ * Slack Events API webhook endpoint.
+ * Receives event payloads from the Slack Events API.
+ */
+app.post(
+  "/slack/events",
+  async (req: ExpressRequest, res: ExpressResponse): Promise<void> => {
+    try {
+      const webResponse = await bot.webhooks.slack(buildWebRequest(req));
+      await sendWebResponse(webResponse, res);
+    } catch (err) {
+      console.error("[crisp-t-bot] Slack webhook error:", err);
       res.status(500).json({ error: "Internal server error" });
     }
   },
@@ -477,16 +538,20 @@ app.get("/health", (_req: ExpressRequest, res: ExpressResponse): void => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * Start the Teams bot server and attempt to initialise the CRISP-T session.
+ * Start the bot server and attempt to initialise the CRISP-T session.
  * This function is the main entry point when the module is run directly.
  */
 export async function main(): Promise<http.Server> {
   return new Promise((resolve) => {
     const server = app.listen(PORT, async () => {
-      console.log(`[crisp-t-bot] Teams bot listening on port ${PORT}`);
-      console.log(`[crisp-t-bot] Webhook URL: http://localhost:${PORT}/api/messages`);
+      console.log(`[crisp-t-bot] Bot listening on port ${PORT}`);
+      console.log(`[crisp-t-bot] Teams webhook:  http://localhost:${PORT}/api/messages`);
+      console.log(`[crisp-t-bot] Slack webhook:  http://localhost:${PORT}/slack/events`);
       console.log(
-        "[crisp-t-bot] Register this URL in your Azure Bot registration as the messaging endpoint.",
+        "[crisp-t-bot] Register the Teams URL in your Azure Bot registration as the messaging endpoint.",
+      );
+      console.log(
+        "[crisp-t-bot] Register the Slack URL in your Slack App as the Events API Request URL.",
       );
 
       // Attempt to ensure crisp-ui is running and create an initial session

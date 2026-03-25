@@ -1,7 +1,7 @@
-"""Tests for the CRISP-T Microsoft Teams integration module.
+"""Tests for the CRISP-T Teams + Slack integration module.
 
-These tests are structural / unit-level and do not require a running Teams
-environment, a running crisp-ui server, or real Azure credentials.  They
+These tests are structural / unit-level and do not require a running Teams or
+Slack environment, a running crisp-ui server, or real credentials.  They
 validate:
 
 - File and directory structure of the integration package
@@ -9,6 +9,7 @@ validate:
 - Command routing logic (via subprocess calling Node)
 - Configuration and environment-variable defaults
 - package.json and tsconfig.json contents
+- Slack-specific source patterns and configuration
 """
 
 import json
@@ -27,6 +28,17 @@ INTEGRATION_DIR = (
     Path(__file__).parent.parent / "src" / "crisp_t" / "integration"
 )
 SRC_DIR = INTEGRATION_DIR / "src"
+
+# Minimal environment required to import the compiled bot without errors.
+# Includes both Teams (TEAMS_APP_ID / TEAMS_APP_PASSWORD) and Slack
+# (SLACK_BOT_TOKEN / SLACK_SIGNING_SECRET) credentials.
+_BOT_ENV = {
+    **os.environ,
+    "TEAMS_APP_ID": "test",
+    "TEAMS_APP_PASSWORD": "test",
+    "SLACK_BOT_TOKEN": "xoxb-test-token",
+    "SLACK_SIGNING_SECRET": "test-signing-secret",
+}
 
 
 def node_available() -> bool:
@@ -128,7 +140,7 @@ def test_compiled_index_js_exists():
 def test_package_json_name():
     """package.json must have the expected package name."""
     pkg = json.loads((INTEGRATION_DIR / "package.json").read_text())
-    assert pkg.get("name") == "crisp-t-teams-bot"
+    assert pkg.get("name") == "crisp-t-bot"
 
 
 def test_package_json_has_start_script():
@@ -234,6 +246,14 @@ def test_index_ts_imports_teams_adapter():
     )
 
 
+def test_index_ts_imports_slack_adapter():
+    """src/index.ts must import from '@chat-adapter/slack'."""
+    src = _read_index_ts()
+    assert "@chat-adapter/slack" in src, (
+        "src/index.ts does not import from '@chat-adapter/slack'"
+    )
+
+
 def test_index_ts_imports_state_memory():
     """src/index.ts must import from '@chat-adapter/state-memory'."""
     src = _read_index_ts()
@@ -334,6 +354,14 @@ def test_index_ts_has_webhook_route():
     )
 
 
+def test_index_ts_has_slack_webhook_route():
+    """src/index.ts must expose the Slack webhook endpoint /slack/events."""
+    src = _read_index_ts()
+    assert "/slack/events" in src, (
+        "src/index.ts does not define the /slack/events webhook endpoint"
+    )
+
+
 def test_index_ts_has_health_endpoint():
     """src/index.ts must expose a /health HTTP endpoint."""
     src = _read_index_ts()
@@ -347,6 +375,17 @@ def test_index_ts_exports_route_message():
     src = _read_index_ts()
     assert "export async function routeMessage" in src, (
         "src/index.ts does not export routeMessage"
+    )
+
+
+def test_index_ts_has_both_adapters_in_bot():
+    """src/index.ts must register both 'teams' and 'slack' in the Chat instance."""
+    src = _read_index_ts()
+    assert "teams: createTeamsAdapter" in src, (
+        "src/index.ts does not include the Teams adapter in the bot"
+    )
+    assert "slack: createSlackAdapter" in src, (
+        "src/index.ts does not include the Slack adapter in the bot"
     )
 
 
@@ -414,7 +453,7 @@ process.stdout.write(JSON.stringify({{ result }}) + '\\n');
         text=True,
         cwd=str(INTEGRATION_DIR),
         timeout=timeout,
-        env={**os.environ, "TEAMS_APP_ID": "test", "TEAMS_APP_PASSWORD": "test"},
+        env=_BOT_ENV,
     )
     # Find the last valid JSON line in stdout
     for line in reversed(run.stdout.strip().splitlines()):
@@ -506,6 +545,82 @@ def test_routing_slash_help_command():
     assert "crisp" in result.lower() or "@list" in result or "@crisp" in result
 
 
+@requires_node
+def test_routing_help_with_slack_platform():
+    """@help with 'Slack' platform should include 'Slack' in the header."""
+    script = """
+const { routeMessage } = await import('./dist/index.js');
+const result = await routeMessage('@help', 'Slack');
+process.stdout.write(JSON.stringify({ result }) + '\\n');
+"""
+    run = subprocess.run(
+        ["node", "--input-type=module"],
+        input=script,
+        capture_output=True,
+        text=True,
+        cwd=str(INTEGRATION_DIR),
+        timeout=15,
+        env=_BOT_ENV,
+    )
+    for line in reversed(run.stdout.strip().splitlines()):
+        try:
+            data = json.loads(line)
+            break
+        except json.JSONDecodeError:
+            continue
+    else:
+        data = {"output": run.stdout, "error": run.stderr}
+    assert "result" in data, f"Unexpected output: {data}"
+    result = data["result"]
+    assert result is not None
+    assert "Slack" in result or "crisp" in result.lower()
+
+
+@requires_node
+def test_routing_help_with_teams_platform():
+    """@help with 'Teams' platform should include 'Teams' in the header."""
+    script = """
+const { routeMessage } = await import('./dist/index.js');
+const result = await routeMessage('@help', 'Teams');
+process.stdout.write(JSON.stringify({ result }) + '\\n');
+"""
+    run = subprocess.run(
+        ["node", "--input-type=module"],
+        input=script,
+        capture_output=True,
+        text=True,
+        cwd=str(INTEGRATION_DIR),
+        timeout=15,
+        env=_BOT_ENV,
+    )
+    for line in reversed(run.stdout.strip().splitlines()):
+        try:
+            data = json.loads(line)
+            break
+        except json.JSONDecodeError:
+            continue
+    else:
+        data = {"output": run.stdout, "error": run.stderr}
+    assert "result" in data, f"Unexpected output: {data}"
+    result = data["result"]
+    assert result is not None
+    assert "Teams" in result or "crisp" in result.lower()
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# package.json Slack dependency tests
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+def test_package_json_slack_adapter_dependency():
+    """package.json must list '@chat-adapter/slack' as a dependency."""
+    pkg = json.loads((INTEGRATION_DIR / "package.json").read_text())
+    deps = pkg.get("dependencies", {})
+    assert "@chat-adapter/slack" in deps, (
+        "'@chat-adapter/slack' not found in dependencies"
+    )
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # .env.example content tests
 # ─────────────────────────────────────────────────────────────────────────────
@@ -521,6 +636,18 @@ def test_env_example_teams_app_password():
     """The .env.example must document TEAMS_APP_PASSWORD."""
     content = (INTEGRATION_DIR / ".env.example").read_text()
     assert "TEAMS_APP_PASSWORD" in content
+
+
+def test_env_example_slack_bot_token():
+    """The .env.example must document SLACK_BOT_TOKEN."""
+    content = (INTEGRATION_DIR / ".env.example").read_text()
+    assert "SLACK_BOT_TOKEN" in content
+
+
+def test_env_example_slack_signing_secret():
+    """The .env.example must document SLACK_SIGNING_SECRET."""
+    content = (INTEGRATION_DIR / ".env.example").read_text()
+    assert "SLACK_SIGNING_SECRET" in content
 
 
 def test_env_example_crisp_ui_url():

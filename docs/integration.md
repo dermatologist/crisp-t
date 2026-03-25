@@ -1,13 +1,15 @@
-# CRISP-T Microsoft Teams Integration
+# CRISP-T Chat Bot Integration — Microsoft Teams & Slack
 
-This guide explains how to set up and use the CRISP-T Microsoft Teams bot, which lets researchers interact with CRISP-T directly from Teams using natural-language commands.
+This guide explains how to set up and use the CRISP-T chat bot, which lets researchers interact with CRISP-T from **Microsoft Teams** and **Slack** using natural-language commands.
 
 ## Overview
 
-The Teams bot acts as a bridge between the Microsoft Teams interface and the CRISP-T web UI server (`crisp-ui`). It uses the [Chat SDK](https://github.com/nicholasgasior/chat-sdk) (`@chat-adapter/teams`) to handle Teams messages and forwards commands to the `crisp-ui` REST API.
+The bot acts as a bridge between Teams/Slack and the CRISP-T web UI server (`crisp-ui`). It uses the [Chat SDK](https://github.com/nicholasgasior/chat-sdk) (`@chat-adapter/teams` + `@chat-adapter/slack`) to handle messages from both platforms and forwards commands to the `crisp-ui` REST API.
 
 ```
-Teams User ──► Teams Chat ──► CRISP-T Bot (Node.js) ──► crisp-ui (Python) ──► CRISP-T Engine
+Teams User ──► Teams Chat  ──┐
+                               ├──► CRISP-T Bot (Node.js) ──► crisp-ui (Python) ──► CRISP-T Engine
+Slack User  ──► Slack Channel ─┘
 ```
 
 ---
@@ -20,8 +22,8 @@ Teams User ──► Teams Chat ──► CRISP-T Bot (Node.js) ──► crisp-
 | npm | ≥ 9 |
 | Python | ≥ 3.10 |
 | `crisp-t[copilot]` | latest |
-| Microsoft Azure account | — |
-| Microsoft Teams workspace | — |
+| Microsoft Azure account | *(for Teams)* |
+| Slack workspace with admin access | *(for Slack)* |
 
 ---
 
@@ -39,23 +41,25 @@ npm run build
 
 ```bash
 cp .env.example .env
-# Edit .env and fill in your Azure credentials
+# Edit .env and fill in your credentials
 ```
 
 Key variables:
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `TEAMS_APP_ID` | Microsoft App ID from Azure Bot registration | *(required)* |
-| `TEAMS_APP_PASSWORD` | Client secret from Azure App registration | *(required)* |
+| `TEAMS_APP_ID` | Microsoft App ID from Azure Bot registration | *(required for Teams)* |
+| `TEAMS_APP_PASSWORD` | Client secret from Azure App registration | *(required for Teams)* |
+| `SLACK_BOT_TOKEN` | Slack Bot User OAuth Token (`xoxb-...`) | *(required for Slack)* |
+| `SLACK_SIGNING_SECRET` | Slack App signing secret | *(required for Slack)* |
 | `TEAMS_APP_TENANT_ID` | Tenant ID (leave blank for multi-tenant) | *(optional)* |
 | `CRISP_UI_URL` | URL where `crisp-ui` is running | `http://127.0.0.1:5000` |
 | `CRISP_DEFAULT_MODEL` | Default AI model for new sessions | `gpt-4.1` |
-| `PORT` | Port the Teams bot webhook server listens on | `3978` |
+| `PORT` | Port the bot webhook server listens on | `3978` |
 
 ---
 
-## Azure Bot Registration
+## Microsoft Teams Setup
 
 ### Step 1 — Create an Azure Bot resource
 
@@ -89,6 +93,46 @@ Once your bot is reachable from the internet (see [Exposing the bot](#exposing-t
 2. Set the **Messaging endpoint** to `https://<your-public-domain>/api/messages`.
 3. Save.
 
+### Step 5 — Add the bot to a Teams workspace
+
+1. In the Azure Bot resource, select **Channels → Microsoft Teams → Open in Teams**.
+2. In Teams, click **Add** to install the bot.
+3. You can now @-mention the bot in any channel or chat with it directly.
+
+---
+
+## Slack Setup
+
+### Step 1 — Create a Slack App
+
+1. Go to [api.slack.com/apps](https://api.slack.com/apps) and click **Create New App**.
+2. Select **From scratch**, give it a name (e.g., `crisp-t-bot`) and choose your workspace.
+
+### Step 2 — Configure permissions
+
+1. Under **OAuth & Permissions**, add the following **Bot Token Scopes**:
+   - `app_mentions:read`
+   - `chat:write`
+   - `im:history`
+   - `im:read`
+   - `im:write`
+2. Click **Install to Workspace** and copy the **Bot User OAuth Token** → set as `SLACK_BOT_TOKEN`.
+
+### Step 3 — Record the signing secret
+
+1. Under **Basic Information**, find the **Signing Secret** → set as `SLACK_SIGNING_SECRET`.
+
+### Step 4 — Enable Events API
+
+Once your bot is reachable from the internet (see [Exposing the bot](#exposing-the-bot-with-ngrok)):
+
+1. Under **Event Subscriptions**, toggle **Enable Events** on.
+2. Set the **Request URL** to `https://<your-public-domain>/slack/events`.
+3. Under **Subscribe to bot events**, add:
+   - `app_mention`
+   - `message.im`
+4. Save changes and reinstall the app if prompted.
+
 ---
 
 ## Running the Bot
@@ -102,7 +146,7 @@ crisp-ui
 
 The bot will also attempt to auto-start `crisp-ui` on startup if it is not detected, but it is more reliable to start it manually.
 
-### Start the Teams bot
+### Start the bot
 
 ```bash
 cd src/crisp_t/integration
@@ -112,8 +156,9 @@ npm start
 You should see:
 
 ```
-[crisp-t-bot] Teams bot listening on port 3978
-[crisp-t-bot] Webhook URL: http://localhost:3978/api/messages
+[crisp-t-bot] Bot listening on port 3978
+[crisp-t-bot] Teams webhook:  http://localhost:3978/api/messages
+[crisp-t-bot] Slack webhook:  http://localhost:3978/slack/events
 [crisp-t-bot] CRISP-T session ready (model: gpt-4.1)
 ```
 
@@ -127,25 +172,20 @@ During development you can use [ngrok](https://ngrok.com) to create a public tun
 ngrok http 3978
 ```
 
-Copy the `https://` forwarding URL and paste it as the **Messaging endpoint** in the Azure Bot **Configuration** page (append `/api/messages`):
+Copy the `https://` forwarding URL and use it for both platforms:
+- **Teams**: append `/api/messages` → paste as Azure Bot **Messaging endpoint**
+- **Slack**: append `/slack/events` → paste as Slack App **Request URL**
 
 ```
-https://abc123.ngrok.io/api/messages
+https://abc123.ngrok.io/api/messages   # Teams
+https://abc123.ngrok.io/slack/events   # Slack
 ```
-
----
-
-## Adding the Bot to a Teams Workspace
-
-1. In the Azure Bot resource, select **Channels → Microsoft Teams → Open in Teams**.
-2. In Teams, click **Add** to install the bot.
-3. You can now @-mention the bot in any channel or chat with it directly.
 
 ---
 
 ## Available Commands
 
-Commands can be used in any Teams channel (by @-mentioning the bot) or in a direct message (DM) conversation.
+Commands work in Teams channels (via @-mention), Teams DMs, Slack channels (via @-mention), and Slack DMs.
 
 | Command | Description |
 |---------|-------------|
@@ -163,8 +203,14 @@ Commands can be used in any Teams channel (by @-mentioning the bot) or in a dire
 
 ### List available models
 
+Teams:
 ```
 @crisp-t-bot @list
+```
+
+Slack:
+```
+@crisp-t-bot /list
 ```
 
 Response:
@@ -257,8 +303,8 @@ src/crisp_t/integration/
 | `switchModel(name)` | Destroys session and recreates with new model |
 | `sendCrispMessage(msg)` | Sends a message and polls for the reply |
 | `clearSession()` | Alias for `destroySession()` with a friendly message |
-| `getHelpText()` | Returns the formatted help string |
-| `routeMessage(text)` | Top-level router; returns `null` for ignored messages |
+| `getHelpText(platform?)` | Returns formatted help (includes platform name if given) |
+| `routeMessage(text, platform?)` | Top-level router; returns `null` for ignored messages |
 | `main()` | Starts the Express server and initialises the session |
 
 ---
@@ -289,6 +335,12 @@ curl http://localhost:3978/health
 - Check that `TEAMS_APP_ID` and `TEAMS_APP_PASSWORD` are correct.
 - Inspect the bot's console output for errors.
 
+### Bot does not respond in Slack
+
+- Verify the **Request URL** in the Slack App **Event Subscriptions** is correct and publicly accessible.
+- Check that `SLACK_BOT_TOKEN` and `SLACK_SIGNING_SECRET` are correct.
+- Ensure the app is reinstalled in the workspace after any permission changes.
+
 ### "CRISP-T server is not running"
 
 - Start `crisp-ui` manually in a separate terminal:
@@ -312,4 +364,5 @@ curl http://localhost:3978/health
 - Never commit your `.env` file.
 - Use short-lived client secrets and rotate them regularly.
 - Restrict `TEAMS_APP_TENANT_ID` to your organisation's tenant in production.
+- Store Slack tokens securely and rotate them if compromised.
 - For production, use Redis (`@chat-adapter/state-redis`) instead of in-memory state.

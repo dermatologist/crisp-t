@@ -1,7 +1,7 @@
 {
-  "name": "crisp-t-teams-bot",
+  "name": "crisp-t-bot",
   "version": "1.0.0",
-  "description": "Microsoft Teams bot for CRISP-T using Chat SDK",
+  "description": "Microsoft Teams and Slack bot for CRISP-T using Chat SDK",
   "type": "module",
   "main": "dist/index.js",
   "scripts": {
@@ -11,6 +11,7 @@
     "lint": "tsc --noEmit"
   },
   "dependencies": {
+    "@chat-adapter/slack": "^4.22.0",
     "@chat-adapter/state-memory": "^4.21.0",
     "@chat-adapter/teams": "^4.21.0",
     "axios": "^1.13.6",

@@ -1,4 +1,4 @@
-# CRISP-T Microsoft Teams Integration — Notes
+# CRISP-T Chat Bot Integration — Notes
 
 ## Design Decisions
 
@@ -6,20 +6,26 @@
 The integration uses `@chat-adapter/state-memory` for simplicity and zero-dependency setup.  In a production deployment with multiple bot instances or across restarts, replace it with `@chat-adapter/state-redis` (or another persistent state adapter) so subscribed threads survive process restarts.
 
 ### Single-session model
-The current implementation uses a single, shared CRISP-T session (`teams-bot-session`) for all Teams users.  This is appropriate for small research teams where all users share the same analysis context.  A future enhancement could create per-user or per-thread sessions keyed by Teams user ID or conversation ID.
+The current implementation uses a single, shared CRISP-T session (`crisp-bot-session`) for all users across both Teams and Slack.  This is appropriate for small research teams where all users share the same analysis context.  A future enhancement could create per-user or per-thread sessions keyed by platform user ID or conversation ID.
+
+### Platform-aware help text
+The `getHelpText(platform?)` function accepts an optional platform name (`'Teams'` or `'Slack'`).  When provided, the help header includes the platform name (e.g., "CRISP-T Slack Bot — available commands").  The `routeMessage(text, platform?)` function passes this through so users see contextual help.
 
 ### Polling for responses
 After sending a message to `crisp-ui`, the bot polls the `/api/session/<id>/messages` endpoint in 1-second intervals for up to 30 seconds.  This is a practical workaround because the `crisp-ui` REST API does not yet expose Server-Sent Events or WebSockets for real-time streaming.  Future versions could adopt streaming once the API supports it.
 
 ### Express + Web Fetch API bridging
-The Chat SDK webhook handler uses the standard Web Fetch API (`Request`/`Response`).  The bot uses Express for the HTTP server and manually converts between Express's Node.js-style `req`/`res` and the Web Fetch API types.  This is a widely-used compatibility pattern that avoids introducing additional dependencies (e.g., Hono).
+The Chat SDK webhook handlers use the standard Web Fetch API (`Request`/`Response`).  The bot uses Express for the HTTP server and converts between Express's Node.js-style `req`/`res` and the Web Fetch API types via two small helper functions (`buildWebRequest` / `sendWebResponse`).  This pattern avoids introducing additional HTTP framework dependencies.
+
+### Shared webhook server
+Both the Teams and Slack webhooks are served from the same Express process on the same port.  Teams uses `POST /api/messages` and Slack uses `POST /slack/events`.  This simplifies deployment and reduces the number of processes to manage.
 
 ---
 
 ## Future Plans
 
 ### Per-user / per-thread sessions
-Allow each Teams user (or conversation thread) to maintain an independent CRISP-T session so that multiple researchers can work simultaneously without sharing context.
+Allow each user (or conversation thread) to maintain an independent CRISP-T session so that multiple researchers can work simultaneously without sharing context.  Session IDs could be derived from the platform-specific user ID or conversation ID.
 
 ### Streaming responses
 Integrate with Chat SDK's streaming API (`thread.stream()`) once the `crisp-ui` backend exposes real-time streaming.  This will give users incremental feedback instead of waiting for the full response.
@@ -28,16 +34,16 @@ Integrate with Chat SDK's streaming API (`thread.stream()`) once the `crisp-ui` 
 Switch to `@chat-adapter/state-redis` for production deployments to persist thread subscriptions across bot restarts.
 
 ### Slash command support
-Register Teams slash commands (`/crisp`, `/list`, etc.) via the Azure Bot manifest so users get auto-complete suggestions and inline help.
+Register platform-specific slash commands (`/crisp`, `/list`, etc.) via the Azure Bot manifest (Teams) and Slack manifest so users get auto-complete suggestions and inline help.
 
-### Adaptive Cards
-Use Chat SDK JSX cards (`<Card>`, `<Actions>`, etc.) to render CRISP-T results as rich Adaptive Cards with buttons for common follow-up actions (e.g., "Analyse topics", "Run regression", "Save corpus").
+### Adaptive Cards (Teams) and Block Kit (Slack)
+Use Chat SDK JSX cards (`<Card>`, `<Actions>`, etc.) to render CRISP-T results as rich interactive messages with buttons for common follow-up actions (e.g., "Analyse topics", "Run regression", "Save corpus").
 
-### Multi-channel support
-The Chat SDK makes it trivial to extend the bot to additional platforms.  Adding Slack support, for example, only requires importing `createSlackAdapter` and providing the Slack credentials — the same event handlers work unchanged.
+### Additional platforms
+The Chat SDK makes it trivial to extend the bot further.  Adding Google Chat, Discord, or Telegram support only requires importing the corresponding adapter and providing credentials — the same `routeMessage` logic works unchanged.
 
 ### Authentication
-Integrate Azure Active Directory (AAD) authentication to ensure only authorised users can interact with the bot and run CRISP-T analyses.
+Integrate Azure Active Directory (AAD) authentication for Teams and Slack OAuth for Slack to ensure only authorised users can interact with the bot and run CRISP-T analyses.
 
 ### Deployment
 Document and automate deployment to Azure App Service, Azure Container Apps, or a Docker container for production use.
