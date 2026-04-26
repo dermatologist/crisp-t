@@ -154,7 +154,7 @@ CRISP-T can be used directly from **Microsoft Teams** and **Slack** via a bot bu
 
 ```bash
 # 1. Install the bot dependencies
-cd src/crisp_t/integration
+cd integration
 npm install && npm run build
 
 # 2. Start the crisp-ui server (in a separate terminal)

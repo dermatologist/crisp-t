@@ -32,7 +32,7 @@ Slack User  ──► Slack Channel ─┘
 ### 1. Install the CRISP-T bot dependencies
 
 ```bash
-cd src/crisp_t/integration
+cd integration
 npm install
 npm run build
 ```
@@ -149,7 +149,7 @@ The bot will also attempt to auto-start `crisp-ui` on startup if it is not detec
 ### Start the bot
 
 ```bash
-cd src/crisp_t/integration
+cd integration
 npm start
 ```
 
@@ -280,7 +280,7 @@ Response:
 ## Architecture
 
 ```
-src/crisp_t/integration/
+integration/
 ├── src/
 │   └── index.ts          # Main bot logic (Chat SDK + Express)
 ├── dist/                 # Compiled JavaScript (auto-generated)

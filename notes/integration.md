@@ -53,20 +53,17 @@ Document and automate deployment to Azure App Service, Azure Container Apps, or 
 ## Development Notes
 
 ### Running tests
-```bash
-# From the repository root
-pytest tests/test_integration.py -v
-```
+No dedicated Python integration test file is maintained for this Node.js project. Validate by type-checking and building the Node project:
 
 ### Type-checking without building
 ```bash
-cd src/crisp_t/integration
+cd integration
 npx tsc --noEmit
 ```
 
 ### Rebuilding after code changes
 ```bash
-cd src/crisp_t/integration
+cd integration
 npm run build
 ```
 

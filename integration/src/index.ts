@@ -52,6 +52,16 @@ const SESSION_ID = "crisp-bot-session";
 /** Port the bot HTTP server listens on */
 const PORT = parseInt(process.env.PORT ?? "3978", 10);
 
+/** Assistant-response polling settings (30 x 1s = ~30s max). */
+const RESPONSE_POLL_MAX_ATTEMPTS = parseInt(
+  process.env.CRISP_RESPONSE_POLL_MAX_ATTEMPTS ?? "30",
+  10,
+);
+const RESPONSE_POLL_DELAY_MS = parseInt(
+  process.env.CRISP_RESPONSE_POLL_DELAY_MS ?? "1000",
+  10,
+);
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Session state
 // ─────────────────────────────────────────────────────────────────────────────
@@ -222,10 +232,8 @@ export async function sendCrispMessage(message: string): Promise<string> {
   });
 
   // Poll for the assistant response (up to ~30 s)
-  const maxAttempts = 30;
-  const delayMs = 1000;
-  for (let i = 0; i < maxAttempts; i++) {
-    await sleep(delayMs);
+  for (let i = 0; i < RESPONSE_POLL_MAX_ATTEMPTS; i++) {
+    await sleep(RESPONSE_POLL_DELAY_MS);
 
     const resp = await axios.get(
       `${CRISP_UI_BASE_URL}/api/session/${SESSION_ID}/messages`,
@@ -295,6 +303,32 @@ function sleep(ms: number): Promise<void> {
 }
 
 /**
+ * Remove HTML tags from incoming message text using a linear scan.
+ *
+ * This avoids regex backtracking issues on adversarial inputs and keeps
+ * normalization predictable for platform-provided message payloads.
+ */
+function stripHtmlTags(text: string): string {
+  let out = "";
+  let inTag = false;
+  for (const ch of text) {
+    if (ch === "<") {
+      inTag = true;
+      out += " ";
+      continue;
+    }
+    if (ch === ">") {
+      inTag = false;
+      continue;
+    }
+    if (!inTag) {
+      out += ch;
+    }
+  }
+  return out;
+}
+
+/**
  * Extract the text after a command prefix from a raw message string.
  * Returns null if the pattern is not found.
  *
@@ -318,10 +352,7 @@ function extractPayload(text: string, regex: RegExp): string | null {
  */
 export async function routeMessage(rawText: string, platform?: string): Promise<string | null> {
   // Normalise: strip Teams HTML tags and collapse whitespace
-  const text = rawText
-    .replace(/<[^>]+>/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
+  const text = stripHtmlTags(rawText).replace(/\s+/g, " ").trim();
 
   const lower = text.toLowerCase();
 

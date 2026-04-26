@@ -214,6 +214,6 @@ marimo/_static/
 marimo/_lsp/
 __marimo__/
 
-# Microsoft Teams Integration (Node.js)
-src/crisp_t/integration/node_modules/
-src/crisp_t/integration/dist/
+# Teams/Slack Integration (Node.js)
+integration/node_modules/
+integration/dist/
