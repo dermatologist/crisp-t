@@ -146,52 +146,9 @@ See usage #4 above.
 
 ---
 
-## 💬 Teams & Slack Integration
+## 💬 Teams & Slack Integration (WIP)
 
 CRISP-T can be used directly from **Microsoft Teams** and **Slack** via a bot built with the [Chat SDK](https://www.npmjs.com/package/chat) (`@chat-adapter/teams` + `@chat-adapter/slack`).
-
-### Quick start
-
-```bash
-# 1. Install the bot dependencies
-cd integration
-npm install && npm run build
-
-# 2. Start the crisp-ui server (in a separate terminal)
-crisp-ui
-
-# 3. Configure credentials
-cp .env.example .env
-# Edit .env:
-#   Teams: fill in TEAMS_APP_ID and TEAMS_APP_PASSWORD
-#   Slack:  fill in SLACK_BOT_TOKEN and SLACK_SIGNING_SECRET
-
-# 4. Start the bot (serves both Teams and Slack from one process)
-npm start
-```
-
-### Supported commands
-
-| Command | Description |
-|---------|-------------|
-| `@list` | List available AI models |
-| `@switch <model>` | Switch to a different AI model |
-| `@crisp <message>` | Send a message to CRISP-T |
-| `@clear` | Clear the current session |
-| `@help` | Show all commands |
-
-### Setup instructions
-
-**Teams:**
-1. Register an **Azure Bot** resource in the [Azure Portal](https://portal.azure.com).
-2. Enable the **Microsoft Teams** channel.
-3. Expose the bot webhook via [ngrok](https://ngrok.com) or a public server.
-4. Set the **Messaging endpoint** to `https://<your-domain>/api/messages`.
-
-**Slack:**
-1. Create a [Slack App](https://api.slack.com/apps) and add bot scopes (`app_mentions:read`, `chat:write`, `im:history`).
-2. Copy the **Bot Token** and **Signing Secret** into `.env`.
-3. Enable **Event Subscriptions** and set the Request URL to `https://<your-domain>/slack/events`.
 
 **📖 Full setup guide: [docs/integration.md](docs/integration.md)**
 
