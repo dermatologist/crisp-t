@@ -146,6 +146,14 @@ See usage #4 above.
 
 ---
 
+## 💬 Teams & Slack Integration (WIP)
+
+CRISP-T can be used directly from **Microsoft Teams** and **Slack** via a bot built with the [Chat SDK](https://www.npmjs.com/package/chat) (`@chat-adapter/teams` + `@chat-adapter/slack`).
+
+**📖 Full setup guide: [docs/integration.md](docs/integration.md)**
+
+---
+
 ### Data model
 
 [![crisp-t](https://github.com/dermatologist/crisp-t/blob/develop/notes/arch.drawio.svg)](https://github.com/dermatologist/crisp-t/blob/develop/notes/arch.drawio.svg)
