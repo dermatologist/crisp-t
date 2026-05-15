@@ -24,6 +24,7 @@
 
 ## 🤖 New Vibe analytics UI using GitHub Copilot SDK!
 * scroll 👇 for details
+* [What’s Brewing in the Repo ☕](https://github.com/dermatologist/crisp-t/wiki/What%E2%80%99s-Brewing:-Agent-Harness)
 
 ## 👩 Human Workflow
 👉 **[CLI Cheatsheet](docs/cheatsheet.md)** | **[Demo & Examples](docs/DEMO.md)** | **[Documentation](https://dermatologist.github.io/crisp-t/)**
