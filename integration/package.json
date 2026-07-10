@@ -14,7 +14,7 @@
     "@chat-adapter/slack": "^4.22.0",
     "@chat-adapter/state-memory": "^4.21.0",
     "@chat-adapter/teams": "^4.21.0",
-    "axios": "^1.15.2",
+    "axios": "^1.18.1",
     "chat": "^4.21.0",
     "express": "^5.2.1"
   },
