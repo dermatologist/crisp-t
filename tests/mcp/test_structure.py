@@ -8,30 +8,29 @@ import sys
 
 
 def test_server_module_structure():
+    """Test that the server module has the required structure."""
     # Only run in GitHub Actions due to hardcoded paths
     if not os.environ.get("GITHUB_ACTIONS"):
         print(
             "Skipping test_server_module_structure: Only runs in GitHub Actions due to hardcoded paths."
         )
-        return True
-    """Test that the server module has the required structure."""
+        return
+
     # Determine the correct home directory prefix based on OS
     import platform
 
     system = platform.system()
-    if system == "Windows":
-        return True
-    elif system == "Darwin":
-        return True
-    else:
-        prefix = "/home/runner/work/crisp-t/crisp-t"
+    if system == "Windows" or system == "Darwin":
+        return
+
+    prefix = "/home/runner/work/crisp-t/crisp-t"
     server_path = f"{prefix}/src/crisp_t/mcp/server.py"
     # Import the server module
     spec = importlib.util.spec_from_file_location(
         "crisp_t.mcp.server",
         server_path,
     )
-    server_module = importlib.util.module_from_spec(spec) # type: ignore
+    server_module = importlib.util.module_from_spec(spec)  # type: ignore
 
     # Check that it would define the expected functions if mcp was available
     # This is a basic smoke test
@@ -40,17 +39,26 @@ def test_server_module_structure():
     with open(server_path, "r") as f:
         content = f.read()
 
-    # Check for required decorators and functions
-    assert "@app.list_tools()" in content
-    assert "@app.call_tool()" in content
-    assert "@app.list_resources()" in content
-    assert "@app.read_resource()" in content
-    assert "@app.list_prompts()" in content
-    assert "@app.get_prompt()" in content
+    # Check for required handler functions and Server configuration
+    # The server uses constructor pattern: Server(name, on_list_tools=..., etc.)
+    assert "handle_list_tools" in content
+    assert "handle_call_tool" in content
+    assert "handle_list_resources" in content
+    assert "handle_read_resource" in content
+    assert "handle_list_prompts" in content
+    assert "handle_get_prompt" in content
+
+    # Check that Server is configured with handlers
+    assert "on_list_tools=handle_list_tools" in content
+    assert "on_call_tool=handle_call_tool" in content
+    assert "on_list_resources=handle_list_resources" in content
+    assert "on_read_resource=handle_read_resource" in content
+    assert "on_list_prompts=handle_list_prompts" in content
+    assert "on_get_prompt=handle_get_prompt" in content
 
     # Check for modular tool imports
     assert "from .tools import get_all_tools, handle_tool_call" in content
-    
+
     # Check that server.py uses the modular approach
     assert "get_all_tools()" in content
     assert "handle_tool_call(" in content
@@ -136,12 +144,12 @@ def test_tool_modules_exist():
         return True
     else:
         prefix = "/home/runner/work/crisp-t/crisp-t"
-    
+
     tools_dir = f"{prefix}/src/crisp_t/mcp/tools"
-    
+
     # Check that tools directory exists
     assert os.path.exists(tools_dir), f"Tools directory not found: {tools_dir}"
-    
+
     # Check for expected tool modules
     expected_modules = [
         "corpus_management.py",
@@ -156,26 +164,26 @@ def test_tool_modules_exist():
         "embedding_linking.py",
         "misc_tools.py",
     ]
-    
+
     for module in expected_modules:
         module_path = os.path.join(tools_dir, module)
         assert os.path.exists(module_path), f"Tool module not found: {module_path}"
-        
+
         # Check that each module has required functions
         with open(module_path, "r") as f:
             content = f.read()
             assert "def get_" in content, f"Module {module} missing get_ function"
             assert "def handle_" in content, f"Module {module} missing handle_ function"
-    
+
     # Check tools/__init__.py
     init_path = os.path.join(tools_dir, "__init__.py")
     assert os.path.exists(init_path), f"Tools __init__.py not found"
-    
+
     with open(init_path, "r") as f:
         content = f.read()
         assert "def get_all_tools()" in content
         assert "def handle_tool_call(" in content
-    
+
     print("✓ All tool modules exist and have correct structure")
     return True
 
