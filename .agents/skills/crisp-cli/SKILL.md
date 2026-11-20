@@ -29,11 +29,6 @@ This skill enables agents to perform qualitative mixed data (text and numeric) r
 - If source CSVs live in `./downloads`, import from `./downloads` but write all generated artifacts to `workspace/`.
 - Existing files may be reused; inspect their names before overwriting them.
 
-```bash
-mkdir -p workspace/reports workspace/visualizations
-uv run crisp --source downloads --unstructured review --out workspace/corpus
-```
-
 Before running analyses, internalize the options for the active command:
 
 ```bash
