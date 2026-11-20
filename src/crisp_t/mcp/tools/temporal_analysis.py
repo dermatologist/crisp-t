@@ -40,7 +40,7 @@ def get_temporal_analysis_tools() -> list[Tool]:
             Workflow: Ensure documents have doc.time field → temporal_link_by_time(method='sequence', period='W') → get_relationships to validate links → Analyze text+numeric patterns over time.
             Tip: Use temporal_sentiment_trend after linking to see sentiment evolution.
             """,
-            inputSchema={
+            input_schema={
                 "type": "object",
                 "properties": {
                     "method": {
@@ -80,7 +80,7 @@ def get_temporal_analysis_tools() -> list[Tool]:
 
             Returns: Filtered corpus with documents/rows only in time range. Use temporal_sentiment_trend or temporal_topics after filtering.
             """,
-            inputSchema={
+            input_schema={
                 "type": "object",
                 "properties": {
                     "start_time": {
@@ -117,7 +117,7 @@ def get_temporal_analysis_tools() -> list[Tool]:
             Workflow: temporal_summary(period='W') to see overall pattern → temporal_filter to zoom into interesting period → temporal_sentiment_trend to analyze mood.
             Tip: If too sparse, try longer period (M instead of W). If too aggregated, try shorter (W instead of M).
             """,
-            inputSchema={
+            input_schema={
                 "type": "object",
                 "properties": {
                     "period": {
@@ -139,7 +139,7 @@ def get_temporal_analysis_tools() -> list[Tool]:
             Analyze sentiment trends over time. Requires documents to have sentiment metadata.
             Returns aggregated sentiment scores per time period.
             """,
-            inputSchema={
+            input_schema={
                 "type": "object",
                 "properties": {
                     "period": {
@@ -161,7 +161,7 @@ def get_temporal_analysis_tools() -> list[Tool]:
             Extract topics over time periods. Shows how topics evolve and change over time.
             Works best with documents that have topic metadata from topic modeling.
             """,
-            inputSchema={
+            input_schema={
                 "type": "object",
                 "properties": {
                     "period": {

@@ -40,7 +40,7 @@ def get_embedding_linking_tools() -> list[Tool]:
             Compare to: temporal_link_by_time (uses timestamps), filter_documents (uses metadata/links).
             Tip: Start with top_k=1 and adjust based on results. Higher threshold=stricter matching.
             """,
-            inputSchema={
+            input_schema={
                 "type": "object",
                 "properties": {
                     "similarity_metric": {
@@ -75,7 +75,7 @@ def get_embedding_linking_tools() -> list[Tool]:
             Workflow: embedding_link(...) → embedding_link_stats → review statistics → if poor quality, re-run with different threshold/top_k → get_relationships for detailed links.
             Tip: Average similarity scores show link quality (0.7+ = good semantic alignment).
             """,
-            inputSchema={
+            input_schema={
                 "type": "object",
                 "properties": {},
             },

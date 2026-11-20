@@ -41,7 +41,7 @@ def get_data_analysis_tools() -> list[Tool]:
             Workflow: get_df_columns → select numeric columns → compute_correlation → find_significant_correlations to filter.
             Tip: Use threshold parameter to show only correlations above certain strength (e.g., 0.5 for moderate+).
             """,
-            inputSchema={
+            input_schema={
                 "type": "object",
                 "properties": {
                     "columns": {
@@ -75,7 +75,7 @@ def get_data_analysis_tools() -> list[Tool]:
             add_relationship to document findings.
             Tip: Start with threshold=0.5 (moderate correlation), increase to 0.7-0.8 for strong relationships only.
             """,
-            inputSchema={
+            input_schema={
                 "type": "object",
                 "properties": {
                     "columns": {
@@ -116,7 +116,7 @@ def get_data_analysis_tools() -> list[Tool]:
             Workflow: Explore data → construct query → execute_query → save_result if needed.
             Tip: Use save_result=true to persist query results in corpus DataFrame.
             """,
-            inputSchema={
+            input_schema={
                 "type": "object",
                 "properties": {
                     "query": {
@@ -145,7 +145,7 @@ def get_data_analysis_tools() -> list[Tool]:
             use insights to decide on preprocessing steps.
             Tip: Compare statistics before/after transformations to verify expected changes.
             """,
-            inputSchema={
+            input_schema={
                 "type": "object",
                 "properties": {
                     "columns": {
@@ -168,7 +168,7 @@ def get_data_analysis_tools() -> list[Tool]:
             decide encoding approach (one-hot for low cardinality, target encoding for high).
             Tip: Columns with >50% unique values may need special handling or should be treated as continuous.
             """,
-            inputSchema={
+            input_schema={
                 "type": "object",
                 "properties": {
                     "columns": {

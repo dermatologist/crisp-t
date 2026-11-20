@@ -43,7 +43,7 @@ def get_nlp_analysis_tools() -> list[Tool]:
 
             Workflow: Usually second step after load_corpus for understanding corpus structure.
             """,
-            inputSchema={
+            input_schema={
                 "type": "object",
                 "properties": {
                     "num": {
@@ -90,7 +90,7 @@ def get_nlp_analysis_tools() -> list[Tool]:
             3. Use assign_topics to assign documents to topics
             4. Add relationships linking topics to numeric outcomes
             """,
-            inputSchema={
+            input_schema={
                 "type": "object",
                 "properties": {
                     "num_topics": {
@@ -125,7 +125,7 @@ def get_nlp_analysis_tools() -> list[Tool]:
 
             Tip: Check topic keywords from topic_modeling before assigning to ensure they're meaningful.
             """,
-            inputSchema={
+            input_schema={
                 "type": "object",
                 "properties": {
                     "num_topics": {
@@ -151,7 +151,7 @@ def get_nlp_analysis_tools() -> list[Tool]:
             - extract_categories: Faster, corpus-level only, simpler interpretation
             - topic_modeling: Probabilistic, document-level mapping possible
             """,
-            inputSchema={
+            input_schema={
                 "type": "object",
                 "properties": {
                     "num": {
@@ -178,7 +178,7 @@ def get_nlp_analysis_tools() -> list[Tool]:
 
             Note: This is extractive (using original sentences), not generative (creating new text).
             """,
-            inputSchema={
+            input_schema={
                 "type": "object",
                 "properties": {
                     "weight": {
@@ -211,7 +211,7 @@ def get_nlp_analysis_tools() -> list[Tool]:
 
             Tip: For more rigorous NLP, combine with topic_modeling for aspect-based sentiment.
             """,
-            inputSchema={
+            input_schema={
                 "type": "object",
                 "properties": {
                     "documents": {
