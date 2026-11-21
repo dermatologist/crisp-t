@@ -9,7 +9,7 @@ description: qualitative and mixed-data research analysis using crisp-t mcp tool
 
 Use CRISP-T MCP tools to support methodologically explicit qualitative and mixed-data research. Treat computation as an aid to interpretation, not a substitute for qualitative reasoning.
 
-**If the CRISP-T MCP server is not available, inform the user and use crisp-cli skill instead.**
+**If the CRISP-T MCP server is not available, inform the user and use crisp-cli skill instead. If both are unavailable, inform the user that no analysis can be performed.**
 
 ## Start by selecting the methodology
 
