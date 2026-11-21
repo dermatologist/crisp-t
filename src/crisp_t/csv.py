@@ -154,7 +154,7 @@ class Csv:
                 for col in self._comma_separated_ignore_columns.split(",")
                 if col.strip()
             ]
-            self._df.drop(columns=ignore_columns, inplace=True, errors="ignore")
+            self._df = self._df.drop(columns=ignore_columns, errors="ignore")
             logger.info(
                 f"Ignored columns: {ignore_columns}. Updated DataFrame shape: {self._df.shape}"
             )
@@ -192,8 +192,8 @@ class Csv:
         Rows with NaN values are then dropped from the DataFrame.
         """
         if self._df is not None:
-            self._df.replace("", np.nan, inplace=True)
-            self._df.dropna(inplace=True)
+            self._df = self._df.replace("", np.nan)
+            self._df = self._df.dropna()
         else:
             logger.error("DataFrame is None. Cannot mark missing values.")
 
@@ -287,7 +287,7 @@ class Csv:
     def drop_na(self):
         """Drop rows with any NA values from the DataFrame."""
         if self._df is not None:
-            self._df.dropna(inplace=True)
+            self._df = self._df.dropna()
             logger.info("Missing values dropped from DataFrame.")
         else:
             logger.error("DataFrame is None. Cannot drop missing values.")
@@ -379,7 +379,7 @@ class Csv:
         """
         if self._df is not None:
             categorical_cols = self._df.select_dtypes(
-                include=["object"]
+                include=["object", "str"]
             ).columns.tolist()
             # Remove categorical columns with more than n unique values
             if filter_high_cardinality:
@@ -513,10 +513,10 @@ class Csv:
             raise ValueError(f"Invalid query: {e}") from e
 
     def compute_correlation(
-        self, 
-        columns: list[str] | None = None, 
+        self,
+        columns: list[str] | None = None,
         threshold: float = 0.5,
-        method: str = 'pearson'
+        method: str = "pearson",
     ) -> pd.DataFrame:
         """
         Compute correlation matrix for numeric columns.
@@ -552,7 +552,9 @@ class Csv:
             # Compute correlation matrix
             corr_matrix = numeric_df.corr(method=method)
 
-            logger.info(f"Computed {method} correlation matrix for {len(numeric_df.columns)} columns")
+            logger.info(
+                f"Computed {method} correlation matrix for {len(numeric_df.columns)} columns"
+            )
 
             return corr_matrix
 
@@ -564,7 +566,7 @@ class Csv:
         self,
         columns: list[str] | None = None,
         threshold: float = 0.5,
-        method: str = 'pearson'
+        method: str = "pearson",
     ) -> pd.DataFrame:
         """
         Find significant correlations above the threshold.
@@ -582,10 +584,12 @@ class Csv:
             >>> csv.find_significant_correlations(threshold=0.7)
             >>> csv.find_significant_correlations(columns=['age', 'score'], threshold=0.6)
         """
-        corr_matrix = self.compute_correlation(columns=columns, threshold=threshold, method=method)
+        corr_matrix = self.compute_correlation(
+            columns=columns, threshold=threshold, method=method
+        )
 
         if corr_matrix.empty:
-            return pd.DataFrame(columns=['Variable 1', 'Variable 2', 'Correlation'])
+            return pd.DataFrame(columns=["Variable 1", "Variable 2", "Correlation"])
 
         # Extract upper triangle to avoid duplicates
         upper_triangle = np.triu(np.ones_like(corr_matrix, dtype=bool), k=1)
@@ -597,22 +601,27 @@ class Csv:
             for idx in corr_upper.index:
                 corr_value = corr_upper.loc[idx, col]
                 if pd.notna(corr_value) and abs(corr_value) >= threshold:
-                    significant_corrs.append({
-                        'Variable 1': idx,
-                        'Variable 2': col,
-                        'Correlation': corr_value
-                    })
+                    significant_corrs.append(
+                        {
+                            "Variable 1": idx,
+                            "Variable 2": col,
+                            "Correlation": corr_value,
+                        }
+                    )
 
         # Create DataFrame with explicit columns to handle empty case
         result_df = pd.DataFrame(
-            significant_corrs, 
-            columns=['Variable 1', 'Variable 2', 'Correlation']
+            significant_corrs, columns=["Variable 1", "Variable 2", "Correlation"]
         )
 
         if not result_df.empty:
-            result_df = result_df.sort_values('Correlation', key=abs, ascending=False)
-            logger.info(f"Found {len(result_df)} significant correlations above threshold {threshold}")
+            result_df = result_df.sort_values("Correlation", key=abs, ascending=False)
+            logger.info(
+                f"Found {len(result_df)} significant correlations above threshold {threshold}"
+            )
         else:
-            logger.info(f"No significant correlations found above threshold {threshold}")
+            logger.info(
+                f"No significant correlations found above threshold {threshold}"
+            )
 
         return result_df
