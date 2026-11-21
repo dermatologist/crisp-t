@@ -10,14 +10,24 @@ import json
 import logging
 from typing import Any, cast
 
-from mcp.server import Server
+from mcp.server import Server, ServerRequestContext
 from mcp.server.stdio import stdio_server
 from mcp.types import (
+    CallToolRequestParams,
+    CallToolResult,
+    GetPromptRequestParams,
     GetPromptResult,
+    ListPromptsResult,
+    ListResourcesResult,
+    ListToolsResult,
+    PaginatedRequestParams,
     Prompt,
     PromptMessage,
+    ReadResourceRequestParams,
+    ReadResourceResult,
     Resource,
     TextContent,
+    TextResourceContents,
     Tool,
 )
 
@@ -84,12 +94,9 @@ def _init_corpus(
         return False
 
 
-# Create the MCP server instance
-app = Server("crisp-t")
-
-
-@app.list_resources()
-async def list_resources() -> list[Resource]:
+async def handle_list_resources(
+    ctx: ServerRequestContext, params: PaginatedRequestParams | None
+) -> ListResourcesResult:
     """List available resources - corpus documents."""
     resources = []
 
@@ -100,23 +107,20 @@ async def list_resources() -> list[Resource]:
                     uri=cast(Any, f"corpus://document/{doc.id}"),
                     name=f"Document: {doc.name or doc.id}",
                     description=doc.description or f"Text content of document {doc.id}",
-                    mimeType="text/plain",
+                    mime_type="text/plain",
                 )
             )
 
-    return resources
+    return ListResourcesResult(resources=resources)
 
 
-@app.read_resource()
-async def read_resource(uri: Any) -> list[TextContent]:
-    """Read a corpus document by URI.
-
-    Returns a list of TextContent items to conform to MCP's expected
-    function output schema for resource reads.
-    """
-    uri_str = str(uri)
+async def handle_read_resource(
+    ctx: ServerRequestContext, params: ReadResourceRequestParams
+) -> ReadResourceResult:
+    """Read a corpus document by URI."""
+    uri_str = str(params.uri)
     if not uri_str.startswith("corpus://document/"):
-        raise ValueError(f"Unknown resource URI: {uri}")
+        raise ValueError(f"Unknown resource URI: {uri_str}")
 
     doc_id = uri_str.replace("corpus://document/", "")
 
@@ -127,44 +131,62 @@ async def read_resource(uri: Any) -> list[TextContent]:
     if not doc:
         raise ValueError(f"Document not found: {doc_id}")
 
-    return [TextContent(type="text", text=doc.text)]
+    return ReadResourceResult(
+        contents=[
+            TextResourceContents(
+                uri=uri_str,
+                text=doc.text,
+                mime_type="text/plain",
+            )
+        ]
+    )
 
 
-@app.list_tools()
-async def list_tools() -> list[Tool]:
+async def handle_list_tools(
+    ctx: ServerRequestContext, params: PaginatedRequestParams | None
+) -> ListToolsResult:
     """List available tools from all tool modules."""
-    return get_all_tools()
+    tools = get_all_tools()
+    return ListToolsResult(tools=tools)
 
 
-
-
-@app.call_tool()
-async def call_tool(name: str, arguments: Any) -> list[TextContent]:
+async def handle_call_tool(
+    ctx: ServerRequestContext, params: CallToolRequestParams
+) -> CallToolResult:
     """Handle tool calls by routing to appropriate tool modules."""
     global _corpus, _text_analyzer, _csv_analyzer, _ml_analyzer
 
     try:
         # Route to tool handlers
         result = handle_tool_call(
-            name, arguments, _corpus, _text_analyzer, _csv_analyzer, _ml_analyzer
+            params.name,
+            params.arguments or {},
+            _corpus,
+            _text_analyzer,
+            _csv_analyzer,
+            _ml_analyzer,
         )
-        
+
         if result is not None:
             # Unpack the result - it's a 5-tuple
             response, _corpus, _text_analyzer, _csv_analyzer, _ml_analyzer = result
-            return response
+            # response is a list[TextContent], wrap it in CallToolResult
+            return CallToolResult(content=response, is_error=False)
         else:
-            return error_response(f"Unknown tool: {name}")
+            error_text = error_response(f"Unknown tool: {params.name}")
+            return CallToolResult(content=error_text, is_error=True)
 
     except Exception as e:
-        logger.error(f"Error executing tool {name}: {e}", exc_info=True)
-        return error_response(str(e))
+        logger.error(f"Error executing tool {params.name}: {e}", exc_info=True)
+        error_text = error_response(str(e))
+        return CallToolResult(content=error_text, is_error=True)
 
 
-@app.list_prompts()
-async def list_prompts() -> list[Prompt]:
+async def handle_list_prompts(
+    ctx: ServerRequestContext, params: PaginatedRequestParams | None
+) -> ListPromptsResult:
     """List available prompts."""
-    return [
+    prompts = [
         Prompt(
             name="analysis_workflow",
             description="Step-by-step guide for conducting a complete CRISP-T analysis based on INSTRUCTIONS.md",
@@ -176,13 +198,14 @@ async def list_prompts() -> list[Prompt]:
             arguments=[],
         ),
     ]
+    return ListPromptsResult(prompts=prompts)
 
 
-@app.get_prompt()
-async def get_prompt(
-    name: str, arguments: dict[str, str] | None = None
+async def handle_get_prompt(
+    ctx: ServerRequestContext, params: GetPromptRequestParams
 ) -> GetPromptResult:
     """Get a specific prompt."""
+    name = params.name
 
     if name == "analysis_workflow":
         return GetPromptResult(
@@ -213,6 +236,18 @@ async def get_prompt(
         )
 
     raise ValueError(f"Unknown prompt: {name}")
+
+
+# Create the MCP server instance with handler functions
+app = Server(
+    "crisp-t",
+    on_list_resources=handle_list_resources,
+    on_read_resource=handle_read_resource,
+    on_list_tools=handle_list_tools,
+    on_call_tool=handle_call_tool,
+    on_list_prompts=handle_list_prompts,
+    on_get_prompt=handle_get_prompt,
+)
 
 
 async def main():

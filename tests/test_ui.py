@@ -1,9 +1,15 @@
 """Tests for CRISP-T Web UI module."""
 
 import sys
+from importlib.util import find_spec
 from pathlib import Path
 
 import pytest
+
+
+def _module_available(module_name: str) -> bool:
+    """Check if a module is available for import."""
+    return find_spec(module_name) is not None
 
 
 def test_ui_module_exists():
@@ -40,7 +46,7 @@ def test_ui_static_files_exist():
 
 
 @pytest.mark.skipif(
-    not pytest.importorskip("quart", reason="quart not installed"),
+    not _module_available("quart"),
     reason="Quart not installed",
 )
 def test_ui_server_module_structure():
@@ -54,7 +60,7 @@ def test_ui_server_module_structure():
 
 
 @pytest.mark.skipif(
-    not pytest.importorskip("quart", reason="quart not installed"),
+    not _module_available("quart"),
     reason="Quart not installed",
 )
 def test_quart_routes_registered():
@@ -73,7 +79,7 @@ def test_quart_routes_registered():
 
 
 @pytest.mark.skipif(
-    not pytest.importorskip("quart", reason="quart not installed"),
+    not _module_available("quart"),
     reason="Quart not installed",
 )
 def test_quart_app_configuration():
@@ -90,7 +96,7 @@ def test_quart_app_configuration():
 
 
 @pytest.mark.skipif(
-    not pytest.importorskip("quart", reason="quart not installed"),
+    not _module_available("quart"),
     reason="Quart not installed",
 )
 def test_copilot_import_graceful_failure():
@@ -102,11 +108,11 @@ def test_copilot_import_graceful_failure():
 
 
 @pytest.mark.skipif(
-    not pytest.importorskip("quart", reason="quart not installed"),
+    not _module_available("quart"),
     reason="Quart not installed",
 )
 @pytest.mark.skipif(
-    not pytest.importorskip("copilot", reason="copilot not installed"),
+    not _module_available("copilot"),
     reason="Copilot SDK not installed",
 )
 def test_copilot_tool_definition():
@@ -126,7 +132,7 @@ def test_copilot_tool_definition():
 
 
 @pytest.mark.skipif(
-    not pytest.importorskip("quart", reason="quart not installed"),
+    not _module_available("quart"),
     reason="Quart not installed",
 )
 @pytest.mark.asyncio
@@ -147,7 +153,7 @@ async def test_health_endpoint_response():
 
 
 @pytest.mark.skipif(
-    not pytest.importorskip("quart", reason="quart not installed"),
+    not _module_available("quart"),
     reason="Quart not installed",
 )
 @pytest.mark.asyncio
@@ -163,7 +169,7 @@ async def test_index_route_serves_html():
 
 
 @pytest.mark.skipif(
-    not pytest.importorskip("quart", reason="quart not installed"),
+    not _module_available("quart"),
     reason="Quart not installed",
 )
 @pytest.mark.asyncio
@@ -180,7 +186,7 @@ async def test_get_messages_requires_session():
 
 
 @pytest.mark.skipif(
-    not pytest.importorskip("quart", reason="quart not installed"),
+    not _module_available("quart"),
     reason="Quart not installed",
 )
 @pytest.mark.asyncio
@@ -194,13 +200,13 @@ async def test_models_endpoint_exists():
     # Should return 200 if copilot available, or 500 if not
     assert response.status_code in [200, 500]
     data = await response.get_json()
-    
+
     # Should have either models list or error
     assert "models" in data or "error" in data
 
 
 @pytest.mark.skipif(
-    not pytest.importorskip("quart", reason="quart not installed"),
+    not _module_available("quart"),
     reason="Quart not installed",
 )
 @pytest.mark.asyncio
@@ -213,13 +219,16 @@ async def test_index_html_has_dynamic_model_loading():
 
     assert response.status_code == 200
     html_content = await response.get_data(as_text=True)
-    
+
     # Check that the dropdown exists
     assert 'id="modelSelect"' in html_content
-    
+
     # Should not have hardcoded model options like before
     # (or should have only a loading placeholder)
-    assert "Loading models..." in html_content or '<option value="">Loading models...</option>' in html_content
+    assert (
+        "Loading models..." in html_content
+        or '<option value="">Loading models...</option>' in html_content
+    )
 
 
 if __name__ == "__main__":

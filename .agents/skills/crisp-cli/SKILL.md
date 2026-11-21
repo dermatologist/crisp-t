@@ -1,124 +1,263 @@
 ---
 name: crisp-cli
-description: Skill for qualitative mixed data research analysis using CRISP-T command-line tools.
+description: qualitative and mixed-data research analysis using crisp-t command-line tools. use when analyzing interviews, focus groups, field notes, observations, documents, open-ended surveys, or linked numeric data; selecting or applying grounded theory, thematic analysis, reflexive thematic analysis, qualitative content analysis, framework analysis, or mixed methods; and producing traceable computationally assisted qualitative findings.
 ---
 
-## Overview
+# CRISP-T Qualitative and Mixed-Data Analysis
 
-This skill enables agents to perform qualitative mixed data (text and numeric) research analysis using **CRISP-T command-line tools**.
+## Purpose
 
-## Core Commands
+Use CRISP-T to support methodologically explicit qualitative and mixed-data research. Treat computation as an aid to interpretation, not a substitute for qualitative reasoning.
 
-### Three main CLI commands are available:
+## Start by selecting the methodology
 
-- **`crisp`** - Main analysis engine (text/NLP, ML, visualization workflows)
-- **`crispt`** - Corpus management (document manipulation, semantic search, relationships)
-- **`crispviz`** - Visualization generation (charts, word clouds, graphs, LDA)
+Before substantive analysis, ask the user which methodology to adopt:
 
-* If the command is not found in your environment, try prefixing with `uv run`
-* If it fails use the python environment in .venv folder, if available.
-* If it still fails, ensure CRISP-T is installed: `pip install crisp-t[ml]`
+1. Constructivist grounded theory (Charmaz default for grounded theory)
+2. Thematic analysis
+3. Reflexive thematic analysis
+4. Qualitative content analysis
+5. Framework analysis
+6. Mixed-methods analysis
+7. Unsure: recommend a method from the research question and intended output
 
-## Understand and INTERNALIZE the options and flags for each command by using `--help`. DO THIS BEFORE RUNNING ANY ANALYSES.
+Also confirm the research question, expected output, data types, unit of analysis, whether data collection is complete, and the role of numeric data. If external web or scholarly research may help, explain why and obtain the user's permission before using it.
 
-crisp --help
-crispt --help
-crispviz --help
+Use this decision guide when recommending a method:
 
-## Tips for Effective Use
-* **Use ./workspace** as the working directory for all artifacts, if not explicitly specified. Create it if it does not exist.
-* **Always start with `--source`** to import data into a corpus structure, if not already done with `--out corpus`. If the corpus folder already exists, use `--inp corpus` to load it for analysis.
-* **Use `--unstructured`** to specify free-text columns in CSV files. If only a single CSV file is present in the source folder, it will be automatically loaded as a corpus with the specified unstructured columns. If free-text columns are not specified, GUESS which columns are text based on content.
-* **Limit dataset size** during testing with `--num` (documents) and `--rec` (rows)
-* **Use `--clear`** when switching datasets or modifying filters
-* **Use --assign** after `--topics` to assign documents to topics always. REMEMBER to use `--clear` before `--assign` if the corpus or filters have changed. THIS STEP MUST be done for TEXT DATA.
-* **Combine `--nlp`** to run all text analyses at once. NOTE: May be slow for large corpora.
-* **For ML tasks**, always specify the outcome variable with `--outcome`
-* **Use `--linkage`** to connect text metadata to numeric outcomes in ML analyses
-* **Do cross-modal linkage** when needed with `--linkage`.
-* **Use `--aggregation`** to define how to combine multiple documents for a single outcome
-* **Use `--include` and `--ignore`** to control features used in ML analyses
-* **Use `crispt`** to manage corpus structure, add/remove documents, and define relationships
-* **Use `crispviz`** to generate visualizations after analysis steps
-* **Save intermediate results** using `--out` at each major step
-* **Use filtering** (`--filters`) to analyze subsets.
-* **Link early**: Add relationships after text analysis for mixed-methods validation
-* **Visualize often**: Use `crispviz` after each major analysis step
-* **Check metadata**: Use `crispt --print` to inspect corpus structure
+- **Constructivist grounded theory**: develop an explanatory account of a process through iterative coding, comparison, memoing, sampling, and category integration.
+- **Thematic analysis**: identify and interpret patterned meaning across a dataset.
+- **Reflexive thematic analysis**: construct themes through recursive interpretation while treating researcher subjectivity as an analytic resource.
+- **Qualitative content analysis**: systematically describe or interpret content using inductive, deductive, or combined categories; counts may support but not replace interpretation.
+- **Framework analysis**: compare cases and predefined/emergent dimensions in a matrix, especially for applied, policy, clinical, implementation, or evaluation questions.
+- **Mixed methods**: integrate qualitative and numeric evidence for convergence, explanation, expansion, development, sampling, or contradiction analysis.
 
-## Important Guidelines for Agents
-* Perform multi-step workflows STEP-BY-STEP, saving intermediate results with `--out` for analytical flexibility.
-* Do not run all analyses at once; break into smaller steps to isolate issues.
-* If analysis results seem off, clear cache with `--clear` before re-running.
-* If a particular analysis fails or takes too long, try reducing dataset size with filters or `--num` or `--rec` or both.
-* If errors persist or if it still takes too long, skip the step and proceed to the next analysis.
-* Document level TOPIC assignment using `--assign` is a VERY important step different from just running `--topics`. THIS STEP MUST be for TEXT DATA.
-* Generate a report as you go, documenting insights from each step.
-* If the source folder contains multiple CSV files, warn the user that only one CSV file is supported.
-* All tools generate tips and warnings in the console output. Pay attention to these messages for guidance on next steps and troubleshooting.
+Declare the selected methodology and intended analytic product in the report. If a complete methodology cannot be followed, describe the work accurately as an exploratory analysis or as using selected techniques.
 
-## Important steps
-* Import data into CRISP-T corpus and dataframe.
-* Perform linking between text and numeric data using various methods (id based, keyword based, time based, embedding based).
-* Explore text data using various methods (e.g., topic modeling, keyword extraction, sentiment analysis, visualizations).
-* Explore numeric data using various methods (e.g., summary statistics, classification, clustering, regression, association, visualizations, TDA, etc.).
-* Perform cross modal analysis using linked text and numeric data (e.g., text features as predictors for numeric outcomes, numeric features as predictors for text outcomes, etc.).
-* Add manual connections between text documents and numeric rows if needed to support theory driven analysis.
-* Derive insights from the analysis and document them.
+## Qualitative sensemaking rules
 
-## Key Concepts for Agents
+- Read a purposeful, varied sample before broad automation.
+- Define the unit of storage, coding, comparison, case, linkage, and inference.
+- Keep every accepted code, category, or theme traceable to source excerpts and context.
+- Compare cases, groups, sources, time periods, supporting evidence, and negative or deviant cases.
+- Write analytic memos throughout; a report is not a substitute for memoing.
+- Separate participant accounts, researcher interpretations, computational outputs, numeric findings, and integrated inferences.
+- Do not select findings solely by frequency, topic weight, model probability, centrality, sentiment magnitude, or statistical significance.
+- Record alternative interpretations, missing perspectives, contradictions, and limitations.
 
-### Corpus Structure
-- **Documents**: Text entries (interviews, field notes, etc.)
-- **DataFrame**: Numeric data (age, income, survey responses, etc.)
-- **Relationships**: Explicit links between text findings and numeric variables
-- **Metadata**: Tags, timestamps, source information
+For constructivist grounded theory, use Charmaz's tradition unless the user requests another. Apply initial and focused coding, constant comparison, memo writing, theoretical sampling or documented corpus-based theoretical retrieval, category development, negative-case analysis, theoretical integration, and theoretical sufficiency. Do not present open/axial/selective coding as mandatory for Charmaz.
 
-### Linkage Methods
-- **id**: Direct document-to-row matching by ID
-- **embedding**: Semantic similarity-based linking
-- **temporal**: Time-based linking (nearest, window, sequence)
-- **keyword**: Linking via extracted keywords/topics
+## Computational guardrails
 
-### Aggregation Strategies
-- **majority**: Most common value (classification)
-- **mean**: Average value (regression)
-- **first**: First value encountered
-- **mode**: Most frequent value
+Automated topics, clusters, keywords, entities, sentiment labels, embeddings, similarities, classifications, and regressions are computational outputs. Use them as candidate patterns, retrieval aids, comparison prompts, sampling aids, negative-case searches, triangulation evidence, or challenges to interpretation.
 
-### Important Flags
-- `--clear`: Always use before `--assign` if filters/data changed
-- `--linkage`: Required when outcome is a text field
-- `--unstructured`: Mark free-text columns in CSV for proper analysis
+Do not automatically label computational outputs as qualitative codes, themes, categories, core categories, or theory. A machine suggestion becomes an accepted qualitative code only after reviewing the source in context, considering alternatives, comparing incidents where possible, and documenting the human decision. Preserve output origin and rejected suggestions.
 
-### File Formats
-- **Corpus files**: `corpus.json` + `corpus_df.csv` (created in `--out` folder)
-- **Visualizations**: PNG/HTML (saved to `--out` folder)
-- **Metadata**: Embedded in corpus.json (view with `--print`)
+Topic assignment is required when downstream CRISP-T document-level topic analysis depends on it; it is not a methodological requirement for all qualitative research.
 
-## Error Handling
+## Core commands
 
-| Error | Cause | Solution |
-|-------|-------|----------|
-| `Cache error before --assign` | Cache from previous run | Use `--clear` flag |
-| `Outcome not found` | Wrong column/field name | Use `crispt --df-cols` or `crispt --print` to verify |
+Three CLI commands are available:
+
+- **`crisp`**: Main analysis engine for text/NLP, ML, and visualization workflows.
+- **`crispt`**: Corpus management, document manipulation, semantic search, and relationships.
+- **`crispviz`**: Charts, word clouds, graphs, and LDA visualizations.
+
+If a command is not found, prefix it with `uv run`. If that fails, use the project environment with `uv run` or `.venv/bin/crisp`. If CRISP-T is not installed, run:
+
+```bash
+uv pip install -e ".[ml,xg,dev]"
+```
+
+Before analysis, inspect the active command options:
+
+```bash
+uv run crisp --help
+uv run crispt --help
+uv run crispviz --help
+```
+
+Pay attention to all CLI tips and warnings.
+
+## Required artifact locations
+
+- Use `<repository-root>/workspace/` for every corpus, result JSON, report, and visualization.
+- Create it once with `mkdir -p workspace`.
+- Keep the unmodified imported corpus in `workspace/corpus/` and reuse it with `--inp`.
+- Use `workspace/reports/` only for human-readable reports.
+- Use `workspace/visualizations/` only for generated images or HTML.
+- Keep qualitative artifacts under `workspace/qualitative/`, including codes, excerpts, memos, comparisons, categories, sampling decisions, and audit records.
+- Intermediate corpora may use descriptive directories under `workspace/`, such as `workspace/corpus_topics/` or `workspace/corpus_assigned/`.
+- Do not create top-level `analysis_output`, `results`, or `visualizations` directories unless the user asks.
+- If source CSVs are in `./downloads`, import from there but write generated artifacts to `workspace/`.
+- Inspect existing filenames before overwriting.
+
+## Staged workflow
+
+### 1. Establish design
+
+- Select and declare the methodology.
+- Confirm research question, intended output, data types, cases, analytic units, and integration purpose.
+- For mixed methods, state whether the design is QUAL->quan, QUAN->qual, concurrent, embedded, or multiphase and whether integration seeks convergence, explanation, expansion, development, sampling, or contradiction.
+
+### 2. Import once
+
+- Use `--source` for a new source.
+- Use `--unstructured <column>` for every free-text CSV column.
+- Save the preserved corpus to `workspace/corpus/`.
+- If the source folder contains multiple CSV files, warn that only one CSV is supported.
+
+### 3. Verify the corpus
+
+```bash
+uv run crispt --inp workspace/corpus --print
+uv run crispt --inp workspace/corpus --df-cols --print
+```
+
+Confirm document and row counts, text fields, metadata, identifiers, timestamps, outcome names, missingness, and the relationship between documents and DataFrame rows.
+
+### 4. Conduct qualitative interpretation
+
+- Read a varied sample before modeling.
+- Create source-linked codes and analytic memos appropriate to the selected methodology.
+- Compare evidence across cases, sources, groups, and time.
+- Search for negative cases and alternative explanations.
+- Save method decisions and developing findings under `workspace/qualitative/`.
+
+### 5. Run text analysis selectively
+
+- Use topic modeling, keyword extraction, sentiment analysis, NLP, semantic search, graphs, or visualizations for a stated analytic purpose.
+- Use `--nlp` only when the corpus is manageable and a broad first pass is appropriate.
+- For topic data, run `--topics`, then run `--clear --assign` as a separate explicit step when document-level topic assignment is needed.
+- Use `--clear` before `--assign` whenever corpora, data, or filters change.
+- Validate every meaningful computational pattern against source excerpts.
+
+### 6. Run numeric analysis
+
+- Inspect columns before modeling.
+- Always specify `--outcome` for supervised ML tasks.
+- Use `--include` and `--ignore` to keep features intentional.
+- Explore numeric data with summary statistics, classification, clustering, regression, association, visualizations, or TDA as appropriate.
+- Do not treat statistical association as qualitative meaning or causation.
+
+### 7. Link and integrate text and numeric data
+
+- Confirm the text-to-row relationship before linkage.
+- Use `crispt --add-rel` for theory-driven or validated manual connections.
+- Use `--linkage` plus `--aggregation` when linking text metadata to numeric outcomes.
+- Supported linkage methods include `id`, `embedding`, `temporal`, and `keyword`.
+- Supported aggregation strategies include `majority`, `mean`, `first`, and `mode`.
+- State why data are linked, what the linkage unit is, and how aggregation changes interpretation.
+- Perform cross-modal analysis when justified, including text features predicting numeric outcomes or numeric features contextualizing text outcomes.
+
+### 8. Visualize and report
+
+- Generate visualizations with `crispviz --out workspace/visualizations/`.
+- Write the evolving and final report under `workspace/reports/`.
+- Document corpus path, methodology, analytic units, commands, parameters, filters, linkage, computational provenance, qualitative findings, numeric findings, integrated inferences, contradictions, and limitations.
+- Treat visualizations as analytic aids, not findings by themselves.
+
+## High-signal operating rules
+
+- Work step by step; do not run unrelated analyses together.
+- Save meaningful intermediate results with `--out` under `workspace/`.
+- Preserve `workspace/corpus/` unchanged.
+- Use `--num` for document/topic limits and `--rec` for row/result limits while testing.
+- Use `--filters` only after verifying that the field exists.
+- Use `crispt --relationships` and `crispt --print` to inspect metadata and explicit links.
+- Clear cache with `--clear` if results appear stale or features changed.
+- If a step is slow, reduce data with filters, `--num`, or `--rec`.
+- If a step fails, report the exact error, try a simpler neighboring analysis, and continue when methodologically defensible.
+- Generate the report as analysis proceeds, but keep analytic memos separate from the final narrative.
+
+## Key concepts and flags
+
+### Corpus structure
+
+- **Documents**: Interviews, focus groups, field notes, observations, documents, open-ended responses, or other text entries.
+- **DataFrame**: Numeric or structured attributes such as age, income, ratings, survey responses, or outcomes.
+- **Relationships**: Explicit links among documents, text findings, and numeric rows or variables.
+- **Metadata**: Tags, timestamps, source information, case identifiers, and analytic provenance.
+
+### Linkage methods
+
+- **`id`**: Direct document-to-row matching by identifier.
+- **`embedding`**: Semantic-similarity linkage.
+- **`temporal`**: Time-based linkage using nearest, window, or sequence logic.
+- **`keyword`**: Linkage through extracted keywords or topics.
+
+### Aggregation strategies
+
+- **`majority`**: Most common class for classification.
+- **`mean`**: Average value for regression.
+- **`first`**: First encountered value.
+- **`mode`**: Most frequent value.
+
+### Important flags
+
+- **`--clear`**: Use before `--assign` if filters or data changed.
+- **`--linkage`**: Required when the outcome is a text field.
+- **`--unstructured`**: Mark every free-text CSV column for proper analysis.
+
+### File formats
+
+- **Corpus**: `corpus.json` and `corpus_df.csv` in the selected `--out` directory.
+- **Visualizations**: PNG or HTML in the selected visualization directory.
+- **Metadata**: Embedded in `corpus.json`; inspect with `--print`.
+
+## Error handling
+
+| Error | Likely cause | Response |
+|---|---|---|
+| `Cache error before --assign` | Cache from a previous run | Use `--clear` |
+| `Outcome not found` | Incorrect column or field name | Verify with `crispt --df-cols` or `crispt --print` |
 | `ML features mismatch` | Features changed after training | Clear cache and retrain |
-| `Linkage failed` | Insufficient data/metadata | Verify timestamps or use simpler linkage method |
-| `Visualization empty` | Analysis not run | Ensure `--topics`, `--tdabm`, or `--graph` completed first |
+| `Linkage failed` | Insufficient data or metadata | Verify IDs/timestamps or use a simpler linkage method |
+| `Visualization empty` | Required analysis was not run | Run the relevant `--topics`, `--tdabm`, or `--graph` step first |
 
-## Performance Notes
+## Performance notes
 
-- **Large corpora** (1000+ docs): Use `--num` to limit imports, use filters
-- **Topic modeling**: Adjust `--num` lower for faster processing (3-5 recommended)
-- **TDABM/graphs**: More expensive; save intermediate results
-- **Semantic search**: Requires initialization; slower on first run
-- **ML training**: Very slow on large datasets; use sampling/filtering
+- **Large corpora (1000+ documents)**: Test with `--num` and filters, then expand deliberately.
+- **Topic modeling**: Use a smaller `--num` while testing; 3-5 topics is a practical initial diagnostic, not a methodological default.
+- **TDABM/graphs**: Save intermediate results because these are more expensive.
+- **Semantic search**: Initialization may make the first run slower.
+- **ML training**: Sample or filter large datasets before full training.
 
-## Examples
+## Example workflow
+
+```bash
+# Create directories and import one CSV.
+mkdir -p workspace/reports workspace/visualizations workspace/qualitative
+uv run crisp --source downloads --unstructured review --out workspace/corpus
+
+# Verify corpus and numeric columns.
+uv run crispt --inp workspace/corpus --print
+uv run crispt --inp workspace/corpus --df-cols --print
+
+# After reading and initial qualitative interpretation, run topic analysis.
+uv run crisp --inp workspace/corpus --topics --num 5 --out workspace/corpus_topics
+uv run crisp --inp workspace/corpus_topics --clear --assign --out workspace/corpus_assigned
+
+# Use sentiment and numeric analysis as labeled computational evidence.
+uv run crisp --inp workspace/corpus_assigned --sentiment --out workspace/corpus_text_results
+uv run crisp --inp workspace/corpus_assigned --regression --outcome rating --include 100g_USD --out workspace/regression_results
+
+# Generate visualizations.
+uv run crispviz --inp workspace/corpus_assigned --out workspace/visualizations --wordcloud --ldavis
+
+# Filter only after verifying the field.
+uv run crisp --inp workspace/corpus_assigned --clear --filters "region=North" --assign --out workspace/north_region
 ```
-crisp --source data_folder --out corpus
-crisp --inp corpus --clear --assign --out results_v2
-crisp --inp results_v2 --clear --filters "region=North" --assign --out results_filtered
-crisp --inp results_filtered --regression --outcome satisfaction_score --include age,income --out results_v3
-crisp --inp corpus --filters "embedding:text" --filters "temporal:df" --sentiment
+
+For a CSV with a free-text column named `review`, the shortest CRISP-T computational workflow is:
+
+```bash
+mkdir -p workspace/reports workspace/visualizations workspace/qualitative
+uv run crisp --source downloads --unstructured review --out workspace/corpus
+uv run crispt --inp workspace/corpus --print
+uv run crisp --inp workspace/corpus --topics --num 5 --out workspace/corpus_topics
+uv run crisp --inp workspace/corpus_topics --clear --assign --sentiment --out workspace/corpus_assigned
+uv run crispviz --inp workspace/corpus_assigned --out workspace/visualizations --wordcloud --ldavis
 ```
+
+This is not, by itself, a complete qualitative methodology. Interpret and validate outputs according to the method selected with the user. Do not leave artifacts in `analysis_output/`, the source folder, or an ad hoc top-level directory.

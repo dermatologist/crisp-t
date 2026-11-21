@@ -42,7 +42,7 @@ def get_topological_analysis_tools() -> list[Tool]:
             Use when: Decision trees/regression don't capture patterns, need global structure understanding, data is high-dimensional.
             Tip: Start with radius=0.3; adjust if too sparse (increase) or too dense (decrease).
             """,
-            inputSchema={
+            input_schema={
                 "type": "object",
                 "properties": {
                     "y_variable": {

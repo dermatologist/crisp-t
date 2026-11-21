@@ -24,7 +24,7 @@ def get_misc_tools() -> list[Tool]:
         Tool(
             name="reset_corpus_state",
             description="Reset the global corpus, text analyzer, and CSV analyzer state. Clear all loaded data and start fresh.",
-            inputSchema={
+            input_schema={
                 "type": "object",
                 "properties": {},
             },
@@ -32,7 +32,7 @@ def get_misc_tools() -> list[Tool]:
         Tool(
             name="clear_cache",
             description="Delete the cache folder if it exists. Use this to clear cached analysis results and free up disk space.",
-            inputSchema={"type": "object", "properties": {}},
+            input_schema={"type": "object", "properties": {}},
         ),
     ]
 

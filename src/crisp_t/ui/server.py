@@ -105,6 +105,14 @@ if COPILOT_AVAILABLE:
         except Exception as e:
             return f"Error executing command: {str(e)}"
 
+else:
+    # Stub implementation when Copilot SDK is not available
+    async def execute_crisp_command(command: str = "", args: str = "") -> str:
+        """
+        Stub implementation of execute_crisp_command when Copilot SDK is not available.
+        """
+        return "Error: Copilot SDK is not installed. Install with: pip install crisp-t[copilot]"
+
 
 async def create_copilot_session(session_id: str, model: str, config: dict) -> dict:
     """Create a new Copilot client and session."""

@@ -28,7 +28,7 @@ def get_corpus_management_tools() -> list[Tool]:
         Tool(
             name="load_corpus",
             description="Load a corpus from a folder containing corpus.json or from a source directory/URL. Essential starting point for all analysis workflows. If using 'source', CRISP-T will import text files (.txt, .pdf) and CSV data into a new corpus structure.\n\t    Workflow tips:\n\t    - If corpus already exists: use 'inp' parameter\n\t    - If importing raw data: use 'source' parameter to auto-create corpus\n\t    - For CSV with text columns: specify 'text_columns' to mark free-text fields\n\t    - Use 'ignore_words' to exclude stop words during initial processing\n\t    - Always call this first before any analysis",
-            inputSchema={
+            input_schema={
                 "type": "object",
                 "properties": {
                     "inp": {
@@ -53,7 +53,7 @@ def get_corpus_management_tools() -> list[Tool]:
         Tool(
             name="save_corpus",
             description="Save the current corpus to a folder as corpus.json and corpus_df.csv (if DataFrame exists). Persists all work including documents, metadata, relationships, and analysis results.\n\t    Use cases: After document modifications, text analysis, linking documents to numeric data, filtering/transforming corpus, or creating analysis checkpoints.\n\t    Tip: Save frequently to preserve work. Different output folders create separate analysis branches.",
-            inputSchema={
+            input_schema={
                 "type": "object",
                 "properties": {
                     "out": {
@@ -67,7 +67,7 @@ def get_corpus_management_tools() -> list[Tool]:
         Tool(
             name="add_document",
             description="Add a new document to the corpus. Expands your dataset with new text entries or integrates external documents into existing corpus.\n\t    Use when: Incrementally building corpus, manually adding external documents, correcting/updating specific documents, or combining multiple corpora.\n\t    Tips: doc_id must be unique within corpus. name field is optional but recommended. Consider adding before analysis for best results.",
-            inputSchema={
+            input_schema={
                 "type": "object",
                 "properties": {
                     "doc_id": {"type": "string", "description": "Unique document ID"},
@@ -80,7 +80,7 @@ def get_corpus_management_tools() -> list[Tool]:
         Tool(
             name="remove_document",
             description="Remove a document from the corpus by ID. Useful for data cleaning, curation, or excluding outliers/irrelevant entries.\n\t    Use for: Removing duplicates, excluding irrelevant/off-topic documents, correcting data quality issues, or curating corpus to specific criteria.\n\t    Tip: Call list_documents first to identify document IDs to remove.",
-            inputSchema={
+            input_schema={
                 "type": "object",
                 "properties": {
                     "doc_id": {"type": "string", "description": "Document ID to remove"}
@@ -91,7 +91,7 @@ def get_corpus_management_tools() -> list[Tool]:
         Tool(
             name="get_document",
             description="Retrieve a specific document by ID to inspect its full text and metadata. Essential for validating data, reviewing specific cases, or extracting quotes.\n\t    Use for: Validating document content, extracting passages for reporting, reviewing documents with specific characteristics, or debugging metadata/assignments.\n\t    Tip: Use with assign_topics or get_relationships to understand document context.",
-            inputSchema={
+            input_schema={
                 "type": "object",
                 "properties": {
                     "doc_id": {"type": "string", "description": "Document ID"}
@@ -102,12 +102,12 @@ def get_corpus_management_tools() -> list[Tool]:
         Tool(
             name="list_documents",
             description="List all document IDs in the corpus. Returns IDs for all available documents, useful for exploration, validation, and batch operations.\n\t    Use to: Explore corpus structure/size, identify specific documents for further analysis, validate document import/creation, or generate reference lists for reporting.\n\t    Workflow: Call this after load_corpus to verify data was loaded correctly.",
-            inputSchema={"type": "object", "properties": {}},
+            input_schema={"type": "object", "properties": {}},
         ),
         Tool(
             name="add_relationship",
             description="Establish explicit links between text findings and numeric variables for mixed-methods triangulation. Documents connections discovered through analysis.\n\t    Format: first|second|relation where first='text:keyword', second='num:column', relation='predicts'/'correlates'/'contrasts'.\n\t    Workflow: Add relationships after running assign_topics, topic_modeling, or sentiment_analysis to link findings to outcomes.",
-            inputSchema={
+            input_schema={
                 "type": "object",
                 "properties": {
                     "first": {
@@ -129,12 +129,12 @@ def get_corpus_management_tools() -> list[Tool]:
         Tool(
             name="get_relationships",
             description="Retrieve all established relationships between text and numeric data. Essential for understanding corpus-wide connections and triangulation findings.\n\t    Use to: Review all documented connections, validate relationship patterns, export findings for reporting, or plan further analysis based on known patterns.\n\t    Returns: List of all text↔numeric relationships with their types.",
-            inputSchema={"type": "object", "properties": {}},
+            input_schema={"type": "object", "properties": {}},
         ),
         Tool(
             name="get_relationships_for_keyword",
             description="Find all relationships connected to a specific keyword, topic, or theme. Useful for exploring how particular concepts relate to numeric outcomes.\n\t    Examples: Find all metrics related to 'satisfaction' keyword, explore connections for specific topics, trace theme relationships through data.\n\t    Tip: Use after add_relationship to verify links were created correctly.",
-            inputSchema={
+            input_schema={
                 "type": "object",
                 "properties": {
                     "keyword": {

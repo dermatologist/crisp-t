@@ -22,9 +22,11 @@
 * **MCP SERVER** will give more agentic power to your vibe analytics experience (See below).
 * **Interpretivist approach**: CRISP-T enforces the **agentic researcher** to adopt an interpretivist approach, rather than a data-science one.
 
-## 😎 UI using GitHub Copilot SDK!
+## 🤖 New Vibe analytics UI using GitHub Copilot SDK!
 * scroll 👇 for details
+* [What’s Brewing in the Repo ☕](https://github.com/dermatologist/crisp-t/wiki/What%E2%80%99s-Brewing:-Agent-Harness)
 
+## 👩 Human Workflow
 👉 **[CLI Cheatsheet](docs/cheatsheet.md)** | **[Demo & Examples](docs/DEMO.md)** | **[Documentation](https://dermatologist.github.io/crisp-t/)**
 
 <p align="center">
@@ -80,7 +82,7 @@ pip install crisp-t[xg]
 
 **Optional (for Web UI with Copilot SDK):**
 ```bash
-pip install crisp-t[copilot]
+pip install crisp-t[ml,copilot]
 # Also requires GitHub Copilot CLI: https://docs.github.com/en/copilot/how-tos/set-up/install-copilot-cli
 ```
 
@@ -112,6 +114,7 @@ Manages corpus structure and detailed queries.
 ### 4. `crisp-ui` (Web UI - NEW!)
 Browser-based interface powered by GitHub Copilot SDK.
 
+*   **[Install the Copilot CLI](https://github.com/features/copilot/cli)**
 *   **Start Web Server:** `crisp-ui`
 *   **Custom Port:** `crisp-ui --port 8080`
 *   **Open browser to:** `http://127.0.0.1:5000`
@@ -128,13 +131,27 @@ Browser-based interface powered by GitHub Copilot SDK.
 
 ## 🤖 MCP Server (Agentic AI)
 
-CRISP-T includes a **Model Context Protocol (MCP)** server, allowing AI agents (like Claude Desktop) to interact directly with your data. If you have opened this repository in [VSCODE](https://code.visualstudio.com/docs/copilot/customization/mcp-servers) or [AntiGravity](https://antigravity.google/), you can start the MCP server using the [configuration file](/.vscode/mcp.json) provided. This [configuration file](/.vscode/mcp.json) provides the necessary details for configuring other AI coding platforms such as [Claude Desktop](https://claude.ai/desktop) to connect to the CRISP-T MCP server as well.
+CRISP-T includes a **Model Context Protocol (MCP)** server, allowing AI agents (like Claude Desktop) to interact directly with your data. If you have opened this repository in [VSCODE](https://code.visualstudio.com/docs/copilot/customization/mcp-servers) or [AntiGravity](https://antigravity.google/), you can start the MCP server using the [configuration file](/.vscode/mcp.json) provided. This [configuration file](/.vscode/mcp.json) provides the necessary details for configuring other AI coding platforms, such as [Claude Desktop](https://claude.ai/desktop) to connect to the CRISP-T MCP server as well.
 
 ---
 
 ## 🤖 Skills (Agentic AI)
 
 CRISP-T also provides **[Skills](/.claude/skills/crisp-cli/SKILL.md)** for use with Claude Desktop, [AntiGravity](https://antigravity.google/), VSCODE and other AI coding platforms.
+
+---
+
+## 🤖 Web UI using GitHub Copilot SDK (Agentic AI)
+
+See usage #4 above.
+
+---
+
+## 💬 Teams & Slack Integration (WIP)
+
+CRISP-T can be used directly from **Microsoft Teams** and **Slack** via a bot built with the [Chat SDK](https://www.npmjs.com/package/chat) (`@chat-adapter/teams` + `@chat-adapter/slack`).
+
+**📖 Full setup guide: [docs/integration.md](docs/integration.md)**
 
 ---
 
