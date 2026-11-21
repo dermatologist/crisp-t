@@ -27,7 +27,7 @@
 * [What’s Brewing in the Repo ☕](https://github.com/dermatologist/crisp-t/wiki/What%E2%80%99s-Brewing:-Agent-Harness)
 
 ## 👩 Human Workflow
-👉 **[CLI Cheatsheet](docs/cheatsheet.md)** | **[Demo & Examples](docs/DEMO.md)** | **[Documentation](https://dermatologist.github.io/crisp-t/)**
+👉 **[CLI Cheatsheet](docs/cheatsheet.md)** | **[Demo & Examples](docs/DEMO.md)** | **[Documentation](https://dermatologist.github.io/crisp-t/)** | **[Kaggle](https://www.kaggle.com/code/beapen/crisp-t-demo)**
 
 <p align="center">
   <img src="https://github.com/dermatologist/crisp-t/blob/develop/notes/crisp-logo.jpg" />
