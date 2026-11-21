@@ -33,7 +33,7 @@ def get_corpus_filtering_tools() -> list[Tool]:
                 "Workflow: Filter to documents with specific coded categories → analyze subset → save as branch for comparison. "
                 "Updates the active corpus."
             ),
-            inputSchema={
+            input_schema={
                 "type": "object",
                 "properties": {
                     "filter": {
@@ -50,7 +50,7 @@ def get_corpus_filtering_tools() -> list[Tool]:
         Tool(
             name="document_count",
             description="Return number of documents currently in active corpus (accounting for any active filters). Use to validate filtering operations or understand corpus size after subsetting. Useful in workflows: load corpus → filter by criteria → check count to verify expected subset size.",
-            inputSchema={"type": "object", "properties": {}},
+            input_schema={"type": "object", "properties": {}},
         ),
     ]
 

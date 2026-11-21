@@ -43,7 +43,7 @@ def get_ml_tools() -> list[Tool]:
 
                 Tip: Normalize/scale columns first for best results; clustering is sensitive to feature magnitude.
                 """,
-            inputSchema={
+            input_schema={
                 "type": "object",
                 "properties": {
                     "num_clusters": {
@@ -79,7 +79,7 @@ def get_ml_tools() -> list[Tool]:
 
                 Tip: Binary classification (2 classes) more reliable than multi-class; start simple.
                 """,
-            inputSchema={
+            input_schema={
                 "type": "object",
                 "properties": {
                     "outcome": {
@@ -130,7 +130,7 @@ def get_ml_tools() -> list[Tool]:
                 Compare to: decision_tree_classification (more interpretable) vs svm_classification (better for complex boundaries)
                 Tip: Normalize/scale features for better SVM performance.
                 """,
-            inputSchema={
+            input_schema={
                 "type": "object",
                 "properties": {
                     "outcome": {
@@ -173,7 +173,7 @@ def get_ml_tools() -> list[Tool]:
                 Compare to: decision_tree (interpretable), svm (good baseline), neural_network (handles complex patterns).
                 Tip: Start with simpler models (decision_tree) first; use neural networks when simpler models underperform.
                 """,
-            inputSchema={
+            input_schema={
                 "type": "object",
                 "properties": {
                     "outcome": {
@@ -219,7 +219,7 @@ def get_ml_tools() -> list[Tool]:
                 Interpretation: Larger coefficient = stronger effect on outcome (positive/negative direction).
                 Tip: Start with top factors from decision_tree_classification for focused regression.
                 """,
-            inputSchema={
+            input_schema={
                 "type": "object",
                 "properties": {
                     "outcome": {
@@ -262,7 +262,7 @@ def get_ml_tools() -> list[Tool]:
                 Workflow example: Do documents with topic X differ on measured variables Y,Z? PCA(n_components=2) on Y,Z → check if topic X documents separate in PCA space.
                 Tip: Normalize/scale features first; PCA sensitive to feature magnitude.
                 """,
-            inputSchema={
+            input_schema={
                 "type": "object",
                 "properties": {
                     "outcome": {
@@ -305,7 +305,7 @@ def get_ml_tools() -> list[Tool]:
                     min_threshold (int): Minimum confidence as percent (1-99).
                     include (str): Comma-separated list of columns to include.
                 """,
-            inputSchema={
+            input_schema={
                 "type": "object",
                 "properties": {
                     "outcome": {
@@ -344,7 +344,7 @@ def get_ml_tools() -> list[Tool]:
                     linkage_method (str, optional): Linkage method when outcome is a text metadata field. Options: id, embedding, temporal, keyword.
                     aggregation (str, optional): Aggregation strategy for multiple documents per row. Options: majority, mean, first, mode.
                 """,
-            inputSchema={
+            input_schema={
                 "type": "object",
                 "properties": {
                     "outcome": {
@@ -396,7 +396,7 @@ def get_ml_tools() -> list[Tool]:
 
                 Note: This tool tests convergence between textual content and numeric outcomes.
                 """,
-            inputSchema={
+            input_schema={
                 "type": "object",
                 "properties": {
                     "outcome": {

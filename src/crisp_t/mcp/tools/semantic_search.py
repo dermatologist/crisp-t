@@ -24,7 +24,7 @@ def get_semantic_search_tools() -> list[Tool]:
         Tool(
             name="semantic_search",
             description="Perform semantic search to find documents similar to query using ChromaDB embeddings (not keyword search). Essential for: Literature reviews (find relevant papers), Qualitative coding (find documents matching themes), Exploring corpus conceptually. Returns documents ordered by semantic similarity (highest first). Query examples: 'healthcare barriers' (finds relevant passages regardless of exact wording). Compare to: filter_documents (exact metadata matching), semantic_chunk_search (searches within one document). Workflow: semantic_search(query='theme') → examine results → use top doc IDs for find_similar_documents. Tip: Refine query if results miss relevant documents.",
-            inputSchema={
+            input_schema={
                 "type": "object",
                 "properties": {
                     "query": {
@@ -43,7 +43,7 @@ def get_semantic_search_tools() -> list[Tool]:
         Tool(
             name="find_similar_documents",
             description="Find documents semantically similar to reference documents (seed-based search). Essential for: Literature review snowballing (start with known relevant papers → find more similar ones), Validation (are these documents similar to my key examples?), Grouping (find all docs similar to this cluster). Parameters: document_ids (one or multiple), n_results (documents to return), threshold (minimum similarity 0-1, default 0.7 = high similarity). Workflow: Pick 1-3 exemplary documents → find_similar_documents → expand literature set → validate quality. Typical threshold: 0.5 (loose matching) to 0.9 (strict matching). Compare to: semantic_search (query-based), semantic_chunk_search (within-document search). Tip: Start with threshold=0.5 if getting too few results.",
-            inputSchema={
+            input_schema={
                 "type": "object",
                 "properties": {
                     "document_ids": {
@@ -67,7 +67,7 @@ def get_semantic_search_tools() -> list[Tool]:
         Tool(
             name="semantic_chunk_search",
             description="Perform semantic search within a single document to find relevant passages/chunks matching a concept or theme. Essential for: Qualitative coding (find mentions of concept X in document Y), Annotation (mark relevant sections for later analysis), Quote extraction (identify key passages supporting theme). Parameters: query (concept/theme), doc_id (document to search), threshold (minimum similarity 0-1, default 0.5), n_results (max chunks to retrieve). Workflow: Get doc_id with semantic_search → semantic_chunk_search(query='theme', doc_id=X) → extract matching chunks for coding/quotes. Threshold guidance: 0.3-0.5 (loose, catch all mentions), 0.7+ (strict, only high matches). Compare to: semantic_search (whole corpus), filter_documents (metadata-based). Tip: Use for manual annotation/coding validation.",
-            inputSchema={
+            input_schema={
                 "type": "object",
                 "properties": {
                     "query": {
@@ -95,7 +95,7 @@ def get_semantic_search_tools() -> list[Tool]:
         Tool(
             name="export_metadata_df",
             description="Export ChromaDB collection metadata as DataFrame for analysis/visualization. Essential for: Analyzing document-level metadata (sources, dates, etc.), Exporting for external analysis tools, Creating reports. Parameters: metadata_keys (comma-separated keys to export, optional - all keys by default). Returns: DataFrame with document metadata. Workflow: semantic_search → export_metadata_df(metadata_keys='source,date') → analyze patterns in metadata.",
-            inputSchema={
+            input_schema={
                 "type": "object",
                 "properties": {
                     "metadata_keys": {
