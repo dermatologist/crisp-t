@@ -449,7 +449,7 @@ def main(
                         max_csv_rows=max_csv_rows,
                     )
                     loaded_any = True
-                    click.echo(format_success("Loaded successfully", indent=5))
+                    click.echo("     " + format_success("Loaded successfully"))
                 except Exception as e:
                     logger.exception(f"Failed to read source {src}: {e}")
                     raise click.ClickException(
