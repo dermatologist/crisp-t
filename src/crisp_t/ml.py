@@ -18,6 +18,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KDTree
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
+from sklearn.tree import DecisionTreeClassifier, export_text, plot_tree
 from tabulate import tabulate
 from tqdm import tqdm
 
@@ -219,7 +220,13 @@ class ML:
             self._csv.corpus = _corpus
         return members
 
-    def get_nnet_predictions(self, y: str, mcp=False, linkage_method: str | None = None, aggregation: str = "majority"):
+    def get_nnet_predictions(
+        self,
+        y: str,
+        mcp=False,
+        linkage_method: str | None = None,
+        aggregation: str = "majority",
+    ):
         """
         Extended: Handles binary (BCELoss) and multi-class (CrossEntropyLoss).
         Returns list of predicted original class labels.
@@ -242,7 +249,9 @@ class ML:
             )
         _corpus = self._csv.corpus
 
-        X_np, Y_raw, X, Y = self._process_xy(y=y, linkage_method=linkage_method, aggregation=aggregation)
+        X_np, Y_raw, X, Y = self._process_xy(
+            y=y, linkage_method=linkage_method, aggregation=aggregation
+        )
 
         unique_classes = np.unique(Y_raw)
         num_classes = unique_classes.size
@@ -366,18 +375,26 @@ class ML:
     def _convert_to_binary(self, Y):
         unique_values = np.unique(Y)
         if len(unique_values) != 2:
-            logger.warning(
-                "Target variable has more than two unique values."
-            )
+            logger.warning("Target variable has more than two unique values.")
             # convert unique_values[0] to 0, rest to 1
-            mapping = {val: (0 if val == unique_values[0] else 1) for val in unique_values}
+            mapping = {
+                val: (0 if val == unique_values[0] else 1) for val in unique_values
+            }
         else:
             mapping = {unique_values[0]: 0, unique_values[1]: 1}
         Y_binary = np.vectorize(mapping.get)(Y)
         print(f"Converted target variable to binary using mapping: {mapping}")
         return Y_binary
 
-    def svm_confusion_matrix(self, y: str, test_size=ml_config.CLASSIFIER_TEST_SIZE, random_state=ml_config.KMEANS_RANDOM_STATE, mcp=False, linkage_method: str | None = None, aggregation: str = "majority"):
+    def svm_confusion_matrix(
+        self,
+        y: str,
+        test_size=ml_config.CLASSIFIER_TEST_SIZE,
+        random_state=ml_config.KMEANS_RANDOM_STATE,
+        mcp=False,
+        linkage_method: str | None = None,
+        aggregation: str = "majority",
+    ):
         """Generate confusion matrix for SVM
 
         Args:
@@ -391,7 +408,9 @@ class ML:
         Returns:
             [list] -- [description]
         """
-        X_np, Y_raw, X, Y = self._process_xy(y=y, linkage_method=linkage_method, aggregation=aggregation)
+        X_np, Y_raw, X, Y = self._process_xy(
+            y=y, linkage_method=linkage_method, aggregation=aggregation
+        )
         Y = self._convert_to_binary(Y)
         X_train, X_test, y_train, y_test = train_test_split(
             X, Y, test_size=test_size, random_state=random_state
@@ -442,7 +461,15 @@ class ML:
         )
 
     # https://stackoverflow.com/questions/45419203/python-numpy-extracting-a-row-from-an-array
-    def knn_search(self, y: str, n=3, r=3, mcp=False, linkage_method: str | None = None, aggregation: str = "majority"):
+    def knn_search(
+        self,
+        y: str,
+        n=3,
+        r=3,
+        mcp=False,
+        linkage_method: str | None = None,
+        aggregation: str = "majority",
+    ):
         """
         Perform K-Nearest Neighbors search.
 
@@ -454,7 +481,9 @@ class ML:
             linkage_method (str, optional): Linkage method for text metadata outcomes ('id', 'embedding', 'temporal', 'keyword').
             aggregation (str): Aggregation strategy when multiple documents link to one row ('majority', 'mean', 'first', 'mode').
         """
-        X_np, Y_raw, X, Y = self._process_xy(y=y, linkage_method=linkage_method, aggregation=aggregation)
+        X_np, Y_raw, X, Y = self._process_xy(
+            y=y, linkage_method=linkage_method, aggregation=aggregation
+        )
         kdt = KDTree(X_np, leaf_size=2, metric="euclidean")
         dist, ind = kdt.query(X_np[r - 1 : r, :], k=n)
         # Display results as human readable (1-based)
@@ -472,10 +501,7 @@ class ML:
         return dist, ind
 
     def _extract_outcome_from_text_metadata(
-        self,
-        metadata_field: str,
-        linkage_method: str,
-        aggregation: str = "majority"
+        self, metadata_field: str, linkage_method: str, aggregation: str = "majority"
     ) -> tuple[pd.Series, list[int]]:
         """
         Extract outcome values from text document metadata using specified linkage method.
@@ -495,7 +521,9 @@ class ML:
                 - valid_indices: List of DataFrame indices that have linked documents
         """
         if not self._csv.corpus or not self._csv.corpus.documents:
-            raise ValueError("Corpus documents not available. Cannot extract text metadata outcomes.")
+            raise ValueError(
+                "Corpus documents not available. Cannot extract text metadata outcomes."
+            )
 
         if self._csv.df is None:
             raise ValueError("DataFrame not available.")
@@ -510,8 +538,7 @@ class ML:
 
             # Create a mapping from id to df index
             id_to_df_index = {
-                str(row_id): idx
-                for idx, row_id in self._csv.df['id'].items()
+                str(row_id): idx for idx, row_id in self._csv.df["id"].items()
             }
 
             for doc in self._csv.corpus.documents:
@@ -536,7 +563,9 @@ class ML:
                                 df_idx = link["df_index"]
                                 if df_idx not in df_index_to_values:
                                     df_index_to_values[df_idx] = []
-                                df_index_to_values[df_idx].append(doc.metadata[metadata_field])
+                                df_index_to_values[df_idx].append(
+                                    doc.metadata[metadata_field]
+                                )
 
         elif linkage_method == "keyword":
             # Keyword linkage: Use keyword_links stored in document metadata
@@ -549,7 +578,9 @@ class ML:
                                 df_idx = link["df_index"]
                                 if df_idx not in df_index_to_values:
                                     df_index_to_values[df_idx] = []
-                                df_index_to_values[df_idx].append(doc.metadata[metadata_field])
+                                df_index_to_values[df_idx].append(
+                                    doc.metadata[metadata_field]
+                                )
 
         else:
             raise ValueError(
@@ -600,7 +631,7 @@ class ML:
         outcome_series = pd.Series(
             [aggregated_values[idx] for idx in valid_indices],
             index=valid_indices,
-            name=metadata_field
+            name=metadata_field,
         )
 
         logger.info(
@@ -611,7 +642,14 @@ class ML:
 
         return outcome_series, valid_indices
 
-    def _process_xy(self, y: str, oversample=False, one_hot_encode_all=False, linkage_method: str | None = None, aggregation: str = "majority"):
+    def _process_xy(
+        self,
+        y: str,
+        oversample=False,
+        one_hot_encode_all=False,
+        linkage_method: str | None = None,
+        aggregation: str = "majority",
+    ):
         """
         Process features and outcome data for ML models.
 
@@ -629,9 +667,7 @@ class ML:
         if linkage_method:
             # Extract outcome from text metadata using specified linkage
             outcome_series, valid_indices = self._extract_outcome_from_text_metadata(
-                metadata_field=y,
-                linkage_method=linkage_method,
-                aggregation=aggregation
+                metadata_field=y, linkage_method=linkage_method, aggregation=aggregation
             )
 
             # Filter DataFrame to only include rows with linked documents
@@ -649,7 +685,7 @@ class ML:
                 X, Y = self._csv.prepare_data(
                     y=f"_text_outcome_{y}",
                     oversample=oversample,
-                    one_hot_encode_all=one_hot_encode_all
+                    one_hot_encode_all=one_hot_encode_all,
                 )
             finally:
                 # Restore original DataFrame and remove temporary column
@@ -657,7 +693,7 @@ class ML:
                 self._csv.df = original_df
 
             # Rename Y back to the original metadata field name
-            if hasattr(Y, 'name'):
+            if hasattr(Y, "name"):
                 Y.name = y
         else:
             # Standard path: y is a DataFrame column
@@ -685,7 +721,14 @@ class ML:
         return X_np, Y_raw, X, Y
 
     def get_decision_tree_classes(
-        self, y: str, top_n=5, test_size=0.5, random_state=1, mcp=False, linkage_method: str | None = None, aggregation: str = "majority"
+        self,
+        y: str,
+        top_n=5,
+        test_size=0.5,
+        random_state=1,
+        mcp=False,
+        linkage_method: str | None = None,
+        aggregation: str = "majority",
     ):
         """
         Train a Decision Tree classifier and return feature importances.
@@ -702,7 +745,9 @@ class ML:
         Returns:
             dict or str: Feature importances and accuracy metrics.
         """
-        X_np, Y_raw, X, Y = self._process_xy(y=y, linkage_method=linkage_method, aggregation=aggregation)
+        X_np, Y_raw, X, Y = self._process_xy(
+            y=y, linkage_method=linkage_method, aggregation=aggregation
+        )
         Y_raw = self._convert_to_binary(Y_raw)
         X_train, X_test, y_train, y_test = train_test_split(
             X_np, Y_raw, test_size=test_size, random_state=random_state
@@ -712,12 +757,18 @@ class ML:
         # print(f"X_test shape: {X_test.shape}, y_test shape: {y_test.shape}")
 
         # Train a RandomForestClassifier
-        clf = RandomForestClassifier(n_estimators=100, random_state=ml_config.CLASSIFIER_RANDOM_STATE)
+        clf = RandomForestClassifier(
+            n_estimators=100, random_state=ml_config.CLASSIFIER_RANDOM_STATE
+        )
         clf.fit(X_train, y_train)
 
         # Compute permutation importance
         results = permutation_importance(
-            clf, X_test, y_test, n_repeats=10, random_state=ml_config.CLASSIFIER_RANDOM_STATE
+            clf,
+            X_test,
+            y_test,
+            n_repeats=10,
+            random_state=ml_config.CLASSIFIER_RANDOM_STATE,
         )
 
         # classifier = DecisionTreeClassifier(random_state=random_state) # type: ignore
@@ -762,8 +813,119 @@ class ML:
             """
         return _confusion_matrix, importance
 
+    def decision_tree_classifier(
+        self,
+        y: str,
+        top_n: int = 5,
+        test_size: float = 0.5,
+        random_state: int = 1,
+        max_depth: int | None = None,
+        min_samples_split: int = 2,
+        mcp: bool = False,
+        linkage_method: str | None = None,
+        aggregation: str = "majority",
+    ):
+        """
+        Train an actual Decision Tree classifier (not Random Forest) and return tree structure, rules, and metrics.
+
+        This method provides interpretable decision trees with visual structure and human-readable rules,
+        unlike get_decision_tree_classes() which uses Random Forest ensemble.
+
+        Args:
+            y (str): Target column name OR text metadata field name (when linkage_method is specified).
+            top_n (int): Number of top features to display.
+            test_size (float): Proportion of dataset to include in test split.
+            random_state (int): Random state for reproducibility.
+            max_depth (int, optional): Maximum depth of the tree. None means unlimited.
+            min_samples_split (int): Minimum samples required to split a node.
+            mcp (bool): Whether to return MCP-formatted string.
+            linkage_method (str, optional): Linkage method for text metadata outcomes ('id', 'embedding', 'temporal', 'keyword').
+            aggregation (str): Aggregation strategy when multiple documents link to one row ('majority', 'mean', 'first', 'mode').
+
+        Returns:
+            tuple or str: (confusion_matrix, feature_importance, tree_rules, trained_model) or MCP-formatted string.
+        """
+        X_np, Y_raw, X, Y = self._process_xy(
+            y=y, linkage_method=linkage_method, aggregation=aggregation
+        )
+        Y_raw = self._convert_to_binary(Y_raw)
+        X_train, X_test, y_train, y_test = train_test_split(
+            X_np, Y_raw, test_size=test_size, random_state=random_state
+        )
+
+        # Train a single DecisionTreeClassifier (not ensemble)
+        clf = DecisionTreeClassifier(
+            random_state=random_state,
+            max_depth=max_depth,
+            min_samples_split=min_samples_split,
+        )
+        clf.fit(X_train, y_train)
+
+        # Make predictions
+        y_pred = clf.predict(X_test)
+        _confusion_matrix = confusion_matrix(y_test, y_pred)
+        print(
+            f"Confusion Matrix for Decision Tree predicting {y}:\n{_confusion_matrix}"
+        )
+
+        accuracy = accuracy_score(y_test, y_pred)
+        print(f"\nAccuracy: {accuracy}\n")
+
+        # Get feature importances from the tree
+        importance = clf.feature_importances_
+
+        # Get indices of top N important features
+        top_n_indices = np.argsort(importance)[-top_n:][::-1]
+
+        # Display feature importance
+        print(f"==== Top {top_n} important features ====")
+        _importance = ""
+        for i, v in enumerate(top_n_indices):
+            print(f"Feature: {X.columns[v]}, Score: {importance[v]:.5f}")
+            _importance += f"Feature: {X.columns[v]}, Score: {importance[v]:.5f}\n"
+
+        # Extract tree rules as text
+        tree_rules = export_text(
+            clf,
+            feature_names=[col for col in X.columns],
+            max_depth=max_depth if max_depth else 10,  # Limit text output depth
+        )
+        print(f"\n==== Decision Tree Rules ====")
+        print(tree_rules)
+
+        # Store in metadata
+        if self._csv.corpus is not None:
+            self._csv.corpus.metadata["decision_tree_accuracy"] = (
+                f"Decision Tree accuracy for predicting {y}: {accuracy*100:.2f}%"
+            )
+            self._csv.corpus.metadata["decision_tree_confusion_matrix"] = (
+                f"Confusion Matrix for Decision Tree predicting {y}:\n{self.format_confusion_matrix_to_human_readable(_confusion_matrix)}"
+            )
+            self._csv.corpus.metadata["decision_tree_feature_importance"] = _importance
+            self._csv.corpus.metadata["decision_tree_rules"] = tree_rules
+            self._csv.corpus.metadata["decision_tree_max_depth"] = clf.get_depth()
+            self._csv.corpus.metadata["decision_tree_n_estimators"] = 1  # Single tree
+
+        if mcp:
+            return f"""
+            Confusion Matrix for Decision Tree predicting {y}:\n{self.format_confusion_matrix_to_human_readable(_confusion_matrix)}
+            \nTop {top_n} important features:\n{_importance}
+            \nDecision Tree Rules:\n{tree_rules}
+            \nAccuracy: {accuracy*100:.2f}%
+            Tree Depth: {clf.get_depth()}
+            """
+
+        return _confusion_matrix, importance, tree_rules, clf
+
     def get_xgb_classes(
-        self, y: str, oversample=False, test_size=ml_config.CLASSIFIER_TEST_SIZE, random_state=ml_config.KMEANS_RANDOM_STATE, mcp=False, linkage_method: str | None = None, aggregation: str = "majority"
+        self,
+        y: str,
+        oversample=False,
+        test_size=ml_config.CLASSIFIER_TEST_SIZE,
+        random_state=ml_config.KMEANS_RANDOM_STATE,
+        mcp=False,
+        linkage_method: str | None = None,
+        aggregation: str = "majority",
     ):
         """
         Train an XGBoost classifier and return feature importances.
@@ -786,7 +948,9 @@ class ML:
             raise ImportError(
                 "XGBoost is not installed. Please install it via `pip install crisp-t[xg]`."
             ) from None
-        X_np, Y_raw, X, Y = self._process_xy(y=y, linkage_method=linkage_method, aggregation=aggregation)
+        X_np, Y_raw, X, Y = self._process_xy(
+            y=y, linkage_method=linkage_method, aggregation=aggregation
+        )
         if ML_INSTALLED:
             # ValueError: Invalid classes inferred from unique values of `y`.  Expected: [0 1], got [1 2]
             # convert y to binary
@@ -832,7 +996,14 @@ class ML:
         else:
             raise ImportError("ML dependencies are not installed.")
 
-    def get_pca(self, y: str, n: int = 3, mcp=False, linkage_method: str | None = None, aggregation: str = "majority"):
+    def get_pca(
+        self,
+        y: str,
+        n: int = 3,
+        mcp=False,
+        linkage_method: str | None = None,
+        aggregation: str = "majority",
+    ):
         """
         Perform a manual PCA (no sklearn PCA) on the feature matrix for target y.
 
@@ -854,7 +1025,9 @@ class ML:
                 'transformed': X_pca
             }
         """
-        X_np, Y_raw, X, Y = self._process_xy(y=y, linkage_method=linkage_method, aggregation=aggregation)
+        X_np, Y_raw, X, Y = self._process_xy(
+            y=y, linkage_method=linkage_method, aggregation=aggregation
+        )
         X_std = StandardScaler().fit_transform(X_np)
 
         cov_mat = np.cov(X_std.T)
@@ -908,7 +1081,13 @@ class ML:
             )
         return result
 
-    def get_regression(self, y: str, mcp=False, linkage_method: str | None = None, aggregation: str = "mean"):
+    def get_regression(
+        self,
+        y: str,
+        mcp=False,
+        linkage_method: str | None = None,
+        aggregation: str = "mean",
+    ):
         """
         Perform linear or logistic regression based on the outcome variable type.
 
@@ -936,7 +1115,9 @@ class ML:
                 "CSV data is not set. Please set self.csv before calling get_regression."
             )
 
-        X_np, Y_raw, X, Y = self._process_xy(y=y, linkage_method=linkage_method, aggregation=aggregation)
+        X_np, Y_raw, X, Y = self._process_xy(
+            y=y, linkage_method=linkage_method, aggregation=aggregation
+        )
 
         # Check if outcome is binary (logistic) or continuous (linear)
         unique_values = np.unique(Y_raw)
@@ -950,7 +1131,9 @@ class ML:
             print(f"\n=== Logistic Regression for {y} ===")
             print(f"Binary outcome detected with values: {unique_values}")
 
-            model = LogisticRegression(max_iter=1000, random_state=ml_config.CLASSIFIER_RANDOM_STATE)
+            model = LogisticRegression(
+                max_iter=1000, random_state=ml_config.CLASSIFIER_RANDOM_STATE
+            )
             model.fit(X_np, Y_raw)
 
             # Predictions
@@ -1129,14 +1312,20 @@ class ML:
             word_counts = Counter()
             tokenized_docs = []
 
-            for doc in tqdm(_corpus.documents, desc="Tokenizing documents", disable=len(_corpus.documents) < 10):
+            for doc in tqdm(
+                _corpus.documents,
+                desc="Tokenizing documents",
+                disable=len(_corpus.documents) < 10,
+            ):
                 # Simple tokenization - split on whitespace and lowercase
                 tokens = doc.text.lower().split()
                 tokenized_docs.append(tokens)
                 word_counts.update(tokens)
 
             # Create vocabulary with most common words (limit to 10000)
-            vocab_size = min(ml_config.LSTM_VOCAB_SIZE, len(word_counts)) + 1  # +1 for padding
+            vocab_size = (
+                min(ml_config.LSTM_VOCAB_SIZE, len(word_counts)) + 1
+            )  # +1 for padding
             most_common = word_counts.most_common(vocab_size - 1)
             word_to_idx = {
                 word: idx + 1 for idx, (word, _) in enumerate(most_common)
@@ -1147,7 +1336,12 @@ class ML:
             sequences = []
             doc_ids = []
 
-            for doc, tokens in tqdm(zip(_corpus.documents, tokenized_docs), total=len(_corpus.documents), desc="Converting to sequences", disable=len(_corpus.documents) < 10):
+            for doc, tokens in tqdm(
+                zip(_corpus.documents, tokenized_docs),
+                total=len(_corpus.documents),
+                desc="Converting to sequences",
+                disable=len(_corpus.documents) < 10,
+            ):
                 # Convert tokens to indices
                 seq = [word_to_idx.get(token, 0) for token in tokens]
                 # Pad or truncate to max_length
@@ -1219,7 +1413,9 @@ class ML:
 
             indices = list(range(len(X_tensor)))
             train_idx, test_idx = train_test_split(
-                indices, test_size=ml_config.CLASSIFIER_TEST_SIZE, random_state=ml_config.CLASSIFIER_RANDOM_STATE
+                indices,
+                test_size=ml_config.CLASSIFIER_TEST_SIZE,
+                random_state=ml_config.CLASSIFIER_RANDOM_STATE,
             )
 
             X_train = X_tensor[train_idx]
@@ -1237,7 +1433,9 @@ class ML:
             train_loader = DataLoader(train_dataset, batch_size=ml_config.LSTM_BATCH_SIZE, shuffle=True)  # type: ignore
 
             # Training
-            epochs = max(self._epochs, ml_config.LSTM_EPOCHS)  # Use at least configured epochs for LSTM
+            epochs = max(
+                self._epochs, ml_config.LSTM_EPOCHS
+            )  # Use at least configured epochs for LSTM
             model.train()
             for epoch in range(epochs):
                 total_loss = 0
