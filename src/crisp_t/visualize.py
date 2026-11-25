@@ -5,6 +5,14 @@ from collections.abc import Iterable, Sequence
 from pathlib import Path
 from typing import cast
 
+# Set matplotlib backend BEFORE importing pyplot for Kaggle/headless compatibility
+import matplotlib
+
+try:
+    matplotlib.use("Agg", force=True)
+except Exception as e:
+    pass  # Let matplotlib use default if Agg fails
+
 import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
 import networkx as nx
@@ -18,6 +26,7 @@ from matplotlib.patches import Rectangle
 from matplotlib.text import Annotation
 from matplotlib.ticker import FuncFormatter
 from sklearn.manifold import TSNE
+from sklearn.tree import plot_tree
 from wordcloud import STOPWORDS, WordCloud
 
 try:
