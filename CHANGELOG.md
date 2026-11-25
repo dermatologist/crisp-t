@@ -1,5 +1,9 @@
 # Changelog
 
+## [v2.5.0](https://github.com/dermatologist/crisp-t/tree/v2.5.0) (2026-11-25)
+
+[Full Changelog](https://github.com/dermatologist/crisp-t/compare/v2.4.0...v2.5.0)
+
 ## [v2.4.0](https://github.com/dermatologist/crisp-t/tree/v2.4.0) (2026-11-21)
 
 [Full Changelog](https://github.com/dermatologist/crisp-t/compare/v2.3.2...v2.4.0)
