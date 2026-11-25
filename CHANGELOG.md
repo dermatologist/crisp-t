@@ -1,8 +1,8 @@
 # Changelog
 
-## [Unreleased](https://github.com/dermatologist/crisp-t/tree/HEAD)
+## [v2.4.0](https://github.com/dermatologist/crisp-t/tree/v2.4.0) (2026-11-21)
 
-[Full Changelog](https://github.com/dermatologist/crisp-t/compare/v2.3.2...HEAD)
+[Full Changelog](https://github.com/dermatologist/crisp-t/compare/v2.3.2...v2.4.0)
 
 **Closed issues:**
 
@@ -34,7 +34,6 @@
 
 - Refactor mcp/server.py by modularizing tools into separate files and organizing prompt templates. [\#79](https://github.com/dermatologist/crisp-t/issues/79)
 - Feature request: Support multiple text columns while importing documents from CSV. [\#77](https://github.com/dermatologist/crisp-t/issues/77)
-- Add time‑based analysis to CRISP-T [\#66](https://github.com/dermatologist/crisp-t/issues/66)
 
 ## [v2.2.0](https://github.com/dermatologist/crisp-t/tree/v2.2.0) (2026-01-31)
 
@@ -52,11 +51,6 @@
 
 [Full Changelog](https://github.com/dermatologist/crisp-t/compare/v1.2.2...v1.2.3)
 
-**Closed issues:**
-
-- Feature request: Improve the CLI scripts using click. [\#60](https://github.com/dermatologist/crisp-t/issues/60)
-- Feature request: Improve the cli with Typer. [\#57](https://github.com/dermatologist/crisp-t/issues/57)
-
 ## [v1.2.2](https://github.com/dermatologist/crisp-t/tree/v1.2.2) (2025-12-23)
 
 [Full Changelog](https://github.com/dermatologist/crisp-t/compare/v1.2.1...v1.2.2)
@@ -69,10 +63,6 @@
 
 [Full Changelog](https://github.com/dermatologist/crisp-t/compare/v1.1.1...v1.2.0)
 
-**Implemented enhancements:**
-
-- Feature Request: Add a graph creation and visualization feature. [\#49](https://github.com/dermatologist/crisp-t/issues/49)
-
 ## [v1.1.1](https://github.com/dermatologist/crisp-t/tree/v1.1.1) (2025-10-28)
 
 [Full Changelog](https://github.com/dermatologist/crisp-t/compare/v1.1.0...v1.1.1)
@@ -84,10 +74,6 @@
 ## [v1.0.0](https://github.com/dermatologist/crisp-t/tree/v1.0.0) (2025-10-26)
 
 [Full Changelog](https://github.com/dermatologist/crisp-t/compare/v0.9.0...v1.0.0)
-
-**Implemented enhancements:**
-
-- Feature request: Improve the --print command with more options and better display. [\#45](https://github.com/dermatologist/crisp-t/issues/45)
 
 ## [v0.9.0](https://github.com/dermatologist/crisp-t/tree/v0.9.0) (2025-10-25)
 
