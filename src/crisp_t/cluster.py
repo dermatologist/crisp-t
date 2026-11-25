@@ -140,7 +140,9 @@ class Cluster:
             topics += f"Topic {topic_num}: {', '.join(words)}\n"
         self._corpus.metadata["topics"] = topics
         # Store raw LDA output for visualization
-        self._corpus.metadata["lda_raw_output"] = [(int(topic[0]), topic[1]) for topic in output]
+        self._corpus.metadata["lda_raw_output"] = [
+            (int(topic[0]), topic[1]) for topic in output
+        ]
         return output
 
     def tokenize(self, spacy_doc):
@@ -214,7 +216,7 @@ class Cluster:
             model=self._lda_model,
             texts=self._processed_docs,
             dictionary=self._dictionary,
-            coherence='c_v'
+            coherence="c_v",
         )
         coherence_score = coherence_model.get_coherence()
 
@@ -242,7 +244,9 @@ class Cluster:
                 )
 
         # Add cluster information to documents metadata
-        for doc in tqdm(documents, desc="Adding cluster metadata", disable=len(documents) < 10):
+        for doc in tqdm(
+            documents, desc="Adding cluster metadata", disable=len(documents) < 10
+        ):
             doc_id = doc.id
             if doc_id in clusters:
                 cluster = clusters[doc_id][0][0]
@@ -340,23 +344,25 @@ class Cluster:
         documents_copy = []
         documents = self._corpus.documents if self._corpus is not None else []
         # Add topic information to the documents metadata
-        for doc in tqdm(documents, desc="Adding topic metadata", disable=len(documents) < 10):
+        for doc in tqdm(
+            documents, desc="Adding topic metadata", disable=len(documents) < 10
+        ):
             doc_id_str = str(doc.id)
-            if doc_id_str in sent_topics_df["Title"].values:
+            if doc_id_str in sent_topics_df["Title"].to_numpy():
                 topic = int(
                     sent_topics_df[sent_topics_df["Title"] == doc_id_str][
                         "Dominant_Topic"
-                    ].values[0]
+                    ].to_numpy()[0]
                 )
                 probability = float(
                     sent_topics_df[sent_topics_df["Title"] == doc_id_str][
                         "Perc_Contribution"
-                    ].values[0]
+                    ].to_numpy()[0]
                 )
                 keywords = str(
                     sent_topics_df[sent_topics_df["Title"] == doc_id_str][
                         "Topic_Keywords"
-                    ].values[0]
+                    ].to_numpy()[0]
                 )
                 doc.metadata["topic"] = topic
                 doc.metadata["probability"] = probability

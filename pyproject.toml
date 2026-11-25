@@ -5,7 +5,7 @@ description = "Qualitative Research support tools in Python!"
 authors = [{ name = "Bell Eapen", email = "github_public@gulfdoctor.net" }]
 readme = "README.md"
 keywords = ['python']
-requires-python = ">=3.10,<4.0"
+requires-python = ">=3.11,<4.0"
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Science/Research",
@@ -20,7 +20,7 @@ classifiers = [
 ]
 dependencies = [
     "pydantic",
-    "pandas",
+    "pandas>=3.0.0",
     "mlxtend",
     "matplotlib",
     "click",
@@ -79,13 +79,7 @@ explicit = true
 fallback-version = "0.1.0"
 
 [tool.uv.build-backend]
-source-exclude = [
-  "tests/*",
-  "examples/*",
-  "docs/*",
-  "notes/*",
-  "notebooks/*"
-]
+source-exclude = ["tests/*", "examples/*", "docs/*", "notes/*", "notebooks/*"]
 
 [project.scripts]
 crisp = "crisp_t.cli:main"
@@ -95,19 +89,9 @@ crisp-mcp = "crisp_t.mcp.__main__:run_server"
 crisp-ui = "crisp_t.ui.cli:main"
 
 [project.optional-dependencies]
-ml = [
-    "scikit-learn",
-    "imbalanced-learn",
-    "torch",
-]
-xg = [
-    "xgboost",
-]
-copilot = [
-    "github-copilot-sdk",
-    "quart",
-    "quart-cors",
-]
+ml = ["scikit-learn", "imbalanced-learn", "torch"]
+xg = ["xgboost"]
+copilot = ["github-copilot-sdk", "quart", "quart-cors"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/crisp_t"]
@@ -156,7 +140,8 @@ select = [
     # mccabe
     "C90",
     # pycodestyle
-    "E", "W",
+    "E",
+    "W",
     # pyflakes
     "F",
     # pygrep-hooks
@@ -187,4 +172,3 @@ skip_empty = true
 [tool.coverage.run]
 branch = true
 source = ["src"]
-
