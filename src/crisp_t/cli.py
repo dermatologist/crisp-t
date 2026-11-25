@@ -81,9 +81,9 @@ except ImportError:
     "-t",
     multiple=True,
     help="Specify CSV columns containing free-form text (e.g., open-ended survey responses). "
-         "Multiple columns can be specified by using this flag multiple times (e.g., -t col1 -t col2) "
-         "or by providing comma-separated column names (e.g., -t 'col1,col2,col3'). "
-         "All specified text columns will be concatenated into a single document per row.",
+    "Multiple columns can be specified by using this flag multiple times (e.g., -t col1 -t col2) "
+    "or by providing comma-separated column names (e.g., -t 'col1,col2,col3'). "
+    "All specified text columns will be concatenated into a single document per row.",
 )
 @click.option(
     "--filters",
@@ -141,7 +141,24 @@ except ImportError:
 @click.option(
     "--cls",
     is_flag=True,
-    help="Perform classification using Support Vector Machine (SVM) and Decision Tree algorithms.",
+    help="Perform classification using both Support Vector Machine (SVM) and Random Forest algorithms. Both run sequentially.",
+)
+@click.option(
+    "--tree",
+    is_flag=True,
+    help="Train an interpretable Decision Tree classifier with visual tree diagram and human-readable rules. Unlike --cls (which uses Random Forest ensemble), this provides transparent decision paths.",
+)
+@click.option(
+    "--max-depth",
+    type=int,
+    default=None,
+    help="Maximum depth of the decision tree (only used with --tree). None means unlimited depth. Use smaller values (3-5) for simpler, more interpretable trees.",
+)
+@click.option(
+    "--min-samples",
+    type=int,
+    default=2,
+    help="Minimum samples required to split a node (only used with --tree). Default: 2.",
 )
 @click.option(
     "--knn",
@@ -154,9 +171,9 @@ except ImportError:
     help="Perform K-Means clustering to group similar records.",
 )
 @click.option(
-    "--cart",
+    "--apriori",
     is_flag=True,
-    help="Generate association rules using the Apriori algorithm (CART).",
+    help="Generate association rules using the Apriori algorithm.",
 )
 @click.option(
     "--pca",
@@ -250,8 +267,8 @@ except ImportError:
 )
 @click.option(
     "--correlation-method",
-    type=click.Choice(['pearson', 'kendall', 'spearman'], case_sensitive=False),
-    default='pearson',
+    type=click.Choice(["pearson", "kendall", "spearman"], case_sensitive=False),
+    default="pearson",
     help="Method for computing correlation: pearson, kendall, or spearman (default: pearson).",
 )
 def main(
@@ -274,9 +291,12 @@ def main(
     nlp,
     nnet,
     cls,
+    tree,
+    max_depth,
+    min_samples,
     knn,
     kmeans,
-    cart,
+    apriori,
     pca,
     regression,
     lstm,
@@ -482,7 +502,16 @@ def main(
         if (
             ML_AVAILABLE
             and (
-                nnet or cls or knn or kmeans or cart or pca or regression or lstm or ml
+                nnet
+                or cls
+                or knn
+                or kmeans
+                or apriori
+                or pca
+                or regression
+                or lstm
+                or ml
+                or tree
             )
             and csv_analyzer
         ):
@@ -494,7 +523,16 @@ def main(
             ml_analyzer = ML(csv=csv_analyzer)  # type: ignore
         else:
             if (
-                nnet or cls or knn or kmeans or cart or pca or regression or lstm or ml
+                nnet
+                or cls
+                or knn
+                or kmeans
+                or apriori
+                or pca
+                or regression
+                or lstm
+                or ml
+                or tree
             ) and not ML_AVAILABLE:
                 click.echo(
                     click.style(
@@ -507,7 +545,16 @@ def main(
                     + click.style("pip install crisp-t[ml]", fg="cyan", bold=True)
                 )
             if (
-                nnet or cls or knn or kmeans or cart or pca or regression or lstm or ml
+                nnet
+                or cls
+                or knn
+                or kmeans
+                or apriori
+                or pca
+                or regression
+                or lstm
+                or ml
+                or tree
             ) and not csv_analyzer:
                 click.echo(
                     click.style("⚠️  ML analysis requires CSV data. ", fg="yellow")
@@ -826,8 +873,16 @@ def main(
                 )
                 click.echo(
                     click.style(
-                        "\nWhat are Classification Models?", fg="cyan", bold=True
+                        "\n📊 Note: Running both SVM and Random Forest classifiers...",
+                        fg="yellow",
+                        bold=True,
                     )
+                )
+                click.echo(
+                    "   Each algorithm provides different insights into your data.\n"
+                )
+                click.echo(
+                    click.style("What are Classification Models?", fg="cyan", bold=True)
                 )
                 click.echo(
                     "   Predict categorical outcomes using machine learning algorithms:"
@@ -837,8 +892,8 @@ def main(
                     + " Support Vector Machine with confusion matrix"
                 )
                 click.echo(
-                    click.style("   • Decision Tree:", fg="yellow")
-                    + " Tree-based classifier with feature importance"
+                    click.style("   • Random Forest:", fg="yellow")
+                    + " Tree-based ensemble classifier with feature importance"
                 )
                 click.echo(click.style("\n💡 Tips:", fg="cyan", bold=True))
                 click.echo(
@@ -870,14 +925,14 @@ def main(
                             confusion_matrix
                         )
                     )
-                    click.echo(format_success("SVM classification complete", indent=2))
+                    click.echo("  " + format_success("SVM classification complete"))
                     if out:
                         _save_output(confusion_matrix, out, "svm_results")
                 except Exception as e:
-                    click.echo(format_error(f"Error in SVM: {e}", indent=2))
+                    click.echo("  " + format_error(f"Error in SVM: {e}"))
                 click.echo(
                     click.style(
-                        "\n▸ Running Decision Tree Classification...", fg="yellow"
+                        "\n▸ Running Random Forest Classification...", fg="yellow"
                     )
                 )
                 try:
@@ -893,25 +948,159 @@ def main(
                     click.echo(
                         ml_analyzer.format_confusion_matrix_to_human_readable(cm)
                     )
-                    click.echo(
-                        format_success(
-                            "Decision tree classification complete", indent=2
-                        )
-                    )
+                    click.echo(format_success("Random Forest classification complete"))
                     if out:
                         _save_output(cm, out, "decision_tree_results")
                 except Exception as e:
-                    click.echo(format_error(f"Error in Decision Tree: {e}", indent=2))
+                    click.echo("  " + format_error(f"Error in Random Forest: {e}"))
+
+            if tree:
+                # Validate --outcome is provided before proceeding
+                if not target_col:
+                    raise click.ClickException(
+                        click.style("❌ Error: ", fg="red", bold=True)
+                        + "--outcome is required for decision tree tasks"
+                    )
+
+                print_section_header(
+                    "DECISION TREE CLASSIFIER", emoji="🌳", color="magenta"
+                )
+                click.echo(
+                    click.style(
+                        "\n📊 Note: Training interpretable Decision Tree with visualization...",
+                        fg="yellow",
+                        bold=True,
+                    )
+                )
+                click.echo(
+                    click.style("\n🌲 What is a Decision Tree?", fg="cyan", bold=True)
+                )
+                click.echo("   Single tree classifier with transparent decision paths:")
+                click.echo(
+                    click.style("   • Visual Tree:", fg="yellow")
+                    + " Graphical representation of decision splits"
+                )
+                click.echo(
+                    click.style("   • Rules:", fg="yellow")
+                    + " Human-readable if-then decision rules"
+                )
+                click.echo(
+                    click.style("   • Interpretable:", fg="yellow")
+                    + " Unlike Random Forest, shows exact decision logic"
+                )
+                click.echo(click.style("\n💡 Tips:", fg="cyan", bold=True))
+                click.echo(
+                    f"   • Use {click.style('--outcome', fg='green')} to specify your target variable"
+                )
+                click.echo(
+                    f"   • Use {click.style('--max-depth', fg='green')} to limit tree complexity (3-5 for simplicity)"
+                )
+                click.echo(
+                    f"   • Use {click.style('--min-samples', fg='green')} to control node splitting"
+                )
+                click.echo(
+                    f"   • Use {click.style('--include', fg='green')} to select specific features\n"
+                )
+                click.echo(click.style("\n▸ Training Decision Tree...", fg="yellow"))
+                try:
+                    from .visualize import QRVisualize
+
+                    cm, importance, tree_rules, tree_model = (
+                        ml_analyzer.decision_tree_classifier(
+                            y=target_col,
+                            top_n=rec,
+                            max_depth=max_depth,
+                            min_samples_split=min_samples,
+                            linkage_method=linkage,
+                            aggregation=aggregation,
+                        )
+                    )
+                    click.echo(
+                        "\n" + click.style("Feature Importance:", fg="cyan", bold=True)
+                    )
+                    click.echo(
+                        ml_analyzer.format_confusion_matrix_to_human_readable(cm)
+                    )
+                    click.echo(
+                        "\n" + click.style("Decision Tree Rules:", fg="cyan", bold=True)
+                    )
+                    click.echo(tree_rules)
+                    click.echo(format_success("Decision Tree training complete"))
+
+                    # Generate visualization
+                    if out:
+                        try:
+                            # Get feature and class names
+                            csv_analyzer = csv_analyzer if csv_analyzer else Csv()
+                            csv_analyzer.drop_na()
+                            _, _, X, _ = ml_analyzer._process_xy(
+                                y=target_col,
+                                linkage_method=linkage,
+                                aggregation=aggregation,
+                            )
+                            feature_names = list(X.columns)
+                            class_names = [str(c) for c in tree_model.classes_]
+
+                            # Create visualizer
+                            visualizer = QRVisualize(
+                                corpus=ml_analyzer._csv.corpus,
+                                folder_path=out,
+                            )
+
+                            # Plot tree
+                            tree_fig = visualizer.plot_decision_tree(
+                                tree_model=tree_model,
+                                feature_names=feature_names,
+                                class_names=class_names,
+                                folder_path=f"{out}/decision_tree.png",
+                                show=False,
+                            )
+                            click.echo(
+                                format_success(
+                                    f"Tree visualization saved to {out}/decision_tree.png"
+                                )
+                            )
+
+                            # Save rules to file
+                            rules_path = f"{out}/decision_tree_rules.txt"
+                            with open(rules_path, "w") as f:
+                                f.write(tree_rules)
+                            click.echo(
+                                format_success(f"Decision rules saved to {rules_path}")
+                            )
+
+                            # Save metrics
+                            metrics = {
+                                "confusion_matrix": cm.tolist(),
+                                "feature_importance": {
+                                    fn: float(imp)
+                                    for fn, imp in zip(feature_names, importance)
+                                },
+                                "accuracy": float(cm.diagonal().sum() / cm.sum()),
+                                "tree_depth": tree_model.get_depth(),
+                                "n_features": len(feature_names),
+                            }
+                            _save_output(metrics, out, "decision_tree_metrics")
+
+                        except Exception as viz_error:
+                            click.echo(
+                                format_info(
+                                    f"Could not generate visualization: {viz_error}"
+                                )
+                            )
+                            # Still save basic results
+                            _save_output(cm, out, "decision_tree_results")
+
+                except Exception as e:
+                    click.echo("  " + format_error(f"Error in Decision Tree: {e}"))
 
             if nnet or ml:
                 click.echo("\n=== Neural Network Classification Accuracy ===")
-                click.echo(
-                    """
+                click.echo("""
                             Neural Network classifier with accuracy output.
                 Hint:   Use --outcome to specify the target variable for classification.
                         Use --include to specify columns to include in the analysis (comma separated).
-                """
-                )
+                """)
                 if not target_col:
                     raise click.ClickException(
                         "--outcome is required for neural network tasks"
@@ -927,15 +1116,13 @@ def main(
 
             if knn or ml:
                 click.echo("\n=== K-Nearest Neighbors ===")
-                click.echo(
-                    """
+                click.echo("""
                            K-Nearest Neighbors search results.
                 Hint:   Use --outcome to specify the target variable for KNN search.
                         Use --rec to specify the record number to search from (1-based index).
                         Use --num to specify the number of nearest neighbors to retrieve.
                         Use --include to specify columns to include in the analysis (comma separated).
-                """
-                )
+                """)
                 if not target_col:
                     raise click.ClickException(
                         "--outcome is required for KNN search tasks"
@@ -957,17 +1144,15 @@ def main(
                 except Exception as e:
                     click.echo(f"Error performing K-Nearest Neighbors search: {e}")
 
-            if cart or ml:
-                click.echo("\n=== Association Rules (CART) ===")
-                click.echo(
-                    """
+            if apriori or ml:
+                click.echo("\n=== Association Rules (Apriori) ===")
+                click.echo("""
                            Association Rules using the Apriori algorithm.
                 Hint:   Use --outcome to specify the target variable to remove from features.
                         Use --num to specify the minimum support (between 1 and 99).
                         Use --rec to specify the minimum threshold for the rules (between 1 and 99).
                         Use --include to specify columns to include in the analysis (comma separated).
-                """
-                )
+                """)
                 if not target_col:
                     raise click.ClickException(
                         "--outcome is required for association rules tasks"
@@ -999,14 +1184,12 @@ def main(
 
             if (pca or ml) and target_col:
                 click.echo("\n=== Principal Component Analysis ===")
-                click.echo(
-                    """
+                click.echo("""
                            Principal Component Analysis (PCA) results.
                 Hint:   Use --outcome to specify the target variable to remove from features.
                         Use --num to specify the number of principal components to generate.
                         Use --include to specify columns to include in the analysis (comma separated).
-                """
-                )
+                """)
                 try:
                     pca_results = ml_analyzer.get_pca(
                         y=target_col,
@@ -1021,15 +1204,13 @@ def main(
 
             if (regression or ml) and target_col:
                 click.echo("\n=== Regression Analysis ===")
-                click.echo(
-                    """
+                click.echo("""
                            Regression Analysis (Linear or Logistic Regression).
                            Automatically detects binary outcomes for logistic regression.
                            Otherwise uses linear regression for continuous outcomes.
                 Hint:   Use --outcome to specify the target variable for regression.
                         Use --include to specify columns to include in the analysis (comma separated).
-                """
-                )
+                """)
                 try:
                     regression_results = ml_analyzer.get_regression(
                         y=target_col, linkage_method=linkage, aggregation=aggregation
@@ -1041,16 +1222,14 @@ def main(
 
             if lstm or ml:
                 click.echo("\n=== LSTM Text Classification ===")
-                click.echo(
-                    """
+                click.echo("""
                            LSTM (Long Short-Term Memory) model for text-based prediction.
                            Tests if text documents converge towards predicting the outcome variable.
                            Requires both text documents and an 'id' column to align texts with outcome.
                 Hint:   Use --outcome to specify the target variable for LSTM prediction.
                         The outcome should be binary (two classes).
                         Ensure documents have IDs matching the 'id' column in your data.
-                """
-                )
+                """)
                 if not target_col:
                     raise click.ClickException(
                         "--outcome is required for LSTM prediction tasks"
@@ -1063,7 +1242,7 @@ def main(
                     click.echo(f"Error performing LSTM prediction: {e}")
 
         elif (
-            nnet or cls or knn or kmeans or cart or pca or regression or lstm or ml
+            nnet or cls or knn or kmeans or apriori or pca or regression or lstm or ml
         ) and not ML_AVAILABLE:
             click.echo(
                 click.style(
@@ -1081,14 +1260,14 @@ def main(
         if query and csv_analyzer:
             print_section_header("QUERY EXECUTION", emoji="🔍", color="cyan")
             try:
-                result = csv_analyzer.execute_query(query, save_result=save_query_result)
+                result = csv_analyzer.execute_query(
+                    query, save_result=save_query_result
+                )
                 click.echo(click.style("\n📊 Query Result:", fg="cyan", bold=True))
                 click.echo(result.to_string())
                 if save_query_result:
                     click.echo(
-                        format_success(
-                            "\n✓ Query result saved to corpus DataFrame"
-                        )
+                        format_success("\n✓ Query result saved to corpus DataFrame")
                     )
                 else:
                     click.echo(
@@ -1109,10 +1288,9 @@ def main(
             try:
                 # Get significant correlations
                 sig_corrs = csv_analyzer.find_significant_correlations(
-                    threshold=correlation_threshold,
-                    method=correlation_method
+                    threshold=correlation_threshold, method=correlation_method
                 )
-                
+
                 if not sig_corrs.empty:
                     click.echo(
                         click.style(
@@ -1122,11 +1300,15 @@ def main(
                         )
                     )
                     click.echo(sig_corrs.to_string(index=False))
-                    
+
                     # Also compute and display full correlation matrix
-                    corr_matrix = csv_analyzer.compute_correlation(method=correlation_method)
+                    corr_matrix = csv_analyzer.compute_correlation(
+                        method=correlation_method
+                    )
                     click.echo(
-                        click.style("\n📊 Full Correlation Matrix:", fg="magenta", bold=True)
+                        click.style(
+                            "\n📊 Full Correlation Matrix:", fg="magenta", bold=True
+                        )
                     )
                     click.echo(corr_matrix.to_string())
                 else:

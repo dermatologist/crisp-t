@@ -510,7 +510,9 @@ class QRVisualize:
                         transform=ax.transAxes,
                     )
             except Exception as e:
-                logger.exception(f"Error occurred while processing document {i - 1}: {e}")
+                logger.exception(
+                    f"Error occurred while processing document {i - 1}: {e}"
+                )
                 continue
 
         plt.subplots_adjust(wspace=0, hspace=0)
@@ -619,7 +621,7 @@ class QRVisualize:
             lambda x, pos: "Topic "
             + str(x)
             + "\n"
-            + df_top3words.loc[df_top3words.topic_id == x, "words"].values[0]  # type: ignore
+            + df_top3words.loc[df_top3words.topic_id == x, "words"].to_numpy()[0]  # type: ignore
         )
         ax1.xaxis.set_major_formatter(tick_formatter)
         ax1.set_title("Number of Documents by Dominant Topic", fontdict=dict(size=10))
@@ -1210,3 +1212,102 @@ class QRVisualize:
         plt.tight_layout()
 
         return self._finalize_plot(fig, folder_path, show)
+
+    def plot_decision_tree(
+        self,
+        tree_model,
+        feature_names: list[str],
+        class_names: list[str],
+        folder_path: str | None = None,
+        show: bool = True,
+        max_depth: int | None = None,
+    ) -> Figure:
+        """
+        Plot a decision tree visualization using sklearn's plot_tree.
+
+        Creates a visual representation of the decision tree structure showing
+        split conditions, node statistics, and class predictions.
+
+        Args:
+            tree_model: Trained DecisionTreeClassifier model
+            feature_names: List of feature/column names
+            class_names: List of class names
+            folder_path: Path to save the figure. If None, uses self.folder_path
+            show: Whether to display the plot
+            max_depth: Maximum depth to display (None shows full tree)
+
+        Returns:
+            Matplotlib Figure object with the tree visualization
+
+        Raises:
+            ValueError: If required inputs are missing
+        """
+        if tree_model is None:
+            raise ValueError("Tree model is required")
+        if not feature_names:
+            raise ValueError("Feature names are required")
+        if not class_names:
+            raise ValueError("Class names are required")
+
+        # Create a large figure for the tree
+        fig = plt.figure(figsize=(20, 10), dpi=160)
+
+        # Plot the decision tree
+        plot_tree(
+            tree_model,
+            feature_names=feature_names,
+            class_names=class_names,
+            filled=True,
+            rounded=True,
+            fontsize=10,
+            proportion=True,
+            max_depth=max_depth,
+        )
+
+        fig.suptitle(
+            "Decision Tree Visualization",
+            fontsize=20,
+            fontweight="bold",
+            y=1.0,
+        )
+
+        plt.tight_layout()
+        plt.subplots_adjust(top=0.95)  # Make room for suptitle
+
+        return self._finalize_plot(fig, folder_path, show)
+
+    def export_decision_tree_rules(
+        self,
+        tree_model,
+        feature_names: list[str],
+        class_names: list[str],
+        max_depth: int | None = None,
+    ) -> str:
+        """
+        Export decision tree rules as human-readable text.
+
+        Uses sklearn's export_text to generate if-then rules from the tree structure.
+
+        Args:
+            tree_model: Trained DecisionTreeClassifier model
+            feature_names: List of feature/column names
+            class_names: List of class names
+            max_depth: Maximum depth to include in text output (None uses tree's actual depth)
+
+        Returns:
+            String containing the tree rules in text format
+        """
+        if tree_model is None:
+            raise ValueError("Tree model is required")
+        if not feature_names:
+            raise ValueError("Feature names are required")
+
+        # Use export_text to generate readable rules
+        rules = export_text(
+            tree_model,
+            feature_names=feature_names,
+            max_depth=max_depth if max_depth else 10,  # Limit depth for readability
+            show_probabilities=True,
+        )
+
+        return rules

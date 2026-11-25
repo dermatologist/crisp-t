@@ -249,12 +249,13 @@ def test_ml_tools_module():
 
         if ML_AVAILABLE:
             tools = get_ml_tools()
-            assert len(tools) == 9
+            assert len(tools) == 10
 
             tool_names = [tool.name for tool in tools]
             expected_names = [
                 "kmeans_clustering",
                 "decision_tree_classification",
+                "decision_tree_visualization",
                 "svm_classification",
                 "neural_network_classification",
                 "regression_analysis",

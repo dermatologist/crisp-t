@@ -414,7 +414,7 @@ class Csv:
                     # )
                     return True
 
-            self._df = self._df.applymap(to_one_hot)  # type: ignore
+            self._df = self._df.map(to_one_hot)  # type: ignore
 
     def filter_rows_by_column_value(self, column_name: str, value, mcp: bool = False):
         """Select rows from the DataFrame where the specified column matches the given value.

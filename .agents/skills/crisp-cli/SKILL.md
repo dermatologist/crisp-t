@@ -21,7 +21,15 @@ Before substantive analysis, ask the user which methodology to adopt:
 6. Mixed-methods analysis
 7. Unsure: recommend a method from the research question and intended output
 
-Also confirm the research question, expected output, data types, unit of analysis, whether data collection is complete, and the role of numeric data. If external web or scholarly research may help, explain why and obtain the user's permission before using it.
+Also confirm the following:
+
+1. Research question.
+2. Expected output.
+3. Data types.
+4. Unit of analysis.
+5. Whether data collection is complete.
+6. Role of numeric data.
+7. If external web or scholarly research is relevant to the analysis, explain why and obtain the user's permission before using it.
 
 Use this decision guide when recommending a method:
 
@@ -207,13 +215,13 @@ Confirm document and row counts, text fields, metadata, identifiers, timestamps,
 
 ## Error handling
 
-| Error | Likely cause | Response |
-|---|---|---|
-| `Cache error before --assign` | Cache from a previous run | Use `--clear` |
-| `Outcome not found` | Incorrect column or field name | Verify with `crispt --df-cols` or `crispt --print` |
-| `ML features mismatch` | Features changed after training | Clear cache and retrain |
-| `Linkage failed` | Insufficient data or metadata | Verify IDs/timestamps or use a simpler linkage method |
-| `Visualization empty` | Required analysis was not run | Run the relevant `--topics`, `--tdabm`, or `--graph` step first |
+| Error                         | Likely cause                    | Response                                                        |
+| ----------------------------- | ------------------------------- | --------------------------------------------------------------- |
+| `Cache error before --assign` | Cache from a previous run       | Use `--clear`                                                   |
+| `Outcome not found`           | Incorrect column or field name  | Verify with `crispt --df-cols` or `crispt --print`              |
+| `ML features mismatch`        | Features changed after training | Clear cache and retrain                                         |
+| `Linkage failed`              | Insufficient data or metadata   | Verify IDs/timestamps or use a simpler linkage method           |
+| `Visualization empty`         | Required analysis was not run   | Run the relevant `--topics`, `--tdabm`, or `--graph` step first |
 
 ## Performance notes
 
