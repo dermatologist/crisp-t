@@ -888,7 +888,7 @@ class ML:
         tree_rules = export_text(
             clf,
             feature_names=[col for col in X.columns],
-            max_depth=max_depth if max_depth else 10,  # Limit text output depth
+            max_depth=max_depth,  # Use provided max_depth or None for full tree
         )
         print(f"\n==== Decision Tree Rules ====")
         print(tree_rules)

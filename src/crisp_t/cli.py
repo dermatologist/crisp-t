@@ -511,6 +511,7 @@ def main(
                 or regression
                 or lstm
                 or ml
+                or tree
             )
             and csv_analyzer
         ):
@@ -531,6 +532,7 @@ def main(
                 or regression
                 or lstm
                 or ml
+                or tree
             ) and not ML_AVAILABLE:
                 click.echo(
                     click.style(
@@ -552,6 +554,7 @@ def main(
                 or regression
                 or lstm
                 or ml
+                or tree
             ) and not csv_analyzer:
                 click.echo(
                     click.style("⚠️  ML analysis requires CSV data. ", fg="yellow")
@@ -951,7 +954,14 @@ def main(
                 except Exception as e:
                     click.echo("  " + format_error(f"Error in Random Forest: {e}"))
 
-            if tree and target_col:
+            if tree:
+                # Validate --outcome is provided before proceeding
+                if not target_col:
+                    raise click.ClickException(
+                        click.style("❌ Error: ", fg="red", bold=True)
+                        + "--outcome is required for decision tree tasks"
+                    )
+
                 print_section_header(
                     "DECISION TREE CLASSIFIER", emoji="🌳", color="magenta"
                 )
@@ -991,11 +1001,6 @@ def main(
                 click.echo(
                     f"   • Use {click.style('--include', fg='green')} to select specific features\n"
                 )
-                if not target_col:
-                    raise click.ClickException(
-                        click.style("❌ Error: ", fg="red", bold=True)
-                        + "--outcome is required for decision tree tasks"
-                    )
                 click.echo(click.style("\n▸ Training Decision Tree...", fg="yellow"))
                 try:
                     from .visualize import QRVisualize

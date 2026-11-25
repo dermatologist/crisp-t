@@ -131,8 +131,8 @@ def get_ml_tools() -> list[Tool]:
                 - Confusion matrix and accuracy metrics
                 - Feature importance rankings
                 - Text-based decision rules (if-then format)
-                - Visual tree diagram (saved to output folder)
                 - Tree depth and complexity metrics
+                Note: Visual tree diagrams are available via CLI (--tree flag) but not through MCP tools.
 
                 Compare to:
                 - decision_tree_classification: Uses Random Forest (ensemble), no tree structure
@@ -144,7 +144,7 @@ def get_ml_tools() -> list[Tool]:
                 - Use smaller trees for business rule extraction
                 - Larger trees may overfit; validate with test data
                 - Binary classification (2 classes) most reliable
-                - Tree visualization saved as PNG when using MCP with output folder
+                - Use CLI (--tree flag) for visual tree diagrams
                 """,
             input_schema={
                 "type": "object",
