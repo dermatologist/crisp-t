@@ -510,7 +510,9 @@ class QRVisualize:
                         transform=ax.transAxes,
                     )
             except Exception as e:
-                logger.exception(f"Error occurred while processing document {i - 1}: {e}")
+                logger.exception(
+                    f"Error occurred while processing document {i - 1}: {e}"
+                )
                 continue
 
         plt.subplots_adjust(wspace=0, hspace=0)
@@ -619,7 +621,7 @@ class QRVisualize:
             lambda x, pos: "Topic "
             + str(x)
             + "\n"
-            + df_top3words.loc[df_top3words.topic_id == x, "words"].values[0]  # type: ignore
+            + df_top3words.loc[df_top3words.topic_id == x, "words"].to_numpy()[0]  # type: ignore
         )
         ax1.xaxis.set_major_formatter(tick_formatter)
         ax1.set_title("Number of Documents by Dominant Topic", fontdict=dict(size=10))
