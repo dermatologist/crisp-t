@@ -104,7 +104,9 @@ class Text:
         if not isinstance(corpus, Corpus):
             raise ValueError("Corpus must be of type Corpus")
         self._corpus = corpus
-        spacy_doc, results = self.process_tokens(self._corpus.id if self._corpus else None)
+        spacy_doc, results = self.process_tokens(
+            self._corpus.id if self._corpus else None
+        )
         self._spacy_doc = spacy_doc
         self._lemma = results["lemma"]
         self._pos = results["pos"]
@@ -135,7 +137,9 @@ class Text:
         if not isinstance(lang, str):
             raise ValueError("lang must be a string")
         self._lang = lang
-        spacy_doc, results = self.process_tokens(self._corpus.id if self._corpus else None)
+        spacy_doc, results = self.process_tokens(
+            self._corpus.id if self._corpus else None
+        )
         self._spacy_doc = spacy_doc
         self._lemma = results["lemma"]
         self._pos = results["pos"]
@@ -299,10 +303,10 @@ class Text:
                         _pos_[result["text"]] = result["pos_"]
                         _word[result["text"]] = result["word"]
                         _sentiment[result["text"]] = result["sentiment"]
-                        _tag = result["tag"]
-                        _dep = result["dep"]
-                        _prob = result["prob"]
-                        _idx = result["idx"]
+                        _tag[result["text"]] = result["tag"]
+                        _dep[result["text"]] = result["dep"]
+                        _prob[result["text"]] = result["prob"]
+                        _idx[result["text"]] = result["idx"]
                     pbar.update(1)
         logger.info("Token processing complete.")
         results = {
@@ -326,7 +330,9 @@ class Text:
         return spacy_doc, results
 
     def map_spacy_doc(self):
-        spacy_doc, results = self.process_tokens(self._corpus.id if self._corpus else None)
+        spacy_doc, results = self.process_tokens(
+            self._corpus.id if self._corpus else None
+        )
         self._spacy_doc = spacy_doc
         self._lemma = results["lemma"]
         self._pos = results["pos"]
@@ -478,7 +484,11 @@ class Text:
         ):
             meta_val = document.metadata.get(metadata_key)
             # Check meta_val is not None and is iterable (str, list, tuple, set)
-            if meta_val is not None and isinstance(meta_val, (str, list, tuple, set)) and metadata_value in meta_val:
+            if (
+                meta_val is not None
+                and isinstance(meta_val, (str, list, tuple, set))
+                and metadata_value in meta_val
+            ):
                 filtered_documents.append(document)
             # Check document.id and document.text are not None and are str
             if isinstance(document.id, str) and metadata_value in document.id:
@@ -544,7 +554,7 @@ class Text:
 
     def print_categories(self, spacy_doc=None, num=10):
         self.map_spacy_doc()
-        bot = self._spacy_doc._.to_bag_of_terms( # type: ignore
+        bot = self._spacy_doc._.to_bag_of_terms(  # type: ignore
             by="lemma_",
             weighting="freq",
             ngs=(1, 2, 3),
