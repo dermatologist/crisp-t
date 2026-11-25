@@ -1,0 +1,2040 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="OMOP CDM utils in Python">
+      
+      
+        <meta name="author" content="Bell Eapen">
+      
+      
+        <link rel="canonical" href="https://dermatologist.github.io/crisp-t/wiki/">
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.2">
+    
+    
+      
+        <title>GitHub Wiki Update Instructions - crisp-t</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.57a0d79d.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.fb2fffe2.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="deep-orange">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#github-wiki-update-instructions" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="crisp-t" class="md-header__button md-logo" aria-label="crisp-t" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            crisp-t
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              GitHub Wiki Update Instructions
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="deep-orange"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="black" data-md-color-accent="deep-orange"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/dermatologist/crisp-t" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    dermatologist/crisp-t
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="crisp-t" class="md-nav__button md-logo" aria-label="crisp-t" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    crisp-t
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/dermatologist/crisp-t" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    dermatologist/crisp-t
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../modules/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Modules
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../contributing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cheatsheet/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cheat Sheet
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../DEMO/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Demo
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../MCP_SERVER/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MCP
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../SEMANTIC_SEARCH/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Semantic Search
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../GRAPH/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GRAPH
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../TDABM/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    TDABM
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../UI_QUICKSTART/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    UI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Overview
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#recent-changes-adding-tree-decision-tree-classifier" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Recent Changes: Adding --tree Decision Tree Classifier
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Recent Changes: Adding --tree Decision Tree Classifier">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#background" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Background
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#key-differences" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Key Differences
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#changes-made-in-repository" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Changes Made in Repository
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#wiki-pages-that-need-updating" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Wiki Pages That Need Updating
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Wiki Pages That Need Updating">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-main-wiki-pages" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Main Wiki Pages
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-new-content-to-add" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. New Content to Add
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#output-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Output Files
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example-rules-output" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example Rules Output
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#when-to-use-decision-trees" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        When to Use Decision Trees
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parameters
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#common-patterns-to-update" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Common Patterns to Update
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Common Patterns to Update">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#command-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Command Examples
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#descriptive-text" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Descriptive Text
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#help-text-references" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Help Text References
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#verification-checklist" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Verification Checklist
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#additional-resources" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Additional Resources
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Additional Resources">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#repository-documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Repository Documentation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#testing-the-changes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Testing the Changes
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#maintenance-notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Maintenance Notes
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Maintenance Notes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#when-to-update-the-wiki" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        When to Update the Wiki
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#wiki-vs-repository-docs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Wiki vs Repository Docs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#best-practices" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Best Practices
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#contact" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Contact
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#appendix-full-list-of-changes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Appendix: Full List of Changes
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Appendix: Full List of Changes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#files-modified" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Files Modified
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#breaking-changes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Breaking Changes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#migration-guide-for-users" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Migration Guide for Users
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#recent-changes-clarifying-cls-dual-algorithm-behavior" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Recent Changes: Clarifying --cls Dual-Algorithm Behavior
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Recent Changes: Clarifying --cls Dual-Algorithm Behavior">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#background_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Background
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#changes-made-in-repository_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Changes Made in Repository
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#why-two-algorithms" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why Two Algorithms?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#wiki-pages-that-need-updating_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Wiki Pages That Need Updating
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Wiki Pages That Need Updating">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-create-new-wiki-page-classification-with-cls" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Create New Wiki Page: "Classification with --cls"
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#with-feature-selection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        With Feature Selection
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#with-top-n-features" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        With Top N Features
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#save-results" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Save Results
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#best-practices_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Best Practices
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#interpreting-results" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Interpreting Results
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Interpreting Results">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#when-algorithms-agree" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        When Algorithms Agree
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#when-algorithms-disagree" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        When Algorithms Disagree
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#troubleshooting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Troubleshooting
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Troubleshooting">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#need-at-least-2-classes-for-classification" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        "Need at least 2 classes for classification"
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#error-in-random-forest-not-enough-observations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        "Error in Random Forest: Not enough observations"
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#low-accuracy-from-both-algorithms" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Low Accuracy from Both Algorithms
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#technical-details" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Technical Details
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Technical Details">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#random-forest-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Random Forest Configuration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#svm-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SVM Configuration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#linkage-support" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Linkage Support
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#comparison-with-other-ml-tools" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Comparison with Other ML Tools
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Comparison with Other ML Tools">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#vs-regression" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        vs. --regression
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#vs-nnet" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        vs. --nnet
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#vs-mcp-tools" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        vs. MCP Tools
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#verification" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Verification
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related-documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Related Documentation
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="github-wiki-update-instructions">GitHub Wiki Update Instructions<a class="headerlink" href="#github-wiki-update-instructions" title="Permanent link">&para;</a></h1>
+<p>This document provides step-by-step instructions for updating the CRISP-T GitHub Wiki to reflect recent changes in the codebase.</p>
+<h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
+<p>The GitHub Wiki for CRISP-T is hosted at: https://github.com/dermatologist/crisp-t/wiki</p>
+<p>Wiki pages are maintained separately from the repository documentation and require manual updates through the GitHub interface.</p>
+<hr />
+<h2 id="recent-changes-adding-tree-decision-tree-classifier">Recent Changes: Adding <code>--tree</code> Decision Tree Classifier<a class="headerlink" href="#recent-changes-adding-tree-decision-tree-classifier" title="Permanent link">&para;</a></h2>
+<h3 id="background">Background<a class="headerlink" href="#background" title="Permanent link">&para;</a></h3>
+<p>A new <code>--tree</code> CLI flag has been added to provide <strong>interpretable Decision Tree classification</strong> with visual tree diagrams and human-readable decision rules. This is distinct from the existing <code>--cls</code> flag which uses Random Forest (ensemble of trees) and SVM.</p>
+<h3 id="key-differences">Key Differences<a class="headerlink" href="#key-differences" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th><code>--tree</code> (Decision Tree)</th>
+<th><code>--cls</code> (SVM + Random Forest)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Algorithm</strong></td>
+<td>Single Decision Tree</td>
+<td>SVM + Random Forest ensemble</td>
+</tr>
+<tr>
+<td><strong>Interpretability</strong></td>
+<td>High - shows exact decision paths</td>
+<td>Low - black-box ensemble</td>
+</tr>
+<tr>
+<td><strong>Output</strong></td>
+<td>Tree diagram, if-then rules</td>
+<td>Confusion matrix, feature importance</td>
+</tr>
+<tr>
+<td><strong>Best For</strong></td>
+<td>Extracting business rules, transparency</td>
+<td>Prediction accuracy</td>
+</tr>
+<tr>
+<td><strong>Visualization</strong></td>
+<td>Visual tree structure saved as PNG</td>
+<td>No tree structure</td>
+</tr>
+</tbody>
+</table>
+<h3 id="changes-made-in-repository">Changes Made in Repository<a class="headerlink" href="#changes-made-in-repository" title="Permanent link">&para;</a></h3>
+<ol>
+<li><strong>ML Implementation</strong> (<code>src/crisp_t/ml.py</code>)</li>
+<li>Added <code>decision_tree_classifier()</code> method using <code>DecisionTreeClassifier</code></li>
+<li>Returns confusion matrix, feature importance, tree rules, and trained model</li>
+<li>
+<p>Supports <code>max_depth</code> and <code>min_samples_split</code> parameters</p>
+</li>
+<li>
+<p><strong>Visualization</strong> (<code>src/crisp_t/visualize.py</code>)</p>
+</li>
+<li>Added <code>plot_decision_tree()</code> method using sklearn's <code>plot_tree()</code></li>
+<li>Added <code>export_decision_tree_rules()</code> method using <code>export_text()</code></li>
+<li>
+<p>Saves tree diagram as PNG and rules as text file</p>
+</li>
+<li>
+<p><strong>CLI Integration</strong> (<code>src/crisp_t/cli.py</code>)</p>
+</li>
+<li>Added <code>--tree</code> flag for decision tree classification</li>
+<li>Added <code>--max-depth</code> option to control tree complexity</li>
+<li>Added <code>--min-samples</code> option to prevent overfitting</li>
+<li>
+<p>Generates visual tree diagram and rule text files</p>
+</li>
+<li>
+<p><strong>MCP Server</strong> (<code>src/crisp_t/mcp/tools/ml_tools.py</code>)</p>
+</li>
+<li>Added <code>decision_tree_visualization</code> tool</li>
+<li>
+<p>Provides programmatic access to decision tree training and visualization</p>
+</li>
+<li>
+<p><strong>Tests</strong> (<code>tests/test_ml_decision_tree.py</code>)</p>
+</li>
+<li>Added comprehensive tests for decision tree functionality</li>
+<li>Tests max_depth parameter, MCP output format, and tree rules</li>
+</ol>
+<h3 id="wiki-pages-that-need-updating">Wiki Pages That Need Updating<a class="headerlink" href="#wiki-pages-that-need-updating" title="Permanent link">&para;</a></h3>
+<h4 id="1-main-wiki-pages">1. <strong>Main Wiki Pages</strong><a class="headerlink" href="#1-main-wiki-pages" title="Permanent link">&para;</a></h4>
+<p>Create or update the following wiki pages:</p>
+<ul>
+<li><strong>Home Page</strong> - Add decision tree to ML features list</li>
+<li><strong>CLI Reference</strong> - Add <code>--tree</code>, <code>--max-depth</code>, <code>--min-samples</code> options</li>
+<li><strong>Machine Learning</strong> - Create new section on Decision Trees</li>
+<li><strong>Examples</strong> - Add decision tree usage examples</li>
+</ul>
+<h4 id="2-new-content-to-add">2. <strong>New Content to Add</strong><a class="headerlink" href="#2-new-content-to-add" title="Permanent link">&para;</a></h4>
+<p><strong>Machine Learning Page - Decision Trees Section:</strong></p>
+<pre><code class="language-markdown">## Decision Tree Classification
+
+CRISP-T provides interpretable Decision Tree classification using the `--tree` flag.
+
+### Usage
+
+```bash
+# Basic decision tree classification
+crisp --inp crisp_input --tree --outcome target_variable --out reports
+
+# Control tree complexity
+crisp --inp crisp_input --tree --outcome target --max-depth 3 --min-samples 10
+
+# With specific features
+crisp --inp crisp_input --tree --outcome target --include feature1,feature2,feature3
+```
+</code></pre>
+<h3 id="output-files">Output Files<a class="headerlink" href="#output-files" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>decision_tree.png</code> - Visual tree diagram showing all decision splits</li>
+<li><code>decision_tree_rules.txt</code> - Human-readable if-then rules</li>
+<li><code>decision_tree_metrics.json</code> - Accuracy, confusion matrix, feature importance</li>
+</ul>
+<h3 id="example-rules-output">Example Rules Output<a class="headerlink" href="#example-rules-output" title="Permanent link">&para;</a></h3>
+<pre><code>|--- self_time &lt;= 4.50
+|   |--- class: No (not relaxed)
+|--- self_time &gt;  4.50
+|   |--- class: Yes (relaxed)
+</code></pre>
+<h3 id="when-to-use-decision-trees">When to Use Decision Trees<a class="headerlink" href="#when-to-use-decision-trees" title="Permanent link">&para;</a></h3>
+<ul>
+<li>✅ Need transparent decision logic</li>
+<li>✅ Want to extract business rules from data</li>
+<li>✅ Explaining ML decisions to stakeholders</li>
+<li>✅ Educational purposes</li>
+<li>⚠️ Prioritize interpretability over raw accuracy</li>
+</ul>
+<h3 id="parameters">Parameters<a class="headerlink" href="#parameters" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>--max-depth</code>: Limit tree depth (3-5 recommended for interpretability)</li>
+<li><code>--min-samples</code>: Minimum samples to split a node (higher = less overfitting)</li>
+<li><code>--include</code>: Specify which features to use</li>
+<li><code>--outcome</code>: Target variable to predict</li>
+</ul>
+<pre><code>
+### Comparison with Other ML Methods
+
+| Method | CLI Flag | Best For |
+|--------|----------|----------|
+| Decision Tree | `--tree` | Interpretable rules, transparency |
+| SVM + Random Forest | `--cls` | Prediction accuracy |
+| Regression | `--regression` | Quantifying relationships |
+| Neural Network | `--nnet` | Complex patterns, large datasets |
+
+---
+
+## Previous Changes: Renaming `--cart` to `--apriori`
+
+### Background
+
+The `--cart` CLI flag has been renamed to `--apriori` to correctly reflect that it implements the **Apriori algorithm** for association rule mining, not CART (Classification and Regression Trees).
+
+### Changes Made in Repository
+
+1. **CLI Implementation** (`src/crisp_t/cli.py`)
+   - Flag renamed from `--cart` to `--apriori`
+   - Help text updated to remove &quot;(CART)&quot; reference
+   - Parameter name changed from `cart` to `apriori`
+   - All conditional checks updated
+   - Output header changed from &quot;Association Rules (CART)&quot; to &quot;Association Rules (Apriori)&quot;
+
+2. **Documentation** (`docs/cheatsheet.md`)
+   - Table entry updated: `--cart` → `--apriori`
+
+### Wiki Pages That Need Updating
+
+#### 1. **Main Wiki Pages**
+
+Check and update the following wiki pages if they exist:
+
+- **Home Page** - If it contains CLI examples with `--cart`
+- **CLI Reference** - Update all `--cart` references to `--apriori`
+- **Getting Started** - Update any tutorial examples
+- **Examples** - Update any code snippets
+
+#### 2. **Specific Pages to Check**
+
+Based on the repository structure, check these pages:
+
+- **What's Brewing: Agent Harness** (already linked in README)
+- **Topological Data Analysis** (already linked in README)
+- Any other pages that mention association rules or the `--cart` flag
+
+---
+
+## Step-by-Step Wiki Update Process
+
+### Method 1: Using GitHub Web Interface
+
+1. **Navigate to the Wiki**
+   - Go to: https://github.com/dermatologist/crisp-t/wiki
+   - Click on the page you want to edit
+
+2. **Edit the Page**
+   - Click the **Edit** button (pencil icon) in the top right
+   - Make your changes using GitHub's markdown editor
+
+3. **Search for `--cart`**
+   - Use your browser's find function (Ctrl+F / Cmd+F)
+   - Search for `--cart` or `cart` flag references
+   - Replace with `--apriori`
+
+4. **Update Examples**
+   - Change command examples:
+
+     ```bash
+     # OLD
+     crisp --inp ./corpus --cart --outcome Gender
+
+     # NEW
+     crisp --inp ./corpus --apriori --outcome Gender
+     ```
+
+5. **Commit Changes**
+   - Add a commit message: &quot;Update --cart to --apriori flag&quot;
+   - Click **Save changes**
+
+### Method 2: Using Git (Advanced)
+
+If you have write access to the wiki repository:
+
+1. **Clone the Wiki Repository**
+
+   ```bash
+   git clone git@github.com:dermatologist/crisp-t.wiki.git
+   cd crisp-t.wiki
+</code></pre>
+<ol>
+<li><strong>Make Changes</strong></li>
+<li>Edit pages locally</li>
+<li>
+<p>Replace all <code>--cart</code> with <code>--apriori</code></p>
+</li>
+<li>
+<p><strong>Push Changes</strong>
+   <code>bash
+   git add .
+   git commit -m "Update --cart to --apriori flag throughout wiki"
+   git push origin master</code></p>
+</li>
+</ol>
+<hr />
+<h2 id="common-patterns-to-update">Common Patterns to Update<a class="headerlink" href="#common-patterns-to-update" title="Permanent link">&para;</a></h2>
+<h3 id="command-examples">Command Examples<a class="headerlink" href="#command-examples" title="Permanent link">&para;</a></h3>
+<p><strong>Before:</strong></p>
+<pre><code class="language-bash">crisp --inp ./corpus --cart --outcome Gender
+crisp --inp ./corpus --ml --cart --regression
+</code></pre>
+<p><strong>After:</strong></p>
+<pre><code class="language-bash">crisp --inp ./corpus --apriori --outcome Gender
+crisp --inp ./corpus --ml --apriori --regression
+</code></pre>
+<h3 id="descriptive-text">Descriptive Text<a class="headerlink" href="#descriptive-text" title="Permanent link">&para;</a></h3>
+<p><strong>Before:</strong></p>
+<ul>
+<li>"Use the <code>--cart</code> flag to generate association rules"</li>
+<li>"CART (Classification and Regression Trees) analysis"</li>
+</ul>
+<p><strong>After:</strong></p>
+<ul>
+<li>"Use the <code>--apriori</code> flag to generate association rules"</li>
+<li>"Apriori algorithm for association rule mining"</li>
+</ul>
+<h3 id="help-text-references">Help Text References<a class="headerlink" href="#help-text-references" title="Permanent link">&para;</a></h3>
+<p><strong>Before:</strong></p>
+<pre><code>--cart    Generate association rules using the Apriori algorithm (CART).
+</code></pre>
+<p><strong>After:</strong></p>
+<pre><code>--apriori Generate association rules using the Apriori algorithm.
+</code></pre>
+<hr />
+<h2 id="verification-checklist">Verification Checklist<a class="headerlink" href="#verification-checklist" title="Permanent link">&para;</a></h2>
+<p>After updating the wiki, verify:</p>
+<ul>
+<li>[ ] All <code>--cart</code> references replaced with <code>--apriori</code></li>
+<li>[ ] Command examples use the new flag</li>
+<li>[ ] Descriptive text mentions "Apriori algorithm" not "CART"</li>
+<li>[ ] Screenshots (if any) updated to show new flag</li>
+<li>[ ] Links to examples still work</li>
+<li>[ ] No broken references to old flag</li>
+</ul>
+<hr />
+<h2 id="additional-resources">Additional Resources<a class="headerlink" href="#additional-resources" title="Permanent link">&para;</a></h2>
+<h3 id="repository-documentation">Repository Documentation<a class="headerlink" href="#repository-documentation" title="Permanent link">&para;</a></h3>
+<p>These files in the repository are already updated and can serve as reference:</p>
+<ul>
+<li><code>docs/cheatsheet.md</code> - CLI reference</li>
+<li><code>README.md</code> - Main documentation</li>
+<li><code>notes/INSTRUCTION.md</code> - Detailed instructions</li>
+<li><code>docs/DEMO.md</code> - Usage examples</li>
+</ul>
+<h3 id="testing-the-changes">Testing the Changes<a class="headerlink" href="#testing-the-changes" title="Permanent link">&para;</a></h3>
+<p>After updating the wiki, test the new flag:</p>
+<pre><code class="language-bash"># Check help text
+crisp --help | grep -i apriori
+
+# Test with sample data
+crisp --inp ./workspace/coffee_corpus --apriori --outcome Gender
+</code></pre>
+<hr />
+<h2 id="maintenance-notes">Maintenance Notes<a class="headerlink" href="#maintenance-notes" title="Permanent link">&para;</a></h2>
+<h3 id="when-to-update-the-wiki">When to Update the Wiki<a class="headerlink" href="#when-to-update-the-wiki" title="Permanent link">&para;</a></h3>
+<p>Update the wiki whenever:</p>
+<ul>
+<li>CLI flags are added, removed, or renamed</li>
+<li>Command behavior changes significantly</li>
+<li>New features are released</li>
+<li>Documentation examples are updated</li>
+</ul>
+<h3 id="wiki-vs-repository-docs">Wiki vs Repository Docs<a class="headerlink" href="#wiki-vs-repository-docs" title="Permanent link">&para;</a></h3>
+<p><strong>Repository Documentation</strong> (<code>docs/</code>, <code>README.md</code>, etc.):</p>
+<ul>
+<li>Version controlled with code</li>
+<li>Updated via pull requests</li>
+<li>Automatically deployed with releases</li>
+</ul>
+<p><strong>GitHub Wiki</strong>:</p>
+<ul>
+<li>Separate repository (<code>.wiki</code>)</li>
+<li>Manual updates through web interface or git</li>
+<li>Better for tutorials and user guides</li>
+<li>Not versioned with releases</li>
+</ul>
+<h3 id="best-practices">Best Practices<a class="headerlink" href="#best-practices" title="Permanent link">&para;</a></h3>
+<ol>
+<li><strong>Keep in Sync</strong>: Always update both repository docs and wiki together</li>
+<li><strong>Test Examples</strong>: Verify all command examples work after changes</li>
+<li><strong>Clear Migration</strong>: For breaking changes, provide migration instructions</li>
+<li><strong>Version Notes</strong>: Consider adding version numbers to wiki pages</li>
+</ol>
+<hr />
+<h2 id="contact">Contact<a class="headerlink" href="#contact" title="Permanent link">&para;</a></h2>
+<p>For questions about wiki updates or documentation:</p>
+<ul>
+<li>Open an issue in the main repository</li>
+<li>Contact the maintainers</li>
+<li>Submit a pull request with suggested changes</li>
+</ul>
+<hr />
+<h2 id="appendix-full-list-of-changes">Appendix: Full List of Changes<a class="headerlink" href="#appendix-full-list-of-changes" title="Permanent link">&para;</a></h2>
+<h3 id="files-modified">Files Modified<a class="headerlink" href="#files-modified" title="Permanent link">&para;</a></h3>
+<ol>
+<li><code>src/crisp_t/cli.py</code> - 9 occurrences updated</li>
+<li><code>docs/cheatsheet.md</code> - 1 occurrence updated</li>
+</ol>
+<h3 id="breaking-changes">Breaking Changes<a class="headerlink" href="#breaking-changes" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Flag Renamed</strong>: <code>--cart</code> → <code>--apriori</code></li>
+<li><strong>No Backward Compatibility</strong>: Old flag will not work</li>
+<li><strong>User Action Required</strong>: Users must update their scripts</li>
+</ul>
+<h3 id="migration-guide-for-users">Migration Guide for Users<a class="headerlink" href="#migration-guide-for-users" title="Permanent link">&para;</a></h3>
+<p><strong>If you were using:</strong></p>
+<pre><code class="language-bash">crisp --inp ./corpus --cart --outcome Gender
+</code></pre>
+<p><strong>Update to:</strong></p>
+<pre><code class="language-bash">crisp --inp ./corpus --apriori --outcome Gender
+</code></pre>
+<p><strong>The functionality is identical</strong> - only the flag name has changed to better reflect the underlying algorithm.</p>
+<hr />
+<h2 id="recent-changes-clarifying-cls-dual-algorithm-behavior">Recent Changes: Clarifying <code>--cls</code> Dual-Algorithm Behavior<a class="headerlink" href="#recent-changes-clarifying-cls-dual-algorithm-behavior" title="Permanent link">&para;</a></h2>
+<h3 id="background_1">Background<a class="headerlink" href="#background_1" title="Permanent link">&para;</a></h3>
+<p>The <code>--cls</code> CLI flag runs <strong>two classification algorithms sequentially</strong>:</p>
+<ol>
+<li><strong>Support Vector Machine (SVM)</strong></li>
+<li><strong>Random Forest</strong> (previously mislabeled as "Decision Tree")</li>
+</ol>
+<p>This dual-algorithm approach enables triangulation by providing different perspectives on the same classification problem.</p>
+<h3 id="changes-made-in-repository_1">Changes Made in Repository<a class="headerlink" href="#changes-made-in-repository_1" title="Permanent link">&para;</a></h3>
+<ol>
+<li><strong>CLI Implementation</strong> (<code>src/crisp_t/cli.py</code>)</li>
+<li>Renamed "Decision Tree" to "Random Forest" in all output messages</li>
+<li>Added summary header: "📊 Note: Running both SVM and Random Forest classifiers..."</li>
+<li>Updated help text to clarify both algorithms run sequentially</li>
+<li>
+<p>Updated algorithm descriptions to accurately reflect Random Forest as "Tree-based ensemble classifier"</p>
+</li>
+<li>
+<p><strong>Documentation</strong> (<code>docs/wiki.md</code>)</p>
+</li>
+<li>Added comprehensive section explaining dual-algorithm approach</li>
+</ol>
+<h3 id="why-two-algorithms">Why Two Algorithms?<a class="headerlink" href="#why-two-algorithms" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>SVM</strong>: Excellent for finding decision boundaries in high-dimensional data; provides confusion matrix</li>
+<li><strong>Random Forest</strong>: Ensemble method using 100 decision trees; provides both confusion matrix and feature importance rankings</li>
+</ul>
+<p>Using both algorithms allows researchers to:</p>
+<ul>
+<li>Validate findings across different methods (triangulation)</li>
+<li>Compare accuracy metrics</li>
+<li>Understand which features are most predictive (Random Forest)</li>
+<li>See decision boundaries in feature space (SVM)</li>
+</ul>
+<h3 id="wiki-pages-that-need-updating_1">Wiki Pages That Need Updating<a class="headerlink" href="#wiki-pages-that-need-updating_1" title="Permanent link">&para;</a></h3>
+<h4 id="1-create-new-wiki-page-classification-with-cls">1. <strong>Create New Wiki Page: "Classification with --cls"</strong><a class="headerlink" href="#1-create-new-wiki-page-classification-with-cls" title="Permanent link">&para;</a></h4>
+<p>Create a new wiki page with the following content:</p>
+<pre><code class="language-markdown"># Classification with --cls: Understanding SVM and Random Forest
+
+## Overview
+
+The `--cls` flag runs **two classification algorithms** sequentially:
+
+1. **Support Vector Machine (SVM)**
+2. **Random Forest**
+
+Both algorithms analyze the same data but provide different insights.
+
+## Why Two Algorithms?
+
+- **SVM**: Excellent for finding decision boundaries in high-dimensional data
+- **Random Forest**: Provides feature importance and handles non-linear relationships well
+
+Using both enables **triangulation** - validating findings across different methods.
+
+## Understanding the Output
+
+### SVM Output
+
+SVM provides a **confusion matrix** showing:
+
+- **True Positive (TP)**: Correctly predicted positive cases
+- **False Positive (FP)**: Incorrectly predicted as positive
+- **True Negative (TN)**: Correctly predicted negative cases
+- **False Negative (FN)**: Incorrectly predicted as negative
+
+Example output:
+</code></pre>
+<p>True Positive: 45
+False Positive: 3
+True Negative: 42
+False Negative: 5</p>
+<pre><code>
+### Random Forest Output
+
+Random Forest provides:
+1. **Confusion matrix** (same format as SVM)
+2. **Feature importance rankings** showing which variables are most predictive
+
+Example output:
+</code></pre>
+<p>Feature Importance:
+Feature: sleep_hours, Score: 0.34215
+Feature: exercise_freq, Score: 0.28934
+Feature: diet_quality, Score: 0.21456</p>
+<pre><code>
+Higher scores indicate more important predictors.
+
+## Example Usage
+
+### Basic Classification
+
+```bash
+crisp --inp ./data --outcome target_variable --cls
+</code></pre>
+<h3 id="with-feature-selection">With Feature Selection<a class="headerlink" href="#with-feature-selection" title="Permanent link">&para;</a></h3>
+<pre><code class="language-bash">crisp --inp ./data --outcome satisfaction --cls --include &quot;age,income,education&quot;
+</code></pre>
+<h3 id="with-top-n-features">With Top N Features<a class="headerlink" href="#with-top-n-features" title="Permanent link">&para;</a></h3>
+<pre><code class="language-bash">crisp --inp ./data --outcome churn --cls --rec 5 --outcome churn
+</code></pre>
+<p>Shows top 5 most important features from Random Forest.</p>
+<h3 id="save-results">Save Results<a class="headerlink" href="#save-results" title="Permanent link">&para;</a></h3>
+<pre><code class="language-bash">crisp --inp ./data --outcome target --cls --out ./results/
+</code></pre>
+<p>Creates two files:</p>
+<ul>
+<li><code>svm_results.json</code> - SVM confusion matrix</li>
+<li><code>decision_tree_results.json</code> - Random Forest results (note: filename kept for backward compatibility)</li>
+</ul>
+<h2 id="best-practices_1">Best Practices<a class="headerlink" href="#best-practices_1" title="Permanent link">&para;</a></h2>
+<ol>
+<li><strong>Ensure outcome is categorical</strong>: Classification requires a categorical target variable</li>
+<li><strong>Use <code>--include</code> to select relevant features</strong>: Reduces noise and improves model performance</li>
+<li><strong>Compare results from both algorithms</strong>: Look for agreement between SVM and Random Forest</li>
+<li><strong>Use <code>--rec</code> to control feature importance display</strong>: Default shows top 10 features</li>
+<li><strong>Save results with <code>--out</code></strong>: Enables later comparison and reporting</li>
+</ol>
+<h2 id="interpreting-results">Interpreting Results<a class="headerlink" href="#interpreting-results" title="Permanent link">&para;</a></h2>
+<h3 id="when-algorithms-agree">When Algorithms Agree<a class="headerlink" href="#when-algorithms-agree" title="Permanent link">&para;</a></h3>
+<p>If both SVM and Random Forest show similar accuracy and identify similar important features, your findings are more robust.</p>
+<h3 id="when-algorithms-disagree">When Algorithms Disagree<a class="headerlink" href="#when-algorithms-disagree" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Different accuracy</strong>: May indicate overfitting in one algorithm</li>
+<li><strong>Different feature importance</strong>: Random Forest may capture non-linear relationships SVM misses</li>
+<li><strong>Investigate further</strong>: Try different feature subsets or preprocessing</li>
+</ul>
+<h2 id="troubleshooting">Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permanent link">&para;</a></h2>
+<h3 id="need-at-least-2-classes-for-classification">"Need at least 2 classes for classification"<a class="headerlink" href="#need-at-least-2-classes-for-classification" title="Permanent link">&para;</a></h3>
+<p><strong>Problem</strong>: Outcome variable has only one unique value</p>
+<p><strong>Solution</strong>: Check your data:</p>
+<pre><code class="language-bash">crisp --inp ./data --describe
+</code></pre>
+<p>Ensure outcome column has at least 2 distinct values.</p>
+<h3 id="error-in-random-forest-not-enough-observations">"Error in Random Forest: Not enough observations"<a class="headerlink" href="#error-in-random-forest-not-enough-observations" title="Permanent link">&para;</a></h3>
+<p><strong>Problem</strong>: Too few data points for reliable classification</p>
+<p><strong>Solution</strong>:</p>
+<ul>
+<li>Increase dataset size</li>
+<li>Reduce number of features with <code>--include</code></li>
+<li>Consider using only one algorithm if dataset is very small</li>
+</ul>
+<h3 id="low-accuracy-from-both-algorithms">Low Accuracy from Both Algorithms<a class="headerlink" href="#low-accuracy-from-both-algorithms" title="Permanent link">&para;</a></h3>
+<p><strong>Possible causes</strong>:</p>
+<ul>
+<li>Insufficient features to predict outcome</li>
+<li>Noisy or irrelevant features</li>
+<li>Imbalanced classes</li>
+<li>Too few observations</li>
+</ul>
+<p><strong>Try</strong>:</p>
+<ul>
+<li>Add more predictive features</li>
+<li>Use <code>--include</code> to select only relevant variables</li>
+<li>Check class balance in outcome variable</li>
+<li>Consider data quality issues</li>
+</ul>
+<h2 id="technical-details">Technical Details<a class="headerlink" href="#technical-details" title="Permanent link">&para;</a></h2>
+<h3 id="random-forest-configuration">Random Forest Configuration<a class="headerlink" href="#random-forest-configuration" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Number of trees</strong>: 100 estimators</li>
+<li><strong>Feature importance</strong>: Computed using permutation importance</li>
+<li><strong>Test/train split</strong>: 25% test, 75% training</li>
+</ul>
+<h3 id="svm-configuration">SVM Configuration<a class="headerlink" href="#svm-configuration" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Kernel</strong>: Linear</li>
+<li><strong>Feature scaling</strong>: StandardScaler applied</li>
+<li><strong>Test/train split</strong>: 25% test, 75% training</li>
+</ul>
+<h3 id="linkage-support">Linkage Support<a class="headerlink" href="#linkage-support" title="Permanent link">&para;</a></h3>
+<p>Both algorithms support text metadata linkage:</p>
+<ul>
+<li><code>--linkage id</code>: Link by document ID</li>
+<li><code>--linkage embedding</code>: Link by semantic similarity</li>
+<li><code>--linkage temporal</code>: Link by temporal proximity</li>
+<li><code>--linkage keyword</code>: Link by keyword matching</li>
+</ul>
+<p>Use <code>--aggregation</code> to control how multiple linked documents are combined:</p>
+<ul>
+<li><code>majority</code>: Most common value (default for classification)</li>
+<li><code>first</code>: First encountered value</li>
+<li><code>mode</code>: Most frequent value</li>
+</ul>
+<h2 id="comparison-with-other-ml-tools">Comparison with Other ML Tools<a class="headerlink" href="#comparison-with-other-ml-tools" title="Permanent link">&para;</a></h2>
+<h3 id="vs-regression">vs. <code>--regression</code><a class="headerlink" href="#vs-regression" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>--cls</code>: For categorical outcomes (e.g., yes/no, high/medium/low)</li>
+<li><code>--regression</code>: For continuous outcomes (e.g., satisfaction score 1-10)</li>
+</ul>
+<h3 id="vs-nnet">vs. <code>--nnet</code><a class="headerlink" href="#vs-nnet" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>--cls</code>: Two interpretable algorithms (SVM + Random Forest)</li>
+<li><code>--nnet</code>: Neural network (black box, may perform better on complex patterns)</li>
+</ul>
+<h3 id="vs-mcp-tools">vs. MCP Tools<a class="headerlink" href="#vs-mcp-tools" title="Permanent link">&para;</a></h3>
+<p>MCP server provides separate tools:</p>
+<ul>
+<li><code>svm_classification</code>: Run only SVM</li>
+<li><code>decision_tree_classification</code>: Run only Random Forest</li>
+</ul>
+<p>CLI <code>--cls</code> runs both for convenience and triangulation.</p>
+<pre><code>
+#### 2. **Update Existing Wiki Pages**
+
+Check and update these pages if they exist:
+
+- **CLI Reference** - Update `--cls` description to mention both algorithms
+- **Getting Started** - If classification examples exist, clarify dual output
+- **Machine Learning** - Add section explaining SVM + Random Forest approach
+
+### Method 1: Using GitHub Web Interface
+
+1. **Navigate to the Wiki**
+   - Go to: https://github.com/dermatologist/crisp-t/wiki
+   - Click **&quot;Add a new page&quot;**
+
+2. **Create New Page**
+   - Page name: `Classification`
+   - Paste the content from above
+   - Click **Save changes**
+
+3. **Update Existing Pages**
+   - Find pages mentioning `--cls` or classification
+   - Update to reflect that both SVM and Random Forest run
+   - Change &quot;Decision Tree&quot; to &quot;Random Forest&quot; where applicable
+
+4. **Commit Changes**
+   - Add commit message: &quot;Document --cls dual-algorithm behavior (SVM + Random Forest)&quot;
+   - Click **Save changes**
+
+### Method 2: Using Git (Advanced)
+
+If you have write access to the wiki repository:
+
+1. **Clone the Wiki Repository**
+
+   ```bash
+   git clone git@github.com:dermatologist/crisp-t.wiki.git
+   cd crisp-t.wiki
+</code></pre>
+<ol>
+<li><strong>Create New Page</strong></li>
+<li>Create file: <code>Classification.md</code></li>
+<li>
+<p>Add content from above</p>
+</li>
+<li>
+<p><strong>Update Existing Pages</strong></p>
+</li>
+<li>Search for "Decision Tree" and update to "Random Forest"</li>
+<li>
+<p>Search for <code>--cls</code> and clarify dual-algorithm behavior</p>
+</li>
+<li>
+<p><strong>Push Changes</strong>
+   <code>bash
+   git add .
+   git commit -m "Document --cls dual-algorithm behavior (SVM + Random Forest)"
+   git push origin main</code></p>
+</li>
+</ol>
+<hr />
+<h2 id="verification">Verification<a class="headerlink" href="#verification" title="Permanent link">&para;</a></h2>
+<p>After updating the wiki, verify:</p>
+<ol>
+<li>✅ New "Classification" page exists with comprehensive documentation</li>
+<li>✅ All references to "Decision Tree" updated to "Random Forest"</li>
+<li>✅ Examples show both SVM and Random Forest outputs</li>
+<li>✅ Troubleshooting section addresses common issues</li>
+<li>✅ Links to related pages work correctly</li>
+</ol>
+<h2 id="related-documentation">Related Documentation<a class="headerlink" href="#related-documentation" title="Permanent link">&para;</a></h2>
+<ul>
+<li><code>docs/cheatsheet.md</code> - Quick reference for CLI flags</li>
+<li><code>docs/DEMO.md</code> - Usage examples</li>
+<li><code>notes/INSTRUCTION.md</code> - Comprehensive user guide</li>
+<li><code>docs/MCP_SERVER.md</code> - MCP tool documentation (separate tools for SVM and Random Forest)</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Maintained by <a href="https://github.com/dermatologist">dermatologist</a>.
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/dermatologist/crisp-t" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://pypi.org/project/crisp-t" target="_blank" rel="noopener" title="pypi.org" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.8 200.5c-7.7-30.9-22.3-54.2-53.4-54.2h-40.1v47.4c0 36.8-31.2 67.8-66.8 67.8H172.7c-29.2 0-53.4 25-53.4 54.3v101.8c0 29 25.2 46 53.4 54.3 33.8 9.9 66.3 11.7 106.8 0 26.9-7.8 53.4-23.5 53.4-54.3v-40.7H226.2v-13.6h160.2c31.1 0 42.6-21.7 53.4-54.2 11.2-33.5 10.7-65.7 0-108.6M286.2 444.7a20.4 20.4 0 1 1 0-40.7 20.4 20.4 0 1 1 0 40.7M167.8 248.1h106.8c29.7 0 53.4-24.5 53.4-54.3V91.9c0-29-24.4-50.7-53.4-55.6-35.8-5.9-74.7-5.6-106.8.1-45.2 8-53.4 24.7-53.4 55.6v40.7h106.9v13.6h-147c-31.1 0-58.3 18.7-66.8 54.2-9.8 40.7-10.2 66.1 0 108.6 7.6 31.6 25.7 54.2 56.8 54.2H101v-48.8c0-35.3 30.5-66.4 66.8-66.4m-6.6-183.4a20.4 20.4 0 1 1 0 40.8 20.4 20.4 0 1 1 0-40.8"/></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://www.linkedin.com/in/beapen" target="_blank" rel="noopener" title="www.linkedin.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M416 32H31.9C14.3 32 0 46.5 0 64.3v383.4C0 465.5 14.3 480 31.9 480H416c17.6 0 32-14.5 32-32.3V64.3c0-17.8-14.4-32.3-32-32.3M135.4 416H69V202.2h66.5V416zM102.2 96a38.5 38.5 0 1 1 0 77 38.5 38.5 0 1 1 0-77m282.1 320h-66.4V312c0-24.8-.5-56.7-34.5-56.7-34.6 0-39.9 27-39.9 54.9V416h-66.4V202.2h63.7v29.2h.9c8.9-16.8 30.6-34.5 62.9-34.5 67.2 0 79.7 44.3 79.7 101.9z"/></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://nuchange.ca" target="_blank" rel="noopener" title="nuchange.ca" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M277.8 8.6c-12.3-11.4-31.3-11.4-43.5 0l-224 208c-9.6 9-12.8 22.9-8 35.1S18.8 272 32 272h16v176c0 35.3 28.7 64 64 64h288c35.3 0 64-28.7 64-64V272h16c13.2 0 25-8.1 29.8-20.3s1.6-26.2-8-35.1zM240 320h32c26.5 0 48 21.5 48 48v96H192v-96c0-26.5 21.5-48 48-48"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": [], "search": "../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.a5f9d56c.min.js"></script>
+      
+    
+  </body>
+</html>
