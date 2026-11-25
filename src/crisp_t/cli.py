@@ -144,6 +144,23 @@ except ImportError:
     help="Perform classification using both Support Vector Machine (SVM) and Random Forest algorithms. Both run sequentially.",
 )
 @click.option(
+    "--tree",
+    is_flag=True,
+    help="Train an interpretable Decision Tree classifier with visual tree diagram and human-readable rules. Unlike --cls (which uses Random Forest ensemble), this provides transparent decision paths.",
+)
+@click.option(
+    "--max-depth",
+    type=int,
+    default=None,
+    help="Maximum depth of the decision tree (only used with --tree). None means unlimited depth. Use smaller values (3-5) for simpler, more interpretable trees.",
+)
+@click.option(
+    "--min-samples",
+    type=int,
+    default=2,
+    help="Minimum samples required to split a node (only used with --tree). Default: 2.",
+)
+@click.option(
     "--knn",
     is_flag=True,
     help="Perform K-Nearest Neighbors search to find similar records.",
@@ -274,6 +291,9 @@ def main(
     nlp,
     nnet,
     cls,
+    tree,
+    max_depth,
+    min_samples,
     knn,
     kmeans,
     apriori,
@@ -491,6 +511,7 @@ def main(
                 or regression
                 or lstm
                 or ml
+                or tree
             )
             and csv_analyzer
         ):
@@ -511,6 +532,7 @@ def main(
                 or regression
                 or lstm
                 or ml
+                or tree
             ) and not ML_AVAILABLE:
                 click.echo(
                     click.style(
@@ -532,6 +554,7 @@ def main(
                 or regression
                 or lstm
                 or ml
+                or tree
             ) and not csv_analyzer:
                 click.echo(
                     click.style("⚠️  ML analysis requires CSV data. ", fg="yellow")
@@ -930,6 +953,146 @@ def main(
                         _save_output(cm, out, "decision_tree_results")
                 except Exception as e:
                     click.echo("  " + format_error(f"Error in Random Forest: {e}"))
+
+            if tree:
+                # Validate --outcome is provided before proceeding
+                if not target_col:
+                    raise click.ClickException(
+                        click.style("❌ Error: ", fg="red", bold=True)
+                        + "--outcome is required for decision tree tasks"
+                    )
+
+                print_section_header(
+                    "DECISION TREE CLASSIFIER", emoji="🌳", color="magenta"
+                )
+                click.echo(
+                    click.style(
+                        "\n📊 Note: Training interpretable Decision Tree with visualization...",
+                        fg="yellow",
+                        bold=True,
+                    )
+                )
+                click.echo(
+                    click.style("\n🌲 What is a Decision Tree?", fg="cyan", bold=True)
+                )
+                click.echo("   Single tree classifier with transparent decision paths:")
+                click.echo(
+                    click.style("   • Visual Tree:", fg="yellow")
+                    + " Graphical representation of decision splits"
+                )
+                click.echo(
+                    click.style("   • Rules:", fg="yellow")
+                    + " Human-readable if-then decision rules"
+                )
+                click.echo(
+                    click.style("   • Interpretable:", fg="yellow")
+                    + " Unlike Random Forest, shows exact decision logic"
+                )
+                click.echo(click.style("\n💡 Tips:", fg="cyan", bold=True))
+                click.echo(
+                    f"   • Use {click.style('--outcome', fg='green')} to specify your target variable"
+                )
+                click.echo(
+                    f"   • Use {click.style('--max-depth', fg='green')} to limit tree complexity (3-5 for simplicity)"
+                )
+                click.echo(
+                    f"   • Use {click.style('--min-samples', fg='green')} to control node splitting"
+                )
+                click.echo(
+                    f"   • Use {click.style('--include', fg='green')} to select specific features\n"
+                )
+                click.echo(click.style("\n▸ Training Decision Tree...", fg="yellow"))
+                try:
+                    from .visualize import QRVisualize
+
+                    cm, importance, tree_rules, tree_model = (
+                        ml_analyzer.decision_tree_classifier(
+                            y=target_col,
+                            top_n=rec,
+                            max_depth=max_depth,
+                            min_samples_split=min_samples,
+                            linkage_method=linkage,
+                            aggregation=aggregation,
+                        )
+                    )
+                    click.echo(
+                        "\n" + click.style("Feature Importance:", fg="cyan", bold=True)
+                    )
+                    click.echo(
+                        ml_analyzer.format_confusion_matrix_to_human_readable(cm)
+                    )
+                    click.echo(
+                        "\n" + click.style("Decision Tree Rules:", fg="cyan", bold=True)
+                    )
+                    click.echo(tree_rules)
+                    click.echo(format_success("Decision Tree training complete"))
+
+                    # Generate visualization
+                    if out:
+                        try:
+                            # Get feature and class names
+                            csv_analyzer = csv_analyzer if csv_analyzer else Csv()
+                            csv_analyzer.drop_na()
+                            _, _, X, _ = ml_analyzer._process_xy(
+                                y=target_col,
+                                linkage_method=linkage,
+                                aggregation=aggregation,
+                            )
+                            feature_names = list(X.columns)
+                            class_names = [str(c) for c in tree_model.classes_]
+
+                            # Create visualizer
+                            visualizer = QRVisualize(
+                                corpus=ml_analyzer._csv.corpus,
+                                folder_path=out,
+                            )
+
+                            # Plot tree
+                            tree_fig = visualizer.plot_decision_tree(
+                                tree_model=tree_model,
+                                feature_names=feature_names,
+                                class_names=class_names,
+                                folder_path=f"{out}/decision_tree.png",
+                                show=False,
+                            )
+                            click.echo(
+                                format_success(
+                                    f"Tree visualization saved to {out}/decision_tree.png"
+                                )
+                            )
+
+                            # Save rules to file
+                            rules_path = f"{out}/decision_tree_rules.txt"
+                            with open(rules_path, "w") as f:
+                                f.write(tree_rules)
+                            click.echo(
+                                format_success(f"Decision rules saved to {rules_path}")
+                            )
+
+                            # Save metrics
+                            metrics = {
+                                "confusion_matrix": cm.tolist(),
+                                "feature_importance": {
+                                    fn: float(imp)
+                                    for fn, imp in zip(feature_names, importance)
+                                },
+                                "accuracy": float(cm.diagonal().sum() / cm.sum()),
+                                "tree_depth": tree_model.get_depth(),
+                                "n_features": len(feature_names),
+                            }
+                            _save_output(metrics, out, "decision_tree_metrics")
+
+                        except Exception as viz_error:
+                            click.echo(
+                                format_info(
+                                    f"Could not generate visualization: {viz_error}"
+                                )
+                            )
+                            # Still save basic results
+                            _save_output(cm, out, "decision_tree_results")
+
+                except Exception as e:
+                    click.echo("  " + format_error(f"Error in Decision Tree: {e}"))
 
             if nnet or ml:
                 click.echo("\n=== Neural Network Classification Accuracy ===")

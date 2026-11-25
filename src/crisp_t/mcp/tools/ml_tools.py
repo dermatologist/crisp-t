@@ -111,6 +111,77 @@ def get_ml_tools() -> list[Tool]:
             },
         ),
         Tool(
+            name="decision_tree_visualization",
+            description="""
+                Train an interpretable Decision Tree classifier with visual tree diagram and human-readable rules. Unlike decision_tree_classification (which uses Random Forest ensemble), this provides transparent decision paths showing exactly how predictions are made.
+
+                Essential for: Understanding exact decision logic (if-then rules), Creating interpretable ML models for stakeholders, Visualizing decision boundaries, Extracting business rules from data, Educational purposes (showing how ML makes decisions).
+
+                Workflow: prepare data → decision_tree_visualization(outcome=target, include="features") → Examine tree structure and rules → Add relationships linking key decision points to text themes → Validate rules with domain expertise.
+
+                Parameters:
+                - outcome: Target variable (DataFrame column or text metadata field if linkage_method specified)
+                - include: Feature columns for model (comma-separated)
+                - max_depth: Maximum tree depth (default: None/unlimited). Use 3-5 for simpler, more interpretable trees.
+                - min_samples_split: Minimum samples to split a node (default: 2). Higher values prevent overfitting.
+                - linkage_method: For text metadata outcomes: "id" (document level), "embedding" (semantic), "temporal" (time-based), "keyword" (link-based)
+                - aggregation: When multiple documents per outcome: "majority" (most common), "mean" (average), "mode", "first"
+
+                Returns:
+                - Confusion matrix and accuracy metrics
+                - Feature importance rankings
+                - Text-based decision rules (if-then format)
+                - Tree depth and complexity metrics
+                Note: Visual tree diagrams are available via CLI (--tree flag) but not through MCP tools.
+
+                Compare to:
+                - decision_tree_classification: Uses Random Forest (ensemble), no tree structure
+                - svm_classification: Better accuracy but less interpretable
+                - neural_network_classification: Handles complex patterns but black-box
+
+                Tips:
+                - Start with max_depth=3-5 for interpretable trees
+                - Use smaller trees for business rule extraction
+                - Larger trees may overfit; validate with test data
+                - Binary classification (2 classes) most reliable
+                - Use CLI (--tree flag) for visual tree diagrams
+                """,
+            input_schema={
+                "type": "object",
+                "properties": {
+                    "outcome": {
+                        "type": "string",
+                        "description": "Target/outcome variable",
+                    },
+                    "include": {
+                        "type": "string",
+                        "description": "Comma-separated columns to include",
+                    },
+                    "max_depth": {
+                        "type": "integer",
+                        "description": "Maximum tree depth (default: None/unlimited). Use 3-5 for simpler trees.",
+                    },
+                    "min_samples_split": {
+                        "type": "integer",
+                        "description": "Minimum samples to split a node (default: 2)",
+                        "default": 2,
+                    },
+                    "linkage_method": {
+                        "type": "string",
+                        "description": "Linkage method for text metadata outcomes: id, embedding, temporal, keyword",
+                        "enum": ["id", "embedding", "temporal", "keyword"],
+                    },
+                    "aggregation": {
+                        "type": "string",
+                        "description": "Aggregation strategy for multiple documents: majority, mean, first, mode",
+                        "enum": ["majority", "mean", "first", "mode"],
+                        "default": "majority",
+                    },
+                },
+                "required": ["outcome", "include"],
+            },
+        ),
+        Tool(
             name="svm_classification",
             description="""
                 Perform SVM (Support Vector Machine) classification. Returns confusion matrix and accuracy. Essential for: Binary/multiclass classification problems, Finding decision boundaries in high-dimensional data, Validating text coding against numeric outcomes.
@@ -420,7 +491,7 @@ def handle_ml_tool(
 ) -> tuple[list[Any], Any, Any] | None:
     """
     Handle ML tool calls.
-    
+
     Args:
         name: Tool name
         arguments: Tool arguments
@@ -428,15 +499,19 @@ def handle_ml_tool(
         text_analyzer: Current text analyzer
         csv_analyzer: Current CSV analyzer
         ml_analyzer: Current ML analyzer (may be None, will be created if needed)
-        
+
     Returns:
         Tuple of (response, updated_corpus, updated_ml_analyzer) or None if tool not handled
     """
-    from ..utils.responses import error_response, no_csv_analyzer_response, success_response
-    
+    from ..utils.responses import (
+        error_response,
+        no_csv_analyzer_response,
+        success_response,
+    )
+
     # Create a local reference for ML analyzer that can be updated
     _ml_analyzer = ml_analyzer
-    
+
     # ML Tools
     if name == "kmeans_clustering":
         if not csv_analyzer:
@@ -479,6 +554,32 @@ def handle_ml_tool(
         result = _ml_analyzer.get_decision_tree_classes(
             y=arguments["outcome"],
             top_n=arguments.get("top_n", 10),
+            mcp=True,
+            linkage_method=arguments.get("linkage_method"),
+            aggregation=arguments.get("aggregation", "majority"),
+        )
+        return success_response(str(result)), corpus, _ml_analyzer
+
+    elif name == "decision_tree_visualization":
+        if not csv_analyzer:
+            return no_csv_analyzer_response(), corpus, _ml_analyzer
+        else:
+            if "include" in arguments:
+                csv_analyzer.comma_separated_include_columns(
+                    arguments.get("include") + "," + arguments.get("outcome", "")
+                )
+
+        if not ML_AVAILABLE:
+            return error_response("ML dependencies not available"), corpus, _ml_analyzer
+
+        if not _ml_analyzer:
+            _ml_analyzer = ML(csv=csv_analyzer)
+
+        result = _ml_analyzer.decision_tree_classifier(
+            y=arguments["outcome"],
+            top_n=arguments.get("top_n", 10),
+            max_depth=arguments.get("max_depth"),
+            min_samples_split=arguments.get("min_samples_split", 2),
             mcp=True,
             linkage_method=arguments.get("linkage_method"),
             aggregation=arguments.get("aggregation", "majority"),
@@ -653,6 +754,6 @@ def handle_ml_tool(
 
         result = _ml_analyzer.get_lstm_predictions(y=arguments["outcome"], mcp=True)
         return success_response(str(result)), corpus, _ml_analyzer
-    
+
     # If we got here, the tool name didn't match
     return None

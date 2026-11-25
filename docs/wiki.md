@@ -10,7 +10,126 @@ Wiki pages are maintained separately from the repository documentation and requi
 
 ---
 
-## Recent Changes: Renaming `--cart` to `--apriori`
+## Recent Changes: Adding `--tree` Decision Tree Classifier
+
+### Background
+
+A new `--tree` CLI flag has been added to provide **interpretable Decision Tree classification** with visual tree diagrams and human-readable decision rules. This is distinct from the existing `--cls` flag which uses Random Forest (ensemble of trees) and SVM.
+
+### Key Differences
+
+| Feature              | `--tree` (Decision Tree)                | `--cls` (SVM + Random Forest)        |
+| -------------------- | --------------------------------------- | ------------------------------------ |
+| **Algorithm**        | Single Decision Tree                    | SVM + Random Forest ensemble         |
+| **Interpretability** | High - shows exact decision paths       | Low - black-box ensemble             |
+| **Output**           | Tree diagram, if-then rules             | Confusion matrix, feature importance |
+| **Best For**         | Extracting business rules, transparency | Prediction accuracy                  |
+| **Visualization**    | Visual tree structure saved as PNG      | No tree structure                    |
+
+### Changes Made in Repository
+
+1. **ML Implementation** (`src/crisp_t/ml.py`)
+   - Added `decision_tree_classifier()` method using `DecisionTreeClassifier`
+   - Returns confusion matrix, feature importance, tree rules, and trained model
+   - Supports `max_depth` and `min_samples_split` parameters
+
+2. **Visualization** (`src/crisp_t/visualize.py`)
+   - Added `plot_decision_tree()` method using sklearn's `plot_tree()`
+   - Added `export_decision_tree_rules()` method using `export_text()`
+   - Saves tree diagram as PNG and rules as text file
+
+3. **CLI Integration** (`src/crisp_t/cli.py`)
+   - Added `--tree` flag for decision tree classification
+   - Added `--max-depth` option to control tree complexity
+   - Added `--min-samples` option to prevent overfitting
+   - Generates visual tree diagram and rule text files
+
+4. **MCP Server** (`src/crisp_t/mcp/tools/ml_tools.py`)
+   - Added `decision_tree_visualization` tool
+   - Provides programmatic access to decision tree training and visualization
+
+5. **Tests** (`tests/test_ml_decision_tree.py`)
+   - Added comprehensive tests for decision tree functionality
+   - Tests max_depth parameter, MCP output format, and tree rules
+
+### Wiki Pages That Need Updating
+
+#### 1. **Main Wiki Pages**
+
+Create or update the following wiki pages:
+
+- **Home Page** - Add decision tree to ML features list
+- **CLI Reference** - Add `--tree`, `--max-depth`, `--min-samples` options
+- **Machine Learning** - Create new section on Decision Trees
+- **Examples** - Add decision tree usage examples
+
+#### 2. **New Content to Add**
+
+**Machine Learning Page - Decision Trees Section:**
+
+````markdown
+## Decision Tree Classification
+
+CRISP-T provides interpretable Decision Tree classification using the `--tree` flag.
+
+### Usage
+
+```bash
+# Basic decision tree classification
+crisp --inp crisp_input --tree --outcome target_variable --out reports
+
+# Control tree complexity
+crisp --inp crisp_input --tree --outcome target --max-depth 3 --min-samples 10
+
+# With specific features
+crisp --inp crisp_input --tree --outcome target --include feature1,feature2,feature3
+```
+````
+
+### Output Files
+
+- `decision_tree.png` - Visual tree diagram showing all decision splits
+- `decision_tree_rules.txt` - Human-readable if-then rules
+- `decision_tree_metrics.json` - Accuracy, confusion matrix, feature importance
+
+### Example Rules Output
+
+```
+|--- self_time <= 4.50
+|   |--- class: No (not relaxed)
+|--- self_time >  4.50
+|   |--- class: Yes (relaxed)
+```
+
+### When to Use Decision Trees
+
+- ✅ Need transparent decision logic
+- ✅ Want to extract business rules from data
+- ✅ Explaining ML decisions to stakeholders
+- ✅ Educational purposes
+- ⚠️ Prioritize interpretability over raw accuracy
+
+### Parameters
+
+- `--max-depth`: Limit tree depth (3-5 recommended for interpretability)
+- `--min-samples`: Minimum samples to split a node (higher = less overfitting)
+- `--include`: Specify which features to use
+- `--outcome`: Target variable to predict
+
+````
+
+### Comparison with Other ML Methods
+
+| Method | CLI Flag | Best For |
+|--------|----------|----------|
+| Decision Tree | `--tree` | Interpretable rules, transparency |
+| SVM + Random Forest | `--cls` | Prediction accuracy |
+| Regression | `--regression` | Quantifying relationships |
+| Neural Network | `--nnet` | Complex patterns, large datasets |
+
+---
+
+## Previous Changes: Renaming `--cart` to `--apriori`
 
 ### Background
 
@@ -90,7 +209,7 @@ If you have write access to the wiki repository:
    ```bash
    git clone git@github.com:dermatologist/crisp-t.wiki.git
    cd crisp-t.wiki
-   ```
+````
 
 2. **Make Changes**
    - Edit pages locally
