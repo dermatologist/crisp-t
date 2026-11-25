@@ -141,7 +141,7 @@ except ImportError:
 @click.option(
     "--cls",
     is_flag=True,
-    help="Perform classification using Support Vector Machine (SVM) and Decision Tree algorithms.",
+    help="Perform classification using both Support Vector Machine (SVM) and Random Forest algorithms. Both run sequentially.",
 )
 @click.option(
     "--knn",
@@ -850,8 +850,16 @@ def main(
                 )
                 click.echo(
                     click.style(
-                        "\nWhat are Classification Models?", fg="cyan", bold=True
+                        "\n📊 Note: Running both SVM and Random Forest classifiers...",
+                        fg="yellow",
+                        bold=True,
                     )
+                )
+                click.echo(
+                    "   Each algorithm provides different insights into your data.\n"
+                )
+                click.echo(
+                    click.style("What are Classification Models?", fg="cyan", bold=True)
                 )
                 click.echo(
                     "   Predict categorical outcomes using machine learning algorithms:"
@@ -861,8 +869,8 @@ def main(
                     + " Support Vector Machine with confusion matrix"
                 )
                 click.echo(
-                    click.style("   • Decision Tree:", fg="yellow")
-                    + " Tree-based classifier with feature importance"
+                    click.style("   • Random Forest:", fg="yellow")
+                    + " Tree-based ensemble classifier with feature importance"
                 )
                 click.echo(click.style("\n💡 Tips:", fg="cyan", bold=True))
                 click.echo(
@@ -894,14 +902,14 @@ def main(
                             confusion_matrix
                         )
                     )
-                    click.echo(format_success("SVM classification complete", indent=2))
+                    click.echo("  " + format_success("SVM classification complete"))
                     if out:
                         _save_output(confusion_matrix, out, "svm_results")
                 except Exception as e:
-                    click.echo(format_error(f"Error in SVM: {e}", indent=2))
+                    click.echo("  " + format_error(f"Error in SVM: {e}"))
                 click.echo(
                     click.style(
-                        "\n▸ Running Decision Tree Classification...", fg="yellow"
+                        "\n▸ Running Random Forest Classification...", fg="yellow"
                     )
                 )
                 try:
@@ -917,15 +925,11 @@ def main(
                     click.echo(
                         ml_analyzer.format_confusion_matrix_to_human_readable(cm)
                     )
-                    click.echo(
-                        format_success(
-                            "Decision tree classification complete", indent=2
-                        )
-                    )
+                    click.echo(format_success("Random Forest classification complete"))
                     if out:
                         _save_output(cm, out, "decision_tree_results")
                 except Exception as e:
-                    click.echo(format_error(f"Error in Decision Tree: {e}", indent=2))
+                    click.echo("  " + format_error(f"Error in Random Forest: {e}"))
 
             if nnet or ml:
                 click.echo("\n=== Neural Network Classification Accuracy ===")
